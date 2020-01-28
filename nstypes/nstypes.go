@@ -81,8 +81,9 @@ var typeNames = map[NamespaceType]string{
 	CLONE_NEWNET:    "net",
 }
 
-// Returns the namespace type value (constant CLONE_NEWNS, ...) corresponding
-// to the specified namespace type name (such as "mnt", "net", et cetera).
+// NameToType returns the namespace type value (constant CLONE_NEWNS, ...)
+// corresponding to the specified namespace type name (such as "mnt", "net",
+// et cetera).
 func NameToType(name string) NamespaceType {
 	t, _ := nameTypes[name]
 	return t
