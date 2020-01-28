@@ -74,7 +74,8 @@ const (
 // Type returns the type of a given Linux namespace, as one of the
 // CLONE_NEW... constants, or 0. The namespace can be specified (or, rather
 // referenced) either giving (1) a file system path string, (2) a file
-// descriptor (int), or (3) an os.File.
+// descriptor (int), or (3) an os.File. A Linux kernel version 4.11 or later
+// is required.
 func Type(ref interface{}) (nstypes.NamespaceType, error) {
 	//nolint: S1034
 	switch ref.(type) {
@@ -133,19 +134,21 @@ func ID(ref interface{}) (nstypes.NamespaceID, error) {
 }
 
 // User returns the owning user namespace of any namespace, as a file. For
-// user namespaces, User() behaves identical to Parent().
+// user namespaces, User() behaves identical to Parent(). A Linux kernel
+// version 4.9 or later is required.
 func User(ref interface{}) (*os.File, error) {
 	return relationship(ref, _NS_GET_USERNS)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is,
 // of PID and user namespaces. For user namespaces, Parent() and User() behave
-// identical.
+// identical. A Linux kernel version 4.9 or later is required.
 func Parent(ref interface{}) (*os.File, error) {
 	return relationship(ref, _NS_GET_PARENT)
 }
 
-// OwnerUID returns the user id (uid) of the specified user namespace.
+// OwnerUID returns the user id (uid) of the specified user namespace. A Linux
+// kernel version 4.11 or later is required.
 func OwnerUID(ref interface{}) (int, error) {
 	var fd int
 	var err error
