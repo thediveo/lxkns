@@ -123,6 +123,24 @@ func rootNamespaces(nsmap NamespaceMap) []Namespace {
 	return result
 }
 
+// discoverySequence contains the namespace type indices in the order of
+// preferred discovery. While often the order of sequence doesn't matter,
+// there are few cases where it makes coding discovery functionality easier
+// when there is a guaranteed type order in place.
+var discoverySequence = []NamespaceTypeIndex{
+	UserNS,
+	PIDNS,
+}
+
+// Completes discoveryOrder to finally contain all namespace types indices.
+func init() {
+	for _, typeidx := range typeIndices {
+		if typeidx != UserNS && typeidx != PIDNS {
+			discoverySequence = append(discoverySequence, typeidx)
+		}
+	}
+}
+
 // Discover returns the Linux kernel namespaces found, based on discovery
 // options specified in the call. The discovery results also specify the
 // initial namespaces, as well the process table/tree on which the discovery
@@ -132,41 +150,36 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		Options:   opts,
 		Processes: NewProcessTable(),
 	}
+	// If no namespace types are specified for discovery, we take this as
+	// discovering all types of namespaces.
 	if result.Options.NamespaceTypes == 0 {
 		result.Options.NamespaceTypes = nstypes.CLONE_NEWNS |
 			nstypes.CLONE_NEWCGROUP | nstypes.CLONE_NEWUTS |
 			nstypes.CLONE_NEWIPC | nstypes.CLONE_NEWUSER |
 			nstypes.CLONE_NEWPID | nstypes.CLONE_NEWNET
 	}
+	// Finish initialization.
 	for idx := range result.Namespaces {
 		result.Namespaces[idx] = NamespaceMap{}
 	}
-	// Iterate over all namespace types and see if we need to run a discovery
-	// on a specific type. Parts of the discovery methods rely on a certain
-	// order of namespace types to be discovered, so we run user, then PID
-	// namespaces first, and then only the rest.
-	nstypeseq := []nstypes.NamespaceType{
-		nstypes.CLONE_NEWUSER,
-		nstypes.CLONE_NEWPID,
-	}
-	for lxnstype := range typeIndices {
-		if lxnstype != nstypes.CLONE_NEWUSER && lxnstype != nstypes.CLONE_NEWPID {
-			nstypeseq = append(nstypeseq, lxnstype)
+	// Now go for discovery: we run the available discovery functions in
+	// sequence, subject to the following rules for the When field:
+	//   - []: call discovery function once; it'll know what to do.
+	//   - [...]: call discovery function multiple times, once for each
+	//     namespace type listed in the When field, and in the same order of
+	//     sequence.
+	for _, disco := range discoverers {
+		if len(*disco.When) == 0 {
+			disco.Discover(^nstypes.NamespaceType(0), result)
+		} else {
+			for _, nstypeidx := range *disco.When {
+				if nstype := TypesByIndex[nstypeidx]; result.Options.NamespaceTypes&nstype != 0 {
+					disco.Discover(nstype, result)
+				}
+			}
 		}
 	}
-	for _, nstype := range nstypeseq {
-		if result.Options.NamespaceTypes&nstype == 0 {
-			continue
-		}
-		discoverFromProc(nstype, result)
-		if !opts.SkipHierarchy {
-			discoverHierarchy(nstype, result)
-		}
-		if !opts.SkipOwnership {
-			resolveOwnership(nstype, result)
-		}
-	}
-	// Fill in some convenience result fields...
+	// Fill in some additional convenience fields in the result.
 	if result.Options.NamespaceTypes&nstypes.CLONE_NEWUSER != 0 {
 		result.UserNSRoots = rootNamespaces(result.Namespaces[UserNS])
 	}
@@ -176,6 +189,33 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)
 	return result
+}
+
+// discoveryFunc implements some Linux kernel namespace discovery
+// functionality.
+type discoveryFunc func(nstypes.NamespaceType, *DiscoveryResult)
+
+// discoverer describes a single discoveryFunc and when to call it: once, per
+// each namespace type and for which namespace types in what sequence. Please
+// note that we use a reference to a slice here, as discoverySequence will
+// only be only completed during the init() phase, but after(!)
+// discoverySequence has been set to its initial value. Sigh.
+type discoverer struct {
+	When     *[]NamespaceTypeIndex // indices of namespace types this discovery function discovers.
+	Discover discoveryFunc         // the concrete namespace discovery functionality.
+}
+
+// Run a discoveryFunc only once per discovery, because it needs to work on
+// multiple namespace types in a single discovery call, and doesn't like
+// multiple per-type calls.
+var discoveronce = []NamespaceTypeIndex{}
+
+// The sequence of discovery functions implemented in lxkns, and how to call
+// them.
+var discoverers = []discoverer{
+	{&discoverySequence, discoverFromProc},
+	{&[]NamespaceTypeIndex{UserNS, PIDNS}, discoverHierarchy},
+	{&discoveronce, resolveOwnership},
 }
 
 // discoverFromProc discovers Linux kernel namespaces from the process table,
@@ -280,9 +320,7 @@ func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
 // be referenced by fd's returned by the kernel namespace ioctl()s. This would
 // then force us to keep potentially a larger number of fd's open.
 func discoverHierarchy(nstype nstypes.NamespaceType, result *DiscoveryResult) {
-	// This check clears the way for stupid a-casting further down this
-	// function body...
-	if nstype != nstypes.CLONE_NEWUSER && nstype != nstypes.CLONE_NEWPID {
+	if result.Options.SkipHierarchy {
 		return
 	}
 	nstypeidx := TypeIndex(nstype)
@@ -365,7 +403,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, result *DiscoveryResult) {
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
 func resolveOwnership(nstype nstypes.NamespaceType, result *DiscoveryResult) {
-	if nstype != nstypes.CLONE_NEWUSER {
+	if !result.Options.SkipOwnership && nstype != nstypes.CLONE_NEWUSER {
 		// The namespace type discovery sequence guarantees us that by the
 		// time we got here, the user namespaces already have been fully
 		// discovered, so we have a complete map of them.

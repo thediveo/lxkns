@@ -64,6 +64,18 @@ var typeIndices = map[nstypes.NamespaceType]NamespaceTypeIndex{
 	nstypes.CLONE_NEWNET:    NetNS,
 }
 
+// TypesByIndex maps Allnamespaces array indices to their corresponding Linux'
+// kernel namespace clone() syscall constants.
+var TypesByIndex = [NamespaceTypesCount]nstypes.NamespaceType{
+	nstypes.CLONE_NEWNS,
+	nstypes.CLONE_NEWCGROUP,
+	nstypes.CLONE_NEWUTS,
+	nstypes.CLONE_NEWIPC,
+	nstypes.CLONE_NEWUSER,
+	nstypes.CLONE_NEWPID,
+	nstypes.CLONE_NEWNET,
+}
+
 // TypeIndexLexicalOrder contains Namespace type indices in lexical order.
 var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 	CgroupNS,
