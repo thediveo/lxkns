@@ -18,6 +18,10 @@
 
 package nstypes
 
+import "strings"
+
+import "strconv"
+
 // Unfortunately, Go's syscall package for whatever reason lacks the const
 // definition for CLONE_NEWCGROUP. So we need to roll our own definitions
 // anyway.
@@ -37,6 +41,9 @@ package nstypes
 // keep with the 64bit-ness of inode numbers, as which they originally appear.
 type NamespaceID uint64
 
+// NoneID is a convenience constant for a non-existing namespaceID.
+const NoneID NamespaceID = 0
+
 // NamespaceType mirrors the data type used in the Linux kernel for the
 // namespace type constants. These constants are actually part of the clone()
 // syscall options parameter.
@@ -53,20 +60,14 @@ const (
 	CLONE_NEWNET    NamespaceType = 0x40000000 // identifies Linux network namespaces.
 )
 
-// TypeName returns the type name string (such as "mnt", "net", ...) for a
-// namespace type value (such as CLONE_NEWNS, CLONE_NEWNET, et cetera). For an
-// invalid type constant, it will return a zero name.
-//
-// Please note that you can also use String() on a NamespaceType.
-func TypeName(nstype NamespaceType) string {
-	name, _ := typeNames[nstype]
-	return name
-}
+// NaNS identifies an invalid namespace type.
+const NaNS NamespaceType = 0
 
 // String returns the type name string (such as "mnt", "net", ...) of a
 // namespace type value.
-func (nst NamespaceType) String() string {
-	return TypeName(nst)
+func (nstype NamespaceType) String() string {
+	name, _ := typeNames[nstype]
+	return name
 }
 
 // Maps Linux namespace constants to their "short" type names, as used in the
@@ -99,4 +100,23 @@ var nameTypes = map[string]NamespaceType{
 	"user":   CLONE_NEWUSER,
 	"pid":    CLONE_NEWPID,
 	"net":    CLONE_NEWNET,
+}
+
+// IDwithType takes a string representation of a namespace instance, such as
+// "net:[1234]" and returns the ID as well as the type of the namespace.
+// Returns (0, NaNS) if the namespace instance string is invalid.
+func IDwithType(s string) (id NamespaceID, t NamespaceType) {
+	colon := strings.IndexRune(s, ':')
+	if colon < 3 || s[colon+1] != '[' || s[len(s)-1] != ']' {
+		return
+	}
+	t, ok := nameTypes[s[0:colon]]
+	if !ok {
+		return
+	}
+	value, err := strconv.Atoi(s[colon+2 : len(s)-1])
+	if err != nil || value <= 0 {
+		return 0, 0
+	}
+	return NamespaceID(value), t
 }

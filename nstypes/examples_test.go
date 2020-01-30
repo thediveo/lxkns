@@ -4,11 +4,6 @@ import (
 	"fmt"
 )
 
-func ExampleTypeName() {
-	fmt.Printf(TypeName(CLONE_NEWNS))
-	// Output: mnt
-}
-
 func ExampleNamespaceType_String() {
 	fmt.Println(CLONE_NEWUSER.String())
 	// ...which can be simplified, because Println tries to String()ify its
@@ -33,4 +28,14 @@ func ExampleNameToType() {
 	// 0x20000000
 	// 0x40000000
 	// 0x00000000
+}
+
+func ExampleIDwithType() {
+	id, t := IDwithType("mnt:[12345678]")
+	fmt.Printf("%q %d\n", t, id)
+	id, t = IDwithType("foo:[-1]")
+	fmt.Printf("%t %t\n", t == NaNS, id == NoneID)
+	// Output:
+	// "mnt" 12345678
+	// true true
 }

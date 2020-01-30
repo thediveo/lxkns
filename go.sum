@@ -14,6 +14,8 @@ github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoT
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/thediveo/go-asciitree v0.0.0-20191029160906-a2c3d617f848 h1:sh/aomta5jQKmyBH6GN49+uUaQ+cCtVRhEYtL46Yg4k=
 github.com/thediveo/go-asciitree v0.0.0-20191029160906-a2c3d617f848/go.mod h1:ajNA/kzi8sLPfHXHHiKEntwNscpqgfgom+nZx/1pdjk=
+github.com/thediveo/go-mntinfo v0.0.0-20200127091958-23a8f7b5a80d h1:dR8wfbgD/4YLhOR8v0YCqRre2CRLifmQlsXI88ydgLY=
+github.com/thediveo/go-mntinfo v0.0.0-20200127091958-23a8f7b5a80d/go.mod h1:BhrbDXCxcdD7Ky6lC4eyLGfvlR+RcUM153EYDgYE/uQ=
 github.com/thediveo/klo v0.0.0-20191111184725-dc4d2ed1c6b1 h1:h1ltIRMIHswzRlgEmPv/04ZIAyJqftQd3aDbrUcSw4g=
 github.com/thediveo/klo v0.0.0-20191111184725-dc4d2ed1c6b1/go.mod h1:9TcLt/N3DFU2TT3/KwCL6G0csiDvbLoaD/EThPxVQ4s=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

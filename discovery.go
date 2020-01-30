@@ -21,6 +21,7 @@ package lxkns
 
 import (
 	"fmt"
+	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/nstypes"
 	rel "github.com/thediveo/lxkns/relations"
 	"os"
@@ -211,9 +212,12 @@ type discoverer struct {
 var discoveronce = []NamespaceTypeIndex{}
 
 // The sequence of discovery functions implemented in lxkns, and how to call
-// them.
+// them. Because discoverySequence will only be completed after this list has
+// been initialized, we need to "late bind" it by reference (pointers to
+// slices, where has the world come to ... mumble ... mumble...)
 var discoverers = []discoverer{
 	{&discoverySequence, discoverFromProc},
+	{&discoveronce, discoverBindmounts},
 	{&[]NamespaceTypeIndex{UserNS, PIDNS}, discoverHierarchy},
 	{&discoveronce, resolveOwnership},
 }
@@ -223,7 +227,7 @@ var discoverers = []discoverer{
 // It does not check any other places, as these are covered by separate
 // discovery functions.
 func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
-	nstypename := nstypes.TypeName(nstype)
+	nstypename := nstype.String()
 	nstypeidx := TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	// For all processes (but not tasks/threads) listed in /proc try to gather
@@ -303,6 +307,25 @@ func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
 		if leaders := ns.Leaders(); len(leaders) > 0 {
 			ns.(namespaceConfigurer).SetRef(
 				fmt.Sprintf("/proc/%d/ns/%s", leaders[0].PID, nstypename))
+		}
+	}
+}
+
+// discoverBindmounts checks bind-mounts to discover namespaces we haven't
+// found so far in the process' joined namespaces. This discovery function is
+// designed to be run only once per discovery.
+func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
+	bindmounts := mntinfo.MountsOfType(-1, "nsfs")
+	for _, bmnt := range bindmounts {
+		nsid, nstype := nstypes.IDwithType(bmnt.Root)
+		if nstype == nstypes.NaNS {
+			continue // Play safe.
+		}
+		typeidx := TypeIndex(nstype)
+		if _, ok := result.Namespaces[typeidx][nsid]; !ok {
+			// As we haven't seen this namespace yet, record it with our
+			// results.
+			result.Namespaces[typeidx][nsid] = NewNamespace(nstype, nsid, "")
 		}
 	}
 }

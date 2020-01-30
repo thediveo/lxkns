@@ -44,7 +44,7 @@ func main() {
 		for _, ns := range result.SortedNamespaces(nsidx) {
 			item := NamespaceRow{
 				ID:   ns.ID(),
-				Type: nstypes.TypeName(ns.Type()),
+				Type: ns.Type().String(),
 			}
 			if procs := ns.Leaders(); len(procs) > 0 {
 				item.PID = int(procs[0].PID)
@@ -57,7 +57,7 @@ func main() {
 	// the "kubectl-like outputter". The DefaultColumnSpec specifies the table
 	// headers in the form of "<Headertext>:{<JSON-Path-Expression>}".
 	prn, err := klo.PrinterFromFlag("",
-		&klo.Specs{DefaultColumnSpec: "NamespaceRow:{.ID},TYPE:{.Type},PID:{.PID},PROCESS:{.ProcName}"})
+		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},PID:{.PID},PROCESS:{.ProcName}"})
 	if err != nil {
 		panic(err)
 	}

@@ -2,8 +2,6 @@ package relations
 
 import (
 	"fmt"
-
-	"github.com/thediveo/lxkns/nstypes"
 )
 
 func ExampleID() {
@@ -33,13 +31,8 @@ func ExampleParent() {
 func ExampleType() {
 	nstype, _ := Type("/proc/self/ns/pid")
 	fmt.Printf("0x%08x\n", uint(nstype))
-	fmt.Println(nstypes.TypeName(nstype))
+	fmt.Println(nstype.String())
 	// Output:
 	// 0x20000000
 	// pid
-}
-
-func ExampleTypeName() {
-	fmt.Println(nstypes.TypeName(nstypes.CLONE_NEWNET))
-	// Output: net
 }

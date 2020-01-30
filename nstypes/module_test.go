@@ -1,4 +1,4 @@
-package lxkns
+package nstypes
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestLinuxKernelNamespaces(t *testing.T) {
+func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns package")
+	RunSpecs(t, "lxkns/nstypes package")
 }
