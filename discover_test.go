@@ -117,7 +117,7 @@ func (cmd *Cmd) Decode(v interface{}) {
 }
 
 type lsnsentryv1 struct {
-	NS      t.NamespaceID `json:"ns"`
+	NS      t.NamespaceID `json:"ns,string"`
 	Type    string        `json:"type"`
 	NProcs  int           `json:"nprocs,string"`
 	PID     PIDType       `json:"pid,string"`
