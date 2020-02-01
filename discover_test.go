@@ -116,7 +116,16 @@ func (cmd *Cmd) Decode(v interface{}) {
 	}
 }
 
-type lsnsentry struct {
+type lsnsentryv1 struct {
+	NS      t.NamespaceID `json:"ns"`
+	Type    string        `json:"type"`
+	NProcs  int           `json:"nprocs,string"`
+	PID     PIDType       `json:"pid,string"`
+	User    string        `json:"user"`
+	Command string        `json:"command"`
+}
+
+type lsnsentryv2 struct {
 	NS      t.NamespaceID `json:"ns"`
 	Type    string        `json:"type"`
 	NProcs  int           `json:"nprocs"`
@@ -125,21 +134,36 @@ type lsnsentry struct {
 	Command string        `json:"command"`
 }
 
-type lsnsdata struct {
-	Namespaces []lsnsentry `json:"namespaces"`
+type lsnsdatav1 struct {
+	Namespaces []lsnsentryv1 `json:"namespaces"`
 }
 
-func lsns(opts ...string) []lsnsentry {
+type lsnsdatav2 struct {
+	Namespaces []lsnsentryv2 `json:"namespaces"`
+}
+
+func lsns(opts ...string) []lsnsentryv2 {
 	out, err := exec.Command(
 		"lsns",
 		append([]string{"--json"}, opts...)...).Output()
 	if err != nil {
 		panic(err)
 	}
-	var res lsnsdata
-	err = json.Unmarshal(out, &res)
-	if err != nil {
-		panic(err)
+	var res lsnsdatav2
+	if err = json.Unmarshal(out, &res); err != nil {
+		var resv1 lsnsdatav1
+		if err = json.Unmarshal(out, &resv1); err != nil {
+			panic(err)
+		}
+		res.Namespaces = make([]lsnsentryv2, len(resv1.Namespaces))
+		for idx := range resv1.Namespaces {
+			res.Namespaces[idx].NS = resv1.Namespaces[idx].NS
+			res.Namespaces[idx].Type = resv1.Namespaces[idx].Type
+			res.Namespaces[idx].NProcs = resv1.Namespaces[idx].NProcs
+			res.Namespaces[idx].PID = resv1.Namespaces[idx].PID
+			res.Namespaces[idx].User = resv1.Namespaces[idx].User
+			res.Namespaces[idx].Command = resv1.Namespaces[idx].Command
+		}
 	}
 	if len(res.Namespaces) == 0 {
 		panic("error: no namespaces read")
