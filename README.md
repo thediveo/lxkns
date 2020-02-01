@@ -39,8 +39,8 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > not allowing multi-threaded processes to switch mount namespaces. In order
 > to work around this constraint, `gons` must fork and immediately re-execute
 > the process it is used in. Applications that want to use such advanced
-> discovery methods thus **must** call `lxkns.ExecReexecAction()` as early as
-> possible in their `main()` function.
+> discovery methods thus **must** call `lxkns.HandleDiscoveryInProgress()` as
+> early as possible in their `main()` function.
 
 ## gons CLI tools
 
@@ -70,7 +70,7 @@ import (
 )
 
 func main() {
-    lxkns.ExecReexecAction() // must be called before a full discovery
+    lxkns.HandleDiscoveryInProgress() // must be called before a full discovery
     result := lxkns.Discover(lxkns.FullDiscovery)
     for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {

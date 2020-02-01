@@ -26,6 +26,7 @@ import (
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/reexec"
 	rel "github.com/thediveo/lxkns/relations"
 )
 
@@ -123,7 +124,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
 		// out which namespace-related bind mounts might be found there...
 		visitedmntns[mntns.ID()] = true
 		var ownedbindmounts []OwnedMountInfo
-		if err := ForkReexec("discover-nsfs-bindmounts", enterns, &ownedbindmounts); err == nil {
+		if err := ReexecIntoAction("discover-nsfs-bindmounts", enterns, &ownedbindmounts); err == nil {
 			// TODO: remember mount namespace for namespaces found, so we
 			// still have a chance later to enter them by using the
 			// bind-mounted reference in a different mount namespace.
@@ -136,7 +137,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
 }
 
 func init() {
-	RegisterReexecAction("discover-nsfs-bindmounts", discoverNsfsBindmounts)
+	reexec.Register("discover-nsfs-bindmounts", discoverNsfsBindmounts)
 }
 
 // discoverNsfsBindmounts is the reexec action run in a separate mount to
