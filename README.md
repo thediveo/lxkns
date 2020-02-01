@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/TheDiveO/lxkns?status.svg)](http://godoc.org/github.com/TheDiveO/lxkns)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 ![build and test](https://github.com/TheDiveO/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/)](https://goreportcard.com/report/github.com/thediveo/lxkns)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts.
