@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"os/user"
 	"reflect"
-	"sort"
-	"strings"
 
 	"github.com/thediveo/lxkns"
 )
@@ -97,24 +95,31 @@ func (v *UserNSVisitor) Get(node reflect.Value) (label string, properties []stri
 
 // leadersString lists the (leader) processes joined to a namespace in text
 // form.
+//
+// TODO: implement control over simplified/full representation forms
 func leadersString(ns lxkns.Namespace) string {
 	procs := "process (none)"
-	if leaders := ns.Leaders(); len(leaders) > 0 {
-		sorted := make([]*lxkns.Process, len(leaders))
-		copy(sorted, leaders)
-		sort.Slice(sorted, func(i, j int) bool {
-			return sorted[i].PID < sorted[j].PID
-		})
-		s := []string{}
-		for _, leader := range leaders {
-			s = append(s, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
-		}
-		procs = strings.Join(s, ", ")
-		if len(leaders) > 1 {
-			procs = "processes " + procs
-		} else {
-			procs = "process " + procs
-		}
+	if ancient := ns.Ealdorman(); ancient != nil {
+		procs = "process " + fmt.Sprintf("%q (%d)", ancient.Name, ancient.PID)
 	}
+	/*
+		if leaders := ns.Leaders(); len(leaders) > 0 {
+				sorted := make([]*lxkns.Process, len(leaders))
+				copy(sorted, leaders)
+				sort.Slice(sorted, func(i, j int) bool {
+					return sorted[i].PID < sorted[j].PID
+				})
+				s := []string{}
+				for _, leader := range sorted {
+					s = append(s, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
+				}
+				procs = strings.Join(s, ", ")
+				if len(leaders) > 1 {
+					procs = "processes " + procs
+				} else {
+					procs = "process " + procs
+				}
+		}
+	*/
 	return procs
 }

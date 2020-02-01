@@ -127,6 +127,7 @@ type Namespace interface {
 	Ref() string                 // reference in form of a file system path.
 	Leaders() []*Process         // "leader" process(es) "inside" this namespace.
 	LeaderPIDs() []PIDType       // "leader" process PIDs only.
+	Ealdorman() *Process         // most senior "leader" process inside this namespace.
 	String() string              // convenience; maps to long representation form.
 }
 
@@ -221,6 +222,21 @@ func (pns *plainNamespace) Type() nstypes.NamespaceType { return pns.nstype }
 func (pns *plainNamespace) Owner() Hierarchy            { return pns.owner }
 func (pns *plainNamespace) Ref() string                 { return pns.ref }
 func (pns *plainNamespace) Leaders() []*Process         { return pns.leaders }
+
+// Ealdorman returns the most senior leader process. Me thinks, me has read
+// too many Bernard Cornwell books.
+func (pns *plainNamespace) Ealdorman() (p *Process) {
+	// Sorting most probably will be more expensive than a single run through
+	// the list, so take it easy without the sort package.
+	for _, proc := range pns.leaders {
+		if p == nil {
+			p = proc
+		} else if proc.Starttime < p.Starttime {
+			p = proc
+		}
+	}
+	return
+}
 
 // LeaderPIDs returns the list of leader PIDs.
 func (pns *plainNamespace) LeaderPIDs() []PIDType {
