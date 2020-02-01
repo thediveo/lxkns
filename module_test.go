@@ -8,6 +8,7 @@ import (
 )
 
 func TestLinuxKernelNamespaces(t *testing.T) {
+	ExecReexecAction()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns package")
 }
