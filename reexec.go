@@ -41,7 +41,7 @@ const reexecMagicEnvVar = "lxkns_reexec_action"
 // measure to cause havoc by unexpected clone restarts.
 var reexecEnabled = false
 
-// Reexeced checks if an application using lxkns has been forked and
+// ExecReexecAction checks if an application using lxkns has been forked and
 // re-executed in order to switch namespaces in the clone. If we're in a
 // re-execution, then this function won't return, but instead run the
 // scheduled reexec functionality. Please do not confuse re-execution with

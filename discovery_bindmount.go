@@ -154,7 +154,7 @@ func discoverNsfsBindmounts() {
 func ownedBindMounts() []OwnedMountInfo {
 	bindmounts := mntinfo.MountsOfType(-1, "nsfs")
 	ownedbindmounts := make([]OwnedMountInfo, len(bindmounts))
-	for idx, _ := range bindmounts {
+	for idx := range bindmounts {
 		bmnt := &bindmounts[idx] // avoid copying the mount information.
 		// While we're in the correct mount namespace, we need to collect also
 		// the information about the relation to the owning user space.
