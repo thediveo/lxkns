@@ -91,7 +91,10 @@ var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 // specified Linux' kernel clone() syscall namespace constant. For instance,
 // for CLONE_NEWNET the index NetNS is then returned.
 func TypeIndex(nstype nstypes.NamespaceType) NamespaceTypeIndex {
-	return typeIndices[nstype]
+	if idx, ok := typeIndices[nstype]; ok {
+		return idx
+	}
+	return -1 // return an invalid index
 }
 
 // AllNamespaces contains separate NamespaceMaps for all types of Linux kernel
@@ -206,10 +209,11 @@ type plainNamespace struct {
 // namespaceConfigurer allows discovery mechanisms to set up the information
 // for a namespace.
 type namespaceConfigurer interface {
-	AddLeader(proc *Process)             // adds yet another self-styled leader.
-	SetRef(string)                       // sets a filesystem path for referencing this namespace.
-	DetectOwner(nsf *os.File)            // detects owning user namespace id.
-	ResolveOwner(usernsmap NamespaceMap) // resolves owner ns id into object reference.
+	AddLeader(proc *Process)               // adds yet another self-styled leader.
+	SetRef(string)                         // sets a filesystem path for referencing this namespace.
+	DetectOwner(nsf *os.File)              // detects owning user namespace id.
+	SetOwner(usernsid nstypes.NamespaceID) // sets the owning user namespace id directly.
+	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
 
 func (pns *plainNamespace) ID() nstypes.NamespaceID     { return pns.nsid }
@@ -291,6 +295,11 @@ func (pns *plainNamespace) DetectOwner(nsf *os.File) {
 	}
 	defer usernsf.Close() // Do NOT leak.
 	pns.ownernsid, _ = rel.ID(usernsf)
+}
+
+// SetOwner set the namespace ID of the user namespace owning this namespace.
+func (pns *plainNamespace) SetOwner(usernsid nstypes.NamespaceID) {
+	pns.ownernsid = usernsid
 }
 
 // ResolveOwner sets the owning user namespace reference based on the owning
