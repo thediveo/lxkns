@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Install test tools
+      run: |
+        apt-get update
+        apt-get install -y util-linux
+
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
       with:
