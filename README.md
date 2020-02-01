@@ -4,19 +4,47 @@
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-`lxkns` is a Golang package for discovering Linux kernel namespaces. In
-contrast to most well-known CLI tools, such as `lsns`, this package detects
-namespaces even in places of a running Linux system other tools do not
-consider. In particular:
+`lxkns` is a Golang package for discovering Linux kernel namespaces. In every
+nook and cranny of your Linux hosts.
+
+## Comprehensive Namespace Discovery
+
+The namespace discovery technology implemented in `gons` surely is quite
+comprehensive. In contrast to most well-known and openly available CLI tools,
+such as `lsns`, this package detects namespaces even in places of a running
+Linux system other tools typically do not consider. In particular:
 
 1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other tools do.
-2. bind-mounted namespaces, via `/proc/[PID]/mountinfo`.
+2. bind-mounted namespaces, via `/proc/[PID]/mountinfo`. Our discovery method
+   even finds bind-mounted namespaces in _other_ mount namespaces than the
+   current one in which the discovery starts.
 3. file descriptor-referenced namespaces, via `/proc/[PID]/fd/*`.
 4. intermediate hierarchical user and PID namespaces, via `NS_GET_PARENT`
    ([man 2 ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
+5. user namespaces owning non-user namespaces, via `NS_GET_USERNS` ([man 2
+   ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
+
+| tool | `/proc/[PID]/ns/*` ① | bind mounts ② | `/proc/[PID]/fd/*` ③ | hierarchy ④ | owning user namespaces ⑤ |
+| -- | -- | -- | -- | -- | -- |
+| `lsns` | ✓ | | | |
+| `gons` | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Applications can control the extent to which a `gons` discovery tries to
+ferret out namespaces from the nooks and crannies of Linux hosts.
+
+> Some discovery methods are more expensive than others, especially the
+> discovery of bind-mounted namespaces in other mount namespaces. The reason
+> lies in the design of the Go runtime which runs multiple threads and Linux
+> not allowing multi-threaded processes to switch mount namespaces. In order
+> to work around this constraint, `gons` must fork and immediately re-execute
+> the process it is used in. Applications that want to use such advanced
+> discovery methods thus **must** call `lxkns.ExecReexecAction()` as early as
+> possible in their `main()` function.
+
+## gons CLI tools
 
 But `lxkns` is more than "just" a Golang package. It also features CLI tools
-build on top of `lxkns`:
+build on top of `lxkns` (we _do_ eat our own dog food):
 
 - `lsuns`: shows _all_ user namespaces in your Linux host, in a neat
   hierarchy. Moreover, it can also show the non-user namespaces "owned" by
@@ -41,6 +69,7 @@ import (
 )
 
 func main() {
+    lxkns.ExecReexecAction() // must be called before a full discovery
     result := lxkns.Discover(lxkns.FullDiscovery)
     for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
