@@ -26,6 +26,11 @@ import (
 )
 
 func main() {
+	// For some discovery methods this app must be forked and re-executed; the
+	// call to ExecReexecAction() will automatically handle this situation and
+	// then never return when in re-execution.
+	lxkns.ExecReexecAction()
+	// Run a full namespace discovery.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	fmt.Println(
 		asciitree.Render(
