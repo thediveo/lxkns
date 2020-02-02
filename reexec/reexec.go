@@ -70,11 +70,11 @@ func CheckAction() {
 
 // Namespace describes a Linux kernel namespace into which a forked and
 // re-executed child process should switch: its type and a path to reference
-// it. The type can optionally preceeded by a bang "!" which indicates that
-// the corresponding path should be opened before any namespace switching
-// occurs; without a bang, the path will be opened only right when this
-// namespace should be switched. Thus, the path will depend on the current set
-// of namespaces, not the initial set when calling ForkReexec().
+// it. The type can optionally preceded by a bang "!" which indicates that the
+// corresponding path should be opened before any namespace switching occurs;
+// without a bang, the path will be opened only right when this namespace
+// should be switched. Thus, the path will depend on the current set of
+// namespaces, not the initial set when calling ForkReexec().
 type Namespace struct {
 	Type string // namespace type, such as "net", "mnt", ...
 	Path string // path reference to namespace in filesystem.

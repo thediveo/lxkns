@@ -49,7 +49,7 @@ type DiscoverOpts struct {
 var FullDiscovery = DiscoverOpts{}
 
 // NoDiscovery set the discovery options to not discover anything. This option
-// set can be used to start from when only a few choosen discovery methods are
+// set can be used to start from when only a few chosen discovery methods are
 // to be enabled.
 var NoDiscovery = DiscoverOpts{
 	SkipProcs:      true,
