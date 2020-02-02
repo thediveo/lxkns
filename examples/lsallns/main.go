@@ -48,7 +48,7 @@ func main() {
 		for _, ns := range result.SortedNamespaces(nsidx) {
 			item := NamespaceRow{
 				ID:   ns.ID(),
-				Type: ns.Type().String(),
+				Type: ns.Type().Name(),
 			}
 			if procs := ns.Leaders(); len(procs) > 0 {
 				item.PID = int(procs[0].PID)

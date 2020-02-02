@@ -36,8 +36,10 @@ type DiscoverOpts struct {
 	NamespaceTypes nstypes.NamespaceType
 
 	// Where to scan (or not scan) for signs of namespaces?
-	SkipBindmounts bool // Don't scan for bind-mounted namespaces.
+	SkipProcs      bool // Don't scan processes.
+	SkipTasks      bool // Don't scan threads, a.k.a. tasks.
 	SkipFds        bool // Don't scan process file descriptors for references to namespaces.
+	SkipBindmounts bool // Don't scan for bind-mounted namespaces.
 	SkipHierarchy  bool // Don't discover the hierarchy of PID and user namespaces.
 	SkipOwnership  bool // Don't discover the ownership of non-user namespaces.
 }
@@ -45,6 +47,18 @@ type DiscoverOpts struct {
 // FullDiscovery sets the discovery options to a full and thus extensive
 // discovery process.
 var FullDiscovery = DiscoverOpts{}
+
+// NoDiscovery set the discovery options to not discover anything. This option
+// set can be used to start from when only a few choosen discovery methods are
+// to be enabled.
+var NoDiscovery = DiscoverOpts{
+	SkipProcs:      true,
+	SkipTasks:      true,
+	SkipFds:        true,
+	SkipBindmounts: true,
+	SkipHierarchy:  true,
+	SkipOwnership:  true,
+}
 
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.

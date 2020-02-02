@@ -10,9 +10,8 @@ nook and cranny of your Linux hosts.
 
 ## Comprehensive Namespace Discovery
 
-The namespace discovery technology implemented in `gons` surely is quite
-comprehensive. In contrast to most well-known and openly available CLI tools,
-such as `lsns`, this package detects namespaces even in places of a running
+When compared to most well-known and openly available CLI tools, such as
+`lsns`, the `gons` package detects namespaces even in places of a running
 Linux system other tools typically do not consider. In particular:
 
 1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other tools do.

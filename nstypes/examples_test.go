@@ -5,12 +5,25 @@ import (
 )
 
 func ExampleNamespaceType_String() {
-	fmt.Println(CLONE_NEWUSER.String())
-	// ...which can be simplified, because Println tries to String()ify its
-	// arguments:
-	fmt.Println(CLONE_NEWCGROUP)
-	// Output: user
-	// cgroup
+	for _, t := range []NamespaceType{
+		CLONE_NEWNS, CLONE_NEWCGROUP, CLONE_NEWUTS, CLONE_NEWIPC,
+		CLONE_NEWUSER, CLONE_NEWPID, CLONE_NEWNET,
+	} {
+		fmt.Println(t.String())
+	}
+	// Output:
+	// CLONE_NEWNS
+	// CLONE_NEWCGROUP
+	// CLONE_NEWUTS
+	// CLONE_NEWIPC
+	// CLONE_NEWUSER
+	// CLONE_NEWPID
+	// CLONE_NEWNET
+}
+
+func ExampleNamespaceType_Name() {
+	fmt.Println(CLONE_NEWCGROUP.Name())
+	// Output: cgroup
 }
 
 func ExampleNameToType() {
@@ -32,10 +45,12 @@ func ExampleNameToType() {
 
 func ExampleIDwithType() {
 	id, t := IDwithType("mnt:[12345678]")
-	fmt.Printf("%q %d\n", t, id)
+	fmt.Printf("%q %d\n", t.Name(), id)
+	// "nonsense" namespace textual representations return an identifier of
+	// NoneID and a type of NaNS (not a namespace).
 	id, t = IDwithType("foo:[-1]")
-	fmt.Printf("%t %t\n", t == NaNS, id == NoneID)
+	fmt.Printf("%v %v\n", t, id)
 	// Output:
 	// "mnt" 12345678
-	// true true
+	// NaNS NoneID
 }

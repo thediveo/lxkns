@@ -42,6 +42,9 @@ type OwnedMountInfo struct {
 // found so far in the process' joined namespaces. This discovery function is
 // designed to be run only once per discovery.
 func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
+	if result.Options.SkipBindmounts {
+		return
+	}
 	// Helper function which adds namespaces not yet known to the discovery
 	// result.
 	updateNamespaces := func(ownedbindmounts []OwnedMountInfo) {
@@ -136,6 +139,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
 	}
 }
 
+// Register discoverNsfsBindmounts() as an action for re-execution.
 func init() {
 	reexec.Register("discover-nsfs-bindmounts", discoverNsfsBindmounts)
 }

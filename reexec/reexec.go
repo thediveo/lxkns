@@ -102,7 +102,7 @@ func ForkReexec(actionname string, namespaces []Namespace, result interface{}) (
 	// switches.
 	ooorder := []string{}
 	for _, ns := range namespaces {
-		ooorder = append(ooorder, ns.Type)
+		ooorder = append(ooorder, strings.TrimPrefix(ns.Type, "!"))
 		forkchild.Env = append(forkchild.Env,
 			fmt.Sprintf("gons_%s=%s", ns.Type, ns.Path))
 	}

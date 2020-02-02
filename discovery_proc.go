@@ -43,7 +43,10 @@ import (
 // It does not check any other places, as these are covered by separate
 // discovery functions.
 func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
-	nstypename := nstype.String()
+	if result.Options.SkipProcs {
+		return
+	}
+	nstypename := nstype.Name()
 	nstypeidx := TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	// For all processes (but not tasks/threads) listed in /proc try to gather

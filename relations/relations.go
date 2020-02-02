@@ -21,10 +21,11 @@ package relations
 import (
 	"errors"
 	"fmt"
-	"github.com/thediveo/lxkns/nstypes"
 	"os"
 	"syscall"
 	"unsafe"
+
+	"github.com/thediveo/lxkns/nstypes"
 )
 
 /*
@@ -94,6 +95,9 @@ func Type(ref interface{}) (nstypes.NamespaceType, error) {
 		t, err := ioctl(fd, _NS_GET_NSTYPE)
 		return nstypes.NamespaceType(t), err
 	// The namespace reference is an (open) file descriptor.
+	case uintptr:
+		t, err := ioctl(int(ref.(uintptr)), _NS_GET_NSTYPE)
+		return nstypes.NamespaceType(t), err
 	case int:
 		t, err := ioctl(ref.(int), _NS_GET_NSTYPE)
 		return nstypes.NamespaceType(t), err
@@ -118,6 +122,8 @@ func ID(ref interface{}) (nstypes.NamespaceID, error) {
 			return 0, err
 		}
 		defer syscall.Close(fd)
+	case uintptr: // namespace reference is an open file descriptor
+		fd = int(ref.(uintptr))
 	case int: // namespace reference is an open file descriptor
 		fd = ref.(int)
 	case *os.File: // namespace reference is an open file
@@ -198,6 +204,8 @@ func relationship(ref interface{}, nr uint) (*os.File, error) {
 		defer syscall.Close(fd)
 		return fileFromFd(ioctl(fd, nr))
 	// The namespace reference is an (open) file descriptor.
+	case uintptr:
+		return fileFromFd(ioctl(int(ref.(uintptr)), nr))
 	case int:
 		return fileFromFd(ioctl(ref.(int), nr))
 	// The namespace reference is an open os.File.

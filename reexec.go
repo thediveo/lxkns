@@ -25,7 +25,7 @@ import "github.com/thediveo/lxkns/reexec"
 func ReexecIntoAction(actionname string, namespaces []Namespace, result interface{}) (err error) {
 	rexns := make([]reexec.Namespace, len(namespaces))
 	for idx := range namespaces {
-		rexns[idx].Type = namespaces[idx].Type().String()
+		rexns[idx].Type = "!" + namespaces[idx].Type().Name()
 		rexns[idx].Path = namespaces[idx].Ref()
 	}
 	return reexec.ForkReexec(actionname, rexns, result)

@@ -15,24 +15,35 @@
 package nstypes
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Namespace Types", func() {
+var _ = Describe("Namespace Types and IDs", func() {
 
-	It("namespace textual representations are parsed correctly", func() {
+	It("parse namespace textual representations", func() {
 		id, t := IDwithType("net:[1]")
 		Expect(t).To(Equal(CLONE_NEWNET))
 		Expect(id).To(Equal(NamespaceID(1)))
+	})
 
-		id, t = IDwithType("foo:[1]")
-		Expect(t).To(Equal(NaNS))
-		Expect(id).To(Equal(NoneID))
+	It("reject invalid textual representations", func() {
+		for _, text := range []string{
+			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1",
+		} {
+			id, t := IDwithType(text)
+			Expect(t).To(Equal(NaNS), "%s is not a namespace", text)
+			Expect(id).To(Equal(NoneID), "%s is not a namespace", text)
+		}
+	})
 
-		id, t = IDwithType("net:[-1]")
-		Expect(t).To(Equal(NaNS))
-		Expect(id).To(Equal(NoneID))
+	It("stringify", func() {
+		Expect(CLONE_NEWNS.String()).To(Equal("CLONE_NEWNS"))
+		Expect((CLONE_NEWCGROUP | CLONE_NEWIPC).String()).
+			To(Equal(fmt.Sprintf("NamespaceType(%d)", CLONE_NEWCGROUP|CLONE_NEWIPC)))
+		Expect(NamespaceID(123).String()).To(Equal("NamespaceID(123)"))
 	})
 
 })

@@ -34,5 +34,5 @@ func ExampleType() {
 	fmt.Println(nstype.String())
 	// Output:
 	// 0x20000000
-	// pid
+	// CLONE_NEWPID
 }

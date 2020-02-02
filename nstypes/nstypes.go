@@ -18,9 +18,10 @@
 
 package nstypes
 
-import "strings"
-
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // Unfortunately, Go's syscall package for whatever reason lacks the const
 // definition for CLONE_NEWCGROUP. So we need to roll our own definitions
@@ -41,8 +42,18 @@ import "strconv"
 // keep with the 64bit-ness of inode numbers, as which they originally appear.
 type NamespaceID uint64
 
-// NoneID is a convenience constant for a non-existing namespaceID.
+// NoneID is a convenience constant for signalling an invalid or non-existing
+// namespace identifier.
 const NoneID NamespaceID = 0
+
+// String returns the namespace identifier as text, or "NoneID", if it is
+// invalid.
+func (nsid NamespaceID) String() string {
+	if nsid != NoneID {
+		return "NamespaceID(" + strconv.FormatInt(int64(nsid), 10) + ")"
+	}
+	return "NoneID"
+}
 
 // NamespaceType mirrors the data type used in the Linux kernel for the
 // namespace type constants. These constants are actually part of the clone()
@@ -63,11 +74,36 @@ const (
 // NaNS identifies an invalid namespace type.
 const NaNS NamespaceType = 0
 
-// String returns the type name string (such as "mnt", "net", ...) of a
+// Name returns the type name string (such as "mnt", "net", ...) of a
 // namespace type value.
-func (nstype NamespaceType) String() string {
+func (nstype NamespaceType) Name() string {
 	name, _ := typeNames[nstype]
 	return name
+}
+
+// String returns the Linux kernel namespace constant name for a given
+// namespace type value.
+func (nstype NamespaceType) String() string {
+	switch nstype {
+	case NaNS:
+		return "NaNS"
+	case CLONE_NEWNS:
+		return "CLONE_NEWNS"
+	case CLONE_NEWCGROUP:
+		return "CLONE_NEWCGROUP"
+	case CLONE_NEWUTS:
+		return "CLONE_NEWUTS"
+	case CLONE_NEWIPC:
+		return "CLONE_NEWIPC"
+	case CLONE_NEWUSER:
+		return "CLONE_NEWUSER"
+	case CLONE_NEWPID:
+		return "CLONE_NEWPID"
+	case CLONE_NEWNET:
+		return "CLONE_NEWNET"
+	default:
+		return "NamespaceType(" + strconv.FormatInt(int64(nstype), 10) + ")"
+	}
 }
 
 // Maps Linux namespace constants to their "short" type names, as used in the
@@ -103,8 +139,9 @@ var nameTypes = map[string]NamespaceType{
 }
 
 // IDwithType takes a string representation of a namespace instance, such as
-// "net:[1234]" and returns the ID as well as the type of the namespace.
-// Returns (0, NaNS) if the namespace instance string is invalid.
+// "net:[1234]", and returns the ID together with the type of the namespace.
+// In case the string is malformed or contains an unknown namespace type, IDwithType
+// returns (NoneID, NaNS).
 func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 	colon := strings.IndexRune(s, ':')
 	if colon < 3 || s[colon+1] != '[' || s[len(s)-1] != ']' {
