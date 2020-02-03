@@ -16,11 +16,11 @@ package lxkns
 
 import (
 	"encoding/json"
-	"io"
+	"fmt"
 	"os/exec"
-	"syscall"
-	"time"
+	"strconv"
 
+	"github.com/thediveo/lxkns/nstest"
 	t "github.com/thediveo/lxkns/nstypes"
 	r "github.com/thediveo/lxkns/relations"
 
@@ -34,14 +34,33 @@ var _ = Describe("Discover", func() {
 		allns := Discover(FullDiscovery)
 		for _, ns := range lsns() {
 			nsidx := TypeIndex(t.NameToType(ns.Type))
-			dns := allns.Namespaces[nsidx][ns.NS]
-			Expect(dns).NotTo(BeZero())
-			Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID)))
+			discons := allns.Namespaces[nsidx][ns.NS]
+			Expect(discons).NotTo(BeZero())
+			// rats ... lsns seems to take the numerically lowest PID number
+			// instead of the topmost PID in a namespace. This makes
+			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID)))
+			// give false negatives.
+			p, ok := allns.Processes[ns.PID]
+			Expect(ok).To(BeTrue(), "unknown PID %d", ns.PID)
+			leaders := discons.LeaderPIDs()
+			func() {
+				pids := []PIDType{}
+				for p != nil {
+					pids = append(pids, p.PID)
+					for _, lPID := range leaders {
+						if lPID == p.PID {
+							return
+						}
+					}
+					p = p.Parent
+				}
+				Fail(fmt.Sprintf("PIDs %v not found in leaders %v", pids, leaders))
+			}()
 		}
 	})
 
 	It("finds hidden hierarchical user namespaces", func() {
-		cmd := NewCmd(
+		cmd := nstest.NewTestCommand(
 			"unshare", "-Ur", "unshare", "-U",
 			"bash", "-c",
 			`readlink /proc/self/ns/user | sed -n -e 's/^.\+:\[\(.*\)\]/\1/p' && read`)
@@ -55,77 +74,17 @@ var _ = Describe("Discover", func() {
 		Expect(userns.Parent().Parent().(Namespace).ID()).To(Equal(ppusernsid))
 	})
 
+	It("rejects finding roots for plain namespaces", func() {
+		opts := NoDiscovery
+		opts.SkipProcs = false
+		opts.NamespaceTypes = t.CLONE_NEWNET
+		allns := Discover(opts)
+		Expect(func() { rootNamespaces(allns.Namespaces[NetNS]) }).To(Panic())
+	})
+
 })
 
-type Cmd struct {
-	cmd             *exec.Cmd
-	stdinr, stdoutr *io.PipeReader
-	stdinw, stdoutw *io.PipeWriter
-	dec             *json.Decoder
-}
-
-func NewCmd(command string, args ...string) *Cmd {
-	cmd := &Cmd{
-		cmd: exec.Command(command, args...),
-	}
-	cmd.cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	inReader, inWriter := io.Pipe()
-	cmd.cmd.Stdin = inReader
-	cmd.stdinr = inReader
-	cmd.stdinw = inWriter
-	outReader, outWriter := io.Pipe()
-	cmd.cmd.Stdout = outWriter
-	cmd.stdoutr = outReader
-	cmd.stdoutw = outWriter
-	cmd.dec = json.NewDecoder(cmd.stdoutr)
-	cmd.cmd.Start()
-	return cmd
-}
-
-// Close completes the command by sending it an ENTER input and then closing
-// the input pipe to the command. Then close waits at most 2s for the command
-// to finish its business. If the command passes the timeout, then it will be
-// killed hard.
-func (cmd *Cmd) Close() {
-	cmd.Proceed()
-	cmd.stdinw.Close()
-	done := make(chan error)
-	go func() { done <- cmd.cmd.Wait() }()
-	select {
-	case <-time.After(2 * time.Second):
-		// And if thou'rt unwilling...
-		cmd.cmd.Process.Kill()
-	case <-done:
-	}
-	cmd.stdinr.Close()
-	cmd.stdoutr.Close()
-	cmd.stdoutw.Close()
-}
-
-// Proceed sends the command an ENTER input.
-func (cmd *Cmd) Proceed() {
-	cmd.stdinw.Write([]byte{'\n'})
-}
-
-// Decode reads JSON from the command's output and tries to decode it into the
-// data element specified.
-func (cmd *Cmd) Decode(v interface{}) {
-	err := cmd.dec.Decode(v)
-	if err != nil {
-		panic(err)
-	}
-}
-
-type lsnsentryv1 struct {
-	NS      t.NamespaceID `json:"ns,string"`
-	Type    string        `json:"type"`
-	NProcs  int           `json:"nprocs,string"`
-	PID     PIDType       `json:"pid,string"`
-	User    string        `json:"user"`
-	Command string        `json:"command"`
-}
-
-type lsnsentryv2 struct {
+type lsnsentry struct {
 	NS      t.NamespaceID `json:"ns"`
 	Type    string        `json:"type"`
 	NProcs  int           `json:"nprocs"`
@@ -134,36 +93,62 @@ type lsnsentryv2 struct {
 	Command string        `json:"command"`
 }
 
-type lsnsdatav1 struct {
-	Namespaces []lsnsentryv1 `json:"namespaces"`
+func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
+	var fields map[string]*json.RawMessage
+	if err := json.Unmarshal(b, &fields); err != nil {
+		return err
+	}
+	var i int
+	if err = toint(fields["ns"], &i); err != nil {
+		return
+	}
+	e.NS = t.NamespaceID(i)
+	if err = tostr(fields["type"], &e.Type); err != nil {
+		return
+	}
+	if err = toint(fields["nprocs"], &e.NProcs); err != nil {
+		return
+	}
+	if err = toint(fields["pid"], &i); err != nil {
+		return
+	}
+	e.PID = PIDType(i)
+	if err = tostr(fields["user"], &e.User); err != nil {
+		return
+	}
+	err = tostr(fields["command"], &e.Command)
+	return
 }
 
-type lsnsdatav2 struct {
-	Namespaces []lsnsentryv2 `json:"namespaces"`
+func tostr(r *json.RawMessage, v *string) (err error) {
+	err = json.Unmarshal(*r, v)
+	return
 }
 
-func lsns(opts ...string) []lsnsentryv2 {
+func toint(r *json.RawMessage, v *int) (err error) {
+	var s string
+	if err = json.Unmarshal(*r, &s); err == nil {
+		*v, err = strconv.Atoi(s)
+		return
+	}
+	err = json.Unmarshal(*r, v)
+	return
+}
+
+type lsnsdata struct {
+	Namespaces []lsnsentry `json:"namespaces"`
+}
+
+func lsns(opts ...string) []lsnsentry {
 	out, err := exec.Command(
 		"lsns",
 		append([]string{"--json"}, opts...)...).Output()
 	if err != nil {
 		panic(err)
 	}
-	var res lsnsdatav2
+	var res lsnsdata
 	if err = json.Unmarshal(out, &res); err != nil {
-		var resv1 lsnsdatav1
-		if err = json.Unmarshal(out, &resv1); err != nil {
-			panic(err)
-		}
-		res.Namespaces = make([]lsnsentryv2, len(resv1.Namespaces))
-		for idx := range resv1.Namespaces {
-			res.Namespaces[idx].NS = resv1.Namespaces[idx].NS
-			res.Namespaces[idx].Type = resv1.Namespaces[idx].Type
-			res.Namespaces[idx].NProcs = resv1.Namespaces[idx].NProcs
-			res.Namespaces[idx].PID = resv1.Namespaces[idx].PID
-			res.Namespaces[idx].User = resv1.Namespaces[idx].User
-			res.Namespaces[idx].Command = resv1.Namespaces[idx].Command
-		}
+		panic(err.Error())
 	}
 	if len(res.Namespaces) == 0 {
 		panic("error: no namespaces read")
