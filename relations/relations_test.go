@@ -15,11 +15,13 @@
 package relations
 
 import (
+	"fmt"
 	"os"
 	"syscall"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/nstypes"
 )
 
@@ -99,6 +101,64 @@ var _ = Describe("Namespaces", func() {
 
 		Expect(errof(User(0))).To(HaveOccurred())
 		Expect(errof(User(nil))).To(HaveOccurred())
+	})
+
+	It("returns the parent of a user namespace", func() {
+		// Creates a first user namespace: this will become the test's
+		// "parent" user namespace. Then creates a second user namespace
+		// inside the first user namespace. This then will become the leaf
+		// user namespace.
+		cmd := nstest.NewTestCommand(
+			"unshare", "-Ur",
+			"bash", "-c",
+			nstest.BashNamespacePath("user")+` && `+
+				nstest.BashPrintNamespaceID("/proc/self/ns/user")+` && `+
+				"unshare -Uf bash -c "+fmt.Sprintf("%q",
+				nstest.BashNamespacePath("user")+` && `+
+					nstest.BashPrintNamespaceID("/proc/self/ns/user")+` && read`))
+		defer cmd.Close()
+
+		var parentuserpath, leafuserpath string
+		var parentusernsid, leafusernsid nstypes.NamespaceID
+		cmd.Decode(&parentuserpath)
+		cmd.Decode(&parentusernsid)
+		cmd.Decode(&leafuserpath)
+		cmd.Decode(&leafusernsid)
+
+		parentuserns, err := Parent(parentuserpath)
+		Expect(err).ToNot(HaveOccurred())
+		defer parentuserns.Close()
+		Expect(ID(parentuserns)).To(Equal(parentusernsid))
+		pp, err := Parent(parentuserns)
+		Expect(err).ToNot(HaveOccurred())
+		defer pp.Close()
+		Expect(nstest.Err(Parent(pp))).To(HaveOccurred())
+	})
+
+	It("finds the owner UID", func() {
+		cmd := nstest.NewTestCommand(
+			"unshare", "-Ufr",
+			"bash", "-c",
+			nstest.BashNamespacePath("user")+` && read`)
+		defer cmd.Close()
+
+		var userpath string
+		cmd.Decode(&userpath)
+
+		uid, err := OwnerUID(userpath)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(uid).To(Equal(os.Getuid()))
+
+		f, err := os.Open(userpath)
+		Expect(err).NotTo(HaveOccurred())
+		defer f.Close()
+		Expect(OwnerUID(f)).To(Equal(os.Getuid()))
+
+		Expect(OwnerUID(f.Fd())).To(Equal(os.Getuid()))
+
+		Expect(nstest.Err(OwnerUID(0))).To(HaveOccurred())
+		Expect(nstest.Err(OwnerUID(nil))).To(HaveOccurred())
+		Expect(nstest.Err(OwnerUID("/foo"))).To(HaveOccurred())
 	})
 
 })

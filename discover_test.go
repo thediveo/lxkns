@@ -104,7 +104,7 @@ func (cmd *Cmd) Close() {
 
 // Proceed sends the command an ENTER input.
 func (cmd *Cmd) Proceed() {
-	cmd.stdinw.Write([]byte{0x0a})
+	cmd.stdinw.Write([]byte{'\n'})
 }
 
 // Decode reads JSON from the command's output and tries to decode it into the

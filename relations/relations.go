@@ -165,6 +165,8 @@ func OwnerUID(ref interface{}) (int, error) {
 			return 0, err
 		}
 		defer syscall.Close(fd)
+	case uintptr:
+		fd = int(ref.(uintptr))
 	case int: // namespace reference is an open file descriptor
 		fd = ref.(int)
 	case *os.File: // namespace reference is an open file

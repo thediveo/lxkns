@@ -57,7 +57,8 @@ var NoDiscovery = DiscoverOpts{
 	SkipFds:        true,
 	SkipBindmounts: true,
 	SkipHierarchy:  true,
-	SkipOwnership:  true,
+
+	SkipOwnership: true,
 }
 
 // DiscoveryResult stores the results of a tour through Linux processes and
