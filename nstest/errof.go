@@ -1,3 +1,8 @@
+// Convenience for writing Gomega Expect()ations when only the error return
+// value of a function is of interest, but not a function's ordinary
+// result(s). Kind of "embrace failure", but maybe not exactly what the shill
+// originally had in mind...
+
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not

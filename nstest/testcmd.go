@@ -1,3 +1,7 @@
+// Spawning commands supporting tests (such as setting up some environment;
+// for instance, some Linux kernel namespaces) with which tests need to
+// interact with.
+
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -33,10 +37,9 @@ func BashPrintNamespaceID(path string) string {
 	return fmt.Sprintf("readlink %s | %s", path, BashExtractNamespaceID)
 }
 
-// BashGetNamespaceRef returns a path to the namespace of type t of the
-// current shell incarnation. It does basically what "$$" does, but as it
-// evaluates only when it gets executed, it doesn't fall victim to early
-// substitution.
+// BashNamespacePath returns a path to the namespace of type t of the current
+// shell incarnation. It does basically what "$$" does, but as it evaluates
+// only when it gets executed, it doesn't fall victim to early substitution.
 func BashNamespacePath(t string) string {
 	return `sed -n -e 's/^PPid:[[:space:]]\+\([[:digit:]]\+\)$/"\/proc\/\1\/ns\/` +
 		t + `"/p' /proc/self/status`
