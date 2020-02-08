@@ -15,7 +15,6 @@
 package relations
 
 import (
-	"fmt"
 	"os"
 	"syscall"
 
@@ -104,18 +103,27 @@ var _ = Describe("Namespaces", func() {
 	})
 
 	It("returns the parent of a user namespace", func() {
+		scripts := nstest.Basher{}
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
 		// Creates a first user namespace: this will become the test's
 		// "parent" user namespace. Then creates a second user namespace
 		// inside the first user namespace. This then will become the leaf
 		// user namespace.
-		cmd := nstest.NewTestCommand(
-			"unshare", "-Ur",
-			"bash", "-c",
-			nstest.BashNamespacePath("user")+` && `+
-				nstest.BashPrintNamespaceID("/proc/self/ns/user")+` && `+
-				"unshare -Uf bash -c "+fmt.Sprintf("%q",
-				nstest.BashNamespacePath("user")+` && `+
-					nstest.BashPrintNamespaceID("/proc/self/ns/user")+` && read`))
+		scripts.Script("newparent", `
+unshare -Ur $parentuserns
+`)
+		scripts.Script("parentuserns", `
+echo "\"/proc/$$/ns/user\""
+process_namespaceid user
+unshare -Uf $childuserns
+`)
+		scripts.Script("childuserns", `
+echo "\"/proc/$$/ns/user\""
+process_namespaceid user
+read # wait for test to proceed()
+`)
+		cmd := scripts.Start("newparent")
 		defer cmd.Close()
 
 		var parentuserpath, leafuserpath string
@@ -125,7 +133,7 @@ var _ = Describe("Namespaces", func() {
 		cmd.Decode(&leafuserpath)
 		cmd.Decode(&leafusernsid)
 
-		parentuserns, err := Parent(parentuserpath)
+		parentuserns, err := Parent(leafuserpath)
 		Expect(err).ToNot(HaveOccurred())
 		defer parentuserns.Close()
 		Expect(ID(parentuserns)).To(Equal(parentusernsid))
@@ -136,10 +144,17 @@ var _ = Describe("Namespaces", func() {
 	})
 
 	It("finds the owner UID", func() {
-		cmd := nstest.NewTestCommand(
-			"unshare", "-Ufr",
-			"bash", "-c",
-			nstest.BashNamespacePath("user")+` && read`)
+		scripts := nstest.Basher{}
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
+		scripts.Script("newuserns", `
+unshare -Ufr $userns
+`)
+		scripts.Script("userns", `
+echo "\"/proc/$$/ns/user\""
+read # wait for test to proceed()
+`)
+		cmd := scripts.Start("newuserns")
 		defer cmd.Close()
 
 		var userpath string

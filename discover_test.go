@@ -61,12 +61,13 @@ var _ = Describe("Discover", func() {
 
 	It("finds hidden hierarchical user namespaces", func() {
 		scripts := nstest.Basher{}
-		defer scripts.Cleanup()
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("doubleunshare", `
-unshare -Ur unshare -U $printuserns
+unshare -Ur unshare -U $print_userns
 `)
-		scripts.Script("printuserns", `
-readlink /proc/self/ns/user | sed -n -e 's/^.\+:\[\(.*\)\]/\1/p'
+		scripts.Script("print-userns", `
+process_namespaceid user
 read # wait for test to proceed()
 `)
 		cmd := scripts.Start("doubleunshare")

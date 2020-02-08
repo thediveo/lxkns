@@ -20,30 +20,11 @@ package nstest
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os/exec"
 	"syscall"
 	"time"
 )
-
-// BashExtractNamespaceID is bash script to extract the ID of a namespace from
-// a namespace textual form "type:[id]".
-const BashExtractNamespaceID = `sed -n -e 's/^.\+:\[\(.*\)\]/\1/p'`
-
-// BashPrintNamespaceID returns bash script code for printing the ID of the
-// namespace referenced by the specified path in the filesystem.
-func BashPrintNamespaceID(path string) string {
-	return fmt.Sprintf("readlink %s | %s", path, BashExtractNamespaceID)
-}
-
-// BashNamespacePath returns a path to the namespace of type t of the current
-// shell incarnation. It does basically what "$$" does, but as it evaluates
-// only when it gets executed, it doesn't fall victim to early substitution.
-func BashNamespacePath(t string) string {
-	return `sed -n -e 's/^PPid:[[:space:]]\+\([[:digit:]]\+\)$/"\/proc\/\1\/ns\/` +
-		t + `"/p' /proc/self/status`
-}
 
 // TestCommand is a command run as part of testing which, for instance, sets
 // up some namespaces. The output of the TestCommand is streamed back in order
