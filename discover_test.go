@@ -23,6 +23,7 @@ import (
 	"github.com/thediveo/lxkns/nstest"
 	t "github.com/thediveo/lxkns/nstypes"
 	r "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/testbasher"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -60,7 +61,7 @@ var _ = Describe("Discover", func() {
 	})
 
 	It("finds hidden hierarchical user namespaces", func() {
-		scripts := nstest.Basher{}
+		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("doubleunshare", `

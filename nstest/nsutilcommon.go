@@ -18,6 +18,8 @@
 
 package nstest
 
+// NamespaceUtilsScript defines some convenience common script functions when
+// working with namespace test auxiliary scripts.
 const NamespaceUtilsScript = `
 # prints the namespace ID for the namespace referenced by path $1.
 namespaceid () {

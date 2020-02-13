@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/testbasher"
 )
 
 func errof(v ...interface{}) error {
@@ -103,7 +104,7 @@ var _ = Describe("Namespaces", func() {
 	})
 
 	It("returns the parent of a user namespace", func() {
-		scripts := nstest.Basher{}
+		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
 		// Creates a first user namespace: this will become the test's
@@ -144,7 +145,7 @@ read # wait for test to proceed()
 	})
 
 	It("finds the owner UID", func() {
-		scripts := nstest.Basher{}
+		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("newuserns", `
