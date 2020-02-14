@@ -19,6 +19,7 @@ package main
 import (
 	"os"
 
+	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/nstypes"
@@ -35,9 +36,9 @@ type NamespaceRow struct {
 
 func main() {
 	// For some discovery methods this app must be forked and re-executed; the
-	// call to HandleDiscoveryInProgress() will automatically handle this
-	// situation and then never return when in re-execution.
-	lxkns.HandleDiscoveryInProgress()
+	// call to reexec.CheckAction() will automatically handle this situation
+	// and then never return when in re-execution.
+	reexec.CheckAction()
 	// Run a full namespace discovery.
 	result := lxkns.Discover(lxkns.FullDiscovery)
 	// Prepare output list from the discovery results. For this, we iterate

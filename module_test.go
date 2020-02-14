@@ -5,10 +5,11 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/gons/reexec"
 )
 
 func TestLinuxKernelNamespaces(t *testing.T) {
-	HandleDiscoveryInProgress()
+	reexec.CheckAction()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns package")
 }

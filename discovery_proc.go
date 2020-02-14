@@ -61,7 +61,8 @@ func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
 		nsref := fmt.Sprintf("/proc/%d/ns/%s", pid, nstypename)
 		// Avoid using high-level golang i/o calls, as these like to hand over
 		// to yet another goroutine, something which really doesn't help us
-		// here.
+		// here. Please note that we need the open fd further below in case we
+		// need to discover ownership.
 		nsf, err := os.OpenFile(nsref, os.O_RDONLY, 0)
 		if err != nil {
 			continue

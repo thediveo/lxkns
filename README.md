@@ -38,8 +38,9 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > not allowing multi-threaded processes to switch mount namespaces. In order
 > to work around this constraint, `gons` must fork and immediately re-execute
 > the process it is used in. Applications that want to use such advanced
-> discovery methods thus **must** call `lxkns.HandleDiscoveryInProgress()` as
-> early as possible in their `main()` function.
+> discovery methods thus **must** call `reexec.CheckAction()` as early as
+> possible in their `main()` function. For this, you need to `import
+> "github.com/thediveo/gons/reexec"`.
 
 ## gons CLI tools
 
@@ -65,11 +66,12 @@ package main
 
 import (
     "fmt"
+    "github.com/thediveo/gons"
     "github.com/thediveo/lxkns"
 )
 
 func main() {
-    lxkns.HandleDiscoveryInProgress() // must be called before a full discovery
+    reexec.CheckAction() // must be called before a full discovery
     result := lxkns.Discover(lxkns.FullDiscovery)
     for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {

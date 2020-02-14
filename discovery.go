@@ -230,6 +230,7 @@ var discoveronce = []NamespaceTypeIndex{}
 // slices, where has the world come to ... mumble ... mumble...)
 var discoverers = []discoverer{
 	{&discoverySequence, discoverFromProc},
+	{&discoveronce, discoverFromFd},
 	{&discoveronce, discoverBindmounts},
 	{&[]NamespaceTypeIndex{UserNS, PIDNS}, discoverHierarchy},
 	{&discoverySequence, resolveOwnership},

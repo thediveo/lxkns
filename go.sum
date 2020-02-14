@@ -34,8 +34,11 @@ github.com/thediveo/gons v0.0.0-20190928203032-2eadaee0335c h1:MuCGEyPI0glRA6PwA
 github.com/thediveo/gons v0.0.0-20190928203032-2eadaee0335c/go.mod h1:s/zVTAe/TsG4sQhMJeZ7bV5slZpDthUm9dIjort6/WI=
 github.com/thediveo/gons v0.0.0-20200131224155-8794d54aa08e h1:Aa+lUcuIRMpNAGyhecbibD4aMUBWKEuicoa54BA8Hus=
 github.com/thediveo/gons v0.0.0-20200131224155-8794d54aa08e/go.mod h1:s/zVTAe/TsG4sQhMJeZ7bV5slZpDthUm9dIjort6/WI=
+github.com/thediveo/gons v0.0.0-20200214185819-02c043da471e h1:esrfocnoGzJCoZGjz+SYYJ+cfmudxAqHdBsXFRBWV0k=
+github.com/thediveo/gons v0.0.0-20200214185819-02c043da471e/go.mod h1:0RvnasWdqsPDJLaIBBKKx4DdxTYEZ8UMwsiuklWDVVc=
 github.com/thediveo/klo v0.0.0-20191111184725-dc4d2ed1c6b1 h1:h1ltIRMIHswzRlgEmPv/04ZIAyJqftQd3aDbrUcSw4g=
 github.com/thediveo/klo v0.0.0-20191111184725-dc4d2ed1c6b1/go.mod h1:9TcLt/N3DFU2TT3/KwCL6G0csiDvbLoaD/EThPxVQ4s=
+github.com/thediveo/lxkns v0.0.0-20200213063026-bf29c28f388b/go.mod h1:vVnWKvcndPpiMkm+Ipg+moYrpEad7nZ/4djXrI/RMZQ=
 github.com/thediveo/testbasher v0.0.0-20200213062358-4c41bdc89149 h1:BI1NjTOO/okNLZWDac1K0TF8pbg8k1fL/Q0VZGYefW8=
 github.com/thediveo/testbasher v0.0.0-20200213062358-4c41bdc89149/go.mod h1:URkiKWMB59o0Pxf3tgiW4ddmNO+mT314m4yug68TVeg=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

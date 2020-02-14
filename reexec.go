@@ -16,7 +16,7 @@
 
 package lxkns
 
-import "github.com/thediveo/lxkns/reexec"
+import "github.com/thediveo/gons/reexec"
 
 // ReexecIntoAction forks and then re-executes this process in order to run a
 // specific action (indicated by actionname) in a set of (different) Linux
@@ -29,13 +29,4 @@ func ReexecIntoAction(actionname string, namespaces []Namespace, result interfac
 		rexns[idx].Path = namespaces[idx].Ref()
 	}
 	return reexec.ForkReexec(actionname, rexns, result)
-}
-
-// HandleDiscoveryInProgress must be called from an application's main()
-// function as early as possible. It checks if the current process is an
-// action invocation: if this is the case, the requested action is called, and
-// the process then terminated. HandleDiscoveryInProgress only returns if
-// there is no action to be taken.
-func HandleDiscoveryInProgress() {
-	reexec.CheckAction()
 }
