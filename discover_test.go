@@ -15,12 +15,10 @@
 package lxkns
 
 import (
-	"encoding/json"
 	"fmt"
-	"os/exec"
-	"strconv"
 
 	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/nstypes"
 	t "github.com/thediveo/lxkns/nstypes"
 	r "github.com/thediveo/lxkns/relations"
 	"github.com/thediveo/testbasher"
@@ -31,7 +29,27 @@ import (
 
 var _ = Describe("Discover", func() {
 
-	It("finds the namespaces lsns finds", func() {
+	It("discovers no namespaces unless told so", func() {
+		allns := Discover(NoDiscovery)
+		for _, nsmap := range allns.Namespaces {
+			Expect(nsmap).To(HaveLen(0))
+		}
+	})
+
+	It("sorts namespaces", func() {
+		nsmap := NamespaceMap{
+			5678: NewNamespace(nstypes.CLONE_NEWNET, 5678, ""),
+			1234: NewNamespace(nstypes.CLONE_NEWNET, 1234, ""),
+		}
+		dr := DiscoveryResult{}
+		dr.Namespaces[NetNS] = nsmap
+		sortedns := dr.SortedNamespaces(NetNS)
+		Expect(sortedns).To(HaveLen(2))
+		Expect(sortedns[0].ID()).To(Equal(nstypes.NamespaceID(1234)))
+		Expect(sortedns[1].ID()).To(Equal(nstypes.NamespaceID(5678)))
+	})
+
+	It("finds at least the namespaces lsns finds", func() {
 		allns := Discover(FullDiscovery)
 		for _, ns := range lsns() {
 			nsidx := TypeIndex(t.NameToType(ns.Type))
@@ -39,8 +57,10 @@ var _ = Describe("Discover", func() {
 			Expect(discons).NotTo(BeZero())
 			// rats ... lsns seems to take the numerically lowest PID number
 			// instead of the topmost PID in a namespace. This makes
-			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID)))
-			// give false negatives.
+			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID))) to
+			// give false negatives, so we need to check the processes along
+			// the hierarchy which are still in the same namespace to be
+			// tested for.
 			p, ok := allns.Processes[ns.PID]
 			Expect(ok).To(BeTrue(), "unknown PID %d", ns.PID)
 			leaders := discons.LeaderPIDs()
@@ -64,14 +84,14 @@ var _ = Describe("Discover", func() {
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("doubleunshare", `
-unshare -Ur unshare -U $print_userns
+		scripts.Script("main", `
+unshare -Ur unshare -U $stage2 # create a user ns with another user ns inside.
 `)
-		scripts.Script("print-userns", `
-process_namespaceid user
+		scripts.Script("stage2", `
+process_namespaceid user # prints the user namespace ID of "the" process.
 read # wait for test to proceed()
 `)
-		cmd := scripts.Start("doubleunshare")
+		cmd := scripts.Start("main")
 		defer cmd.Close()
 		var usernsid t.NamespaceID
 		cmd.Decode(&usernsid)
@@ -82,7 +102,44 @@ read # wait for test to proceed()
 		Expect(userns.Parent().Parent().(Namespace).ID()).To(Equal(ppusernsid))
 	})
 
+	It("finds fd-referenced namespaces", func() {
+		scripts := testbasher.Basher{}
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
+		scripts.Script("main", `
+unshare -Urn $stage2 # set up the stage with a new user ns.
+`)
+		scripts.Script("stage2", `
+process_namespaceid net # print ID of first new net ns.
+exec unshare -n 3</proc/self/ns/net $stage3 # fd-ref net ns and then replace our shell.
+`)
+		scripts.Script("stage3", `
+process_namespaceid net # print ID of second new net ns.
+read # wait for test to proceed()
+`)
+		cmd := scripts.Start("main")
+		defer cmd.Close()
+		var fdnetnsid, netnsid t.NamespaceID
+		cmd.Decode(&fdnetnsid)
+		cmd.Decode(&netnsid)
+		Expect(fdnetnsid).ToNot(Equal(netnsid))
+		// correctly misses fd-referenced namespaces without proper discovery
+		// method enabled.
+		opts := NoDiscovery
+		opts.SkipProcs = false
+		allns := Discover(opts)
+		Expect(allns.Namespaces[NetNS]).To(HaveKey(netnsid))
+		Expect(allns.Namespaces[NetNS]).ToNot(HaveKey(fdnetnsid))
+		// correctly finds fd-referenced namespaces now.
+		opts = NoDiscovery
+		opts.SkipFds = false
+		allns = Discover(opts)
+		Expect(allns.Namespaces[NetNS]).To(HaveKey(fdnetnsid))
+	})
+
 	It("rejects finding roots for plain namespaces", func() {
+		// We only need to run a simplified discovery on processes, but
+		// nothing else.
 		opts := NoDiscovery
 		opts.SkipProcs = false
 		opts.NamespaceTypes = t.CLONE_NEWNET
@@ -91,75 +148,3 @@ read # wait for test to proceed()
 	})
 
 })
-
-type lsnsentry struct {
-	NS      t.NamespaceID `json:"ns"`
-	Type    string        `json:"type"`
-	NProcs  int           `json:"nprocs"`
-	PID     PIDType       `json:"pid"`
-	User    string        `json:"user"`
-	Command string        `json:"command"`
-}
-
-func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
-	var fields map[string]*json.RawMessage
-	if err := json.Unmarshal(b, &fields); err != nil {
-		return err
-	}
-	var i int
-	if err = toint(fields["ns"], &i); err != nil {
-		return
-	}
-	e.NS = t.NamespaceID(i)
-	if err = tostr(fields["type"], &e.Type); err != nil {
-		return
-	}
-	if err = toint(fields["nprocs"], &e.NProcs); err != nil {
-		return
-	}
-	if err = toint(fields["pid"], &i); err != nil {
-		return
-	}
-	e.PID = PIDType(i)
-	if err = tostr(fields["user"], &e.User); err != nil {
-		return
-	}
-	err = tostr(fields["command"], &e.Command)
-	return
-}
-
-func tostr(r *json.RawMessage, v *string) (err error) {
-	err = json.Unmarshal(*r, v)
-	return
-}
-
-func toint(r *json.RawMessage, v *int) (err error) {
-	var s string
-	if err = json.Unmarshal(*r, &s); err == nil {
-		*v, err = strconv.Atoi(s)
-		return
-	}
-	err = json.Unmarshal(*r, v)
-	return
-}
-
-type lsnsdata struct {
-	Namespaces []lsnsentry `json:"namespaces"`
-}
-
-func lsns(opts ...string) []lsnsentry {
-	out, err := exec.Command(
-		"lsns",
-		append([]string{"--json"}, opts...)...).Output()
-	if err != nil {
-		panic(err)
-	}
-	var res lsnsdata
-	if err = json.Unmarshal(out, &res); err != nil {
-		panic(err.Error())
-	}
-	if len(res.Namespaces) == 0 {
-		panic("error: no namespaces read")
-	}
-	return res.Namespaces
-}

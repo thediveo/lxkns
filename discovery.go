@@ -57,8 +57,7 @@ var NoDiscovery = DiscoverOpts{
 	SkipFds:        true,
 	SkipBindmounts: true,
 	SkipHierarchy:  true,
-
-	SkipOwnership: true,
+	SkipOwnership:  true,
 }
 
 // DiscoveryResult stores the results of a tour through Linux processes and
@@ -85,7 +84,8 @@ func SortNamespaces(nslist []Namespace) []Namespace {
 
 // SortChildNamespaces returns a sorted copy of a list of hierarchical
 // namespaces. The namespaces are sorted by their namespace ids in ascending
-// order.
+// order. Please note that the list itself is flat, but this function can only
+// be used on hierarchical namespaces (PID, user).
 func SortChildNamespaces(nslist []Hierarchy) []Hierarchy {
 	newnslist := make([]Hierarchy, len(nslist))
 	copy(newnslist, nslist)
