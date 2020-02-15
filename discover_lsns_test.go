@@ -44,21 +44,22 @@ type lsnsdata struct {
 // differences between the lsns v1 and v2 JSON schemas.
 func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	var fields map[string]*json.RawMessage
-	if err := json.Unmarshal(b, &fields); err != nil {
-		return err
+	if err = json.Unmarshal(b, &fields); err != nil {
+		return
 	}
-	var i int
-	if err = toint(fields["ns"], &i); err != nil {
+	var i uint64
+	if err = touint64(fields["ns"], &i); err != nil {
 		return
 	}
 	e.NS = t.NamespaceID(i)
 	if err = tostr(fields["type"], &e.Type); err != nil {
 		return
 	}
-	if err = toint(fields["nprocs"], &e.NProcs); err != nil {
+	if err = touint64(fields["nprocs"], &i); err != nil {
 		return
 	}
-	if err = toint(fields["pid"], &i); err != nil {
+        e.NProcs = int(i)
+	if err = touint64(fields["pid"], &i); err != nil {
 		return
 	}
 	e.PID = PIDType(i)
@@ -76,12 +77,12 @@ func tostr(r *json.RawMessage, v *string) (err error) {
 	return
 }
 
-// toint unmarshalles either a JSON number or string into a Golang int.
-func toint(r *json.RawMessage, v *int) (err error) {
+// touint64 unmarshalles either a JSON number or string into a Golang int.
+func touint64(r *json.RawMessage, v *uint64) (err error) {
 	var s string
 	if err = json.Unmarshal(*r, &s); err == nil {
-		*v, err = strconv.Atoi(s)
-		return
+		*v, err = strconv.ParseUint(s, 10, 64)
+                return err
 	}
 	err = json.Unmarshal(*r, v)
 	return
