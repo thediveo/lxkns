@@ -49,7 +49,7 @@ import (
 // hidden namespaces don't have file paths as references but instead can only
 // be referenced by fd's returned by the kernel namespace ioctl()s. This would
 // then force us to keep potentially a larger number of fd's open.
-func discoverHierarchy(nstype nstypes.NamespaceType, result *DiscoveryResult) {
+func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipHierarchy {
 		return
 	}

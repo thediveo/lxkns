@@ -41,7 +41,7 @@ type OwnedMountInfo struct {
 // discoverBindmounts checks bind-mounts to discover namespaces we haven't
 // found so far in the process' joined namespaces. This discovery function is
 // designed to be run only once per discovery.
-func discoverBindmounts(_ nstypes.NamespaceType, result *DiscoveryResult) {
+func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipBindmounts {
 		return
 	}

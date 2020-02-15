@@ -42,7 +42,7 @@ import (
 // using the namespace links inside the proc filesystem: "/proc/[PID]/ns/...".
 // It does not check any other places, as these are covered by separate
 // discovery functions.
-func discoverFromProc(nstype nstypes.NamespaceType, result *DiscoveryResult) {
+func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipProcs {
 		return
 	}

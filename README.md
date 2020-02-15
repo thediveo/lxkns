@@ -66,7 +66,7 @@ package main
 
 import (
     "fmt"
-    "github.com/thediveo/gons"
+    "github.com/thediveo/gons/reexec"
     "github.com/thediveo/lxkns"
 )
 

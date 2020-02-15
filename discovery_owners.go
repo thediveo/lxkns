@@ -25,7 +25,7 @@ import "github.com/thediveo/lxkns/nstypes"
 // namespaces. We only run the resolution phase after we've discovered a
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
-func resolveOwnership(nstype nstypes.NamespaceType, result *DiscoveryResult) {
+func resolveOwnership(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
 	if !result.Options.SkipOwnership && nstype != nstypes.CLONE_NEWUSER {
 		// The namespace type discovery sequence guarantees us that by the
 		// time we got here, the user namespaces already have been fully

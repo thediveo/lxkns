@@ -184,11 +184,11 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	//     sequence.
 	for _, disco := range discoverers {
 		if len(*disco.When) == 0 {
-			disco.Discover(result.Options.NamespaceTypes, result)
+			disco.Discover(result.Options.NamespaceTypes, "/proc", result)
 		} else {
 			for _, nstypeidx := range *disco.When {
 				if nstype := TypesByIndex[nstypeidx]; result.Options.NamespaceTypes&nstype != 0 {
-					disco.Discover(nstype, result)
+					disco.Discover(nstype, "/proc", result)
 				}
 			}
 		}
@@ -207,7 +207,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 
 // discoveryFunc implements some Linux kernel namespace discovery
 // functionality.
-type discoveryFunc func(nstypes.NamespaceType, *DiscoveryResult)
+type discoveryFunc func(nstypes.NamespaceType, string, *DiscoveryResult)
 
 // discoverer describes a single discoveryFunc and when to call it: once, per
 // each namespace type and for which namespace types in what sequence. Please
