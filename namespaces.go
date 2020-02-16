@@ -385,13 +385,20 @@ func (hns *hierarchicalNamespace) ParentChildrenString() string {
 // different parents.
 func (hns *hierarchicalNamespace) AddChild(child Hierarchy) {
 	child.(hierarchyConfigurer).SetParent(hns)
+	for _, c := range hns.children {
+		if c.(Namespace).ID() == child.(Namespace).ID() {
+			panic("lxkns internal error: duplicate child," +
+				"parent: " + hns.String() + "\n" +
+				"child: " + child.(NamespaceStringer).String())
+		}
+	}
 	hns.children = append(hns.children, child)
 }
 
 // SetParent sets the parent namespace of this child namespace. It panics in
 // case the parent would change.
 func (hns *hierarchicalNamespace) SetParent(parent Hierarchy) {
-	if hns.parent != nil && hns.parent != parent {
+	if hns.parent != nil {
 		panic("trying to change parents might sometimes not a good idea, especially just now.\n" +
 			"parent: " + parent.(NamespaceStringer).String() + "\n" +
 			"child: " + hns.String())

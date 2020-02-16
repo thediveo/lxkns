@@ -58,9 +58,9 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 	for _, somens := range nsmap {
 		ns := somens // ...so we can later climb rung by rung.
 		if ns.(Hierarchy).Parent() != nil {
-			// Skip this user/PID namespace, if it has already been brought
-			// into the hierarchy as part of the line-of-hierarchy for another
-			// user/PID namespace.
+			// Early exit: skip this user/PID namespace, if it has already
+			// been brought into the hierarchy as part of the
+			// line-of-hierarchy for another user/PID namespace.
 			continue
 		}
 		// For climbing up the hierarchy, Linux wants us to give it file
@@ -72,6 +72,13 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 		}
 		// Now, go climbing up the hierarchy...
 		for {
+			// We already worked on this user/pid namespace, so we don't need
+			// to climb up further. This won't catch the initial user/pid
+			// namespaces, but then these will break out of the loop anyway,
+			// as they don't have any parents.
+			if ns.(Hierarchy).Parent() != nil {
+				break
+			}
 			// By the way ... if it's a user namespace, then get its owner's
 			// UID, as we just happen to have a useful fd referencing the
 			// namespace open anyway.

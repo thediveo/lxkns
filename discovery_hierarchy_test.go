@@ -47,4 +47,32 @@ read # wait for test to proceed()
 		Expect(userns.Parent().Parent().(Namespace).ID()).To(Equal(ppusernsid))
 	})
 
+	It("adds child namespaces only once", func() {
+		scripts := testbasher.Basher{}
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
+		scripts.Script("main", `
+unshare -Umnr unshare -Un $stage2
+`)
+		scripts.Script("stage2", `
+echo "\"ready\""
+read
+`)
+		cmd := scripts.Start("main")
+		defer cmd.Close()
+		var ready string
+		cmd.Decode(&ready)
+		allns := Discover(FullDiscovery)
+		for _, uns := range allns.Namespaces[UserNS] {
+			children := uns.(Hierarchy).Children()
+			for chidx, child := range children {
+				for checkidx, checkchild := range children {
+					if child == checkchild && chidx != checkidx {
+						Fail("duplicate child")
+					}
+				}
+			}
+		}
+	})
+
 })
