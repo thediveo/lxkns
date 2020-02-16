@@ -27,16 +27,16 @@ Linux system other tools typically do not consider. In particular:
 | tool | `/proc/[PID]/ns/*` ① | bind mounts ② | `/proc/[PID]/fd/*` ③ | hierarchy ④ | owning user namespaces ⑤ |
 | -- | -- | -- | -- | -- | -- |
 | `lsns` | ✓ | | | |
-| `gons` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `lxkns` | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-Applications can control the extent to which a `gons` discovery tries to
+Applications can control the extent to which a `lxkns` discovery tries to
 ferret out namespaces from the nooks and crannies of Linux hosts.
 
 > Some discovery methods are more expensive than others, especially the
 > discovery of bind-mounted namespaces in other mount namespaces. The reason
 > lies in the design of the Go runtime which runs multiple threads and Linux
 > not allowing multi-threaded processes to switch mount namespaces. In order
-> to work around this constraint, `gons` must fork and immediately re-execute
+> to work around this constraint, `lxkns` must fork and immediately re-execute
 > the process it is used in. Applications that want to use such advanced
 > discovery methods thus **must** call `reexec.CheckAction()` as early as
 > possible in their `main()` function. For this, you need to `import
