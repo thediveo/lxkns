@@ -6,15 +6,15 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/gons/reexec"
+	rxtst "github.com/thediveo/gons/reexec/testing"
 )
 
 func TestMain(m *testing.M) {
-	// Ensure that the registered handler is run in the re-executed child. This
-	// won't trigger the handler while we're in the parent, because the
-	// parent's Arg[0] won't match the name of our handler.
-	reexec.CheckAction()
-	os.Exit(m.Run())
+	// Ensure that the registered handler is run in the re-executed child.
+	// This won't trigger the handler while we're in the parent. We're using
+	// gons' very special coverage profiling support for re-execution.
+	mm := &rxtst.M{M: m}
+	os.Exit(mm.Run())
 }
 
 func TestLinuxKernelNamespaces(t *testing.T) {
