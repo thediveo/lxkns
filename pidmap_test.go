@@ -24,6 +24,19 @@ import (
 
 var _ = Describe("maps PIDs", func() {
 
+	It("returns empty PID slice for non-existing PID", func() {
+		Expect(NSpid(&Process{})).To(BeEmpty())
+	})
+
+	It("doesn't translates non-existing PID/namespace", func() {
+		opts := NoDiscovery
+		opts.SkipProcs = false
+		opts.SkipHierarchy = false
+		allns := Discover(opts)
+		pidmap := NewPIDMap(allns)
+		Expect(pidmap.Translate(0, allns.InitialNamespaces[PIDNS], allns.InitialNamespaces[PIDNS])).To(BeZero())
+	})
+
 	It("translates PIDs", func() {
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
