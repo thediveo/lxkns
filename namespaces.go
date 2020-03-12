@@ -150,8 +150,8 @@ type Hierarchy interface {
 // Ownership informs about the owning user ID, as well as the namespaces owned
 // by a specific user namespace. Only user namespaces can execute Ownership.
 type Ownership interface {
-	UID() int             // the user ID of the process that created this user namespace.
-	Owned() AllNamespaces // all owned namespaces, except for child user namespaces.
+	UID() int               // the user ID of the process that created this user namespace.
+	Ownings() AllNamespaces // all owned namespaces, except for child user namespaces.
 }
 
 // NewNamespace returns a new zero'ed namespace objects suitable for the

@@ -73,7 +73,7 @@ func (v *UserNSVisitor) Get(node reflect.Value) (label string, properties []stri
 	// Owned (non-user) namespaces...
 	if v.Details {
 		if uns, ok := node.Interface().(lxkns.Ownership); ok {
-			ownedns := uns.Owned()
+			ownedns := uns.Ownings()
 			for _, nstype := range lxkns.TypeIndexLexicalOrder {
 				if nstype == lxkns.UserNS {
 					// Just in case: skip owned user namespaces; note: they
