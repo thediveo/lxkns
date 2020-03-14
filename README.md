@@ -1,7 +1,7 @@
 # Linux kernel Namespaces
 
 [![GoDoc](https://godoc.org/github.com/TheDiveO/lxkns?status.svg)](http://godoc.org/github.com/TheDiveO/lxkns)
-[![Architecture](https://img.shields.io/badge/doc-architecture-blue)](architecture.md)
+[![Architecture](https://img.shields.io/badge/doc-architecture-blue)](docs/architecture.md)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 ![build and test](https://github.com/TheDiveO/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)

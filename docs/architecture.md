@@ -24,7 +24,7 @@ Auxiliary packages:
 The gory details of discovering Linux-kernel namespaces are hidden beneath the
 surface of `Discover()`.
 
-> *Rant: Writing a namespace discoverer in Golang is going down the Gopher
+> Rant: Writing a namespace discoverer in Golang is going down the Gopher
 > hole anyway, as Golang has the annoying habit of interfering with switching
 > namespaces due running multiple OS threads and switching go routinges from
 > OS thread to OS thread when inclined to do so; not least are the
@@ -32,41 +32,9 @@ surface of `Discover()`.
 > [`gons/reexec`](https://github.com/TheDiveO/gons/tree/master/reexec)
 > packages testament to the literal loops to go through to build a working
 > namespace discovery engine in Golang. (Now contrast this with a
-> single-threaded Python implementation...)*
+> single-threaded Python implementation...)
 
-```plantuml
-hide empty fields
-hide empty methods
-
-namespace lxkns {
-  
-  class Discover as " " <<(F,LightGray)>> {
-    Discover(opts DiscoverOpts) *DiscoveryResult
-  }
-  
-  Discover <.. DiscoverOpts : "controls"
-  Discover ..> DiscoveryResult : "returns"
-  
-  class "DiscoverOpts" <<(S,YellowGreen)>> {
-    NamespaceTypes nstypes.NamespaceType
-    SkipProcs bool
-    SkipTasks bool
-    SkipFds bool
-    SkipBindmounts bool
-    SkipHierarchy bool
-    SkipOwnership bool
-  }
-  
-  class "DiscoveryResult" <<(S,YellowGreen)>> {
-    Options DiscoverOpts
-    Namespaces AllNamespaces
-    InitialNamespaces NamespacesSet
-    ' TODO: Root(s)
-    Processes ProcessTable
-  }
-  
-}
-```
+![Discovering Linux kernel namespaces](uml/namespaces-discovery-uml.png)
 
 ## Linux Namespaces From 10,000m
 
@@ -80,51 +48,16 @@ et cetera.
 Linux namespaces are somewhat peculiar, as shown in this diagram (please note
 that element names depicted are not any valid `lxkns` types):
 
-```plantuml
-hide empty fields
-hide empty methods
+![Linux kernel namespaces](uml/linux-namespaces-uml.png)
 
-class "Flat Linux Kernel Namespace" as ns <<(L,LightBlue)>>
-
-class cgroup <<(L,LightBlue)>>
-note bottom: control group
-ns <|--- cgroup
-class ipc <<(L,LightBlue)>>
-note bottom: SYSV\ninter-process\ncommunication
-ns <|--- ipc
-class mnt <<(L,LightBlue)>>
-note bottom: filesystem\nmounts
-ns <|--- mnt
-class net <<(L,LightBlue)>>
-note bottom: network
-ns <|--- net
-class uts <<(L,LightBlue)>>
-note bottom: hostname and\ndomain name
-ns <|--- uts
-
-cgroup -[hidden] ipc
-
-class "Hierarchical Namespace" as hns <<(L,LightBlue)>>
-ns <|-- hns
-
-class pid <<(L,LightBlue)>>
-note bottom: PIDs
-hns <|-- pid
-hns <--> hns : parent/children
-
-class user <<(L,LightBlue)>>
-note bottom: uids/gids,\ncaps, …
-hns <|-- user
-ns <-- pid : owns
-
-user -[hidden] pid
-
-```
-
-- they have no names; the term “namespace” originally derives from the first
-  Linux namespace type implemented ever, [mount
+- Linux kernal namespaces have no names; the term “namespace” originally
+  derives from the first Linux namespace type implemented ever, [mount
   namespaces](http://man7.org/linux/man-pages/man7/mount_namespaces.7.html).
-  Mount namespaces allow different filesystem namespaces.
+  Mount namespaces allow different filesystem namespaces. Thus, the term
+  "namespace" originally referred to the file and directory names, this can
+  still be spotted from the kernel type constant `CLONE_NEWNS`, which is the
+  only one nowadays to not specify its specific type, unlike `CLONE_NEWNET`,
+  et cetera.
 
 - most types of namespaces are flat: they don't form hierarchies and also
   don't nest. The exception are “PID” and “user” namespaces, which form
@@ -143,46 +76,7 @@ that not all types of namespaces offer all interfaces. That is, only
 hierarchical “PID” and “user” namespaces offer the `Hierarchy` interface, and
 only “user”namespaces offer the fourth `Ownership` interface.
 
-```plantuml
-hide empty fields
-hide empty methods
-!define L <size:12><&link-intact></size><i>
-
-interface Hierarchy {
-  L Parent() Hierarchy
-  L Children() []Hierarchy
-}
-
-interface Ownership {
-  UID() int
-  L Ownings() AllNamespaces
-}
-
-Hierarchy "*" -up-> Hierarchy : Parent
-Hierarchy <-down- "*" Hierarchy : Children
-
-Hierarchy -[hidden] Ownership
-
-Ownership --> "*" Namespace : "Ownings"
-
-interface Namespace {
-  ID() nstypes.NamespaceID
-  Type() nstypes.NamespaceType
-  L Owner() Hierarchy
-  Ref() string
-  L Leaders() []*Process
-  LeaderPIDs() []PIDType
-  L Ealdorman() *Process
-  String() string
-}
-
-Hierarchy <-- Namespace : "Owner"
-
-interface NamespaceStringer {
-  TypeIDString() string
-}
-Namespace <|- NamespaceStringer
-```
+![lxkns namespaces](uml/lxkns-namespaces-uml.png)
 
 - `Namespace`: this interface gives access to the properties common to all
   Linux kernel namespaces, as well as to what we additionally discovered and
@@ -206,30 +100,7 @@ namespaces typically are. Not least is the `proc` filesystem an important
 place to discover namespaces. `lxkns` automatically discovers the tree of
 processes, and the links between processes and namespaces.
 
-```plantuml
-hide empty fields
-hide empty methods
-!define L <size:12><&link-intact></size><i>
-
-interface Namespace {
-  L Leaders() []*Process
-  L Ealdorman() *Process
-}
-
-Namespace ---> "0,1" Process : Ealdorman
-Namespace ---> "*" Process : Leaders
-
-class ProcessTable
-ProcessTable -> Process : "[PID]"
-
-class Process {
-  L Parent *Process
-  L Namespaces NamespacesSet
-}
-
-Process --> "7" Namespace : Namespaces
-Process "*" --> Process : Parent
-```
+![Processes and Namespaces](uml/lxkns-processes-uml.png)
 
 To reduce interlinking, each `Namespace` only references those topmost
 processes in the process tree which are associated to it: the so-called
@@ -259,22 +130,26 @@ namespace to another “PID” namespace. Tools using `lxkns` can use the mappin
 in order to show PIDs as seen from, say, inside a container, instead of
 displaying PIDs as seen by the container host itself.
 
-```plantuml
-hide empty fields
-hide empty methods
-!define L <size:12><&link-intact></size><i>
+The PID mapping can be read from the [`proc`
+filesystem](http://man7.org/linux/man-pages/man5/proc.5.html), but is in a
+rather inconvenient format: the PIDs a specific process has in its own “PID”
+namespace, as well as in all the parent “PID” namespaces is stored in the
+`NSpid:` field inside `/proc/[PID]/status`. Unfortunately, `NSpid:` only tells
+us the PIDs, but not the namespaces. We also need the “PID” namespaces
+hieararchy in order to understand which PIDs belongs to which “PID” namespaces.
 
-class "PIDMap" <<(S,YellowGreen)>> {
-  m map[NamespacedPID]NamespacedPIDs
-}
+![PID map](uml/pid-map-uml.png)
 
-class NamespacedPIDs <<(T,Khaki)>> {
-    []NamespacedPID
-}
+The PID translation map introduces the concept of a PID being only meaningful
+in the context of its “PID” namespace as type `NamespacedPID`. Ignoring how to
+index, our PID translation map contains for each process its list of
+namespaced PIDs (type `NamespacedPIDs`). As described above, this list is
+calculated by combining the `NSpid:` information with the discovered “PID”
+namespace hierarchy.
 
-class NamespacedPID {
-  PIDNS Namespace
-  PID PIDType
-}
+Now, in order to translate (lookup) namespaced PIDs, we simply index all
+namespaced PIDs to point to their respective process' list of namespaced PIDs.
 
-```
+A `Translate()` operation then looks up the specified namespaced PID, getting
+the corresponding process' list of namespaced PIDs. It then returns the PID
+matching the destination “PID” namespace.
