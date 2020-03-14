@@ -15,10 +15,11 @@
 package lxkns
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"os"
 	"strconv"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Process", func() {
@@ -40,7 +41,7 @@ var _ = Describe("Process", func() {
 			"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 -1",
 			"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 x",
 		} {
-			Expect(newProcess(badstat)).To(BeNil(), badstat)
+			Expect(newProcessFromStatline(badstat)).To(BeNil(), badstat)
 		}
 	})
 
@@ -76,6 +77,18 @@ var _ = Describe("Process", func() {
 })
 
 var _ = Describe("ProcessTable", func() {
+
+	It("synthetic /proc", func() {
+		pt := newProcessTable("test/proctable/proc")
+		Expect(pt).NotTo(BeNil())
+		Expect(pt).To(HaveLen(2))
+		Expect(pt[1]).NotTo(BeZero())
+		Expect(pt[1].Parent).To(BeZero())
+	})
+
+	It("returns nil for inaccessible /proc", func() {
+		Expect(newProcessTable("test/nirvana")).To(BeNil())
+	})
 
 	It("gathered from /proc", func() {
 		pt := NewProcessTable()

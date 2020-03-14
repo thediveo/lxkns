@@ -51,17 +51,23 @@ type ProcessTable map[PIDType]*Process
 // Linux process with the specified PID. In particular, the parent PID and the
 // name of the process.
 func NewProcess(PID PIDType) (proc *Process) {
-	line, err := ioutil.ReadFile("/proc/" + strconv.Itoa(int(PID)) + "/stat")
+	return newProcess(PID, "/proc")
+}
+
+// newProcess implements NewProcess and additionally allows for testing on
+// fake /proc "filesystems".
+func newProcess(PID PIDType, procroot string) (proc *Process) {
+	line, err := ioutil.ReadFile(procroot + "/" + strconv.Itoa(int(PID)) + "/stat")
 	if err != nil {
 		return nil
 	}
-	return newProcess(string(line))
+	return newProcessFromStatline(string(line))
 }
 
-// newProcess parses a process status line (as read from /proc/[PID]/status)
+// newProcessStat parses a process status line (as read from /proc/[PID]/status)
 // into a Process object. Factoring out the parsing functionality allows unit
 // testing it separately from the live process tree.
-func newProcess(procstat string) (proc *Process) {
+func newProcessFromStatline(procstat string) (proc *Process) {
 	proc = &Process{}
 	// Gather the PID from the (1) pid field. Please note that the bracketed
 	// numbers and field names are following man proc(5),
@@ -141,7 +147,13 @@ func (p *Process) String() string {
 // without tasks=threads). The process table is in fact a map, indexed by
 // PIDs.
 func NewProcessTable() (pt ProcessTable) {
-	procentries, err := ioutil.ReadDir("/proc")
+	return newProcessTable("/proc")
+}
+
+// newProcessTable implements NewProcessTable and allows for testing on fake
+// /proc "filesystems".
+func newProcessTable(procroot string) (pt ProcessTable) {
+	procentries, err := ioutil.ReadDir(procroot)
 	if err != nil {
 		return nil
 	}
@@ -151,7 +163,7 @@ func NewProcessTable() (pt ProcessTable) {
 	for _, procentry := range procentries {
 		pid, err := strconv.Atoi(procentry.Name())
 		if err == nil && pid > 0 {
-			proc := NewProcess(PIDType(pid))
+			proc := newProcess(PIDType(pid), procroot)
 			if proc != nil {
 				pt[proc.PID] = proc
 			}

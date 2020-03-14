@@ -100,7 +100,12 @@ func NewPIDMap(res *DiscoveryResult) *PIDMap {
 }
 
 // NSpid returns the list of namespaced PIDs for the process proc, based on
-// information from the /proc filesystem.
+// information from the /proc filesystem (the "NSpid:" field in particular).
+// NSpid only returns the list of PIDs, but not the corresponding PID
+// namespaces; this is because the Linux kernel doesn't give us the namespace
+// information as part of the process status. Instead, a caller (such as
+// NewPIDMap) needs to combine a namespaced PIDs list with the hierarchy own
+// PID namespaces to calculate the correct namespacing.
 func NSpid(proc *Process) (pids []PIDType) {
 	f, err := os.Open(fmt.Sprintf("/proc/%d/status", proc.PID))
 	if err != nil {
@@ -108,6 +113,8 @@ func NSpid(proc *Process) (pids []PIDType) {
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
+	// Scan through the process status information until we arrive at the
+	// sought-after "NSpid:" field. That's the only field interesting to us.
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "NSpid:\t") {
