@@ -16,34 +16,35 @@ packages:
 
 Auxiliary packages:
 
-- `cmd`: the `lsuns` and `lspns` commands.
-- `examples`: examples illustrating the API usage.
+- `cmd`: the `lsuns` and `lspns` commands. These simultaneously serve as more
+  complex examples.
+- `examples`: examples illustrating the `lxkns` API usage.
 
 ## Discovering Namespaces
 
 The gory details of discovering Linux-kernel namespaces are hidden beneath the
 surface of `Discover()`.
 
-> Rant: Writing a namespace discoverer in Golang is going down the Gopher
-> hole anyway, as Golang has the annoying habit of interfering with switching
-> namespaces due running multiple OS threads and switching go routinges from
-> OS thread to OS thread when inclined to do so; not least are the
+> Rant: _Writing a namespace discoverer in Golang is going down the Gopher hole.
+> For instance, Golang has the annoying habit of interfering with switching
+> certain namespaces (such as mount namespaces) because it often runs multiple
+> OS threads and switches go routines from OS thread to another OS thread
+> whenever it feels inclined to do so. Not least are the
 > [`gons`](https://github.com/thediveo/gons) and
-> [`gons/reexec`](https://github.com/TheDiveO/gons/tree/master/reexec)
-> packages testament to the literal loops to go through to build a working
-> namespace discovery engine in Golang. (Now contrast this with a
-> single-threaded Python implementation...)
+> [`gons/reexec`](https://github.com/TheDiveO/gons/tree/master/reexec) packages
+> testament to the literal loops to go through in order to build a working
+> namespace discovery engine in Golang. Now contrast this with a single-threaded
+> Python implementation..._
 
 ![Discovering Linux kernel namespaces](uml/namespaces-discovery-uml.png)
 
 ## Linux Namespaces From 10,000m
 
 Simply put, [Linux
-namespaces](http://man7.org/linux/man-pages/man7/namespaces.7.html) (man7
-namespaces) are a kernel mechanism to partition certain types of kernel
-resources. Processes within a partition will only see the resources allocated
-to this partition, such as network interfaces, processes, filesystem mounts,
-et cetera.
+namespaces](http://man7.org/linux/man-pages/man7/namespaces.7.html) are a kernel
+mechanism to “partition” certain types of kernel resources. Processes within a
+“partition” will only see the resources allocated to this “partition”, such as
+network interfaces, processes, filesystem mounts, et cetera.
 
 Linux namespaces are somewhat peculiar, as shown in this diagram (please note
 that element names depicted are not any valid `lxkns` types):
@@ -67,6 +68,98 @@ that element names depicted are not any valid `lxkns` types):
   namespaces, but also all other types of namespaces. That is, they control
   the capabilities processes possess in other namespaces than the ones a
   process is currently attached to.
+
+Some important peculiarities to keep in mind, as they influence the
+architecture of `lxkns`...
+
+### Namespace Identifiers
+
+In a twist of irony, Linux kernel namespaces have no names. But they are at
+least unique identifyable by their [inode
+numbers](https://en.wikipedia.org/wiki/Inode). Each namespace has its own inode
+number, albeit after deleting one namespace, the next namespace being created my
+get the old inode number assigned (stackexchange: [When does Linux
+garbage-collect
+namespaces?](https://unix.stackexchange.com/questions/560912/when-does-linux-garbage-collect-namespaces)).
+
+Please note that it is sufficient to just use namespace inodes for identity.
+While some namespace-related packages also check a namespace's device number,
+this isn't strictly necessary. The reason is that the Linux kernel contains a
+special filesystem called `nsfs`: the namespace filesystem. `nsfs` cannot be
+mounted, unlike `proc` and many other filesystems. Instead, `nsfs` is tightly
+interwoven with the namespace management. The bottom line of this is: all
+namespaces have inodes exclusively on the single `nsfs` instance, so the device
+number is a “don't care”. In consequence, `lxkns` ignores the device numbers of
+namespace filesystem references to simplify the code, avoiding superfluous code.
+
+Now there's an ugly problem with inodes: they're fine for identity, but they're
+useless for access or reference. You simply cannot give the Linux kernel the
+inode number whenever it needs a namespace reference. You need some filesystem
+reference or a file descriptor referencing a namespace. The most well-known
+place for namespace references is the `proc` filesystem. Other places are
+bind-mounts, which can be in any corner of the virtual filesystem. And the open
+file descriptors of processes and threads.
+
+And finally, there are hierarchical namespaces, where we can end up with“hidden”
+PID and user namespaces which do not have any filesystem reference, but can only
+be found using special Linux kernel namespace `ioctl()` calls. (_Simply spoken,
+a child PID namespace needs to be bind-mounted/fd-referenced for its
+process-less(!) parent PID namespace to become hidden, but still alive. For user
+namespaces it is already sufficient that a child user namespace has a process,
+but its parent user namespace has no processes, to become hidden._)
+
+### Mount Namespaces
+
+[Mount namespaces](http://man7.org/linux/man-pages/man7/mount_namespaces.7.html)
+separate sets of mount points. Changing mount the mount namespace of a running
+process is only possible as long as the process is single-threaded (that is,
+[the process doesn't share filesystem-related
+attributes](http://man7.org/linux/man-pages/man2/setns.2.html)). As the Golang
+runtime usually quickly goes multi-threaded, changing the mount namespace of an
+OS thread isn't possible after the Golang runtime has started ([stackoverflow:
+“Calling setns from Go returns EINVAL for mnt
+namespace”](https://stackoverflow.com/q/25704661)). This can be achieved by
+using, for instance, the [`gons` package](https://github.com/thediveo/gons).
+
+### PID Namespaces
+
+[PID namespaces](http://man7.org/linux/man-pages/man7/pid_namespaces.7.html)
+separate process identifiers, usually simply abbreviated as PID. PID namespaces
+not only control visibility of PIDs, but also their numbering. PIDs in a new PID
+namespace start at 1, somewhat resembling a standalone system.
+
+Processes cannot switch their PID namespaces, but instead are stuck in whatever
+PID namespace a process was born into. Linux only allows child processes to
+start in different PID namespaces than their parents.
+
+PID namespaces are hierarchical and also nested: given sufficient privileges, a
+process in a certain PID namespace can “see” process in child PID namespaces of
+its PID namespace, and also further down the hierarchy. But a process cannot see
+any process in a parent PID namespace, or any sibling PID namespace.
+
+As an important source for discovering Linux kernel namespaces is the `proc`
+process filesystem, the `lxkns` discovery engine basically can only find
+namespaces used by processes in the engine's PID namespace, as well as child
+namespaces and further down the hierarchy. (_Note: the `lxkns` engine might
+discover namespaces in other places through other information sources, but might
+not be able to access them for gather further details._)
+
+### User Namespaces
+
+[User namespaces](http://man7.org/linux/man-pages/man7/user_namespaces.7.html)
+separate user and group IDs, capabilities, and other kernel resources. They are
+hierarchical.
+
+User namespaces control the capabilities a process might have in another
+namespace. This control bases on the “ownership” of namespaces (of any type) by
+a specific user namespace. Additionally, this control furthermore bases on the hierarchy of user namespaces.
+
+For instance, Linux blocks any process from either re-entering its own current
+user namespace (as this would give it full capabilities, _not joking_) or a
+parent user namespace. A child user namespace can only be entered by a process
+if the process' UID is the same as the owner UID of the child user namespace, or
+if it has sufficient capabilities in the current user namespace and thus in all
+child namespaces thereof.
 
 ## Linux Namespace Representation in lxkns
 
@@ -149,6 +242,9 @@ namespace hierarchy.
 
 Now, in order to translate (lookup) namespaced PIDs, we simply index all
 namespaced PIDs to point to their respective process' list of namespaced PIDs.
+This design trades a slight performance degration in for an otherwise much
+larger memory consumption in case of indexing all <_namespace-from_, _PID-from_,
+_namespace-to_> tuples with their corresponding _PID-tos_.
 
 A `Translate()` operation then looks up the specified namespaced PID, getting
 the corresponding process' list of namespaced PIDs. It then returns the PID
