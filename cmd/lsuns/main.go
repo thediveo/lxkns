@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 
-	asciitree "github.com/TheDiveO/go-asciitree"
+	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
 	common "github.com/thediveo/lxkns/cmd/internal/pkg/shared"

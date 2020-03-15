@@ -17,7 +17,7 @@
 package common
 
 import (
-	asciitree "github.com/TheDiveO/go-asciitree"
+	asciitree "github.com/thediveo/go-asciitree"
 )
 
 // NamespaceStyle bases on asciitree.LineStyle, but with properties marked
