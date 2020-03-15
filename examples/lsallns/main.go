@@ -22,13 +22,12 @@ import (
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/nstypes"
 )
 
 // NamespaceRow stores information about a single namespace, to be printed
 // as a single row.
 type NamespaceRow struct {
-	ID       nstypes.NamespaceID
+	ID       uint64
 	Type     string
 	PID      int
 	ProcName string
@@ -48,7 +47,7 @@ func main() {
 	for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
 		for _, ns := range result.SortedNamespaces(nsidx) {
 			item := NamespaceRow{
-				ID:   ns.ID(),
+				ID:   uint64(ns.ID()),
 				Type: ns.Type().Name(),
 			}
 			if procs := ns.Leaders(); len(procs) > 0 {
