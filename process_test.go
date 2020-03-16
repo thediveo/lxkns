@@ -82,8 +82,10 @@ var _ = Describe("ProcessTable", func() {
 		pt := newProcessTable("test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
-		Expect(pt[1]).NotTo(BeZero())
-		Expect(pt[1].Parent).To(BeZero())
+		Expect(pt[1]).NotTo(BeNil())
+		Expect(pt[1].Parent).To(BeNil())
+		Expect(pt[1].Children).To(HaveLen(1))
+		Expect(pt[1].Children[0]).To(BeIdenticalTo(pt[42]))
 	})
 
 	It("returns nil for inaccessible /proc", func() {
