@@ -185,3 +185,13 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 	// Phew: done.
 	return
 }
+
+// ProcessListByPID is a type alias for sorting slices of *Process numerically
+// by their PIDs.
+type ProcessListByPID []*Process
+
+func (l ProcessListByPID) Len() int      { return len(l) }
+func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l ProcessListByPID) Less(i, j int) bool {
+	return l[i].PID < l[j].PID
+}

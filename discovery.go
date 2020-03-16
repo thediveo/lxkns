@@ -200,6 +200,8 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	if result.Options.NamespaceTypes&nstypes.CLONE_NEWPID != 0 {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[PIDNS])
 	}
+	// TODO: Find the initial namespaces...
+
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)
 	return result
