@@ -138,7 +138,7 @@ var _ = Describe("namespaces", func() {
 			}
 
 			Expect(uns.UID()).To(Equal(uns.owneruid))
-			Expect(uns.Owned()[NetNS]).To(HaveLen(1))
+			Expect(uns.Ownings()[NetNS]).To(HaveLen(1))
 
 			s := uns.String()
 			Expect(s).To(ContainSubstring(`joined by "foobar" (88888)`))
