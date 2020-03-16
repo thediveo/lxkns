@@ -408,8 +408,8 @@ type userNamespace struct {
 	ownedns  AllNamespaces
 }
 
-func (uns *userNamespace) UID() int             { return uns.owneruid }
-func (uns *userNamespace) Owned() AllNamespaces { return uns.ownedns }
+func (uns *userNamespace) UID() int               { return uns.owneruid }
+func (uns *userNamespace) Ownings() AllNamespaces { return uns.ownedns }
 
 // String describes this instance of a user namespace, with its parent,
 // children, and owned namespaces. This description is non-recursive.

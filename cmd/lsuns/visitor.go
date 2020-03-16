@@ -61,9 +61,11 @@ func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	return
 }
 
-// Get returns the text label, as well as the list of properties and list of
-// children of a node.
-func (v *UserNSVisitor) Get(node reflect.Value) (label string, properties []string, children reflect.Value) {
+// Get returns the user namespace text label for the current node (which is
+// always an user namespace), as well as the list of properties (owned
+// non-user namespaces) and the list of child user namespace nodes.
+func (v *UserNSVisitor) Get(node reflect.Value) (
+	label string, properties []string, children reflect.Value) {
 	// Label for this user namespace...
 	label = v.Label(node)
 	// Children of this user namespace...
