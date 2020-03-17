@@ -56,6 +56,11 @@ build on top of `lxkns` (we _do_ eat our own dog food):
 
 - `lspns`: shows _all_ PID namespaces in your Linux host, in a neat hierarchy.
 
+- `pidtree`: shows the process hierarchy within the PID namespace hierarchy.
+  See also the [pidtree
+  command](https://godoc.org/github.com/thediveo/lxkns/cmd/pidtree)
+  documentation.
+
 ## Package Usage
 
 The following example code runs a full namespace discovery using
