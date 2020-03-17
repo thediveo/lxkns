@@ -21,7 +21,6 @@ package lxkns
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/thediveo/go-mntinfo"
@@ -60,12 +59,12 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 				// results.
 				ns = NewNamespace(nstype, nsid, "")
 				result.Namespaces[typeidx][nsid] = ns
-				ns.(namespaceConfigurer).SetRef(bmnt.MountPoint)
+				ns.(NamespaceConfigurer).SetRef(bmnt.MountPoint)
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
 			if nstype != nstypes.CLONE_NEWUSER && bmnt.OwnernsID != nstypes.NoneID {
-				ns.(namespaceConfigurer).SetOwner(bmnt.OwnernsID)
+				ns.(NamespaceConfigurer).SetOwner(bmnt.OwnernsID)
 			}
 		}
 	}
@@ -135,7 +134,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 			updateNamespaces(ownedbindmounts)
 		} else {
 			// TODO: for diagnosis:
-			fmt.Fprintf(os.Stderr, "failed: %s\n", err.Error())
+			// fmt.Fprintf(os.Stderr, "failed: %s\n", err.Error())
 		}
 	}
 }

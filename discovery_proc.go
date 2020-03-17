@@ -94,7 +94,7 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		// treat ownership differently for non-user namespaces versus user
 		// namespaces all the time. Thus, sorry, no user namespaces here.
 		if !result.Options.SkipOwnership && nstype != nstypes.CLONE_NEWUSER {
-			ns.(namespaceConfigurer).DetectOwner(nsf)
+			ns.(NamespaceConfigurer).DetectOwner(nsf)
 		}
 		// Don't leak... And no, defer won't help us here.
 		nsf.Close()
@@ -120,13 +120,13 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 			p = parentp
 			parentp = p.Parent
 		}
-		p.Namespaces[nstypeidx].(namespaceConfigurer).AddLeader(p)
+		p.Namespaces[nstypeidx].(NamespaceConfigurer).AddLeader(p)
 	}
 	// Try to set namespace references which we hope to be as longlived as
 	// possible; so we use one of the leader processes.
 	for _, ns := range nsmap {
 		if leaders := ns.Leaders(); len(leaders) > 0 {
-			ns.(namespaceConfigurer).SetRef(
+			ns.(NamespaceConfigurer).SetRef(
 				fmt.Sprintf("/proc/%d/ns/%s", leaders[0].PID, nstypename))
 		}
 	}

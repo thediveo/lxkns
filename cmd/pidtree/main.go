@@ -20,6 +20,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/gons/reexec"
@@ -35,15 +36,30 @@ func main() {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
+	// You may wonder why lxkns returns a slice of "root" PID and user
+	// namespaces, instead of only a single root for each. The rationale is
+	// that in some situation without sufficient privileges (capabilities) and
+	// bind-mounted or fd-references PID and/or user namespaces, these can
+	// still show up in the discovery process. We don't filter them out on
+	// purpose. However, we might not be able to correlate them to processes,
+	// as insufficient privileges (missing CAP_SYS_PTRACE) hinders us to read
+	// the namespaces a process of another user is attached to. In
+	// consequence, here we only start with our own PID namespace, ignoring
+	// any other roots that might have turned up during discovery. And this
+	// slightly ranty comment now gets me another badge-achievement which is
+	// so important in today's societies: "ranty source commenter".
+	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
 	// Finally render the output based on the information gathered. The
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
 	// the desired process tree with PID namespaces.
 	fmt.Println(
 		asciitree.Render(
-			allns.PIDNSRoots, &PIDVisitor{
-				Details:      true,
-				PIDMap:       pidmap,
-				InitialPIDNS: allns.PIDNSRoots[0], //allns.InitialNamespaces[lxkns.PIDNS],
-			}, common.NamespaceStyler))
+			[]lxkns.Namespace{rootpidns}, // note to self: expects a slice of roots
+			&PIDVisitor{
+				Details:   true,
+				PIDMap:    pidmap,
+				RootPIDNS: rootpidns,
+			},
+			common.NamespaceStyler))
 }

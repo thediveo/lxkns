@@ -125,7 +125,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 			}
 			// Now insert the current namespace as a child of its parent in
 			// the hierarchy, and then prepare for the next rung...
-			parentns.(hierarchyConfigurer).AddChild(ns.(Hierarchy))
+			parentns.(HierarchyConfigurer).AddChild(ns.(Hierarchy))
 			ns = parentns
 			nsf.Close()
 			nsf = parentnsf

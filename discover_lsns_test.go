@@ -58,7 +58,7 @@ func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	if err = touint64(fields["nprocs"], &i); err != nil {
 		return
 	}
-        e.NProcs = int(i)
+	e.NProcs = int(i)
 	if err = touint64(fields["pid"], &i); err != nil {
 		return
 	}
@@ -82,7 +82,7 @@ func touint64(r *json.RawMessage, v *uint64) (err error) {
 	var s string
 	if err = json.Unmarshal(*r, &s); err == nil {
 		*v, err = strconv.ParseUint(s, 10, 64)
-                return err
+		return err
 	}
 	err = json.Unmarshal(*r, v)
 	return

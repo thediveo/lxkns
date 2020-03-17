@@ -151,7 +151,7 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 	if !ok {
 		return
 	}
-	value, err := strconv.ParseUint(s[colon+2 : len(s)-1], 10, 64)
+	value, err := strconv.ParseUint(s[colon+2:len(s)-1], 10, 64)
 	if err != nil || value <= 0 {
 		return 0, 0
 	}

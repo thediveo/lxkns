@@ -207,9 +207,9 @@ type plainNamespace struct {
 	leaders   []*Process
 }
 
-// namespaceConfigurer allows discovery mechanisms to set up the information
+// NamespaceConfigurer allows discovery mechanisms to set up the information
 // for a namespace.
-type namespaceConfigurer interface {
+type NamespaceConfigurer interface {
 	AddLeader(proc *Process)               // adds yet another self-styled leader.
 	SetRef(string)                         // sets a filesystem path for referencing this namespace.
 	DetectOwner(nsf *os.File)              // detects owning user namespace id.
@@ -339,9 +339,9 @@ type hierarchicalNamespace struct {
 	children []Hierarchy
 }
 
-// hierarchyConfigurer allows discovery mechanisms to configure the
+// HierarchyConfigurer allows discovery mechanisms to configure the
 // information hold by hierarchical namespaces.
-type hierarchyConfigurer interface {
+type HierarchyConfigurer interface {
 	AddChild(child Hierarchy)
 	SetParent(parent Hierarchy)
 }
@@ -384,7 +384,7 @@ func (hns *hierarchicalNamespace) ParentChildrenString() string {
 // case a child is tried to be added twice to either the same parent or
 // different parents.
 func (hns *hierarchicalNamespace) AddChild(child Hierarchy) {
-	child.(hierarchyConfigurer).SetParent(hns)
+	child.(HierarchyConfigurer).SetParent(hns)
 	hns.children = append(hns.children, child)
 }
 
@@ -440,18 +440,6 @@ func (uns *userNamespace) String() string {
 		leaders,
 		parentandchildren,
 		owneds)
-}
-
-// AddChild adds a new child user namespace to this user namespace. Oh, the
-// glory of golang!
-func (uns *userNamespace) AddChild(child Hierarchy) {
-	uns.hierarchicalNamespace.AddChild(child)
-}
-
-// SetParent sets the parent user namespace for this user namespace. Oh, the
-// glory of golang!
-func (uns *userNamespace) SetParent(parent Hierarchy) {
-	uns.hierarchicalNamespace.SetParent(parent)
 }
 
 // detectUIDs takes an open file referencing a user namespace to query its

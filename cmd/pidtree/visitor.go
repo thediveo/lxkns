@@ -18,21 +18,28 @@ package main
 
 import (
 	"fmt"
+	"os/user"
 	"reflect"
 	"sort"
 
 	"github.com/thediveo/lxkns"
 )
 
+// PIDVisitor is an asciitree.Visitor which works on discovery results and
+// visits them in order to produce a process tree. Differing from `ps fax`, we
+// also show the PID namespaces inbetween the process hierarchy where the PID
+// namespace changes from one to another.
 type PIDVisitor struct {
-	Details      bool
-	PIDMap       *lxkns.PIDMap
-	InitialPIDNS lxkns.Namespace
+	Details   bool
+	PIDMap    *lxkns.PIDMap
+	RootPIDNS lxkns.Namespace
 }
 
-// Roots returns the given topmost hierarchical process namespaces sorted; it
-// will be called on the list of topmost PID namespace(s). It won't be called
-// ever afterwards.
+// Roots returns the given "topmost" hierarchical process namespaces sorted;
+// it will be called on the list of "topmost" PID namespace(s). It won't be
+// called ever afterwards. In our case, we'll only ever pass in a slice of
+// exactly one PID namespace, the "root" PID namespace. However, we leave this
+// code in for instructional purposes.
 func (v *PIDVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 	pidroots := lxkns.SortNamespaces(roots.Interface().([]lxkns.Namespace))
 	count := len(pidroots)
@@ -43,22 +50,42 @@ func (v *PIDVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 	return
 }
 
-// Label returns the text label for a namespace node. Everything else will have
-// no label.
+// Label returns a node label text, which varies depending on whether the node
+// is a Process or a (PID) Namespace. In case of a PID Namespace, the label
+// will show the namespace type and its ID, as well as the owner name and UID
+// (via the owning user Namespace). If it's a Process instead, then the text
+// label contains the name and "global" PID, but also the translated "local"
+// PID (which is the PID as seen from inside the PID namespace of the
+// Process).
 func (v *PIDVisitor) Label(node reflect.Value) (label string) {
 	if proc, ok := node.Interface().(*lxkns.Process); ok {
+		// It's a Process; do we have namespace information for it? If yes,
+		// then we can translate between the process-local PID namespace and
+		// the "initial" PID namespace.
 		if procpidns := proc.Namespaces[lxkns.PIDNS]; procpidns != nil {
-			localpid := v.PIDMap.Translate(proc.PID, v.InitialPIDNS, procpidns)
+			localpid := v.PIDMap.Translate(proc.PID, v.RootPIDNS, procpidns)
 			if localpid != proc.PID {
-				return fmt.Sprintf("PID %d=%d %q", proc.PID, localpid, proc.Name)
+				return fmt.Sprintf("%q (%d=%d)", proc.Name, proc.PID, localpid)
 			}
+			return fmt.Sprintf("%q (%d)", proc.Name, proc.PID)
 		}
-		return fmt.Sprintf("PID %d %q", proc.PID, proc.Name)
+		// PID namespace information is NOT known, so this is a process out of
+		// our reach. We thus print it in a way to signal that we don't know
+		// about this process' PID namespace
+		return fmt.Sprintf("pid:[???] %q (%d=???)", proc.Name, proc.PID)
 	}
+	// It's a PID namespace, so we give details about the ID and the owner's
+	// UID and name.
 	pidns := node.Interface().(lxkns.Namespace)
-	label = fmt.Sprintf("%s, owned by UID %d",
-		pidns.(lxkns.NamespaceStringer).TypeIDString(),
-		pidns.Owner().(lxkns.Ownership).UID())
+	label = pidns.(lxkns.NamespaceStringer).TypeIDString()
+	if pidns.Owner() != nil {
+		uid := pidns.Owner().(lxkns.Ownership).UID()
+		var userstr string
+		if u, err := user.LookupId(fmt.Sprintf("%d", uid)); err == nil {
+			userstr = fmt.Sprintf(" (%q)", u.Username)
+		}
+		label += fmt.Sprintf(", owned by UID %d%s", uid, userstr)
+	}
 	return
 }
 
@@ -85,7 +112,19 @@ func (v *PIDVisitor) Get(node reflect.Value) (
 			if childproc.Namespaces[lxkns.PIDNS] == pidns {
 				clist = append(clist, childproc)
 			} else {
-				clist = append(clist, childproc.Namespaces[lxkns.PIDNS])
+				// We might also end up here in case we have insufficient
+				// privileges (capabilities) to discover the PID namespace of
+				// a process. In this case, we only can dump the processes,
+				// but with a signature indicating that we don't known about
+				// their namespaces. Otherwise, we insert a PID namespace
+				// node, from which the tree will branch into that PID
+				// namespace's leader processes.
+				cpidns := childproc.Namespaces[lxkns.PIDNS]
+				if cpidns == nil {
+					clist = append(clist, childproc)
+				} else {
+					clist = append(clist, cpidns)
+				}
 			}
 		}
 	} else {

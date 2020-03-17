@@ -34,7 +34,7 @@ func resolveOwnership(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		nstypeidx := TypeIndex(nstype)
 		nsmap := result.Namespaces[nstypeidx]
 		for _, ns := range nsmap {
-			ns.(namespaceConfigurer).ResolveOwner(usernsmap)
+			ns.(NamespaceConfigurer).ResolveOwner(usernsmap)
 		}
 	}
 }

@@ -42,8 +42,8 @@ var _ = Describe("namespaces", func() {
 			Expect(pns.LeaderString()).To(Equal(""))
 
 			pns.leaders = []*Process{
-				&Process{PID: 666, Starttime: 666, Name: "foo"},
-				&Process{PID: 42, Starttime: 42, Name: "bar"},
+				{PID: 666, Starttime: 666, Name: "foo"},
+				{PID: 42, Starttime: 42, Name: "bar"},
 			}
 			s := pns.String()
 			Expect(s).To(ContainSubstring(`net:[123]`))
@@ -68,8 +68,8 @@ var _ = Describe("namespaces", func() {
 		It("find an ealdorman", func() {
 			pns := &plainNamespace{
 				leaders: []*Process{
-					&Process{PID: 666, Starttime: 666},
-					&Process{PID: 42, Starttime: 42},
+					{PID: 666, Starttime: 666},
+					{PID: 42, Starttime: 42},
 				},
 			}
 			Expect(pns.Ealdorman()).To(Equal(&Process{PID: 42, Starttime: 42}))
