@@ -33,11 +33,13 @@ import (
 type PIDType int32
 
 // Process represents our very limited view and even more limited interest in
-// a specific Linux process.
+// a specific Linux process. Well, the limitation comes from what we need for
+// namespace discovery to be useful.
 type Process struct {
 	PID        PIDType       // this process' identifier.
 	PPID       PIDType       // parent's process identifier.
 	Parent     *Process      // our parent's process description.
+	Children   []*Process    // child processes.
 	Name       string        // synthesized name of process.
 	Namespaces NamespacesSet // the 7 namespaces joined by this process.
 	Starttime  uint64        // Time of process start, since the Kernel boot epoch.
@@ -175,8 +177,21 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 	// pointers. We're even so lazy as to not check for the PPID being
 	// present, as we'll get back a zero value anyway.
 	for _, proc := range pt {
-		proc.Parent = pt[proc.PPID]
+		if parent, ok := pt[proc.PPID]; ok {
+			proc.Parent = parent
+			parent.Children = append(parent.Children, proc)
+		}
 	}
 	// Phew: done.
 	return
+}
+
+// ProcessListByPID is a type alias for sorting slices of *Process numerically
+// by their PIDs.
+type ProcessListByPID []*Process
+
+func (l ProcessListByPID) Len() int      { return len(l) }
+func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l ProcessListByPID) Less(i, j int) bool {
+	return l[i].PID < l[j].PID
 }

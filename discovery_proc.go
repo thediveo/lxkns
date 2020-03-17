@@ -84,7 +84,8 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		}
 		// To speed up finding the process leaders in a specific namespace, we
 		// remember this namespace as joined by the process we're just looking
-		// at.
+		// at. Additionally, other applications also benefit from quickly
+		// navigating from a process to its joined namespace proxy objects.
 		proc.Namespaces[nstypeidx] = ns
 		// Let's also get the owning user namespace id, while we still have a
 		// suitable fd open. For user namespaces, we skip this step, as this
