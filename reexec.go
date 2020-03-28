@@ -23,10 +23,19 @@ import "github.com/thediveo/gons/reexec"
 // kernel namespaces. The stdout result of running the action is then
 // deserialized as JSON into the specified result element.
 func ReexecIntoAction(actionname string, namespaces []Namespace, result interface{}) (err error) {
+	return ReexecIntoActionEnv(actionname, namespaces, nil, result)
+}
+
+// ReexecIntoAction forks and then re-executes this process in order to run a
+// specific action (indicated by actionname) in a set of (different) Linux
+// kernel namespaces. It also passes the additional environment variables
+// specified in envvars. The stdout result of running the action is then
+// deserialized as JSON into the specified result element.
+func ReexecIntoActionEnv(actionname string, namespaces []Namespace, envvars []string, result interface{}) (err error) {
 	rexns := make([]reexec.Namespace, len(namespaces))
 	for idx := range namespaces {
 		rexns[idx].Type = "!" + namespaces[idx].Type().Name()
 		rexns[idx].Path = namespaces[idx].Ref()
 	}
-	return reexec.ForkReexec(actionname, rexns, result)
+	return reexec.ForkReexecEnv(actionname, rexns, envvars, result)
 }
