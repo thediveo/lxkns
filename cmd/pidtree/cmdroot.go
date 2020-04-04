@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -45,7 +46,7 @@ var rootCmd = &cobra.Command{
 		// If no PID was specified ("zero" PID), then render the usual full
 		// PID namespace and process tree.
 		if pid == 0 {
-			return pidtree()
+			return renderPIDTreeWithNamespaces(os.Stdout)
 		}
 		// If there is a PID, then check next if there is also a PID namespace
 		// specified, in which the PID is valid. Then render only the branch
@@ -64,7 +65,7 @@ var rootCmd = &cobra.Command{
 				}
 			}
 		}
-		return pidbranch(lxkns.PIDType(pid), nstypes.NamespaceID(pidnsid))
+		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), nstypes.NamespaceID(pidnsid))
 	},
 }
 
@@ -82,7 +83,7 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
+func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
@@ -130,7 +131,7 @@ func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
 		proc = pproc
 	}
 	// Now render the whole branch...
-	fmt.Println(
+	fmt.Fprintln(out,
 		asciitree.Render(
 			branch,
 			&BranchVisitor{
@@ -142,8 +143,8 @@ func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
 	return nil
 }
 
-// Renders a full PID namespace and PID tree.
-func pidtree() error {
+// Renders a full PID tree including PID namespaces.
+func renderPIDTreeWithNamespaces(out io.Writer) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
@@ -164,7 +165,7 @@ func pidtree() error {
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
 	// the desired process tree with PID namespaces.
-	fmt.Println(
+	fmt.Fprintln(out,
 		asciitree.Render(
 			[]lxkns.Namespace{rootpidns}, // note to self: expects a slice of roots
 			&TreeVisitor{
