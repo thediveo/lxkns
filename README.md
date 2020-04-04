@@ -56,10 +56,50 @@ build on top of `lxkns` (we _do_ eat our own dog food):
 
 - `lspns`: shows _all_ PID namespaces in your Linux host, in a neat hierarchy.
 
-- `pidtree`: shows the process hierarchy within the PID namespace hierarchy.
-  See also the [pidtree
-  command](https://godoc.org/github.com/thediveo/lxkns/cmd/pidtree)
-  documentation.
+- `pidtree`: shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
+
+### pidtree
+
+`pidtree` shows either the process hierarchy within the PID namespace
+hierarchy or a single branch only. It additionally shows translated PIDs,
+which are valid only inside the PID namespace processes are joined to. Such as
+in `"containerd" (24446=78)`, where the PID namespace-local PID is 78, but
+inside the initial (root) PID namespace the PID is 24446 instead.
+
+```
+$ sudo pidtree
+pid:[4026531836], owned by UID 0 ("root")
+├─ "systemd" (1974)
+│  ├─ "dbus-daemon" (2030)
+│  ├─ "kglobalaccel5" (2128)
+...
+│  ├─ "containerd" (1480)
+│  │  ├─ "containerd-shim" (21411)
+│  │  │  └─ "gw" (21434)
+│  │  ├─ "containerd-shim" (24173)
+│  │  │  └─ pid:[4026533005], owned by UID 0 ("root")
+│  │  │     └─ "systemd" (24191=1)
+│  │  │        ├─ "systemd-journal" (24366=70)
+│  │  │        ├─ "containerd" (24446=78)
+```
+  
+Alternatively, it can show just a single branch down to a PID inside a
+specific PID namespace.
+
+```
+$ sudo pidtree -n pid:[4026532512] -p 3
+pid:[4026531836], owned by UID 0 ("root")
+└─ "systemd" (1)
+    └─ "kdeinit5" (2098)
+      └─ "code" (20384)
+          └─ pid:[4026532512], owned by UID 1000 ("harald")
+            └─ "code" (20387=1)
+                └─ "code" (20389=3)
+```
+
+Please see also the [pidtree
+command](https://godoc.org/github.com/thediveo/lxkns/cmd/pidtree)
+documentation.
 
 ## Package Usage
 
