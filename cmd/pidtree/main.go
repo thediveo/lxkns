@@ -1,6 +1,8 @@
 // The "pidtree" CLI tool shows a simplified process tree, but with the
 // following twists: it also shows PID namespaces, and translates PIDs into
-// their PID namespace-local versions.
+// their PID namespace-local versions. In addition, it also allows showing
+// only a single branch leading to a specific process/PID in a specific PID
+// namespace.
 
 // Copyright 2020 Harald Albrecht.
 //
@@ -19,7 +21,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/thediveo/gons/reexec"
@@ -30,9 +31,11 @@ func main() {
 	// call to reexec.CheckAction() will automatically handle this situation
 	// and then never return when in re-execution.
 	reexec.CheckAction()
-	// Otherwise, this is cobra boilerplate.
+	// Otherwise, this is cobra boilerplate documentation, except for the
+	// missing call to fmt.Println(err) which in the original boilerplate is
+	// just plain wrong: it renders the error message twice, see also:
+	// https://github.com/spf13/cobra/issues/304
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

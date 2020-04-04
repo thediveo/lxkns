@@ -76,6 +76,10 @@ func init() {
 		"PID namespace of PID, if not the initial PID namespace")
 }
 
+type SingleBranch struct {
+	Branch []interface{}
+}
+
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
 func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
@@ -103,10 +107,10 @@ func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
 	if !ok {
 		return fmt.Errorf("unknown process PID %d", pid)
 	}
-	branch := []interface{}{}
+	branch := SingleBranch{Branch: []interface{}{}}
 	for proc != nil {
 		// Prepend the current process to the branch.
-		branch = append([]interface{}{proc}, branch...)
+		branch.Branch = append([]interface{}{proc}, branch.Branch...)
 		// Now if there is a change in PID namespaces just at the current
 		// process, prepend our "current" PID namespace also. The difficult
 		// part here is that we need to deal with the situation where we have
@@ -118,7 +122,9 @@ func pidbranch(pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
 		if (pproc == nil ||
 			pproc.Namespaces[lxkns.PIDNS] != proc.Namespaces[lxkns.PIDNS]) &&
 			proc.Namespaces[lxkns.PIDNS] != nil {
-			branch = append([]interface{}{proc.Namespaces[lxkns.PIDNS]}, branch...)
+			branch.Branch = append(
+				[]interface{}{proc.Namespaces[lxkns.PIDNS]},
+				branch.Branch...)
 		}
 		// Climb up towards the root/stem.
 		proc = pproc
@@ -161,7 +167,7 @@ func pidtree() error {
 	fmt.Println(
 		asciitree.Render(
 			[]lxkns.Namespace{rootpidns}, // note to self: expects a slice of roots
-			&PIDVisitor{
+			&TreeVisitor{
 				Details:   true,
 				PIDMap:    pidmap,
 				RootPIDNS: rootpidns,

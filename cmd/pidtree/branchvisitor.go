@@ -1,4 +1,5 @@
-// A visitor implementing the view on the process tree and PID namespaces.
+// A visitor implementing the single-branch view on the process tree and PID
+// namespaces.
 
 // Copyright 2020 Harald Albrecht.
 //
@@ -17,27 +18,25 @@
 package main
 
 import (
-	"fmt"
-	"os/user"
 	"reflect"
 
 	"github.com/thediveo/lxkns"
 )
 
-// BranchVisitor is an asciitree.Visitor which works on a branch from an
-// initial/root PID namespace down to a specific process (sic!). It expects a
-// sequence of PID namespaces and/or processes, which it will follow until it
-// ends.
+// BranchVisitor is an asciitree.Visitor which works on a single branch from
+// an initial/root PID namespace going down to a specific process (sic!). It
+// expects a sequence of PID namespaces and/or processes, which it will follow
+// until the branch ends.
 type BranchVisitor struct {
 	Details   bool
 	PIDMap    *lxkns.PIDMap
 	RootPIDNS lxkns.Namespace
 }
 
-// Roots simply returns the specified branch as it, as the Get visitor method
-// will take care of all details.
-func (v *BranchVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	return []reflect.Value{roots}
+// Roots simply returns the specified branch as the only root, as the Get
+// visitor method will take care of all details.
+func (v *BranchVisitor) Roots(branch reflect.Value) (children []reflect.Value) {
+	return []reflect.Value{branch}
 }
 
 // Label returns a node label text, which varies depending on whether the node
@@ -48,36 +47,11 @@ func (v *BranchVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 // PID (which is the PID as seen from inside the PID namespace of the
 // Process).
 func (v *BranchVisitor) Label(branch reflect.Value) (label string) {
-	nodeif := branch.Index(0).Interface()
+	nodeif := branch.Interface().(SingleBranch).Branch[0]
 	if proc, ok := nodeif.(*lxkns.Process); ok {
-		// It's a Process; do we have namespace information for it? If yes,
-		// then we can translate between the process-local PID namespace and
-		// the "initial" PID namespace.
-		if procpidns := proc.Namespaces[lxkns.PIDNS]; procpidns != nil {
-			localpid := v.PIDMap.Translate(proc.PID, v.RootPIDNS, procpidns)
-			if localpid != proc.PID {
-				return fmt.Sprintf("%q (%d=%d)", proc.Name, proc.PID, localpid)
-			}
-			return fmt.Sprintf("%q (%d)", proc.Name, proc.PID)
-		}
-		// PID namespace information is NOT known, so this is a process out of
-		// our reach. We thus print it in a way to signal that we don't know
-		// about this process' PID namespace
-		return fmt.Sprintf("pid:[???] %q (%d=???)", proc.Name, proc.PID)
+		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS)
 	}
-	// It's a PID namespace, so we give details about the ID and the owner's
-	// UID and name. And if it's not ... PANIC!!!
-	pidns := nodeif.(lxkns.Namespace)
-	label = pidns.(lxkns.NamespaceStringer).TypeIDString()
-	if pidns.Owner() != nil {
-		uid := pidns.Owner().(lxkns.Ownership).UID()
-		var userstr string
-		if u, err := user.LookupId(fmt.Sprintf("%d", uid)); err == nil {
-			userstr = fmt.Sprintf(" (%q)", u.Username)
-		}
-		label += fmt.Sprintf(", owned by UID %d%s", uid, userstr)
-	}
-	return
+	return PIDNamespaceLabel(nodeif.(lxkns.Namespace))
 }
 
 // Get is called on nodes which can be either (1) PID namespaces or (2)
@@ -93,10 +67,11 @@ func (v *BranchVisitor) Get(branch reflect.Value) (
 	// The only child can be either a PID namespace or a process, as we'll
 	// find out later ... but there will only be exactly one "child" in any
 	// case.
-	if b := branch.Interface().([]interface{})[1:]; len(b) > 0 {
-		children = reflect.ValueOf([]interface{}{b})
-	} else {
-		children = reflect.ValueOf([]interface{}{})
+	clist := []interface{}{}
+	if b := branch.Interface().(SingleBranch).Branch[1:]; len(b) > 0 {
+		subbranch := SingleBranch{Branch: b}
+		clist = append(clist, subbranch)
 	}
+	children = reflect.ValueOf(clist)
 	return
 }
