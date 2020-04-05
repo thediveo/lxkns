@@ -25,7 +25,7 @@ import (
 
 // TreeVisitor is an asciitree.Visitor which works on discovery results and
 // visits them in order to produce a process tree. Differing from `ps fax`, we
-// also show the PID namespaces inbetween the process hierarchy where the PID
+// also show the PID namespaces in between the process hierarchy where the PID
 // namespace changes from one to another.
 type TreeVisitor struct {
 	Details   bool

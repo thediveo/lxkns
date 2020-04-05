@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 	common "github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 	"github.com/thediveo/lxkns/nstypes"
 )
@@ -34,14 +35,17 @@ var rootCmd = &cobra.Command{
 	Short: "pidtree shows the tree of PID namespaces together with PIDs",
 	Args:  cobra.NoArgs,
 	Example: `  pidtree
-	shows the PID namespaces hierarchy together and the process trees inside them.
+	shows the PID namespaces hierarchy with the process inside them as a tree.
   pidtree -p 42
-	shows the PID namespace hierarchy and process tree only for the branch leading
-	to process PID 42.
+	shows only those PID namespaces hierarchy and processes on the branch
+	leading to process PID 42.
   pidtree -n pid:[4026531836] -p 1
-	shows the PID namespace hierarchy and process tree only for the branch leading
-	to process PID 1 in PID namespace 4026531836.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	shows only the PID namespace hierarchy and processes on the branch
+	leading to process PID 1 in PID namespace 4026531836.`,
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		return shared.ConfigureStyles()
+	},
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		pid, _ := cmd.PersistentFlags().GetUint32("pid")
 		// If no PID was specified ("zero" PID), then render the usual full
 		// PID namespace and process tree.
@@ -74,9 +78,15 @@ func init() {
 	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
 		"PID of process to show PID namespace tree and parent PIDs for")
 	rootCmd.PersistentFlags().StringP("ns", "n", "",
-		"PID namespace of PID, if not the initial PID namespace")
+		"PID namespace of PID, if not the initial PID namespace;\n"+
+			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
+			"PID namespace textual representation like \"pid:[4026531836]\"")
+	shared.AddStyleFlags(rootCmd)
 }
 
+// SingleBranch encodes a single branch from the initial/root PID namespace
+// down to a particular process, with all intermediate PID namespaces and
+// processes along the route.
 type SingleBranch struct {
 	Branch []interface{}
 }

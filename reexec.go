@@ -26,8 +26,8 @@ func ReexecIntoAction(actionname string, namespaces []Namespace, result interfac
 	return ReexecIntoActionEnv(actionname, namespaces, nil, result)
 }
 
-// ReexecIntoAction forks and then re-executes this process in order to run a
-// specific action (indicated by actionname) in a set of (different) Linux
+// ReexecIntoActionEnv forks and then re-executes this process in order to run
+// a specific action (indicated by actionname) in a set of (different) Linux
 // kernel namespaces. It also passes the additional environment variables
 // specified in envvars. The stdout result of running the action is then
 // deserialized as JSON into the specified result element.

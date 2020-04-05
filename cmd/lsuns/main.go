@@ -18,12 +18,9 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
-	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns"
-	common "github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 )
 
 func main() {
@@ -31,9 +28,11 @@ func main() {
 	// call to reexec.CheckAction() will automatically handle this situation
 	// and then never return when in re-execution.
 	reexec.CheckAction()
-	// Run a full namespace discovery.
-	allns := lxkns.Discover(lxkns.FullDiscovery)
-	fmt.Println(
-		asciitree.Render(
-			allns.UserNSRoots, &UserNSVisitor{true}, common.NamespaceStyler))
+	// Otherwise, this is cobra boilerplate documentation, except for the
+	// missing call to fmt.Println(err) which in the original boilerplate is
+	// just plain wrong: it renders the error message twice, see also:
+	// https://github.com/spf13/cobra/issues/304
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

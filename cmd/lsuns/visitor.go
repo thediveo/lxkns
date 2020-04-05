@@ -21,8 +21,10 @@ import (
 	"fmt"
 	"os/user"
 	"reflect"
+	"strconv"
 
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 )
 
 // UserNSVisitor is an asciitree.Visitor which starts from a list (slice) of
@@ -47,16 +49,19 @@ func (v *UserNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 // no label.
 func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	if ns, ok := node.Interface().(lxkns.Namespace); ok {
+		style := shared.Styles[ns.Type().Name()]
 		label = fmt.Sprintf("%s %s",
-			ns.(lxkns.NamespaceStringer).TypeIDString(),
+			style.S(ns.(lxkns.NamespaceStringer).TypeIDString()),
 			leadersString(ns))
 	}
 	if uns, ok := node.Interface().(lxkns.Ownership); ok {
 		username := ""
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
-			username = user.Username
+			username = fmt.Sprintf(" (%s)", shared.OwnerStyle.Q(user.Username))
 		}
-		label += fmt.Sprintf(" created by %q (%d)", username, uns.UID())
+		label += fmt.Sprintf(" created by UID %s%s",
+			shared.OwnerStyle.S(strconv.Itoa(uns.UID())),
+			username)
 	}
 	return
 }
@@ -84,8 +89,9 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 				}
 				nslist := lxkns.SortedNamespaces(ownedns[nstype])
 				for _, ns := range nslist {
+					style := shared.Styles[ns.Type().Name()]
 					s := fmt.Sprintf("%s %s",
-						ns.(lxkns.NamespaceStringer).TypeIDString(),
+						style.S(ns.(lxkns.NamespaceStringer).TypeIDString()),
 						leadersString(ns))
 					properties = append(properties, s)
 				}
@@ -102,7 +108,9 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 func leadersString(ns lxkns.Namespace) string {
 	procs := "process (none)"
 	if ancient := ns.Ealdorman(); ancient != nil {
-		procs = "process " + fmt.Sprintf("%q (%d)", ancient.Name, ancient.PID)
+		procs = "process " +
+			fmt.Sprintf("%s (%d)",
+				shared.ProcessStyle.Q(ancient.Name), ancient.PID)
 	}
 	/*
 		if leaders := ns.Leaders(); len(leaders) > 0 {
