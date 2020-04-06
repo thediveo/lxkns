@@ -20,10 +20,9 @@ package main
 import (
 	"fmt"
 	"os/user"
-	"strconv"
 
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/shared"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
 // ProcessLabel returns the text label for a Process, rendering such
@@ -37,36 +36,35 @@ func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Nam
 	if procpidns := proc.Namespaces[lxkns.PIDNS]; procpidns != nil {
 		localpid := pidmap.Translate(proc.PID, rootpidns, procpidns)
 		if localpid != proc.PID {
-			return fmt.Sprintf("%s (%d=%d)",
-				shared.ProcessStyle.Q(proc.Name),
+			return fmt.Sprintf("%q (%d=%d)",
+				style.ProcessStyle.V(proc.Name),
 				proc.PID, localpid)
 		}
-		return fmt.Sprintf("%s (%d)", shared.ProcessStyle.Q(proc.Name), proc.PID)
+		return fmt.Sprintf("%q (%d)", style.ProcessStyle.V(proc.Name), proc.PID)
 	}
 	// PID namespace information is NOT known, so this is a process out of
 	// our reach. We thus print it in a way to signal that we don't know
 	// about this process' PID namespace
-	return fmt.Sprintf("%s %s (%d=%s)",
-		shared.PIDStyle.S("pid:[", shared.UnknownStyle.S("???"), "]"),
-		shared.ProcessStyle.Q(proc.Name),
+	return fmt.Sprintf("%s %q (%d=%s)",
+		style.PIDStyle.S("pid:[", style.UnknownStyle.V("???"), "]"),
+		style.ProcessStyle.V(proc.Name),
 		proc.PID,
-		shared.UnknownStyle.S("???"))
+		style.UnknownStyle.V("???"))
 }
 
 // PIDNamespaceLabel returns the text label for a PID namespace, giving not
 // only the details about type (always PID) and ID, but additionally the
 // owner's UID and user name.
 func PIDNamespaceLabel(pidns lxkns.Namespace) (label string) {
-	label = pidns.(lxkns.NamespaceStringer).TypeIDString()
-	label = shared.PIDStyle.S(label)
+	label = style.PIDStyle.S(pidns.(lxkns.NamespaceStringer).TypeIDString())
 	if pidns.Owner() != nil {
 		uid := pidns.Owner().(lxkns.Ownership).UID()
 		var userstr string
 		if u, err := user.LookupId(fmt.Sprintf("%d", uid)); err == nil {
-			userstr = fmt.Sprintf(" (%s)", shared.OwnerStyle.Q(u.Username))
+			userstr = fmt.Sprintf(" (%q)", style.OwnerStyle.V(u.Username))
 		}
-		label += fmt.Sprintf(", owned by UID %s%s",
-			shared.OwnerStyle.S(strconv.Itoa(uid)), userstr)
+		label += fmt.Sprintf(", owned by UID %d%s",
+			style.OwnerStyle.V(uid), userstr)
 	}
 	return
 }

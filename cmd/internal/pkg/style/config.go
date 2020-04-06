@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package shared
+package style
 
 import (
 	"fmt"
@@ -98,35 +98,6 @@ var Styles = map[string]*Style{
 	"owner":   &OwnerStyle,
 	"process": &ProcessStyle,
 	"unknown": &UnknownStyle,
-}
-
-// Style represents a set of style settings to apply to text when rendering to
-// a terminal supporting ANSI coloring and styling.
-type Style struct {
-	style termenv.Style
-}
-
-// S returns the specified text s styled according to this Style's
-// configuration. If multiple strings are specified, then the styling is
-// applied to each string anew, thus allowing interleaving differently styled
-// strings with this styling. The individual strings are put immediately
-// adjacent to each without any intermediate spaces.
-func (st *Style) S(s ...string) string {
-	r := ""
-	for _, str := range s {
-		r += st.style.Styled(str)
-	}
-	return r
-}
-
-// Q returns the specified text s properly quoted and styled according to this
-// Style's configuration.
-func (st *Style) Q(s string) string {
-	return st.style.Styled(fmt.Sprintf("%q", s))
-}
-
-func (st *Style) D(d int64) string {
-	return ""
 }
 
 func readStyles(configyaml string) {

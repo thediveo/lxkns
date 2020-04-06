@@ -20,8 +20,8 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 	common "github.com/thediveo/lxkns/cmd/internal/pkg/shared"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
 var rootCmd = &cobra.Command{
@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "lsuns shows the tree of user namespaces, optionally with owned namespaces",
 	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return shared.ConfigureStyles()
+		return style.ConfigureStyles()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		details, _ := cmd.PersistentFlags().GetBool("details")
@@ -50,5 +50,5 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().BoolP("details", "d", false,
 		"shows details, such as owned namespaces")
-	shared.AddStyleFlags(rootCmd)
+	style.AddStyleFlags(rootCmd)
 }

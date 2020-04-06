@@ -15,27 +15,21 @@ Usage:
 
 The flags are:
 
-  -n=""
-  --ns=""
-          optional PID namespace of PID, if not the initial PID namespace.
-          Can be either an uint64 value ("4026531836"), or a PID namespace
-          textual representation, such as "pid:[4026531836]".
-  -p=0
-  --pid=0
-          optional PID of process to show PID namespace branch and parent
-          PIDs for.
-  -c
-          ...
-  -h
-  --help
-          show help.
+  -c, --color string[="always"]   colorize the output; can be 'always' (default if omitted), 'auto',
+                                  or 'never' (default "auto")
+  -h, --help                      help for pidtree
+  -n, --ns string                 PID namespace of PID, if not the initial PID namespace;
+                                  either an unsigned int64 value, such as "4026531836", or a
+                                  PID namespace textual representation like "pid:[4026531836]"
+  -p, --pid uint32                PID of process to show PID namespace tree and parent PIDs for
 
 Display:
 
 The process tree starts at the topmost PID namespace; when started in the
 initial PID namespace, then this will be the initial PID namespace.
 
-  pid:[4026531836], owned by UID 0 ("root") ├─ "systemd" (1748)
+  pid:[4026531836], owned by UID 0 ("root")
+  ├─ "systemd" (1748)
   [...]
 
 When started in a child PID namespace, then the topmost PID namespace will be
@@ -53,14 +47,17 @@ in turn was active when the PID namespace was created. Or to phrase this chain
 slightly differently: the PID namespace is owned by a user namespace, and that
 user namespace is owned by a user.
 
-  pid:[4026531836], owned by UID 0 ("root") ├─ "systemd" (1) │  ├─
-  "systemd-journal" (417)
+  pid:[4026531836], owned by UID 0 ("root")
+  ├─ "systemd" (1)
+  │  ├─ "systemd-journal" (417)
   [...]
-  │  │  └─ "unshare" (5309) │  │     └─ pid:[4026532229], owned by UID 1000
-  ("thediveo") │  │        └─ "bash" (5310=1) │  │           └─ "unshare"
-  (5344=24) │  │              └─ pid:[4026532247], owned by UID 1000
-  ("thediveo") │  │                 └─ "bash" (5345=1) │  │ └─ "sleep"
-  (5529=25)
+  │  │  └─ "unshare" (5309)
+  │  │     └─ pid:[4026532229], owned by UID 1000 ("thediveo")
+  │  │        └─ "bash" (5310=1)
+  │  │           └─ "unshare" (5344=24)
+  │  │              └─ pid:[4026532247], owned by UID 1000 ("thediveo")
+  │  │                 └─ "bash" (5345=1)
+  │  │ └─ "sleep" (5529=25)
   [...]
 
 For PID namespaces different from the starting PID namespace, pidtree not only
@@ -71,8 +68,11 @@ PID is thus the PID seen by the process itself. For instance, this information
 about the local PID might be useful when entering child PID namespaces and
 controlling childs or diagnosing logs with PIDs.
 
-  │  │              └─ pid:[4026532247], owned by UID 1000 ("thediveo") │  │
-  └─ "bash" (5345=1) │  │                    └─ "sleep" (5529=25)
+  [...]
+  │  │              └─ pid:[4026532247], owned by UID 1000 ("thediveo")
+  │  │                 └─ "bash" (5345=1)
+  │  │                    └─ "sleep" (5529=25)
+  [...]
 
 Insufficient Privileges/Capabilities:
 
@@ -85,11 +85,14 @@ namespace, then it will be prefixed with a "pid:[???]" indication and
 additionally an unknown local PID "=???" will be shown.
 
   [...]
-  │  ├─ "bash" (14725) │  │  └─ pid:[???] "sudo" (14738=???) │  │     └─
-  pid:[???] "unshare" (14742=???) │  │        └─ pid:[???] "bash" (14744=???)
-  │  │           └─ pid:[???] "unshare" (14756=???) │  │              └─
-  pid:[???] "bash" (14757=???) │  │                 ├─ pid:[???] "sleep"
-  (14773=???) │  │                 └─ pid:[???] "bash" (15662=???)
+  │  ├─ "bash" (14725)
+  │  │  └─ pid:[???] "sudo" (14738=???)
+  │  │     └─ pid:[???] "unshare" (14742=???)
+  │  │        └─ pid:[???] "bash" (14744=???)
+  │  │           └─ pid:[???] "unshare" (14756=???)
+  │  │              └─ pid:[???] "bash" (14757=???)
+  │  │                 ├─ pid:[???] "sleep" (14773=???)
+  │  │                 └─ pid:[???] "bash" (15662=???)
   [...]
 
 */
