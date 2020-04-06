@@ -31,8 +31,20 @@ type NamespacedPID struct {
 }
 
 // NamespacedPIDs is a list of PIDs for the same process, but in different PID
-// namespaces.
+// namespaces. The order of the list is undefined.
 type NamespacedPIDs []NamespacedPID
+
+// PIDs just returns the different PIDs assigned to a single process in
+// different PID namespaces, without the namespaces. This is a convenience
+// function for those lazy cases where just the PID list is wanted, but no PID
+// namespace details.
+func (ns NamespacedPIDs) PIDs() []PIDType {
+	pids := make([]PIDType, len(ns))
+	for idx, el := range ns {
+		pids[idx] = el.PID
+	}
+	return pids
+}
 
 // PIDMap maps a single namespaced PID to the list of PIDs for this process in
 // different PID namespaces. Further PIDMap methods then allow simple
@@ -54,6 +66,23 @@ func (pm *PIDMap) Translate(pid PIDType, from Namespace, to Namespace) PIDType {
 		}
 	}
 	return 0
+}
+
+// NamespacedPIDs returns for a specific namespaced PID the list of all PIDs
+// the corresponding process has been given in different PID namespaces.
+// Returns nil if the PID doesn't exist in the specified PID namespace. The
+// list is ordered from the topmost PID namespace down to the leaf PID
+// namespace to which a process actually is joined to.
+func (pm *PIDMap) NamespacedPIDs(pid PIDType, from Namespace) NamespacedPIDs {
+	if namespacedpids, ok := pm.m[NamespacedPID{PID: pid, PIDNS: from}]; ok {
+		size := len(namespacedpids)
+		nspids := make([]NamespacedPID, size)
+		for idx, el := range namespacedpids {
+			nspids[size-1-idx] = el
+		}
+		return nspids
+	}
+	return nil
 }
 
 // NewPIDMap returns a new PID map based on the specified discovery results

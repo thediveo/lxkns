@@ -53,11 +53,11 @@ user namespace is owned by a user.
   [...]
   │  │  └─ "unshare" (5309)
   │  │     └─ pid:[4026532229], owned by UID 1000 ("thediveo")
-  │  │        └─ "bash" (5310=1)
-  │  │           └─ "unshare" (5344=24)
+  │  │        └─ "bash" (5310/1)
+  │  │           └─ "unshare" (5344/24)
   │  │              └─ pid:[4026532247], owned by UID 1000 ("thediveo")
-  │  │                 └─ "bash" (5345=1)
-  │  │ └─ "sleep" (5529=25)
+  │  │                 └─ "bash" (5345/1)
+  │  │ └─ "sleep" (5529/25)
   [...]
 
 For PID namespaces different from the starting PID namespace, pidtree not only
@@ -70,8 +70,8 @@ controlling childs or diagnosing logs with PIDs.
 
   [...]
   │  │              └─ pid:[4026532247], owned by UID 1000 ("thediveo")
-  │  │                 └─ "bash" (5345=1)
-  │  │                    └─ "sleep" (5529=25)
+  │  │                 └─ "bash" (5345/1)
+  │  │                    └─ "sleep" (5529/25)
   [...]
 
 Insufficient Privileges/Capabilities:
@@ -80,19 +80,19 @@ When pidtree is started without the necessary privileges (in particular, the
 CAP_SYS_PTRACE capability) it has only limited visibilty onto Linux kernel
 namespaces. In this situation, pidtree will only show processes which are
 either in the same PID namespace as itself, or which are direct or indirect
-children of such processes. When a child process is in an unknown PID
+children of such processes. When a child process is in an inaccessible PID
 namespace, then it will be prefixed with a "pid:[???]" indication and
-additionally an unknown local PID "=???" will be shown.
+additionally an unknown local PID "/???" will be shown.
 
   [...]
   │  ├─ "bash" (14725)
-  │  │  └─ pid:[???] "sudo" (14738=???)
-  │  │     └─ pid:[???] "unshare" (14742=???)
-  │  │        └─ pid:[???] "bash" (14744=???)
-  │  │           └─ pid:[???] "unshare" (14756=???)
-  │  │              └─ pid:[???] "bash" (14757=???)
-  │  │                 ├─ pid:[???] "sleep" (14773=???)
-  │  │                 └─ pid:[???] "bash" (15662=???)
+  │  │  └─ pid:[???] "sudo" (14738/???)
+  │  │     └─ pid:[???] "unshare" (14742/???)
+  │  │        └─ pid:[???] "bash" (14744/???)
+  │  │           └─ pid:[???] "unshare" (14756/???)
+  │  │              └─ pid:[???] "bash" (14757/???)
+  │  │                 ├─ pid:[???] "sleep" (14773/???)
+  │  │                 └─ pid:[???] "bash" (15662/???)
   [...]
 
 */

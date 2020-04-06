@@ -20,6 +20,8 @@ package main
 import (
 	"fmt"
 	"os/user"
+	"strconv"
+	"strings"
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
@@ -32,20 +34,25 @@ import (
 func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Namespace) string {
 	// Do we have namespace information for it? If yes, then we can translate
 	// between the process-local PID namespace and the "initial" PID
-	// namespace.
+	// namespace. For convenience, we show all PIDs in all PID namespaces,
+	// from the initial PID namespace down to the PID namespace this process
+	// is joined to.
 	if procpidns := proc.Namespaces[lxkns.PIDNS]; procpidns != nil {
-		localpid := pidmap.Translate(proc.PID, rootpidns, procpidns)
-		if localpid != proc.PID {
-			return fmt.Sprintf("%q (%d=%d)",
+		pids := []string{}
+		for _, el := range pidmap.NamespacedPIDs(proc.PID, rootpidns) {
+			pids = append(pids, strconv.FormatUint(uint64(el.PID), 10))
+		}
+		if len(pids) > 1 {
+			return fmt.Sprintf("%q (%s)",
 				style.ProcessStyle.V(proc.Name),
-				proc.PID, localpid)
+				strings.Join(pids, "/"))
 		}
 		return fmt.Sprintf("%q (%d)", style.ProcessStyle.V(proc.Name), proc.PID)
 	}
 	// PID namespace information is NOT known, so this is a process out of
 	// our reach. We thus print it in a way to signal that we don't know
 	// about this process' PID namespace
-	return fmt.Sprintf("%s %q (%d=%s)",
+	return fmt.Sprintf("%s %q (%d/%s)",
 		style.PIDStyle.S("pid:[", style.UnknownStyle.V("???"), "]"),
 		style.ProcessStyle.V(proc.Name),
 		proc.PID,
