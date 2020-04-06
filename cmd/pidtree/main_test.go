@@ -69,8 +69,8 @@ echo "$$"
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^(│? +)+└─ "unshare" \(\d+\)
 (│? +)+└─ pid:\[%d\], owned by UID %d \(".*"\)
-(│? +)+└─ "stage2.sh" \(\d+=1\)
-(│? +)+└─ "stage2.sh" \(\d+=%d\)$`,
+(│? +)+└─ "stage2.sh" \(\d+/1\)
+(│? +)+└─ "stage2.sh" \(\d+/%d\)$`,
 			pidnsid, os.Geteuid(), leafpid)))
 	})
 
@@ -80,7 +80,7 @@ echo "$$"
 		tree := out.String()
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
-\ +└─ "stage2.sh" \(\d+=1\)
+\ +└─ "stage2.sh" \(\d+/1\)
 $`,
 			pidnsid, os.Geteuid())))
 	})
