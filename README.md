@@ -9,6 +9,8 @@
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts.
 
+Tested with Go 1.13 and 1.14.
+
 ## Comprehensive Namespace Discovery
 
 When compared to most well-known and openly available CLI tools, such as
@@ -46,7 +48,10 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 ## gons CLI tools
 
 But `lxkns` is more than "just" a Golang package. It also features CLI tools
-build on top of `lxkns` (we _do_ eat our own dog food):
+build on top of `lxkns` (we _do_ eat our own dog food). To install these tools
+into your `$GOPATH/bin` directory, simply run `go install ./...`.
+
+These are the CLI tools:
 
 - `lsuns`: shows _all_ user namespaces in your Linux host, in a neat
   hierarchy. Moreover, it can also show the non-user namespaces "owned" by
