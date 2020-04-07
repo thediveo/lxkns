@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "lsuns shows the tree of user namespaces, optionally with owned namespaces",
 	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return style.ConfigureStyles()
+		return style.HandleStyles()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		details, _ := cmd.PersistentFlags().GetBool("details")

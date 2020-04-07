@@ -43,7 +43,7 @@ var rootCmd = &cobra.Command{
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return style.ConfigureStyles()
+		return style.HandleStyles()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		pid, _ := cmd.PersistentFlags().GetUint32("pid")

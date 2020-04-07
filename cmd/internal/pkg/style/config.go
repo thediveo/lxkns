@@ -16,50 +16,70 @@ package style
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	COLOR_ALWAYS = "always"
-	COLOR_AUTO   = "auto"
-	COLOR_NEVER  = "never"
-)
-
-// Style-related CLI command flags.
+// Style/colorization-related CLI command flags.
 var (
-	ColorMode string // colorization mode: "always", "auto", or "never"
+	colorize  ColorMode // colorization mode: "always", "auto", or "never"
+	theme     Theme     // dark or light color theme
+	dumptheme bool      // print the selected color theme to stdout
 )
 
 // AddStyleFlags adds global CLI command flags related to colorization and
 // styling.
 func AddStyleFlags(rootCmd *cobra.Command) {
-	rootCmd.PersistentFlags().StringVarP(&ColorMode, "color", "c", "auto",
+	pf := rootCmd.PersistentFlags()
+	pf.VarP(&colorize, "color", "c",
 		"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
 			"or 'never'")
-	rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"
+	pf.Lookup("color").NoOptDefVal = "always"
+	pf.Var(&theme, "theme", "colorization theme 'dark' or 'light'")
+	pf.BoolVar(&dumptheme, "dump", false,
+		"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
 }
 
-// ConfigureStyles configures the various output rendering styles based on CLI
+// HandleStyles configures the various output rendering styles based on CLI
 // command flags and configuration files. It needs to be called before
 // rendering any (styled) output, ideally as a "PersistentPreRun" of a Cobra
 // root command.
-func ConfigureStyles() error {
-	switch ColorMode {
-	case COLOR_ALWAYS:
+func HandleStyles() error {
+	// Colorization mode...
+	switch colorize {
+	case CmAlways:
 		colorProfile = termenv.ANSI256
-	case COLOR_AUTO:
+	case CmAuto:
 		colorProfile = termenv.ColorProfile()
-	case COLOR_NEVER:
+	case CmNever:
 		colorProfile = termenv.Ascii
-	default:
-		return fmt.Errorf(
-			"invalid --color mode %q, must be 'always', 'never', or 'auto'",
-			ColorMode)
 	}
-	readStyles(defaultstyles)
+	// First look for a user-defined theme in the user's home directory.
+	var th string
+	if home, err := os.UserHomeDir(); err == nil {
+		if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
+			th = string(styling)
+		}
+	}
+	if th == "" || dumptheme {
+		// Theme selection (or dumping): dark or light...
+		switch theme {
+		case ThDark:
+			th = darkTheme
+		case ThLight:
+			th = lightTheme
+		}
+	}
+	if dumptheme {
+		fmt.Fprint(os.Stdout, th)
+		os.Exit(0)
+	}
+	readStyles(th)
 	return nil
 }
 
@@ -134,31 +154,3 @@ func readStyles(configyaml string) {
 		}
 	}
 }
-
-const defaultstyles = `
-user:
-- bold
-- background: '#dadada' # Schwitters would be delighted!
-- foreground: '#000000'
-pid:
-- bold
-- background: '#e6ffff'
-- foreground: '#000000'
-cgroup:
-- background: '#ffe6e6'
-ipc:
-- background: '#ffffcc'
-mnt:
-- background: '#e6e6ff'
-net:
-- background: '#ccffdd'
-uts:
-- background: '#d9b3ff'
-
-process:
-- foreground: '#004000'
-owner:
-- foreground: '#808000'
-unknown:
-- foreground: '#800000'
-`
