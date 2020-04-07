@@ -9,21 +9,27 @@ The pidtree command bears some resemblance with the pstree command
 tree of processes. However, pidtree focuses on how processes are organized in
 PID namespaces; something pstree isn't aware of.
 
-Usage:
+Usage
+
+To run pidtree, enter in CLI:
 
   pidtree [flag]
 
-The flags are:
+Flags
 
-  -c, --color string[="always"]   colorize the output; can be 'always' (default if omitted), 'auto',
-                                  or 'never' (default "auto")
-  -h, --help                      help for pidtree
-  -n, --ns string                 PID namespace of PID, if not the initial PID namespace;
-                                  either an unsigned int64 value, such as "4026531836", or a
-                                  PID namespace textual representation like "pid:[4026531836]"
-  -p, --pid uint32                PID of process to show PID namespace tree and parent PIDs for
+The following pidtree flags are available:
 
-Display:
+  -c, --color colormodus[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
+                                    or 'never' (default always)
+      --dump                        dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
+  -h, --help                        help for pidtree
+  -n, --ns string                   PID namespace of PID, if not the initial PID namespace;
+                                    either an unsigned int64 value, such as "4026531836", or a
+                                    PID namespace textual representation like "pid:[4026531836]"
+  -p, --pid uint32                  PID of process to show PID namespace tree and parent PIDs for
+      --theme theme                 colorization theme 'dark' or 'light' (default dark)
+
+Display
 
 The process tree starts at the topmost PID namespace; when started in the
 initial PID namespace, then this will be the initial PID namespace.
