@@ -18,8 +18,7 @@
 package style
 
 import (
-	"errors"
-	"strings"
+	"github.com/thediveo/enumflag"
 )
 
 // ColorMode is an enumeration for colorizing output always, auto(matic), and
@@ -33,37 +32,18 @@ const (
 	CmNever                   // never colorize
 )
 
-// colorModusName maps color mode enum values to their textual
-// representations.
-var colorModeNames = map[ColorMode]string{
-	CmAlways: "always",
-	CmAuto:   "auto",
-	CmNever:  "never",
-}
+// Implements the methods required by spf13/cobra in order to use the enum as
+// a flag.
+func (cm *ColorMode) String() string     { return enumflag.String(cm) }
+func (cm *ColorMode) Set(s string) error { return enumflag.Set(cm, s) }
+func (cm *ColorMode) Type() string       { return "colormode" }
 
-// String returns the text representation of a color mode value.
-func (cm *ColorMode) String() string {
-	return colorModeNames[*cm]
-}
-
-// Set parses the given color mode string and converts it into the
-// corresponding (enumeration) value. We're actually more liberal than what
-// "ls" accepts.
-func (cm *ColorMode) Set(s string) error {
-	switch strings.ToLower(s) {
-	case "always", "on":
-		*cm = CmAlways
-	case "auto":
-		*cm = CmAuto
-	case "never", "off":
-		*cm = CmNever
-	default:
-		return errors.New("must be 'always'/'on', 'never'/'off', or 'auto'")
-	}
-	return nil
-}
-
-// Type returns the pflag name for color mode values.
-func (cm *ColorMode) Type() string {
-	return "colormode"
+// Implements the method required by enumflag to map enum values to their
+// textual identifiers.
+func (cm *ColorMode) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
+	return map[ColorMode][]string{
+		CmAlways: {"always", "on"},
+		CmAuto:   {"auto"},
+		CmNever:  {"never", "off"},
+	}, enumflag.EnumCaseSensitive
 }
