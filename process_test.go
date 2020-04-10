@@ -16,6 +16,7 @@ package lxkns
 
 import (
 	"os"
+	"sort"
 	"strconv"
 
 	. "github.com/onsi/ginkgo"
@@ -49,6 +50,10 @@ var _ = Describe("Process", func() {
 		Expect(NewProcess(0)).To(BeNil())
 	})
 
+	It("skips broken process stat", func() {
+		Expect(newProcess(1, "test/proctable/kaputt")).To(BeNil())
+	})
+
 	It("properties are read from /proc/[PID]", func() {
 		pid := PIDType(os.Getpid())
 		me := NewProcess(pid)
@@ -64,7 +69,7 @@ var _ = Describe("Process", func() {
 		Expect(me.Valid()).NotTo(BeTrue())
 	})
 
-	It("stringifies some properties", func() {
+	It("stringifies descriptive properties", func() {
 		me := NewProcess(PIDType(os.Getpid()))
 		s := me.String()
 		const startre = `(^|\s|[[:punct:]])`
@@ -74,31 +79,79 @@ var _ = Describe("Process", func() {
 		Expect(s).To(MatchRegexp(startre + me.Name + endre))
 	})
 
+	It("gets basename and command line", func() {
+		proc42 := newProcess(PIDType(42), "test/proctable/proc")
+		Expect(proc42.Cmdline).To(HaveLen(3))
+		Expect(proc42.Basename()).To(Equal("mumble.exe"))
+		Expect(proc42.Cmdline[2], "arg2")
+
+		// $0 doesn't contain any "/"
+		proc667 := newProcess(PIDType(667), "test/proctable/kaputt")
+		Expect(proc667.Basename()).To(Equal("mumble.exe"))
+	})
+
+	It("falls back on process name", func() {
+		// Please note that our synthetic PID 1 has no command line, but only
+		// a process name in its stat file.
+		proc1 := newProcess(PIDType(1), "test/proctable/proc")
+		Expect(proc1.Basename()).To(Equal("init"))
+	})
+
+	It("synthesizes basename if all else fails", func() {
+		proc := newProcess(PIDType(666), "test/proctable/kaputt")
+		Expect(proc.Basename()).To(Equal("process (666)"))
+	})
+
 })
 
 var _ = Describe("ProcessTable", func() {
 
-	It("synthetic /proc", func() {
+	It("reads synthetic /proc", func() {
 		pt := newProcessTable("test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
-		Expect(pt[1]).NotTo(BeNil())
-		Expect(pt[1].Parent).To(BeNil())
-		Expect(pt[1].Children).To(HaveLen(1))
-		Expect(pt[1].Children[0]).To(BeIdenticalTo(pt[42]))
+
+		proc1 := pt[1]
+		proc42 := pt[42]
+		Expect(proc1).NotTo(BeNil())
+		Expect(proc1.Parent).To(BeNil())
+		Expect(proc1.Children).To(HaveLen(1))
+		Expect(proc1.Children[0]).To(BeIdenticalTo(proc42))
 	})
 
 	It("returns nil for inaccessible /proc", func() {
 		Expect(newProcessTable("test/nirvana")).To(BeNil())
 	})
 
-	It("gathered from /proc", func() {
+	It("gathers from real /proc", func() {
 		pt := NewProcessTable()
 		Expect(pt).NotTo(BeNil())
-		pid := PIDType(os.Getpid())
-		Expect(pt[pid]).NotTo(BeZero())
-		Expect(pt[pid].Parent).NotTo(BeNil())
-		Expect(pt[pid].Parent.PID).To(Equal(PIDType(os.Getppid())))
+		proc := pt[PIDType(os.Getpid())]
+		Expect(proc).NotTo(BeZero())
+		Expect(proc.Parent).NotTo(BeNil())
+		Expect(proc.Parent.PID).To(Equal(PIDType(os.Getppid())))
+	})
+
+})
+
+var _ = Describe("ProcessListByPID", func() {
+
+	It("sorts Process lists", func() {
+		pls := [][]*Process{
+			{
+				&Process{PID: 1, Name: "foo"},
+				&Process{PID: 42, Name: "bar"},
+			},
+			{
+				&Process{PID: 42, Name: "bar"},
+				&Process{PID: 1, Name: "foo"},
+			},
+		}
+		for _, pl := range pls {
+			sort.Sort(ProcessListByPID(pl))
+			Expect(pl[0].PID).To(Equal(PIDType(1)))
+			Expect(pl[1].PID).To(Equal(PIDType(42)))
+		}
 	})
 
 })

@@ -21,6 +21,7 @@
 package lxkns
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -41,6 +42,7 @@ type Process struct {
 	Parent     *Process      // our parent's process description.
 	Children   []*Process    // child processes.
 	Name       string        // synthesized name of process.
+	Cmdline    []string      // command line of process.
 	Namespaces NamespacesSet // the 7 namespaces joined by this process.
 	Starttime  uint64        // Time of process start, since the Kernel boot epoch.
 }
@@ -49,9 +51,34 @@ type Process struct {
 // lookups.
 type ProcessTable map[PIDType]*Process
 
+// Basename returns the process executable name with the directory stripped
+// off, similar to what basename(1) does when applied to the "$0" argument. In
+// case the basename would be empty, then the process name is returned instead
+// as fallback.
+func (p *Process) Basename() (basename string) {
+	if len(p.Cmdline) > 0 {
+		if idx := strings.LastIndex(p.Cmdline[0], "/"); idx >= 0 {
+			basename = p.Cmdline[0][idx+1:]
+		} else {
+			basename = p.Cmdline[0]
+		}
+	}
+	// Fall back to the process name if the command line did play tricks and
+	// didn't gave us a useable name.
+	if basename == "" {
+		basename = p.Name
+	}
+	// Really fall back if even trying the process name plays tricks on us. We
+	// then use a synthesized name in the form of "process (PID)".
+	if basename == "" {
+		basename = "process (" + strconv.FormatUint(uint64(p.PID), 10) + ")"
+	}
+	return
+}
+
 // NewProcess returns a Process object describing certain properties of the
 // Linux process with the specified PID. In particular, the parent PID and the
-// name of the process.
+// name of the process, as well as the command line.
 func NewProcess(PID PIDType) (proc *Process) {
 	return newProcess(PID, "/proc")
 }
@@ -59,11 +86,27 @@ func NewProcess(PID PIDType) (proc *Process) {
 // newProcess implements NewProcess and additionally allows for testing on
 // fake /proc "filesystems".
 func newProcess(PID PIDType, procroot string) (proc *Process) {
-	line, err := ioutil.ReadFile(procroot + "/" + strconv.Itoa(int(PID)) + "/stat")
+	procbase := procroot + "/" + strconv.Itoa(int(PID))
+	line, err := ioutil.ReadFile(procbase + "/stat")
 	if err != nil {
 		return nil
 	}
-	return newProcessFromStatline(string(line))
+	proc = newProcessFromStatline(string(line))
+	if proc == nil {
+		return
+	}
+	// Also get the process command line, so later tools can decide to
+	// either go for the process name or the executable basename, et
+	// cetera.
+	cmdline, err := ioutil.ReadFile(procbase + "/cmdline")
+	if err == nil {
+		cmdparts := bytes.Split(bytes.TrimRight(cmdline, "\x00"), []byte{0x00})
+		proc.Cmdline = make([]string, len(cmdparts))
+		for idx, part := range cmdparts {
+			proc.Cmdline[idx] = string(part)
+		}
+	}
+	return proc
 }
 
 // newProcessStat parses a process status line (as read from /proc/[PID]/status)
@@ -163,13 +206,17 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 	// properties, such as name and PPID.
 	pt = map[PIDType]*Process{}
 	for _, procentry := range procentries {
+		// Get the process PID as a number and then read its /proc/[PID]/stat
+		// procfs entry in order to get some details about the process.
 		pid, err := strconv.Atoi(procentry.Name())
-		if err == nil && pid > 0 {
-			proc := newProcess(PIDType(pid), procroot)
-			if proc != nil {
-				pt[proc.PID] = proc
-			}
+		if err != nil || pid == 0 {
+			continue
 		}
+		proc := newProcess(PIDType(pid), procroot)
+		if proc == nil {
+			continue
+		}
+		pt[proc.PID] = proc
 	}
 	// Phase II: form a process object tree to speed up repeated traversals,
 	// which we'll need to run during namespace discovery. This is a simple
@@ -186,8 +233,8 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 	return
 }
 
-// ProcessListByPID is a type alias for sorting slices of *Process numerically
-// by their PIDs.
+// ProcessListByPID is a type alias for sorting slices of *Process by their
+// PIDs in numerically ascending order.
 type ProcessListByPID []*Process
 
 func (l ProcessListByPID) Len() int      { return len(l) }
