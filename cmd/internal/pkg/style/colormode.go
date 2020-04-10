@@ -65,5 +65,5 @@ func (cm *ColorMode) Set(s string) error {
 
 // Type returns the pflag name for color mode values.
 func (cm *ColorMode) Type() string {
-	return "colormodus"
+	return "colormode"
 }

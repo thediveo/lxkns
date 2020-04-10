@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package relations
+package style
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestRelations(t *testing.T) {
+func TestLinuxKernelNamespaces(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/relations package")
+	RunSpecs(t, "cmd/internal/pkg/style")
 }
