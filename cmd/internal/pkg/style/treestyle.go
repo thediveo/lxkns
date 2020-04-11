@@ -79,10 +79,10 @@ func init() {
 			})
 		case TsAscii:
 			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
-				Fork:     "+",
-				Nodeconn: "-",
+				Fork:     `\`,
+				Nodeconn: "_",
 				Nofork:   "|",
-				Lastnode: "`",
+				Lastnode: `\`,
 				Property: "o-",
 			})
 		}

@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 )
@@ -91,7 +92,7 @@ func init() {
 		}
 		// If the colorProfile is set to Ascii, then we actually skip all
 		// styling, not just coloring, such as "ls" does.
-		if colorize != CmNever {
+		if colorProfile != termenv.Ascii {
 			parseStyles(th)
 		}
 	})
