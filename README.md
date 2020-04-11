@@ -80,7 +80,7 @@ pid:[4026531836], owned by UID 0 ("root")
 ...
 │  ├─ "containerd" (1480)
 │  │  ├─ "containerd-shim" (21411)
-│  │  │  └─ "gw" (21434)
+│  │  │  └─ "foobar" (21434)
 │  │  ├─ "containerd-shim" (24173)
 │  │  │  └─ pid:[4026533005], owned by UID 0 ("root")
 │  │  │     └─ "systemd" (24191=1)
