@@ -89,7 +89,11 @@ func init() {
 		if th == "" {
 			th = defaultThemes[theme]
 		}
-		parseStyles(th)
+		// If the colorProfile is set to Ascii, then we actually skip all
+		// styling, not just coloring, such as "ls" does.
+		if colorize != CmNever {
+			parseStyles(th)
+		}
 	})
 }
 

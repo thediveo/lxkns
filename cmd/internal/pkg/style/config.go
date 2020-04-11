@@ -41,6 +41,20 @@ func BeforeCommand() error {
 	return nil
 }
 
+// PrepareForTest needs to be called during test setup in order to correctly
+// initialize styling to a well-known minimal state suitable for testing.
+func PrepareForTest() {
+	rootCmd := &cobra.Command{
+		Run: func(_ *cobra.Command, _ []string) { BeforeCommand() },
+	}
+	AddFlags(rootCmd)
+	rootCmd.SetArgs([]string{
+		"--treestyle=line",
+		"--color=never",
+	})
+	_ = rootCmd.Execute()
+}
+
 // pflagCreators lists the CLI flag constructor functions to be called in
 // order to register these flags. This trick here helps us in keeping things
 // modular in this package. According to

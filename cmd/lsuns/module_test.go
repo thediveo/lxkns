@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	rxtst "github.com/thediveo/gons/reexec/testing"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
 func TestMain(m *testing.M) {
@@ -31,7 +32,8 @@ func TestMain(m *testing.M) {
 	os.Exit(mm.Run())
 }
 
-func TestLinuxKernelNamespaces(t *testing.T) {
+func TestLsunsCmd(t *testing.T) {
+	style.PrepareForTest()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lsuns command")
 }
