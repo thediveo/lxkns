@@ -28,7 +28,7 @@ import (
 var colorProfile termenv.Profile
 
 // The CLI flag colorize controls output colorization.
-var colorize ColorMode
+var colorize = CmAuto
 
 // ColorMode is an enumeration for colorizing output always, auto(matic), and
 // never.
