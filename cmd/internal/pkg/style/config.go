@@ -1,3 +1,12 @@
+// This implements central part of the style configuration mechanism: packages
+// consuming this package must call AddFlags() after they've created their
+// root command, as well as BeforeCommand() before their command executes,
+// preferably as PersistentPreRunE of their root command.
+//
+// Other parts of this package then hook themselves automatically into the two
+// phases of flag creation and just-before-command-execution. This helps
+// keeping this package more modular.
+
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -15,142 +24,58 @@
 package style
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
-	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
-// Style/colorization-related CLI command flags.
-var (
-	colorize  ColorMode // colorization mode: "always", "auto", or "never"
-	theme     Theme     // dark or light color theme
-	dumptheme bool      // print the selected color theme to stdout
-)
-
-// AddStyleFlags adds global CLI command flags related to colorization and
-// styling.
-func AddStyleFlags(rootCmd *cobra.Command) {
-	pf := rootCmd.PersistentFlags()
-	pf.VarP(&colorize, "color", "c",
-		"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
-			"or 'never'")
-	pf.Lookup("color").NoOptDefVal = "always"
-	pf.Var(&theme, "theme", "colorization theme 'dark' or 'light'")
-	pf.BoolVar(&dumptheme, "dump", false,
-		"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
+// AddFlags adds global CLI command flags related to colorization and styling.
+func AddFlags(rootCmd *cobra.Command) {
+	pflagCreators.Run(rootCmd)
 }
 
-// HandleStyles configures the various output rendering styles based on CLI
-// command flags and configuration files. It needs to be called before
-// rendering any (styled) output, ideally as a "PersistentPreRun" of a Cobra
-// root command.
-func HandleStyles() error {
-	// Colorization mode...
-	switch colorize {
-	case CmAlways:
-		colorProfile = termenv.ANSI256
-	case CmAuto:
-		colorProfile = termenv.ColorProfile()
-	case CmNever:
-		colorProfile = termenv.Ascii
-	}
-	// First look for a user-defined theme in the user's home directory.
-	var th string
-	if home, err := os.UserHomeDir(); err == nil {
-		if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
-			th = string(styling)
-		}
-	}
-	if th == "" || dumptheme {
-		// Theme selection (or dumping): dark or light...
-		switch theme {
-		case ThDark:
-			th = darkTheme
-		case ThLight:
-			th = lightTheme
-		}
-	}
-	if dumptheme {
-		fmt.Fprint(os.Stdout, th)
-		os.Exit(0)
-	}
-	readStyles(th)
+// BeforeCommand needs to be called just before the selected command is run,
+// ideally as a "PersistentPreRun" of a Cobra root command. It configures the
+// various output rendering styles based on CLI command flags and/or
+// configuration files.
+func BeforeCommand() error {
+	runhooks.Run()
 	return nil
 }
 
-// The termenv color profile to be used when styling, such as plain colorless
-// ASCII, 256 colors, et cetera.
-var colorProfile termenv.Profile
+// pflagCreators lists the CLI flag constructor functions to be called in
+// order to register these flags. This trick here helps us in keeping things
+// modular in this package. According to
+// https://golang.org/doc/effective_go.html#initialization,
+// variables are initialized before the init functions in a package.
+var pflagCreators = flagCreators{}
 
-// The set of styles for styling types of Linux-kernel namespaces differently,
-// as well as some more elements, such as process names, user names, et
-// cetera.
-var (
-	MntStyle    Style // styles mnt: namespaces
-	CgroupStyle Style // styles cgroup: namespaces
-	UTSStyle    Style // styles uts: namespaces
-	IPCStyle    Style // styles ipc: namespaces
-	UserStyle   Style // styles utc: namespaces
-	PIDStyle    Style // styles pid: namespaces
-	NetStyle    Style // styles net: namespaces
+type flagCreators []func(*cobra.Command)
 
-	OwnerStyle   Style // styles owner username and UID
-	ProcessStyle Style // styles process names
-	UnknownStyle Style // styles undetermined elements, such as unknown PIDs.
-)
-
-// Maps configuration top-level element names to their corresponding Style
-// objects for storing and using specific style information.
-var Styles = map[string]*Style{
-	"mnt":    &MntStyle,
-	"cgroup": &CgroupStyle,
-	"uts":    &UTSStyle,
-	"ipc":    &IPCStyle,
-	"user":   &UserStyle,
-	"pid":    &PIDStyle,
-	"net":    &NetStyle,
-
-	"owner":   &OwnerStyle,
-	"process": &ProcessStyle,
-	"unknown": &UnknownStyle,
+// Register a creator which then registers root command flags, et cetera.
+func (fc *flagCreators) Register(creator func(rootCmd *cobra.Command)) {
+	*fc = append(*fc, creator)
 }
 
-func readStyles(configyaml string) {
-	y := map[string]interface{}{}
-	err := yaml.Unmarshal([]byte(configyaml), &y)
-	if err != nil {
-		panic(err) // FIXME: better error reporting
+// Run runs the pflag rootCmd registering functions.
+func (fc flagCreators) Run(cmd *cobra.Command) {
+	for _, creatorf := range fc {
+		creatorf(cmd)
 	}
-	for key, settings := range y {
-		sty, ok := Styles[key]
-		if !ok {
-			continue
-		}
-		for _, setting := range settings.([]interface{}) {
-			if s, ok := setting.(string); ok {
-				switch s {
-				case "bold":
-					sty.style = sty.style.Bold()
-				}
-			} else {
-				if kvs, ok := setting.(map[interface{}]interface{}); ok {
-					for k, v := range kvs {
-						if s, ok := k.(string); ok {
-							switch s {
-							case "foreground":
-								sty.style = sty.style.Foreground(colorProfile.Color(v.(string)))
-							case "background":
-								sty.style = sty.style.Background(colorProfile.Color(v.(string)))
-							}
-						}
-					}
-				}
-			}
-		}
+}
+
+// runhooks lists hooks to be run after CLI args/flags have been parsed and
+// just before the selected command is executed.
+var runhooks = hooks{}
+
+type hooks []func()
+
+// Register a hook to be run immediately before executing the selected command.
+func (h *hooks) Register(hook func()) {
+	*h = append(*h, hook)
+}
+
+// Run all registered hooks.
+func (h hooks) Run() {
+	for _, hook := range h {
+		hook()
 	}
 }

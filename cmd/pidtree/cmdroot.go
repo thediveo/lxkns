@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
-	common "github.com/thediveo/lxkns/cmd/internal/pkg/shared"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/nstypes"
 )
@@ -43,7 +42,7 @@ var rootCmd = &cobra.Command{
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return style.HandleStyles()
+		return style.BeforeCommand()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		pid, _ := cmd.PersistentFlags().GetUint32("pid")
@@ -81,7 +80,7 @@ func init() {
 		"PID namespace of PID, if not the initial PID namespace;\n"+
 			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
 			"PID namespace textual representation like \"pid:[4026531836]\"")
-	style.AddStyleFlags(rootCmd)
+	style.AddFlags(rootCmd)
 }
 
 // SingleBranch encodes a single branch from the initial/root PID namespace
@@ -149,7 +148,7 @@ func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid nstypes.Namespace
 				PIDMap:    pidmap,
 				RootPIDNS: rootpidns,
 			},
-			common.NamespaceStyler))
+			style.NamespaceStyler))
 	return nil
 }
 
@@ -183,6 +182,6 @@ func renderPIDTreeWithNamespaces(out io.Writer) error {
 				PIDMap:    pidmap,
 				RootPIDNS: rootpidns,
 			},
-			common.NamespaceStyler))
+			style.NamespaceStyler))
 	return nil
 }

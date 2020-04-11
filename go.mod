@@ -7,7 +7,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/spf13/cobra v0.0.7
-	github.com/thediveo/enumflag v0.0.0-20200410190536-4204d39ee44b
+	github.com/thediveo/enumflag v0.9.0
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
 	github.com/thediveo/gons v0.0.0-20200328222805-52313499c476

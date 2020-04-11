@@ -16,7 +16,7 @@
 
 package style
 
-const darkTheme = `# dark lxkns colorization theme
+const defaultDarkTheme = `# dark lxkns colorization theme
 user:
 - bold
 - background: '#404040'
@@ -43,7 +43,7 @@ unknown:
 - foreground: '#ff0000'
 `
 
-const lightTheme = `# light lxkns colorization theme
+const defaultLightTheme = `# light lxkns colorization theme
 user:
 - bold
 - background: '#dadada' # Schwitters would be delighted!

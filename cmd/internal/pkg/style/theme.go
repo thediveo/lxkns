@@ -18,12 +18,24 @@
 package style
 
 import (
-	"errors"
-	"strings"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+	"github.com/thediveo/enumflag"
 )
 
+// The CLI flag controlling which theme to use when colorization is used.
+var theme Theme // dark or light color theme
+
+// The CLI flag instructing us to dump a default theme, either the dark or
+// light one, as specified in the theme variable.
+var dumptheme bool // print the selected color theme to stdout
+
 // Theme is an enumeration for selecting either a light or dark theme.
-type Theme int
+type Theme enumflag.Flag
 
 // Enumeration of allowed Theme values.
 const (
@@ -31,32 +43,58 @@ const (
 	ThLight              // light (background) theme
 )
 
-// themeNames maps them enum values to their textual representations.
-var themeNames = map[Theme]string{
-	ThDark:  "dark",
-	ThLight: "light",
+// Implements the methods required by spf13/cobra in order to use the enum as
+// a flag.
+func (th *Theme) String() string     { return enumflag.String(th) }
+func (th *Theme) Set(s string) error { return enumflag.Set(th, s) }
+func (th *Theme) Type() string       { return "theme" }
+
+// Implements the method required by enumflag to map enum values to their
+// textual identifiers.
+func (th *Theme) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
+	return map[Theme][]string{
+		ThDark:  {"dark"},
+		ThLight: {"light"},
+	}, enumflag.EnumCaseSensitive
 }
 
-// String returns the text representation of a theme value.
-func (t *Theme) String() string {
-	return themeNames[*t]
+// Register our CLI flag.
+func init() {
+	// Delayed registration our CLI flag.
+	pflagCreators.Register(func(rootCmd *cobra.Command) {
+		rootCmd.PersistentFlags().Var(&theme, "theme", "colorization theme 'dark' or 'light'")
+		rootCmd.PersistentFlags().BoolVar(&dumptheme, "dump", false,
+			"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
+	})
+	// Delayed selection, reading, or dumping of styling profiles, just before
+	// the selected command runs.
+	runhooks.Register(func() {
+		// If the user wants to dump a theme using "--dump" then the selected
+		// default theme, light or dark, takes precedence and any user
+		// definitions get ignored in this special case. This allows users to
+		// recreate a clean user-defined theme.
+		if dumptheme {
+			fmt.Fprint(os.Stdout, defaultThemes[theme])
+			os.Exit(0)
+		}
+		// If there is a user-defined theme in the user's home directory, then
+		// this takes precedence over any --theme selection. Unless the file
+		// is empty, then we fall back onto the default themes.
+		var th string
+		if home, err := os.UserHomeDir(); err == nil {
+			if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
+				th = string(styling)
+			}
+		}
+		if th == "" {
+			th = defaultThemes[theme]
+		}
+		parseStyles(th)
+	})
 }
 
-// Set parses the given theme name string and converts it into the
-// corresponding (enumeration) value.
-func (t *Theme) Set(s string) error {
-	switch strings.ToLower(s) {
-	case "dark":
-		*t = ThDark
-	case "light":
-		*t = ThLight
-	default:
-		return errors.New("must be 'dark' or 'light'")
-	}
-	return nil
-}
-
-// Type returns the pflag name for color mode values.
-func (t *Theme) Type() string {
-	return "theme"
+// Maps the Theme enumeration to the corresponding theme descriptions.
+var defaultThemes = map[Theme]string{
+	ThDark:  defaultDarkTheme,
+	ThLight: defaultLightTheme,
 }

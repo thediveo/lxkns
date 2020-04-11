@@ -1,5 +1,5 @@
-// Implements a --colormode pflag value enumeration type, which can only be
-// either "always", "auto", or "never".
+// Implements controlling the colorization mode via the "--colormode" CLI
+// flag, which can be either "always" (="on"), "auto", or "never" (="off").
 
 // Copyright 2020 Harald Albrecht.
 //
@@ -18,12 +18,21 @@
 package style
 
 import (
+	"github.com/muesli/termenv"
+	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 )
 
+// The termenv color profile to be used when styling, such as plain colorless
+// ASCII, 256 colors, et cetera.
+var colorProfile termenv.Profile
+
+// The CLI flag colorize controls output colorization.
+var colorize ColorMode
+
 // ColorMode is an enumeration for colorizing output always, auto(matic), and
 // never.
-type ColorMode int
+type ColorMode enumflag.Flag
 
 // Enumeration of allowed ColorMode values.
 const (
@@ -44,6 +53,29 @@ func (cm *ColorMode) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
 	return map[ColorMode][]string{
 		CmAlways: {"always", "on"},
 		CmAuto:   {"auto"},
-		CmNever:  {"never", "off"},
+		CmNever:  {"never", "none", "off"},
 	}, enumflag.EnumCaseSensitive
+}
+
+func init() {
+	// Delayed registration our CLI flag.
+	pflagCreators.Register(func(rootCmd *cobra.Command) {
+		rootCmd.PersistentFlags().VarP(&colorize, "color", "c",
+			"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
+				"or 'never'")
+		rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"
+	})
+	// Delayed color profile selection based on our CLI flag and terminal
+	// profile detection, just before the selected command runs.
+	runhooks.Register(func() {
+		// Colorization mode...
+		switch colorize {
+		case CmAlways:
+			colorProfile = termenv.ANSI256
+		case CmAuto:
+			colorProfile = termenv.ColorProfile()
+		case CmNever:
+			colorProfile = termenv.Ascii
+		}
+	})
 }

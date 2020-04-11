@@ -1,0 +1,90 @@
+// Implements controlling the tree rendering style via the "--treestyle" CLI
+// flag, which can be either "line", or "ascii" ()="plain").
+
+// Copyright 2020 Harald Albrecht.
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy
+// of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
+package style
+
+import (
+	"github.com/spf13/cobra"
+	"github.com/thediveo/enumflag"
+	asciitree "github.com/thediveo/go-asciitree"
+)
+
+// NamespaceStyler styles namespace hierarchies (trees) using the selected
+// tree style. This object can directly be used by other packages consuming
+// our cmd/internal/style package. This styler object is correctly set when
+// the particular (cobra) command runs.
+var NamespaceStyler *asciitree.TreeStyler
+
+// The CLI flag treestyle selects the specific style for rendering trees in
+// the terminal.
+var treestyle TreeStyle
+
+// TreeStyle is an enumeration for selecting a specific tree style.
+type TreeStyle enumflag.Flag
+
+// Enumeration of allowed Theme values.
+const (
+	TsLine  TreeStyle = iota // default tree line style
+	TsAscii                  // simple ASCII tree style
+)
+
+// Implements the methods required by spf13/cobra in order to use the enum as
+// a flag.
+func (ts *TreeStyle) String() string     { return enumflag.String(ts) }
+func (ts *TreeStyle) Set(s string) error { return enumflag.Set(ts, s) }
+func (ts *TreeStyle) Type() string       { return "treestyle" }
+
+// Implements the method required by enumflag to map enum values to their
+// textual identifiers.
+func (ts *TreeStyle) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
+	return map[TreeStyle][]string{
+		TsLine:  {"line"},
+		TsAscii: {"ascii", "plain"},
+	}, enumflag.EnumCaseSensitive
+}
+
+// Register our CLI flag.
+func init() {
+	// Delayed registration our CLI flag.
+	pflagCreators.Register(func(rootCmd *cobra.Command) {
+		rootCmd.PersistentFlags().Var(&treestyle, "treestyle",
+			"select the tree render style; can be 'line' (default if omitted)\n"+
+				"or 'ascii'")
+	})
+	// Delayed rendering style selection based on our CLI flag, just before
+	// the selected command runs.
+	runhooks.Register(func() {
+		switch treestyle {
+		case TsLine:
+			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
+				Fork:     "├", // Don't print this on an FX-80/100 ;)
+				Nodeconn: "─",
+				Nofork:   "│",
+				Lastnode: "└",
+				Property: "⋄─",
+			})
+		case TsAscii:
+			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
+				Fork:     "+",
+				Nodeconn: "-",
+				Nofork:   "|",
+				Lastnode: "`",
+				Property: "o-",
+			})
+		}
+	})
+}
