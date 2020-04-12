@@ -47,14 +47,15 @@ func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Nam
 				style.ProcessStyle.V(proc.Name),
 				strings.Join(pids, "/"))
 		}
-		return fmt.Sprintf("%q (%d)", style.ProcessStyle.V(proc.Name), proc.PID)
+		return fmt.Sprintf("%q (%d)",
+			style.ProcessStyle.V(style.ProcessName(proc)), proc.PID)
 	}
 	// PID namespace information is NOT known, so this is a process out of
 	// our reach. We thus print it in a way to signal that we don't know
 	// about this process' PID namespace
 	return fmt.Sprintf("%s %q (%d/%s)",
 		style.PIDStyle.S("pid:[", style.UnknownStyle.V("???"), "]"),
-		style.ProcessStyle.V(proc.Name),
+		style.ProcessStyle.V(style.ProcessName(proc)),
 		proc.PID,
 		style.UnknownStyle.V("???"))
 }

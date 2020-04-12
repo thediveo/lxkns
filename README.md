@@ -53,15 +53,17 @@ into your `$GOPATH/bin` directory, simply run `go install ./...`.
 
 These are the CLI tools:
 
-- `lsuns`: shows _all_ user namespaces in your Linux host, in a neat
-  hierarchy. Moreover, it can also show the non-user namespaces "owned" by
-  user namespaces. This ownership information is important with respect to
+- `lsuns`
+  [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/lsuns):
+  shows _all_ user namespaces in your Linux host, in a neat hierarchy.
+  Moreover, it can also show the non-user namespaces "owned" by user
+  namespaces. This ownership information is important with respect to
   capabilities and processes switching namespaces using `setns()` ([man 2
   setns](http://man7.org/linux/man-pages/man2/setns.2.html)).
 
 - `lspns`: shows _all_ PID namespaces in your Linux host, in a neat hierarchy.
 
-- `pidtree`: shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
+- `pidtree` [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/pidtree): shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
 
 ### pidtree
 

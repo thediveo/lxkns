@@ -34,11 +34,11 @@ var _ = Describe("styles output", func() {
 			fail      bool
 		}{
 			{"foo", "", 0, true},
-			{"always", "always", CmAlways, false},
-			{"on", "always", CmAlways, false},
-			{"never", "never", CmNever, false},
-			{"off", "never", CmNever, false},
-			{"auto", "auto", CmAuto, false},
+			{"always", "always", ColorAlways, false},
+			{"on", "always", ColorAlways, false},
+			{"never", "never", ColorNever, false},
+			{"off", "never", ColorNever, false},
+			{"auto", "auto", ColorAuto, false},
 		}
 		for _, tst := range tests {
 			var cm ColorMode

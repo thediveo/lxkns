@@ -109,7 +109,7 @@ func leadersString(ns lxkns.Namespace) string {
 	if ancient := ns.Ealdorman(); ancient != nil {
 		procs = "process " +
 			fmt.Sprintf("%q (%d)",
-				style.ProcessStyle.V(ancient.Name),
+				style.ProcessStyle.V(style.ProcessName(ancient)),
 				ancient.PID)
 	}
 	/*

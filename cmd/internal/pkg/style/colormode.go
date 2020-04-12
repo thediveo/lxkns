@@ -28,7 +28,7 @@ import (
 var colorProfile termenv.Profile
 
 // The CLI flag colorize controls output colorization.
-var colorize = CmAuto
+var colorize = ColorAuto
 
 // ColorMode is an enumeration for colorizing output always, auto(matic), and
 // never.
@@ -36,9 +36,9 @@ type ColorMode enumflag.Flag
 
 // Enumeration of allowed ColorMode values.
 const (
-	CmAlways ColorMode = iota // always colorize
-	CmAuto                    // colorize if output goes to a terminal
-	CmNever                   // never colorize
+	ColorAlways ColorMode = iota // always colorize
+	ColorAuto                    // colorize if output goes to a terminal
+	ColorNever                   // never colorize
 )
 
 // Implements the methods required by spf13/cobra in order to use the enum as
@@ -51,14 +51,14 @@ func (cm *ColorMode) Type() string       { return "colormode" }
 // textual identifiers.
 func (cm *ColorMode) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
 	return map[ColorMode][]string{
-		CmAlways: {"always", "on"},
-		CmAuto:   {"auto"},
-		CmNever:  {"never", "none", "off"},
+		ColorAlways: {"always", "on"},
+		ColorAuto:   {"auto"},
+		ColorNever:  {"never", "none", "off"},
 	}, enumflag.EnumCaseSensitive
 }
 
 func init() {
-	// Delayed registration our CLI flag.
+	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
 		rootCmd.PersistentFlags().VarP(&colorize, "color", "c",
 			"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
@@ -70,11 +70,11 @@ func init() {
 	runhooks.Register(func() {
 		// Colorization mode...
 		switch colorize {
-		case CmAlways:
+		case ColorAlways:
 			colorProfile = termenv.ANSI256
-		case CmAuto:
+		case ColorAuto:
 			colorProfile = termenv.ColorProfile()
-		case CmNever:
+		case ColorNever:
 			colorProfile = termenv.Ascii
 		}
 	})

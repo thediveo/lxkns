@@ -40,8 +40,8 @@ type Theme enumflag.Flag
 
 // Enumeration of allowed Theme values.
 const (
-	ThDark  Theme = iota // default dark (background) theme
-	ThLight              // light (background) theme
+	ThemeDark  Theme = iota // default dark (background) theme
+	ThemeLight              // light (background) theme
 )
 
 // Implements the methods required by spf13/cobra in order to use the enum as
@@ -54,14 +54,14 @@ func (th *Theme) Type() string       { return "theme" }
 // textual identifiers.
 func (th *Theme) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
 	return map[Theme][]string{
-		ThDark:  {"dark"},
-		ThLight: {"light"},
+		ThemeDark:  {"dark"},
+		ThemeLight: {"light"},
 	}, enumflag.EnumCaseSensitive
 }
 
 // Register our CLI flag.
 func init() {
-	// Delayed registration our CLI flag.
+	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
 		rootCmd.PersistentFlags().Var(&theme, "theme", "colorization theme 'dark' or 'light'")
 		rootCmd.PersistentFlags().BoolVar(&dumptheme, "dump", false,
@@ -100,6 +100,6 @@ func init() {
 
 // Maps the Theme enumeration to the corresponding theme descriptions.
 var defaultThemes = map[Theme]string{
-	ThDark:  defaultDarkTheme,
-	ThLight: defaultLightTheme,
+	ThemeDark:  defaultDarkTheme,
+	ThemeLight: defaultLightTheme,
 }

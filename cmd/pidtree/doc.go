@@ -11,23 +11,31 @@ PID namespaces; something pstree isn't aware of.
 
 Usage
 
-To run pidtree, enter in CLI:
+To use pidtree:
 
   pidtree [flag]
+
+For example, to view the colorized tree of PID namespaces and their processes
+in a pager:
+
+  pidtree -c | less -SR
 
 Flags
 
 The following pidtree flags are available:
 
-  -c, --color colormodus[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
-                                    or 'never' (default always)
-      --dump                        dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
-  -h, --help                        help for pidtree
-  -n, --ns string                   PID namespace of PID, if not the initial PID namespace;
-                                    either an unsigned int64 value, such as "4026531836", or a
-                                    PID namespace textual representation like "pid:[4026531836]"
-  -p, --pid uint32                  PID of process to show PID namespace tree and parent PIDs for
-      --theme theme                 colorization theme 'dark' or 'light' (default dark)
+  -c, --color colormode[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
+                                   or 'never' (default auto)
+      --dump                       dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
+  -h, --help                       help for pidtree
+  -n, --ns string                  PID namespace of PID, if not the initial PID namespace;
+                                   either an unsigned int64 value, such as "4026531836", or a
+                                   PID namespace textual representation like "pid:[4026531836]"
+  -p, --pid uint32                 PID of process to show PID namespace tree and parent PIDs for
+      --proc namemode[=name]       process name style; can be 'name' (default if omitted), 'basename',
+                                   or 'exe' (default name)
+      --theme theme                colorization theme 'dark' or 'light' (default dark)
+      --treestyle treestyle        select the tree render style; can be 'line' (default if omitted)
 
 Display
 
@@ -100,6 +108,66 @@ additionally an unknown local PID "/???" will be shown.
   │  │                 ├─ pid:[???] "sleep" (14773/???)
   │  │                 └─ pid:[???] "bash" (15662/???)
   [...]
+
+Colorization
+
+Unless specified otherwise using the "--color=none" flag, lsuns colorizes its
+output in order to make different types of namespaces easier to differentiate.
+Colorization gets disabled if lsuns detects that stdout isn't connected to a
+terminal, such as when piping into tools like "less".
+
+Out of the box (or rather, Gopher hole), lsuns supports two color themes,
+called "dark" and "light". Default is the dark theme, but it can be changed
+using "--theme light". In order to set a theme permanently, and to optionally
+adapt it later to personal preferences, the selected theme can be writting to
+stdout:
+
+  lsuns --theme light --dump > ~/.lxknsrc.yaml
+
+For each type of Linux-kernel namespace the styling file "~.lxknsrc.yaml"
+contains a top-level element:
+
+  user:
+  pid:
+  cgroup:
+  ipc:
+  mnt:
+  net:
+  uts:
+
+Additional output elements can also be styled:
+
+  process: # process names
+  owner:   # owner UIDs and user names
+  unknown: # unknown PIDs and PID namespaces
+
+For each top-level element the foreground and background colors can be set
+independently, as well as several different type face and font rendering
+attributes. If the foreground and/or background color(s) or a specific
+attribute are not specified, then the terminal defaults apply.
+
+Colors and attributes need to be specified in form of YAML list members,
+introduced with a "-" dash. Colors can be specified either in #RRGGBB format,
+or alternatively as ANSI colors (0-255). Make sure to always enclose color
+values in (single or double) quotes.
+
+For example:
+
+  pid:
+  - bold
+  - foreground: '#aabbcc'
+
+The following attributes are supported, but are subject to specific terminal
+implementations rendering them:
+
+  blink
+  bold
+  crossout
+  faint
+  italic, italics
+  overline
+  reverse
+  underline
 
 */
 package main

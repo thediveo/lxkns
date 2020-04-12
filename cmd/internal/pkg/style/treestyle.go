@@ -38,8 +38,8 @@ type TreeStyle enumflag.Flag
 
 // Enumeration of allowed Theme values.
 const (
-	TsLine  TreeStyle = iota // default tree line style
-	TsAscii                  // simple ASCII tree style
+	TreeStyleLine  TreeStyle = iota // default tree line style
+	TreeStyleAscii                  // simple ASCII tree style
 )
 
 // Implements the methods required by spf13/cobra in order to use the enum as
@@ -52,14 +52,14 @@ func (ts *TreeStyle) Type() string       { return "treestyle" }
 // textual identifiers.
 func (ts *TreeStyle) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
 	return map[TreeStyle][]string{
-		TsLine:  {"line"},
-		TsAscii: {"ascii", "plain"},
+		TreeStyleLine:  {"line"},
+		TreeStyleAscii: {"ascii", "plain"},
 	}, enumflag.EnumCaseSensitive
 }
 
 // Register our CLI flag.
 func init() {
-	// Delayed registration our CLI flag.
+	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
 		rootCmd.PersistentFlags().Var(&treestyle, "treestyle",
 			"select the tree render style; can be 'line' (default if omitted)\n"+
@@ -69,7 +69,7 @@ func init() {
 	// the selected command runs.
 	runhooks.Register(func() {
 		switch treestyle {
-		case TsLine:
+		case TreeStyleLine:
 			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
 				Fork:     "├", // Don't print this on an FX-80/100 ;)
 				Nodeconn: "─",
@@ -77,7 +77,7 @@ func init() {
 				Lastnode: "└",
 				Property: "⋄─",
 			})
-		case TsAscii:
+		case TreeStyleAscii:
 			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
 				Fork:     `\`,
 				Nodeconn: "_",
