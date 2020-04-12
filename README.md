@@ -14,7 +14,7 @@ Tested with Go 1.13 and 1.14.
 ## Comprehensive Namespace Discovery
 
 When compared to most well-known and openly available CLI tools, such as
-`lsns`, the `gons` package detects namespaces even in places of a running
+`lsns`, the `lxkns` package detects namespaces even in places of a running
 Linux system other tools typically do not consider. In particular:
 
 1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other tools do.
