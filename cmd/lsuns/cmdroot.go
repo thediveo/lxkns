@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -50,4 +51,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("details", "d", false,
 		"shows details, such as owned namespaces")
 	style.AddFlags(rootCmd)
+	filter.AddFilterFlag(rootCmd)
 }

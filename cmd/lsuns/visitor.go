@@ -23,6 +23,7 @@ import (
 	"reflect"
 
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -88,6 +89,9 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 				}
 				nslist := lxkns.SortedNamespaces(ownedns[nstype])
 				for _, ns := range nslist {
+					if !filter.Filter(ns) {
+						continue
+					}
 					style := style.Styles[ns.Type().Name()]
 					s := fmt.Sprintf("%s %s",
 						style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
