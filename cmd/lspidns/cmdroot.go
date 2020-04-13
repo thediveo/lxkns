@@ -20,26 +20,25 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "lsuns",
-	Short: "lsuns shows the tree of user namespaces, optionally with owned namespaces",
+	Use:   "lspidns",
+	Short: "lspidns shows the tree of PID namespaces",
 	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		return style.BeforeCommand()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		details, _ := cmd.PersistentFlags().GetBool("details")
+		user, _ := cmd.PersistentFlags().GetBool("user")
 		// Run a full namespace discovery.
 		allns := lxkns.Discover(lxkns.FullDiscovery)
 		fmt.Println(
 			asciitree.Render(
-				allns.UserNSRoots,
-				&UserNSVisitor{
-					Details: details,
+				allns.PIDNSRoots,
+				&PIDNSVisitor{
+					ShowUserNS: user,
 				},
 				style.NamespaceStyler))
 		return nil
@@ -49,8 +48,7 @@ var rootCmd = &cobra.Command{
 // Sets up the flags.
 func init() {
 	rootCmd.PersistentFlags().BoolP(
-		"details", "d", false,
-		"shows details, such as owned namespaces")
+		"user", "u", false,
+		"shows owner user namespaces")
 	style.AddFlags(rootCmd)
-	filter.AddFilterFlag(rootCmd)
 }

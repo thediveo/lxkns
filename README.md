@@ -61,7 +61,11 @@ These are the CLI tools:
   capabilities and processes switching namespaces using `setns()` ([man 2
   setns](http://man7.org/linux/man-pages/man2/setns.2.html)).
 
-- `lspns`: shows _all_ PID namespaces in your Linux host, in a neat hierarchy.
+- `lspidns`
+  [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/lspidns):
+  shows _all_ PID namespaces in your Linux host, in a neat hierarchy.
+  Optionally, the owning user namespaces can be shown interleaved with the PID
+  namespace hierarchy.
 
 - `pidtree` [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/pidtree): shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
 

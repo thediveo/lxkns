@@ -1,34 +1,35 @@
 /*
 
-lsuns lists the tree of user namespaces, optionally with the other namespaces
-they own.
+lspidns lists the tree of PID namespaces, optionally with their owning user namespaces.
 
 Usage
 
-To use lsuns:
+To use lspns:
 
-  lsuns [flag]
+  lspidns [flag]
 
-For example, to view the colorized tree of user and owned namespaces in a pager:
+For example, to view the colorized tree of PID namespaces in a pager:
 
-  lsuns -cd | less -SR
+  lspidns -c | less -SR
+
+Show PID namespaces within their owning user namespaces:
+
+  lspidns -u
 
 Flags
 
-The following lsuns flags are available:
+The following lspidns flags are available:
 
   -c, --color color[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
                                or 'never' (default auto)
-  -d, --details                shows details, such as owned namespaces
       --dump                   dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
-  -f, --filter filter          shows only selected namespace types; can be 'cgroup'/'c', 'ipc'/'i', 'mnt'/'m',
-                               'net'/'n', 'pid'/'p', 'user'/'U', 'uts'/'u' (default [mnt,cgroup,uts,ipc,user,pid,net])
-  -h, --help                   help for lsuns
+  -h, --help                   help for lspidns
       --proc proc[=name]       process name style; can be 'name' (default if omitted), 'basename',
                                or 'exe' (default name)
       --theme theme            colorization theme 'dark' or 'light' (default dark)
       --treestyle treestyle    select the tree render style; can be 'line' (default if omitted)
                                or 'ascii' (default line)
+  -u, --user                   shows owner user namespaces
 
 Colorization
 

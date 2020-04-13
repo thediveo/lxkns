@@ -399,6 +399,22 @@ func (hns *hierarchicalNamespace) SetParent(parent Hierarchy) {
 	hns.parent = parent
 }
 
+// ResolveOwner sets the owning user namespace reference based on the owning
+// user namespace id discovered earlier. Yes, we're repeating us ourselves with
+// this method, because Golang is self-inflicted pain when trying to emulate
+// inheritance using embedding ... note: it doesn't work correctly. The reason
+// is that we need the use the correct instance pointer and not a pointer to an
+// embedded instance when setting the "owned" relationship.
+func (hns *hierarchicalNamespace) ResolveOwner(usernsmap NamespaceMap) {
+	// Only try to resolve when we actually got the user namespace id
+	// of the owner, otherwise we must skip resolution.
+	if hns.ownernsid != 0 {
+		ownerns := usernsmap[hns.ownernsid].(*userNamespace)
+		hns.owner = ownerns
+		ownerns.ownedns[TypeIndex(hns.nstype)][hns.nsid] = hns
+	}
+}
+
 // userNamespace stores ownership information in addition to the information
 // for hierarchical namespaces. On top of the interfaces supported by a
 // hierarchicalNamespace, userNamespace implements the Ownership interface.
@@ -447,3 +463,30 @@ func (uns *userNamespace) String() string {
 func (uns *userNamespace) detectUID(nsf *os.File) {
 	uns.owneruid, _ = rel.OwnerUID(nsf)
 }
+
+// ResolveOwner sets the owning user namespace reference based on the owning
+// user namespace id discovered earlier. Yes, we're repeating us ourselves with
+// this method, because Golang is self-inflicted pain when trying to emulate
+// inheritance using embedding ... note: it doesn't work correctly. The reason
+// is that we need the use the correct instance pointer and not a pointer to an
+// embedded instance when setting the "owned" relationship.
+func (uns *userNamespace) ResolveOwner(usernsmap NamespaceMap) {
+	// Only try to resolve when we actually got the user namespace id
+	// of the owner, otherwise we must skip resolution.
+	if uns.ownernsid != 0 {
+		ownerns := usernsmap[uns.ownernsid].(*userNamespace)
+		uns.owner = ownerns
+		ownerns.ownedns[TypeIndex(uns.nstype)][uns.nsid] = uns
+	}
+}
+
+var _ Namespace = (*plainNamespace)(nil)
+var _ Namespace = (*hierarchicalNamespace)(nil)
+var _ Namespace = (*userNamespace)(nil)
+
+var _ NamespaceStringer = (*plainNamespace)(nil)
+
+var _ Hierarchy = (*hierarchicalNamespace)(nil)
+var _ Hierarchy = (*userNamespace)(nil)
+
+var _ Ownership = (*userNamespace)(nil)

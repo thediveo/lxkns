@@ -70,4 +70,21 @@ var _ = Describe("Discover", func() {
 		Expect(func() { rootNamespaces(allns.Namespaces[NetNS]) }).To(Panic())
 	})
 
+	It("returns namespaces in correct slots, implementing correct interfaces", func() {
+		allns := Discover(FullDiscovery)
+		for _, nstype := range TypeIndexLexicalOrder {
+			for _, ns := range allns.Namespaces[nstype] {
+				Expect(TypesByIndex[nstype]).To(Equal(ns.Type()))
+				Expect(ns.(Namespace)).NotTo(BeNil())
+				switch nstype {
+				case PIDNS:
+					Expect(ns.(Hierarchy)).NotTo(BeNil())
+				case UserNS:
+					Expect(ns.(Hierarchy)).NotTo(BeNil())
+					Expect(ns.(Ownership)).NotTo(BeNil())
+				}
+			}
+		}
+	})
+
 })
