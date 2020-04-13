@@ -44,26 +44,19 @@ const (
 	ThemeLight              // light (background) theme
 )
 
-// Implements the methods required by spf13/cobra in order to use the enum as
-// a flag.
-func (th *Theme) String() string     { return enumflag.String(th) }
-func (th *Theme) Set(s string) error { return enumflag.Set(th, s) }
-func (th *Theme) Type() string       { return "theme" }
-
-// Implements the method required by enumflag to map enum values to their
-// textual identifiers.
-func (th *Theme) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
-	return map[Theme][]string{
-		ThemeDark:  {"dark"},
-		ThemeLight: {"light"},
-	}, enumflag.EnumCaseSensitive
+// Defines the textual representations for the Theme values.
+var themeIds = map[Theme][]string{
+	ThemeDark:  {"dark"},
+	ThemeLight: {"light"},
 }
 
 // Register our CLI flag.
 func init() {
 	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(&theme, "theme", "colorization theme 'dark' or 'light'")
+		rootCmd.PersistentFlags().Var(
+			enumflag.New(&theme, "theme", themeIds, enumflag.EnumCaseSensitive),
+			"theme", "colorization theme 'dark' or 'light'")
 		rootCmd.PersistentFlags().BoolVar(&dumptheme, "dump", false,
 			"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
 	})

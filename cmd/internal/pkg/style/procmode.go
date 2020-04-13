@@ -48,26 +48,19 @@ const (
 	ProcExe
 )
 
-// Implements the methods required by spf13/cobra in order to use the enum as
-// a flag.
-func (pm *ProcNameMode) String() string     { return enumflag.String(pm) }
-func (pm *ProcNameMode) Set(s string) error { return enumflag.Set(pm, s) }
-func (pm *ProcNameMode) Type() string       { return "namemode" }
-
-// Implements the method required by enumflag to map enum values to their
-// textual identifiers.
-func (pm *ProcNameMode) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
-	return map[ProcNameMode][]string{
-		ProcName:     {"name"},
-		ProcBasename: {"basename"},
-		ProcExe:      {"exe"},
-	}, enumflag.EnumCaseSensitive
+// Defines the textual representations for the ProcNameMode values.
+var procNameModeIds = map[ProcNameMode][]string{
+	ProcName:     {"name"},
+	ProcBasename: {"basename"},
+	ProcExe:      {"exe"},
 }
 
 func init() {
 	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(&procNameMode, "proc",
+		rootCmd.PersistentFlags().Var(
+			enumflag.New(&procNameMode, "proc", procNameModeIds, enumflag.EnumCaseSensitive),
+			"proc",
 			"process name style; can be 'name' (default if omitted), 'basename',\n"+
 				"or 'exe'")
 		rootCmd.PersistentFlags().Lookup("proc").NoOptDefVal = "name"

@@ -17,16 +17,12 @@ package style
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/enumflag"
 )
 
 var _ = Describe("styles output", func() {
 
-	It("has a flag type", func() {
-		var cm ColorMode
-		Expect(cm.Type()).To(Equal("colormode"))
-	})
-
-	It("parses colormodes", func() {
+	It("has the correct colormodes", func() {
 		tests := []struct {
 			arg       string
 			expected  string
@@ -42,13 +38,14 @@ var _ = Describe("styles output", func() {
 		}
 		for _, tst := range tests {
 			var cm ColorMode
-			err := cm.Set(tst.arg)
+			value := enumflag.New(&cm, "colormode", colorModeIds, enumflag.EnumCaseSensitive)
+			err := value.Set(tst.arg)
 			if tst.fail {
 				Expect(err).To(HaveOccurred(), "should have failed")
 				continue
 			}
 			Expect(err).NotTo(HaveOccurred(), "should not have failed")
-			Expect(cm.String()).To(Equal(tst.expected))
+			Expect(value.String()).To(Equal(tst.expected))
 			Expect(cm).To(Equal(tst.colormode))
 		}
 	})

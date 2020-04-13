@@ -41,26 +41,19 @@ const (
 	ColorNever                   // never colorize
 )
 
-// Implements the methods required by spf13/cobra in order to use the enum as
-// a flag.
-func (cm *ColorMode) String() string     { return enumflag.String(cm) }
-func (cm *ColorMode) Set(s string) error { return enumflag.Set(cm, s) }
-func (cm *ColorMode) Type() string       { return "colormode" }
-
-// Implements the method required by enumflag to map enum values to their
-// textual identifiers.
-func (cm *ColorMode) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
-	return map[ColorMode][]string{
-		ColorAlways: {"always", "on"},
-		ColorAuto:   {"auto"},
-		ColorNever:  {"never", "none", "off"},
-	}, enumflag.EnumCaseSensitive
+// Defines the textual representations for the ColorMode values.
+var colorModeIds = map[ColorMode][]string{
+	ColorAlways: {"always", "on"},
+	ColorAuto:   {"auto"},
+	ColorNever:  {"never", "none", "off"},
 }
 
 func init() {
 	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().VarP(&colorize, "color", "c",
+		rootCmd.PersistentFlags().VarP(
+			enumflag.New(&colorize, "color", colorModeIds, enumflag.EnumCaseSensitive),
+			"color", "c",
 			"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
 				"or 'never'")
 		rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"

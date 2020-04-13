@@ -42,26 +42,19 @@ const (
 	TreeStyleAscii                  // simple ASCII tree style
 )
 
-// Implements the methods required by spf13/cobra in order to use the enum as
-// a flag.
-func (ts *TreeStyle) String() string     { return enumflag.String(ts) }
-func (ts *TreeStyle) Set(s string) error { return enumflag.Set(ts, s) }
-func (ts *TreeStyle) Type() string       { return "treestyle" }
-
-// Implements the method required by enumflag to map enum values to their
-// textual identifiers.
-func (ts *TreeStyle) Enums() (interface{}, enumflag.EnumCaseSensitivity) {
-	return map[TreeStyle][]string{
-		TreeStyleLine:  {"line"},
-		TreeStyleAscii: {"ascii", "plain"},
-	}, enumflag.EnumCaseSensitive
+// Defines the textual representations for the TreeStyle values.
+var treeStyleIds = map[TreeStyle][]string{
+	TreeStyleLine:  {"line"},
+	TreeStyleAscii: {"ascii", "plain"},
 }
 
 // Register our CLI flag.
 func init() {
 	// Delayed registration of our CLI flag.
 	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(&treestyle, "treestyle",
+		rootCmd.PersistentFlags().Var(
+			enumflag.New(&treestyle, "treestyle", treeStyleIds, enumflag.EnumCaseSensitive),
+			"treestyle",
 			"select the tree render style; can be 'line' (default if omitted)\n"+
 				"or 'ascii'")
 	})
