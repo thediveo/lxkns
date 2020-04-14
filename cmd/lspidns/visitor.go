@@ -26,9 +26,9 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
-// UserNSVisitor is an asciitree.Visitor which starts from a list (slice) of
-// root user namespaces and then recursively dives into the user namespace
-// hierarchy.
+// PIDNSVisitor is an asciitree.Visitor which starts from a list (slice) of root
+// PID namespaces and then recursively dives into the PID namespace hierarchy,
+// optionally showing the intermediate user namespaces owing PID namespaces.
 type PIDNSVisitor struct {
 	ShowUserNS bool
 }
@@ -94,12 +94,24 @@ func (v *PIDNSVisitor) Label(node reflect.Value) (label string) {
 // non-user namespaces) and the list of child user namespace nodes.
 func (v *PIDNSVisitor) Get(node reflect.Value) (
 	label string, properties []string, children reflect.Value) {
-	// Label for this pid (or user) namespace...
+	// Label for this PID (or user) namespace; this is the easy part ;)
 	label = v.Label(node)
-	// For a user namespace, the children are the owned PID namespaces.
+	// For a user namespace, its children are the owned PID namespaces ... but
+	// ... we must only take the topmost owned PID namespaces, otherwise the
+	// result isn't exactly correct and we would all subtrees mirrored to the
+	// topmost level. Now, a "topmost" owned PID namespace is one that either
+	// has no parent PID namespace, or the parent PID namespace has a different
+	// owner. That's all that's to it.
 	if uns, ok := node.Interface().(lxkns.Ownership); ok {
-		pidns := lxkns.SortedNamespaces(uns.Ownings()[lxkns.PIDNS])
-		children = reflect.ValueOf(pidns)
+		clist := []lxkns.Namespace{}
+		for _, ns := range uns.Ownings()[lxkns.PIDNS] {
+			pidns := ns.(lxkns.Hierarchy)
+			ppidns := pidns.Parent()
+			if ppidns == nil || ppidns.(lxkns.Namespace).Owner() != uns.(lxkns.Hierarchy) {
+				clist = append(clist, ns)
+			}
+		}
+		children = reflect.ValueOf(lxkns.SortNamespaces(clist))
 		return
 	}
 	// For a PID namespace, the children are either PID namespaces, or user
@@ -108,12 +120,14 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 	clist := []interface{}{}
 	if hns, ok := node.Interface().(lxkns.Hierarchy); ok {
 		if !v.ShowUserNS {
-			// Show only the PID namespace hierarchy.
+			// Show only the PID namespace hierarchy: this is easy, as we all we
+			// need to do is to take all child PID namespaces and return them.
+			// That's it.
 			for _, cpidns := range lxkns.SortChildNamespaces(hns.Children()) {
 				clist = append(clist, cpidns)
 			}
 		} else {
-			// Insert user namespaces into the PID namespace hierarchy, when
+			// Insert user namespaces into the PID namespace hierarchy, whenever
 			// there is a change of user namespaces in the PID hierarchy.
 			userns := node.Interface().(lxkns.Namespace).Owner()
 			for _, cpidns := range lxkns.SortChildNamespaces(hns.Children()) {
