@@ -43,7 +43,9 @@ func Filter(ns lxkns.Namespace) bool {
 	return ns.Type()&filterMask != 0
 }
 
-var filterMask nstypes.NamespaceType = 0
+// filterMask is a set of OR'ed namespace CLONE_NEWxx constants indicating the
+// type of namespaces allowed to pass the filter.
+var filterMask nstypes.NamespaceType
 
 // The user-controlled namespace filters; they default to showing all types of
 // Linux-kernel namespaces.

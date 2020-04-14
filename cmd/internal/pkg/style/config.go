@@ -45,7 +45,7 @@ func BeforeCommand() error {
 // initialize styling to a well-known minimal state suitable for testing.
 func PrepareForTest() {
 	rootCmd := &cobra.Command{
-		Run: func(_ *cobra.Command, _ []string) { BeforeCommand() },
+		Run: func(_ *cobra.Command, _ []string) { _ = BeforeCommand() },
 	}
 	AddFlags(rootCmd)
 	rootCmd.SetArgs([]string{

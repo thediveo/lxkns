@@ -119,7 +119,7 @@ terminal, such as when piping into tools like "less".
 Out of the box (or rather, Gopher hole), lsuns supports two color themes,
 called "dark" and "light". Default is the dark theme, but it can be changed
 using "--theme light". In order to set a theme permanently, and to optionally
-adapt it later to personal preferences, the selected theme can be writting to
+adapt it later to personal preferences, the selected theme can be written to
 stdout:
 
   lsuns --theme light --dump > ~/.lxknsrc.yaml

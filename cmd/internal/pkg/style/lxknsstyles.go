@@ -36,8 +36,8 @@ var (
 	UnknownStyle Style // styles undetermined elements, such as unknown PIDs.
 )
 
-// Maps configuration top-level element names to their corresponding Style
-// objects for storing and using specific style information.
+// Styles maps style configuration top-level element names to their
+// corresponding Style objects for storing and using specific style information.
 var Styles = map[string]*Style{
 	"mnt":    &MntStyle,
 	"cgroup": &CgroupStyle,

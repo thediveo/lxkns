@@ -17,7 +17,9 @@ package style
 import (
 	"fmt"
 	"os"
+	"reflect"
 
+	"github.com/muesli/termenv"
 	"gopkg.in/yaml.v2"
 )
 
@@ -50,30 +52,35 @@ func parseStyles(configyaml string) {
 	}
 }
 
+// Maps style attributes to their corresponding termenv.Style methods.
+var styleAttributeMap = map[string]string{
+	"blink":     "Blink",
+	"bold":      "Bold",
+	"crossout":  "CrossOut",
+	"faint":     "Faint",
+	"italic":    "Italic",
+	"italics":   "Italic",
+	"overline":  "Overline",
+	"reverse":   "Reverse",
+	"underline": "Underline",
+}
+
 // Parse a single element style, such as a color settings, or a styling
 // attribute like "bold", et cetera.
 func parseElementStyle(sty *Style, elementStyle interface{}) {
 	// If it's "just" a simple string (list) element, then we interpret it as
 	// an attribute, which must be one of the defined styling attributes.
 	if attr, ok := elementStyle.(string); ok {
-		switch attr {
-		case "blink": // AAAARGH!!!!
-			sty.style = sty.style.Blink()
-		case "bold":
-			sty.style = sty.style.Bold()
-		case "crossout":
-			sty.style = sty.style.CrossOut()
-		case "faint":
-			sty.style = sty.style.Faint()
-		case "italic", "italics":
-			sty.style = sty.style.Italic()
-		case "overline":
-			sty.style = sty.style.Overline()
-		case "reverse":
-			sty.style = sty.style.Reverse()
-		case "underline":
-			sty.style = sty.style.Underline()
-		default:
+		if stylemethod, ok := styleAttributeMap[attr]; ok {
+			// You can call me by name ... *plonk*
+			//
+			// Fun fact: coming up with the reflection-based call reduces the
+			// cyclomatic complexity significantly, while raising the idiocity
+			// complexity by several orders of magnitude. We can call this a
+			// clear win for gocyclo.
+			sty.style = reflect.ValueOf(&sty.style).MethodByName(stylemethod).
+				Call([]reflect.Value{})[0].Interface().(termenv.Style)
+		} else {
 			fmt.Fprintf(os.Stderr,
 				"warning: unknown styling attribute %q\n", attr)
 		}
