@@ -69,6 +69,79 @@ These are the CLI tools:
 
 - `pidtree` [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/pidtree): shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
 
+### lsuns
+
+In its simplest form, `lsuns` shows the hierarchy of user namespaces.
+
+```
+$ sudo lsuns
+user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
+└─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
+```
+
+It gets more interesting with the `-d` (details) flag: `lsuns` then additionally
+displays all non-user namespaces owned by the user namespaces. In Linux-kernel
+namespace parlance, "owning" refers to the relationship between a newly created
+namespace and the user namespace that was active at the time the new namespace
+was created. For convenience, `lsuns` sorts the owned namespaces first
+alphabetically by type, and second numerically by namespace IDs.
+
+```
+$ sudo lsuns -d
+user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
+│  ⋄─ cgroup:[4026531835] process "systemd" (1)
+│  ⋄─ ipc:[4026531839] process "kthreadd" (2)
+│  ⋄─ mnt:[4026531840] process "systemd" (1)
+│  ⋄─ mnt:[4026531860] process "kdevtmpfs" (29)
+│  ⋄─ mnt:[4026532156] process "systemd-udevd" (161)
+│  ⋄─ mnt:[4026532256] process "systemd-timesyn" (298)
+│  ⋄─ mnt:[4026532271] process "bluetoothd" (472)
+│  ⋄─ mnt:[4026532273] process "unshare" (11697)
+│  ⋄─ mnt:[4026532275] process "unshare" (11818)
+│  ⋄─ net:[4026531905] process "kthreadd" (2)
+│  ⋄─ pid:[4026531836] process "kthreadd" (2)
+│  ⋄─ pid:[4026532274] process "bash" (11698)
+│  ⋄─ pid:[4026532276] process "bash" (11819)
+│  ⋄─ uts:[4026531838] process "systemd" (1)
+└─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
+      ⋄─ mnt:[4026532278] process "unshare" (15736)
+      ⋄─ mnt:[4026532280] process "unshare" (15747)
+      ⋄─ pid:[4026532279] process "bash" (15737)
+      ⋄─ pid:[4026532281] process "bash" (15748)
+```
+
+### lspidns
+
+On its surface, `lspidns` might appear to be `lsuns` twin, but for PID namespaces.
+
+```
+pid:[4026531836] process "kthreadd" (2)
+└─ pid:[4026532274] process "bash" (11698)
+   └─ pid:[4026532276] process "bash" (11819)
+      └─ pid:[4026532279] process "bash" (15737)
+         └─ pid:[4026532281] process "bash" (15748)
+```
+
+But hidden beneath the surface lies the `-u` flag; "u" as in user namespace. Now
+what have user namespaces to do with PID namespaces? Like other non-user
+namespaces, also PID namespaces are owned by user namespaces. `-u` now tells
+`lspidns` to show a "synthesized" hierarchy where owning user namespaces and
+owned PID namespaces are laid out in a single tree.
+
+```
+user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
+└─ pid:[4026531836] process "kthreadd" (2)
+   └─ pid:[4026532274] process "bash" (11698)
+      └─ pid:[4026532276] process "bash" (11819)
+         └─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
+            └─ pid:[4026532279] process "bash" (15737)
+               └─ pid:[4026532281] process "bash" (15748)
+```
+
+Please note that this representation is only possible because the capabilities
+rules for user and PID namespaces forbid user namespaces criss-crossing PID
+namespaces and vice versa.
+
 ### pidtree
 
 `pidtree` shows either the process hierarchy within the PID namespace
