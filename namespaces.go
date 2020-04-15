@@ -123,7 +123,7 @@ type NamespaceMap map[nstypes.NamespaceID]Namespace
 type Namespace interface {
 	ID() nstypes.NamespaceID     // unique identifier of this Linux kernel namespace.
 	Type() nstypes.NamespaceType // type of namespace.
-	Owner() Hierarchy            // user namespace "owning" this namespace.
+	Owner() Ownership            // user namespace "owning" this namespace.
 	Ref() string                 // reference in form of a file system path.
 	Leaders() []*Process         // "leader" process(es) "inside" this namespace.
 	LeaderPIDs() []PIDType       // "leader" process PIDs only.
@@ -202,7 +202,7 @@ type plainNamespace struct {
 	nsid      nstypes.NamespaceID
 	nstype    nstypes.NamespaceType
 	ownernsid nstypes.NamespaceID
-	owner     Hierarchy
+	owner     Ownership
 	ref       string
 	leaders   []*Process
 }
@@ -219,7 +219,7 @@ type NamespaceConfigurer interface {
 
 func (pns *plainNamespace) ID() nstypes.NamespaceID     { return pns.nsid }
 func (pns *plainNamespace) Type() nstypes.NamespaceType { return pns.nstype }
-func (pns *plainNamespace) Owner() Hierarchy            { return pns.owner }
+func (pns *plainNamespace) Owner() Ownership            { return pns.owner }
 func (pns *plainNamespace) Ref() string                 { return pns.ref }
 func (pns *plainNamespace) Leaders() []*Process         { return pns.leaders }
 
@@ -299,9 +299,8 @@ func (pns *plainNamespace) SetRef(ref string) {
 	pns.ref = ref
 }
 
-// DetectOwner gets the ownering user namespace id from Linux, and stores it
-// for later resolution only when we have a complete map of all user
-// namespaces.
+// DetectOwner gets the ownering user namespace id from Linux, and stores it for
+// later resolution, after when we have a complete map of all user namespaces.
 func (pns *plainNamespace) DetectOwner(nsf *os.File) {
 	// The User() call gives us an fd wrapped in an os.File, which we can then
 	// ask for its namespace ID.

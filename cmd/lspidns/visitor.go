@@ -107,7 +107,7 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 		for _, ns := range uns.Ownings()[lxkns.PIDNS] {
 			pidns := ns.(lxkns.Hierarchy)
 			ppidns := pidns.Parent()
-			if ppidns == nil || ppidns.(lxkns.Namespace).Owner() != uns.(lxkns.Hierarchy) {
+			if ppidns == nil || ppidns.(lxkns.Namespace).Owner() != uns.(lxkns.Ownership) {
 				clist = append(clist, ns)
 			}
 		}
