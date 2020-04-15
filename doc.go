@@ -51,6 +51,8 @@ result organizes the namespaces found by type. For instance, the following code
 snippet prints all namespaces, sorted first by type and then by namespace
 identifier:
 
+    // Iterate over all 7 types of Linux-kernel namespaces, then over all
+    // namespaces of a given type...
     for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
         for _, ns := range allns.SortedNamespaces(nsidx) {
             println(ns.Type().Name(), ns.ID())
@@ -100,20 +102,24 @@ discovery process with the following effective capabilities:
   * CAP_SYS_CHROOT -- for mount namespace switching
   * CAP_SYS_ADMIN  -- for mount namespace switching
 
-Considering CAP_SYS_PTRACE being essential there's probably not much difference
-to "just root" in the end, unless you want show off your "capabalities
-capabilities".
+Considering that especially CAP_SYS_PTRACE being essential there's probably not
+much difference to "just be root" in the end, unless you want show off your
+"capabilities capabilities".
 
 Namespace Hierarchies
 
 PID and user namespaces form separate and independent namespaces hierarchies.
 This parent-child hierarchy is exposed through the lxkns.Hierarchy interface of
-the discovered namespaces. Please note that namespaces are represented through
-the lxkns.Namespace interface only. For PID and user-type namespaces, an
-interface value of type lxkns.Namespace can be "converted" into an interface
+the discovered namespaces.
+
+Please note that lxkns represents namespaces often using the lxkns.Namespace
+interface when the specific type of namespace doesn't matter. In case of PID and
+user-type namespaces an lxkns.Namespace can be "converted" into an interface
 value of type lxkns.Hierarchy using a type assertion, in order to access the
 particular namespace hierarchy.
 
+    // If it's a PID or user namespace, then we can turn a "Namespace"
+    // into an "Hierarchy" in order to access hierarchy information.
     if hns, ok := ns.(lxkns.Hierarchy); ok {
         if hns.Parent() != nil {
             ...
@@ -143,6 +149,7 @@ If a namespace interface value represents a user-type namespace, then it can be
 interface discloses which namespaces are owned by a particular user namespace.
 Please note that this includes child user namespaces, too.
 
+    // Get the user namespace -owned-> namespaces relationships.
     if owns, ok := ns.(lxkns.Ownership); ok {
         for _, ownedns := range owns.Ownings() {
             ...
@@ -152,6 +159,7 @@ Please note that this includes child user namespaces, too.
 In the opposite direction, the owner of a namespace can be directly queried via
 the lxkns.Namespace interface:
 
+    // Get the namespace -owned by-> user namespace relationship.
     ownerns := ns.Owner()
 
 When asking a user namespace for its owner, the parent user namespace is
