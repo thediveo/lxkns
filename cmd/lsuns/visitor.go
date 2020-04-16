@@ -83,8 +83,11 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 			ownedns := uns.Ownings()
 			for _, nstype := range lxkns.TypeIndexLexicalOrder {
 				if nstype == lxkns.UserNS {
-					// Just in case: skip owned user namespaces; note: they
-					// shouldn't be present in the model anyway.
+					// The lxkns information model does not add child user
+					// namespaces to the model, but instead models the
+					// parent-child relationship. So, there should be no owned
+					// user namespaces present anyway. But we skip just as a
+					// safeguard in case the model would change anytime later.
 					continue
 				}
 				nslist := lxkns.SortedNamespaces(ownedns[nstype])

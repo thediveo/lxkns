@@ -23,12 +23,8 @@ package lxkns
 
 import (
 	"fmt"
-	"os"
-	"os/user"
-	"strings"
 
 	"github.com/thediveo/lxkns/nstypes"
-	rel "github.com/thediveo/lxkns/relations"
 )
 
 // NamespaceTypeIndex is an array index type for Linux kernel namespace types.
@@ -119,16 +115,47 @@ type NamespacesSet [NamespaceTypesCount]Namespace
 type NamespaceMap map[nstypes.NamespaceID]Namespace
 
 // Namespace represents a Linux kernel namespace in terms of its unique
-// identifier, type, owning user namespace, et cetera.
+// identifier, type, owning user namespace, joined (leader) processes, and some
+// more.
 type Namespace interface {
-	ID() nstypes.NamespaceID     // unique identifier of this Linux kernel namespace.
-	Type() nstypes.NamespaceType // type of namespace.
-	Owner() Ownership            // user namespace "owning" this namespace.
-	Ref() string                 // reference in form of a file system path.
-	Leaders() []*Process         // "leader" process(es) "inside" this namespace.
-	LeaderPIDs() []PIDType       // "leader" process PIDs only.
-	Ealdorman() *Process         // most senior "leader" process inside this namespace.
-	String() string              // convenience; maps to long representation form.
+	// ID returns the unique identifier of this Linux-kernel namespace. This
+	// identifier is basically an inode number from the special "nsfs" namespace
+	// filesystem inside the Linux kernel. IDs cannot be set as only the Linux
+	// allocates and manages them.
+	ID() nstypes.NamespaceID
+	// Type returns the type of namespace in form of one of the NamespaceType, such
+	// as nstypes.CLONE_NEWNS, nstypes.CLONE_NEWCGROUP, et cetera.
+	Type() nstypes.NamespaceType
+	// Owner returns the user namespace "owning" this namespace. For user
+	// namespaces, Owner always returns nil; use Hierarchy.Parent() instead, as
+	// the owner of a user namespace is its parent user namespace.
+	Owner() Ownership
+	// Ref returns a filesystem path suitable for referencing this namespace. A zero
+	// ref indicates that there is no reference path available: this is the case for
+	// "hidden" PID and user namespaces sandwiched in between PID or user namespaces
+	// where reference paths are available, because these other namespaces have
+	// processes joined to them, or are either bind-mounted or fd-referenced. Hidden
+	// PID namespaces can appear only when there is no process in any of their child
+	// namespaces and the child PID namespace(s) is bind-mounted or fd-references
+	// (the parent PID namespace is then kept alive because the child PID namespaces
+	// are kept alive).
+	Ref() string
+	// Leaders returns an unsorted list of Process-es which are joined to this
+	// namespace and which are the topmost processes in the process tree still
+	// joined to this namespace.
+	Leaders() []*Process
+	// LeaderPIDs returns the list of leader PIDs. This is a convenience method for
+	// those use cases where just a list of leader process PIDs is needed, but not
+	// the leader Process objects themselves.
+	LeaderPIDs() []PIDType // "leader" process PIDs only.
+	// Ealdorman returns the most senior leader process. The "most senior"
+	// process is the one which was created at the earliest, based on the start
+	// times from /proc/[PID]/stat. Me thinks, me has read too many Bernard
+	// Cornwell books. Wyrd bið ful aræd.
+	Ealdorman() *Process
+	// String describes this namespace with type, id, joined leader processes,
+	// and optionally information about owner, children, parent.
+	String() string
 }
 
 // NamespaceStringer describes a namespace either in its descriptive form when
@@ -137,29 +164,41 @@ type Namespace interface {
 // namespace.
 type NamespaceStringer interface {
 	fmt.Stringer
+	// TypeIDString describes this instance of a Linux kernel namespace just by
+	// its type and identifier, and nothing else.
 	TypeIDString() string
 }
 
 // Hierarchy informs about the parent-child relationships of PID and user
 // namespaces.
 type Hierarchy interface {
-	Parent() Hierarchy     // parent namespace of this namespace.
-	Children() []Hierarchy // child namespaces, if any.
+	// Parent returns the parent user or PID namespace of this user or PID
+	// namespace. If there is no parent namespace or the parent namespace in
+	// inaccessible, then Parent returns nil.
+	Parent() Hierarchy
+	// Children returns a list of child PID or user namespaces for this PID or
+	// user namespace.
+	Children() []Hierarchy
 }
 
 // Ownership informs about the owning user ID, as well as the namespaces owned
 // by a specific user namespace. Only user namespaces can execute Ownership.
 type Ownership interface {
-	UID() int               // the user ID of the process that created this user namespace.
-	Ownings() AllNamespaces // all owned namespaces, except for child user namespaces.
+	// UID returns the user ID of the process that created this user namespace.
+	UID() int
+	// Ownings returns all namespaces owned by this user namespace, with the
+	// execption of user namespaces. "Owned" user namespaces are actually child
+	// user namespaces, so they are returned through Hierarchy.Children()
+	// instead.
+	Ownings() AllNamespaces
 }
 
-// NewNamespace returns a new zero'ed namespace objects suitable for the
-// specified type of namespace. Oh, this is a case where the "nongonformist"
-// rule of "accept interfaces, return structs" doesn't make sense, because
-// struct types don't support polymorphism. On the other hand, thousands of
-// blog posts and SO answers cannot be wrong, more so, the more upvotes they
-// accumulated ;)
+// NewNamespace returns a new zero'ed namespace object suitable for the
+// specified type of namespace. Now this is a real-world case where the
+// "nongonformist" rule of "accept interfaces, return structs" doesn't make
+// sense, because struct types don't support polymorphism. On the other hand,
+// thousands of blog posts and SO answers cannot be wrong, more so, the more
+// upvotes they accumulated ;)
 func NewNamespace(nstype nstypes.NamespaceType, nsid nstypes.NamespaceID, ref string) Namespace {
 	switch nstype {
 	case nstypes.CLONE_NEWUSER:
@@ -192,300 +231,3 @@ func NewNamespace(nstype nstypes.NamespaceType, nsid nstypes.NamespaceID, ref st
 		return &plainNamespace{nsid: nsid, nstype: nstype, ref: ref}
 	}
 }
-
-// plainNamespace stores useful information about a concrete Linux kernel
-// namespace. It implements the interfaces Namespace, Hierarchy, Ownership,
-// and NamespaceStringer. Additionally, it implements the package-private
-// interface leaderAdder. (There, I did it. I documented implemented
-// interfaces explicitly for clarity.)
-type plainNamespace struct {
-	nsid      nstypes.NamespaceID
-	nstype    nstypes.NamespaceType
-	ownernsid nstypes.NamespaceID
-	owner     Ownership
-	ref       string
-	leaders   []*Process
-}
-
-// NamespaceConfigurer allows discovery mechanisms to set up the information
-// for a namespace.
-type NamespaceConfigurer interface {
-	AddLeader(proc *Process)               // adds yet another self-styled leader.
-	SetRef(string)                         // sets a filesystem path for referencing this namespace.
-	DetectOwner(nsf *os.File)              // detects owning user namespace id.
-	SetOwner(usernsid nstypes.NamespaceID) // sets the owning user namespace id directly.
-	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
-}
-
-func (pns *plainNamespace) ID() nstypes.NamespaceID     { return pns.nsid }
-func (pns *plainNamespace) Type() nstypes.NamespaceType { return pns.nstype }
-func (pns *plainNamespace) Owner() Ownership            { return pns.owner }
-func (pns *plainNamespace) Ref() string                 { return pns.ref }
-func (pns *plainNamespace) Leaders() []*Process         { return pns.leaders }
-
-// Ealdorman returns the most senior leader process. Me thinks, me has read
-// too many Bernard Cornwell books.
-func (pns *plainNamespace) Ealdorman() (p *Process) {
-	// Sorting most probably will be more expensive than a single run through
-	// the list, so take it easy without the sort package.
-	for _, proc := range pns.leaders {
-		if p == nil {
-			p = proc
-		} else if proc.Starttime < p.Starttime {
-			p = proc
-		}
-	}
-	return
-}
-
-// LeaderPIDs returns the list of leader PIDs.
-func (pns *plainNamespace) LeaderPIDs() []PIDType {
-	pids := make([]PIDType, len(pns.leaders))
-	for idx, leader := range pns.leaders {
-		pids[idx] = leader.PID
-	}
-	return pids
-}
-
-// String describes this instance of a non-hierarchical ("plain") Linux kernel
-// namespace.
-func (pns *plainNamespace) String() string {
-	var s string
-	if pns.owner != nil {
-		s = fmt.Sprintf("%s, owned by %s",
-			pns.TypeIDString(),
-			pns.owner.(NamespaceStringer).TypeIDString())
-	} else {
-		s = pns.TypeIDString()
-	}
-	if l := pns.LeaderString(); l != "" {
-		s += ", " + l
-	}
-	return s
-}
-
-// TypeIDString describes this instance of a Linux kernel namespace just by
-// its type and identifier, and nothing else.
-func (pns *plainNamespace) TypeIDString() string {
-	return fmt.Sprintf("%s:[%d]", pns.nstype.Name(), pns.nsid)
-}
-
-// LeaderString returns a textual list of leader process PIDs.
-func (pns *plainNamespace) LeaderString() string {
-	if len(pns.leaders) == 0 {
-		return ""
-	}
-	leaders := []string{}
-	for _, leader := range pns.leaders {
-		leaders = append(leaders, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
-	}
-	return fmt.Sprintf("joined by %s", strings.Join(leaders, ", "))
-}
-
-// AddLeader joins another leader process to the lot of leaders in this
-// namespace. It ensures that each leader appears only once in the list, even
-// if AddLeader is called multiple times for the same leader process.
-func (pns *plainNamespace) AddLeader(proc *Process) {
-	for _, leader := range pns.leaders {
-		if leader == proc {
-			return
-		}
-	}
-	pns.leaders = append(pns.leaders, proc)
-}
-
-// SetRef sets a filesystem path to reference this namespace.
-func (pns *plainNamespace) SetRef(ref string) {
-	pns.ref = ref
-}
-
-// DetectOwner gets the ownering user namespace id from Linux, and stores it for
-// later resolution, after when we have a complete map of all user namespaces.
-func (pns *plainNamespace) DetectOwner(nsf *os.File) {
-	// The User() call gives us an fd wrapped in an os.File, which we can then
-	// ask for its namespace ID.
-	usernsf, err := rel.User(nsf)
-	if err != nil {
-		return
-	}
-	defer usernsf.Close() // Do NOT leak.
-	pns.ownernsid, _ = rel.ID(usernsf)
-}
-
-// SetOwner set the namespace ID of the user namespace owning this namespace.
-func (pns *plainNamespace) SetOwner(usernsid nstypes.NamespaceID) {
-	pns.ownernsid = usernsid
-}
-
-// ResolveOwner sets the owning user namespace reference based on the owning
-// user namespace id discovered earlier.
-func (pns *plainNamespace) ResolveOwner(usernsmap NamespaceMap) {
-	// Only try to resolve when we actually got the user namespace id
-	// of the owner, otherwise we must skip resolution.
-	if pns.ownernsid != 0 {
-		ownerns := usernsmap[pns.ownernsid].(*userNamespace)
-		pns.owner = ownerns
-		ownerns.ownedns[TypeIndex(pns.nstype)][pns.nsid] = pns
-	}
-}
-
-// hierarchicalNamespace stores hierarchy information in addition to the
-// information for plain namespaces. Besides the interfaces for a
-// plainNamespace, it additionally implements the public Hierarchy interface.
-type hierarchicalNamespace struct {
-	plainNamespace
-	parent   Hierarchy
-	children []Hierarchy
-}
-
-// HierarchyConfigurer allows discovery mechanisms to configure the
-// information hold by hierarchical namespaces.
-type HierarchyConfigurer interface {
-	AddChild(child Hierarchy)
-	SetParent(parent Hierarchy)
-}
-
-func (hns *hierarchicalNamespace) Parent() Hierarchy     { return hns.parent }
-func (hns *hierarchicalNamespace) Children() []Hierarchy { return hns.children }
-
-// String describes this instance of a hierarchical Linux kernel namespace,
-// with its parent and children (but not grand-children). This description is
-// non-recursive.
-func (hns *hierarchicalNamespace) String() string {
-	return fmt.Sprintf("%s, %s",
-		hns.plainNamespace.String(), hns.ParentChildrenString())
-}
-
-// ParentChildrenString just describes the parent and children of a
-// hierarchical Linux kernel namespace, in a non-recursive form.
-func (hns *hierarchicalNamespace) ParentChildrenString() string {
-	var parent, children string
-	// Who is our parent?
-	if hns.parent == nil {
-		parent = "none"
-	} else {
-		parent = hns.parent.(NamespaceStringer).TypeIDString()
-	}
-	// Who are our children?
-	if len(hns.children) == 0 {
-		children = "none"
-	} else {
-		c := make([]string, len(hns.children))
-		for idx, child := range hns.children {
-			c[idx] = child.(NamespaceStringer).TypeIDString()
-		}
-		children = "[" + strings.Join(c, ", ") + "]"
-	}
-	return fmt.Sprintf("parent %s, children %s", parent, children)
-}
-
-// AddChild adds a child namespace to this (parent) namespace. It panics in
-// case a child is tried to be added twice to either the same parent or
-// different parents.
-func (hns *hierarchicalNamespace) AddChild(child Hierarchy) {
-	child.(HierarchyConfigurer).SetParent(hns)
-	hns.children = append(hns.children, child)
-}
-
-// SetParent sets the parent namespace of this child namespace. It panics in
-// case the parent would change.
-func (hns *hierarchicalNamespace) SetParent(parent Hierarchy) {
-	if hns.parent != nil {
-		panic("trying to change parents might sometimes not a good idea, especially just now.\n" +
-			"parent: " + parent.(NamespaceStringer).String() + "\n" +
-			"child: " + hns.String())
-	}
-	hns.parent = parent
-}
-
-// ResolveOwner sets the owning user namespace reference based on the owning
-// user namespace id discovered earlier. Yes, we're repeating us ourselves with
-// this method, because Golang is self-inflicted pain when trying to emulate
-// inheritance using embedding ... note: it doesn't work correctly. The reason
-// is that we need the use the correct instance pointer and not a pointer to an
-// embedded instance when setting the "owned" relationship.
-func (hns *hierarchicalNamespace) ResolveOwner(usernsmap NamespaceMap) {
-	// Only try to resolve when we actually got the user namespace id
-	// of the owner, otherwise we must skip resolution.
-	if hns.ownernsid != 0 {
-		ownerns := usernsmap[hns.ownernsid].(*userNamespace)
-		hns.owner = ownerns
-		ownerns.ownedns[TypeIndex(hns.nstype)][hns.nsid] = hns
-	}
-}
-
-// userNamespace stores ownership information in addition to the information
-// for hierarchical namespaces. On top of the interfaces supported by a
-// hierarchicalNamespace, userNamespace implements the Ownership interface.
-type userNamespace struct {
-	hierarchicalNamespace
-	owneruid int
-	ownedns  AllNamespaces
-}
-
-func (uns *userNamespace) UID() int               { return uns.owneruid }
-func (uns *userNamespace) Ownings() AllNamespaces { return uns.ownedns }
-
-// String describes this instance of a user namespace, with its parent,
-// children, and owned namespaces. This description is non-recursive.
-func (uns *userNamespace) String() string {
-	u, err := user.LookupId(fmt.Sprintf("%d", uns.owneruid))
-	var userstr string
-	if err == nil {
-		userstr = fmt.Sprintf(" (%q)", u.Username)
-	}
-	owneds := ""
-	var o []string
-	for _, ownedbytype := range uns.ownedns {
-		for _, owned := range ownedbytype {
-			o = append(o, owned.(NamespaceStringer).TypeIDString())
-		}
-	}
-	if len(o) != 0 {
-		owneds = ", owning [" + strings.Join(o, ", ") + "]"
-	}
-	parentandchildren := uns.ParentChildrenString()
-	leaders := uns.LeaderString()
-	if leaders != "" {
-		leaders = ", " + leaders
-	}
-	return fmt.Sprintf("%s, created by UID %d%s%s, %s%s",
-		uns.TypeIDString(),
-		uns.owneruid, userstr,
-		leaders,
-		parentandchildren,
-		owneds)
-}
-
-// detectUIDs takes an open file referencing a user namespace to query its
-// owner's UID and then stores it for this user namespace proxy.
-func (uns *userNamespace) detectUID(nsf *os.File) {
-	uns.owneruid, _ = rel.OwnerUID(nsf)
-}
-
-// ResolveOwner sets the owning user namespace reference based on the owning
-// user namespace id discovered earlier. Yes, we're repeating us ourselves with
-// this method, because Golang is self-inflicted pain when trying to emulate
-// inheritance using embedding ... note: it doesn't work correctly. The reason
-// is that we need the use the correct instance pointer and not a pointer to an
-// embedded instance when setting the "owned" relationship.
-func (uns *userNamespace) ResolveOwner(usernsmap NamespaceMap) {
-	// Only try to resolve when we actually got the user namespace id
-	// of the owner, otherwise we must skip resolution.
-	if uns.ownernsid != 0 {
-		ownerns := usernsmap[uns.ownernsid].(*userNamespace)
-		uns.owner = ownerns
-		ownerns.ownedns[TypeIndex(uns.nstype)][uns.nsid] = uns
-	}
-}
-
-var _ Namespace = (*plainNamespace)(nil)
-var _ Namespace = (*hierarchicalNamespace)(nil)
-var _ Namespace = (*userNamespace)(nil)
-
-var _ NamespaceStringer = (*plainNamespace)(nil)
-
-var _ Hierarchy = (*hierarchicalNamespace)(nil)
-var _ Hierarchy = (*userNamespace)(nil)
-
-var _ Ownership = (*userNamespace)(nil)

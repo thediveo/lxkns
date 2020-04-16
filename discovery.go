@@ -64,7 +64,7 @@ var NoDiscovery = DiscoverOpts{
 // kernel namespaces.
 type DiscoveryResult struct {
 	Options           DiscoverOpts  // options used during discovery.
-	Namespaces        AllNamespaces // all discovered namespaces, subjectg to filtering according to Options.
+	Namespaces        AllNamespaces // all discovered namespaces, subject to filtering according to Options.
 	InitialNamespaces NamespacesSet // the 7 initial namespaces.
 	UserNSRoots       []Namespace   // the topmost user namespace(s) in the hierarchy
 	PIDNSRoots        []Namespace   // the topmost PID namespace(s) in the hierarchy

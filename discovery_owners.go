@@ -26,15 +26,16 @@ import "github.com/thediveo/lxkns/nstypes"
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
 func resolveOwnership(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
-	if !result.Options.SkipOwnership && nstype != nstypes.CLONE_NEWUSER {
-		// The namespace type discovery sequence guarantees us that by the
-		// time we got here, the user namespaces already have been fully
-		// discovered, so we have a complete map of them.
-		usernsmap := result.Namespaces[UserNS]
-		nstypeidx := TypeIndex(nstype)
-		nsmap := result.Namespaces[nstypeidx]
-		for _, ns := range nsmap {
-			ns.(NamespaceConfigurer).ResolveOwner(usernsmap)
-		}
+	if result.Options.SkipOwnership || nstype == nstypes.CLONE_NEWUSER {
+		return
+	}
+	// The namespace type discovery sequence guarantees us that by the
+	// time we got here, the user namespaces already have been fully
+	// discovered, so we have a complete map of them.
+	usernsmap := result.Namespaces[UserNS]
+	nstypeidx := TypeIndex(nstype)
+	nsmap := result.Namespaces[nstypeidx]
+	for _, ns := range nsmap {
+		ns.(NamespaceConfigurer).ResolveOwner(usernsmap)
 	}
 }

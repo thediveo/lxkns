@@ -162,9 +162,9 @@ pid:[4026531836], owned by UID 0 ("root")
 │  │  │  └─ "foobar" (21434)
 │  │  ├─ "containerd-shim" (24173)
 │  │  │  └─ pid:[4026533005], owned by UID 0 ("root")
-│  │  │     └─ "systemd" (24191=1)
-│  │  │        ├─ "systemd-journal" (24366=70)
-│  │  │        ├─ "containerd" (24446=78)
+│  │  │     └─ "systemd" (24191/1)
+│  │  │        ├─ "systemd-journal" (24366/70)
+│  │  │        ├─ "containerd" (24446/78)
 ```
   
 Alternatively, it can show just a single branch down to a PID inside a
@@ -177,8 +177,8 @@ pid:[4026531836], owned by UID 0 ("root")
     └─ "kdeinit5" (2098)
       └─ "code" (20384)
           └─ pid:[4026532512], owned by UID 1000 ("harald")
-            └─ "code" (20387=1)
-                └─ "code" (20389=3)
+            └─ "code" (20387/1)
+                └─ "code" (20389/3)
 ```
 
 Please see also the [pidtree

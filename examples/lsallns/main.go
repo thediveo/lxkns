@@ -44,8 +44,8 @@ func main() {
 	// over all types of namespaces, because the discovery results contain the
 	// namespaces organized by type of namespace.
 	list := []NamespaceRow{}
-	for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
-		for _, ns := range result.SortedNamespaces(nsidx) {
+	for nsidx := range result.Namespaces {
+		for _, ns := range result.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
 			item := NamespaceRow{
 				ID:   uint64(ns.ID()),
 				Type: ns.Type().Name(),

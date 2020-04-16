@@ -20,8 +20,9 @@ for, according to the needs of API users of the lxkns package.
 
 Discovery
 
-Running a namespace discovery is a single function call (and an initial one-time
-support function call).
+A namespace discovery is just a single call to function lxkns.Discover().
+Additionally, there's a one-time support function call to reexec.CheckAction()
+required as early as possible in main().
 
     import (
         "github.com/thediveo/gons/reexec"
@@ -53,8 +54,8 @@ identifier:
 
     // Iterate over all 7 types of Linux-kernel namespaces, then over all
     // namespaces of a given type...
-    for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
-        for _, ns := range allns.SortedNamespaces(nsidx) {
+    for nsidx := range allns.Namespaces {
+        for _, ns := range allns.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
             println(ns.Type().Name(), ns.ID())
         }
     }
@@ -98,7 +99,8 @@ In-Capabilities
 It is possible to run full discoveries without being root, when executing the
 discovery process with the following effective capabilities:
 
-  * CAP_SYS_PTRACE -- no joking here, that's what needed for reading namespace refs
+  * CAP_SYS_PTRACE -- no joking here, that's what needed for reading namespace
+    references from /proc/[PID]/ns/*
   * CAP_SYS_CHROOT -- for mount namespace switching
   * CAP_SYS_ADMIN  -- for mount namespace switching
 
@@ -135,19 +137,21 @@ User namespaces play the central role in controlling the access of processes to
 other namespaces as well as the capabilities process gain when allowed to join
 user namespaces. A comprehensive discussion of the rules and their ramifications
 is beyond this package documentation. For starters, please refer to the man page
-for user_namespaces(7), http://man7.org/linux/man-pages/man7/user_namespaces.7.html.
+for user_namespaces(7),
+http://man7.org/linux/man-pages/man7/user_namespaces.7.html.
 
 The controlling role of user namespaces show up in the discovery information
 model as owner-owneds relationships: user namespaces own non-user namespaces.
 And non-user namespaces are owned by user namespaces, the "ownings". In case you
-are scratching your head why the Gopher the owned namespaces are related to as
-"ownings": welcome to the wonderful Gopher world of "er"-ers, where interface
-method naming conventions create wonderful identifier art.
+are now scratching your head "why the Gopher" the owned namespaces are referred
+to as "ownings": welcome to the wonderful Gopher world of "er"-ers, where
+interface method naming conventions create wonderful identifier art.
 
 If a namespace interface value represents a user-type namespace, then it can be
 "converted" into an lxkns.Ownership interface value using a type assertion. This
 interface discloses which namespaces are owned by a particular user namespace.
-Please note that this includes child user namespaces, too.
+Please note that this does not include child user namespaces, use
+Hierarchy.Children() instead.
 
     // Get the user namespace -owned-> namespaces relationships.
     if owns, ok := ns.(lxkns.Ownership); ok {
@@ -157,7 +161,7 @@ Please note that this includes child user namespaces, too.
     }
 
 In the opposite direction, the owner of a namespace can be directly queried via
-the lxkns.Namespace interface:
+the lxkns.Namespace interface (again, only for non-user namespaces):
 
     // Get the namespace -owned by-> user namespace relationship.
     ownerns := ns.Owner()
@@ -211,6 +215,11 @@ such system states.
     for _, leaders := range initprocess.Namespaces[lxkns.UserNS].Leaders() {
         ...
     }
+
+Architecture
+
+Please find more details about the lxkns information model in the architectural
+documents: https://github.com/TheDiveO/lxkns/blob/master/docs/architecture.md.
 
 */
 package lxkns
