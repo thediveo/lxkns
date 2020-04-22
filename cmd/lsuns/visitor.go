@@ -24,6 +24,7 @@ import (
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -52,7 +53,7 @@ func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 		style := style.Styles[ns.Type().Name()]
 		label = fmt.Sprintf("%s %s",
 			style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
-			leadersString(ns))
+			output.NamespaceReferenceLabel(ns))
 	}
 	if uns, ok := node.Interface().(lxkns.Ownership); ok {
 		username := ""
@@ -98,45 +99,11 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 					style := style.Styles[ns.Type().Name()]
 					s := fmt.Sprintf("%s %s",
 						style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
-						leadersString(ns))
+						output.NamespaceReferenceLabel(ns))
 					properties = append(properties, s)
 				}
 			}
 		}
 	}
 	return
-}
-
-// leadersString lists the (leader) processes joined to a namespace in text
-// form.
-//
-// TODO: implement control over simplified/full representation forms
-func leadersString(ns lxkns.Namespace) string {
-	procs := "process (none)"
-	if ancient := ns.Ealdorman(); ancient != nil {
-		procs = "process " +
-			fmt.Sprintf("%q (%d)",
-				style.ProcessStyle.V(style.ProcessName(ancient)),
-				ancient.PID)
-	}
-	/*
-		if leaders := ns.Leaders(); len(leaders) > 0 {
-				sorted := make([]*lxkns.Process, len(leaders))
-				copy(sorted, leaders)
-				sort.Slice(sorted, func(i, j int) bool {
-					return sorted[i].PID < sorted[j].PID
-				})
-				s := []string{}
-				for _, leader := range sorted {
-					s = append(s, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
-				}
-				procs = strings.Join(s, ", ")
-				if len(leaders) > 1 {
-					procs = "processes " + procs
-				} else {
-					procs = "process " + procs
-				}
-		}
-	*/
-	return procs
 }

@@ -23,6 +23,7 @@ import (
 	"reflect"
 
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -75,7 +76,7 @@ func (v *PIDNSVisitor) Label(node reflect.Value) (label string) {
 		style := style.Styles[ns.Type().Name()]
 		label = fmt.Sprintf("%s %s",
 			style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
-			leadersString(ns))
+			output.NamespaceReferenceLabel(ns))
 	}
 	if uns, ok := node.Interface().(lxkns.Ownership); ok {
 		username := ""
@@ -146,17 +147,4 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 	}
 	children = reflect.ValueOf(clist)
 	return
-}
-
-// leadersString lists the (leader) processes joined to a namespace in text
-// form.
-func leadersString(ns lxkns.Namespace) string {
-	procs := "process (none)"
-	if ancient := ns.Ealdorman(); ancient != nil {
-		procs = "process " +
-			fmt.Sprintf("%q (%d)",
-				style.ProcessStyle.V(style.ProcessName(ancient)),
-				ancient.PID)
-	}
-	return procs
 }
