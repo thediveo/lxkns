@@ -169,7 +169,12 @@ func renderPIDTreeWithNamespaces(out io.Writer) error {
 	// any other roots that might have turned up during discovery. And this
 	// slightly ranty comment now gets me another badge-achievement which is
 	// so important in today's societies: "ranty source commenter".
-	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
+	ourproc, ok := allns.Processes[lxkns.PIDType(os.Getpid())]
+	if !ok {
+		fmt.Fprintln(os.Stderr, "error: /proc does not match the current PID namespace")
+		os.Exit(1)
+	}
+	rootpidns := ourproc.Namespaces[lxkns.PIDNS]
 	// Finally render the output based on the information gathered. The
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
