@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -64,7 +65,8 @@ func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Nam
 // only the details about type (always PID) and ID, but additionally the
 // owner's UID and user name.
 func PIDNamespaceLabel(pidns lxkns.Namespace) (label string) {
-	label = style.PIDStyle.S(pidns.(lxkns.NamespaceStringer).TypeIDString())
+	label = output.NamespaceIcon(pidns) +
+		style.PIDStyle.S(pidns.(lxkns.NamespaceStringer).TypeIDString())
 	if pidns.Owner() != nil {
 		uid := pidns.Owner().(lxkns.Ownership).UID()
 		var userstr string

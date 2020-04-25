@@ -74,7 +74,8 @@ func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 func (v *PIDNSVisitor) Label(node reflect.Value) (label string) {
 	if ns, ok := node.Interface().(lxkns.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = fmt.Sprintf("%s %s",
+		label = fmt.Sprintf("%s%s %s",
+			output.NamespaceIcon(ns),
 			style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
 			output.NamespaceReferenceLabel(ns))
 	}

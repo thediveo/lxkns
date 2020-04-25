@@ -51,7 +51,8 @@ func (v *UserNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	if ns, ok := node.Interface().(lxkns.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = fmt.Sprintf("%s %s",
+		label = fmt.Sprintf("%s%s %s",
+			output.NamespaceIcon(ns),
 			style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
 			output.NamespaceReferenceLabel(ns))
 	}
@@ -97,7 +98,8 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 						continue
 					}
 					style := style.Styles[ns.Type().Name()]
-					s := fmt.Sprintf("%s %s",
+					s := fmt.Sprintf("%s%s %s",
+						output.NamespaceIcon(ns),
 						style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
 						output.NamespaceReferenceLabel(ns))
 					properties = append(properties, s)

@@ -25,71 +25,21 @@ package style
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 )
-
-// AddFlags adds global CLI command flags related to colorization and styling.
-func AddFlags(rootCmd *cobra.Command) {
-	pflagCreators.Run(rootCmd)
-}
-
-// BeforeCommand needs to be called just before the selected command is run,
-// ideally as a "PersistentPreRun" of a Cobra root command. It configures the
-// various output rendering styles based on CLI command flags and/or
-// configuration files.
-func BeforeCommand() error {
-	runhooks.Run()
-	return nil
-}
 
 // PrepareForTest needs to be called during test setup in order to correctly
 // initialize styling to a well-known minimal state suitable for testing.
 func PrepareForTest() {
 	rootCmd := &cobra.Command{
-		Run: func(_ *cobra.Command, _ []string) { _ = BeforeCommand() },
+		Run: func(_ *cobra.Command, _ []string) {
+			_ = cli.BeforeCommand()
+		},
 	}
-	AddFlags(rootCmd)
+	cli.AddFlags(rootCmd)
 	rootCmd.SetArgs([]string{
 		"--treestyle=line",
 		"--color=never",
 	})
 	_ = rootCmd.Execute()
-}
-
-// pflagCreators lists the CLI flag constructor functions to be called in
-// order to register these flags. This trick here helps us in keeping things
-// modular in this package. According to
-// https://golang.org/doc/effective_go.html#initialization,
-// variables are initialized before the init functions in a package.
-var pflagCreators = flagCreators{}
-
-type flagCreators []func(*cobra.Command)
-
-// Register a creator which then registers root command flags, et cetera.
-func (fc *flagCreators) Register(creator func(rootCmd *cobra.Command)) {
-	*fc = append(*fc, creator)
-}
-
-// Run runs the pflag rootCmd registering functions.
-func (fc flagCreators) Run(cmd *cobra.Command) {
-	for _, creatorf := range fc {
-		creatorf(cmd)
-	}
-}
-
-// runhooks lists hooks to be run after CLI args/flags have been parsed and
-// just before the selected command is executed.
-var runhooks = hooks{}
-
-type hooks []func()
-
-// Register a hook to be run immediately before executing the selected command.
-func (h *hooks) Register(hook func()) {
-	*h = append(*h, hook)
-}
-
-// Run all registered hooks.
-func (h hooks) Run() {
-	for _, hook := range h {
-		hook()
-	}
 }

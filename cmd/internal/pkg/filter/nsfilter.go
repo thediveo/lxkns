@@ -17,20 +17,10 @@ package filter
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
+	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/nstypes"
 )
-
-// AddFilterFlag adds the "--filter" flag to the specified command. The filter
-// flag accepts a set of namespace type names, either separated by commas, or
-// specified using multiple "--filter" flags.
-func AddFilterFlag(cmd *cobra.Command) {
-	cmd.PersistentFlags().VarP(
-		enumflag.NewSlice(&namespaceFilters, "filter", nsFilterIds, enumflag.EnumCaseSensitive),
-		"filter", "f",
-		"shows only selected namespace types; can be 'cgroup'/'c', 'ipc'/'i', 'mnt'/'m',\n"+
-			"'net'/'n', 'pid'/'p', 'user'/'U', 'uts'/'u'")
-}
 
 // Filter returns true if the given Linux-kernel namespace passes the namespace
 // type filter.
@@ -68,4 +58,28 @@ var nsFilterIds = map[nstypes.NamespaceType][]string{
 	nstypes.CLONE_NEWUSER:   {"user", "U"},
 	nstypes.CLONE_NEWPID:    {"pid", "p"},
 	nstypes.CLONE_NEWNET:    {"net", "n"},
+}
+
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
+func init() {
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "filter",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: FilterSetupCLI},
+		},
+	})
+}
+
+// FilterSetupCLI adds the "--filter" flag to the specified command. The filter
+// flag accepts a set of namespace type names, either separated by commas, or
+// specified using multiple "--filter" flags.
+func FilterSetupCLI(cmd *cobra.Command) {
+	cmd.PersistentFlags().VarP(
+		enumflag.NewSlice(&namespaceFilters, "filter", nsFilterIds, enumflag.EnumCaseSensitive),
+		"filter", "f",
+		"shows only selected namespace types; can be 'cgroup'/'c', 'ipc'/'i', 'mnt'/'m',\n"+
+			"'net'/'n', 'pid'/'p', 'user'/'U', 'uts'/'u'")
 }

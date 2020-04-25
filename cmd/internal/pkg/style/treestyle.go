@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	asciitree "github.com/thediveo/go-asciitree"
+	"github.com/thediveo/go-plugger"
 )
 
 // NamespaceStyler styles namespace hierarchies (trees) using the selected
@@ -48,36 +49,52 @@ var treeStyleIds = map[TreeStyle][]string{
 	TreeStyleAscii: {"ascii", "plain"},
 }
 
-// Register our CLI flag.
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
 func init() {
-	// Delayed registration of our CLI flag.
-	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(
-			enumflag.New(&treestyle, "treestyle", treeStyleIds, enumflag.EnumCaseSensitive),
-			"treestyle",
-			"select the tree render style; can be 'line' (default if omitted)\n"+
-				"or 'ascii'")
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "treestyle",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: TreeStyleSetupCLI},
+			plugger.NamedSymbol{Name: "BeforeRun", Symbol: TreeStyleBeforeRun},
+		},
 	})
-	// Delayed rendering style selection based on our CLI flag, just before
-	// the selected command runs.
-	runhooks.Register(func() {
-		switch treestyle {
-		case TreeStyleLine:
-			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
-				Fork:     "├", // Don't print this on an FX-80/100 ;)
-				Nodeconn: "─",
-				Nofork:   "│",
-				Lastnode: "└",
-				Property: "⋄─",
-			})
-		case TreeStyleAscii:
-			NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
-				Fork:     `\`,
-				Nodeconn: "_",
-				Nofork:   "|",
-				Lastnode: `\`,
-				Property: "o-",
-			})
-		}
-	})
+}
+
+// TreeStyleSetupCLI is a plugin function that registers the CLI "treestyle"
+// flag.
+func TreeStyleSetupCLI(rootCmd *cobra.Command) {
+	rootCmd.PersistentFlags().Var(
+		enumflag.New(&treestyle, "treestyle", treeStyleIds, enumflag.EnumCaseSensitive),
+		"treestyle",
+		"select the tree render style; can be 'line' (default if omitted)\n"+
+			"or 'ascii'")
+}
+
+// TreeStyleBeforeRun is a plugin function that handles selection, reading, or
+// dumping of styling profiles, just before the selected command runs. In case
+// of dumping, it also exits this process, so the itself command won't ever
+// start.
+func TreeStyleBeforeRun() error {
+	switch treestyle {
+	case TreeStyleLine:
+		NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
+			Fork:     "├", // Don't print this on an FX-80/100 ;)
+			Nodeconn: "─",
+			Nofork:   "│",
+			Lastnode: "└",
+			Property: "⋄─",
+		})
+	case TreeStyleAscii:
+		NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
+			Fork:     `\`,
+			Nodeconn: "_",
+			Nofork:   "|",
+			Lastnode: `\`,
+			Property: "o-",
+		})
+	}
+	return nil
 }

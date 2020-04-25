@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -28,7 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "lspidns shows the tree of PID namespaces",
 	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return style.BeforeCommand()
+		return cli.BeforeCommand()
 	},
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		user, _ := cmd.PersistentFlags().GetBool("user")
@@ -50,5 +51,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolP(
 		"user", "u", false,
 		"shows owner user namespaces")
-	style.AddFlags(rootCmd)
+	cli.AddFlags(rootCmd)
 }

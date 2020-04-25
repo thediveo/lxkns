@@ -120,6 +120,12 @@ github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039 h1:9eZXgLbbE
 github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039/go.mod h1:HOo87Dns4ivT4i3Ya1/Q3D/O4uPcm2ebO5HvGdTr4bA=
 github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6 h1:zUz5+dbOOwCWmGi3osQIygTjyVW8Xig36nEc7KwAB6I=
 github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6/go.mod h1:NcRbq+rEEkZcKCO/fPX0f1QtHhVW8YlLqMwE1CgLsOo=
+github.com/thediveo/go-plugger v0.0.0-20200321151451-cc19027ab8cc h1:FCsIothq+bN3AkvRbjPbWtrsetxO/T+FER1ILWn++YU=
+github.com/thediveo/go-plugger v0.0.0-20200321151451-cc19027ab8cc/go.mod h1:FJENJKNlc5Wa5FHZtfVfVEYJCW+8peF86NHrdvopBds=
+github.com/thediveo/go-plugger v0.0.0-20200424222932-436b81c542dd h1:JIHcPN7IqY1gCBR9tcuKV8Dxl5StgIBlzcJRgVMH0Kw=
+github.com/thediveo/go-plugger v0.0.0-20200424222932-436b81c542dd/go.mod h1:FJENJKNlc5Wa5FHZtfVfVEYJCW+8peF86NHrdvopBds=
+github.com/thediveo/go-plugger v0.9.0 h1:LCAO3/UiOhvg68qUEfQv7Qmot++3VUrPMNFDfPyjqig=
+github.com/thediveo/go-plugger v0.9.0/go.mod h1:FJENJKNlc5Wa5FHZtfVfVEYJCW+8peF86NHrdvopBds=
 github.com/thediveo/gons v0.0.0-20200328222805-52313499c476 h1:9gCUc0KgFBxHWN/iv3hHhBkl0yTGUq6DUtCUDXZpZJ0=
 github.com/thediveo/gons v0.0.0-20200328222805-52313499c476/go.mod h1:BcJpgzqAsgBATvt959qz7tVuyoKpe7iGcnthwcp/ekY=
 github.com/thediveo/klo v0.0.0-20200201214446-23f1c697d426 h1:VOrQ+uKdKq+5hTnSZZeazzXP8hJf8TUM/HxDEVCVq1Y=

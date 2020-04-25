@@ -21,6 +21,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
+	"github.com/thediveo/go-plugger"
 )
 
 // The termenv color profile to be used when styling, such as plain colorless
@@ -48,27 +49,42 @@ var colorModeIds = map[ColorMode][]string{
 	ColorNever:  {"never", "none", "off"},
 }
 
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
 func init() {
-	// Delayed registration of our CLI flag.
-	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().VarP(
-			enumflag.New(&colorize, "color", colorModeIds, enumflag.EnumCaseSensitive),
-			"color", "c",
-			"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
-				"or 'never'")
-		rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "colormode",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ColorModeSetupCLI},
+			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ColorModeBeforeRun},
+		},
 	})
-	// Delayed color profile selection based on our CLI flag and terminal
-	// profile detection, just before the selected command runs.
-	runhooks.Register(func() {
-		// Colorization mode...
-		switch colorize {
-		case ColorAlways:
-			colorProfile = termenv.ANSI256
-		case ColorAuto:
-			colorProfile = termenv.ColorProfile()
-		case ColorNever:
-			colorProfile = termenv.Ascii
-		}
-	})
+}
+
+// ColorModeSetupCLI is a plugin function that registers the CLI "color" flag.
+func ColorModeSetupCLI(rootCmd *cobra.Command) {
+	rootCmd.PersistentFlags().VarP(
+		enumflag.New(&colorize, "color", colorModeIds, enumflag.EnumCaseSensitive),
+		"color", "c",
+		"colorize the output; can be 'always' (default if omitted), 'auto',\n"+
+			"or 'never'")
+	rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"
+}
+
+// ColorModeBeforeRun is a plugin function that delays color profile selection
+// based on our CLI flag and terminal profile detection until the last minute,
+// just before the selected command runs.
+func ColorModeBeforeRun() error {
+	// Colorization mode...
+	switch colorize {
+	case ColorAlways:
+		colorProfile = termenv.ANSI256
+	case ColorAuto:
+		colorProfile = termenv.ColorProfile()
+	case ColorNever:
+		colorProfile = termenv.Ascii
+	}
+	return nil
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
+	"github.com/thediveo/go-plugger"
 )
 
 // The CLI flag controlling which theme to use when colorization is used.
@@ -50,45 +51,61 @@ var themeIds = map[Theme][]string{
 	ThemeLight: {"light"},
 }
 
-// Register our CLI flag.
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
 func init() {
-	// Delayed registration of our CLI flag.
-	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(
-			enumflag.New(&theme, "theme", themeIds, enumflag.EnumCaseSensitive),
-			"theme", "colorization theme 'dark' or 'light'")
-		rootCmd.PersistentFlags().BoolVar(&dumptheme, "dump", false,
-			"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "theme",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ThemeSetupCLI},
+			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ThemeBeforeRun},
+		},
 	})
-	// Delayed selection, reading, or dumping of styling profiles, just before
-	// the selected command runs.
-	runhooks.Register(func() {
-		// If the user wants to dump a theme using "--dump" then the selected
-		// default theme, light or dark, takes precedence and any user
-		// definitions get ignored in this special case. This allows users to
-		// recreate a clean user-defined theme.
-		if dumptheme {
-			fmt.Fprint(os.Stdout, defaultThemes[theme])
-			os.Exit(0)
+}
+
+// ThemeSetupCLI is a plugin function that registers the CLI flags related to
+// theming.
+func ThemeSetupCLI(rootCmd *cobra.Command) {
+	rootCmd.PersistentFlags().Var(
+		enumflag.New(&theme, "theme", themeIds, enumflag.EnumCaseSensitive),
+		"theme", "colorization theme 'dark' or 'light'")
+	rootCmd.PersistentFlags().BoolVar(&dumptheme, "dump", false,
+		"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
+}
+
+// ThemeBeforeRun is a plugin function that handles selection, reading, or
+// dumping of styling profiles, just before the selected command runs. In case
+// of dumping, it also exits this process, so the itself command won't ever
+// start.
+func ThemeBeforeRun() error {
+	// If the user wants to dump a theme using "--dump" then the selected
+	// default theme, light or dark, takes precedence and any user
+	// definitions get ignored in this special case. This allows users to
+	// recreate a clean user-defined theme.
+	if dumptheme {
+		fmt.Fprint(os.Stdout, defaultThemes[theme])
+		os.Exit(0)
+	}
+	// If there is a user-defined theme in the user's home directory, then
+	// this takes precedence over any --theme selection. Unless the file
+	// is empty, then we fall back onto the default themes.
+	var th string
+	if home, err := os.UserHomeDir(); err == nil {
+		if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
+			th = string(styling)
 		}
-		// If there is a user-defined theme in the user's home directory, then
-		// this takes precedence over any --theme selection. Unless the file
-		// is empty, then we fall back onto the default themes.
-		var th string
-		if home, err := os.UserHomeDir(); err == nil {
-			if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
-				th = string(styling)
-			}
-		}
-		if th == "" {
-			th = defaultThemes[theme]
-		}
-		// If the colorProfile is set to Ascii, then we actually skip all
-		// styling, not just coloring, such as "ls" does.
-		if colorProfile != termenv.Ascii {
-			parseStyles(th)
-		}
-	})
+	}
+	if th == "" {
+		th = defaultThemes[theme]
+	}
+	// If the colorProfile is set to Ascii, then we actually skip all
+	// styling, not just coloring, such as "ls" does.
+	if colorProfile != termenv.Ascii {
+		parseStyles(th)
+	}
+	return nil
 }
 
 // Maps the Theme enumeration to the corresponding theme descriptions.

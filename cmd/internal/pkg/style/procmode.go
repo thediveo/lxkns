@@ -17,6 +17,7 @@ package style
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
+	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns"
 )
 
@@ -55,14 +56,25 @@ var procNameModeIds = map[ProcNameMode][]string{
 	ProcExe:      {"exe"},
 }
 
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
 func init() {
-	// Delayed registration of our CLI flag.
-	pflagCreators.Register(func(rootCmd *cobra.Command) {
-		rootCmd.PersistentFlags().Var(
-			enumflag.New(&procNameMode, "proc", procNameModeIds, enumflag.EnumCaseSensitive),
-			"proc",
-			"process name style; can be 'name' (default if omitted), 'basename',\n"+
-				"or 'exe'")
-		rootCmd.PersistentFlags().Lookup("proc").NoOptDefVal = "name"
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "procmode",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ProcModeSetupCLI},
+		},
 	})
+}
+
+// ProcModeSetupCLI is a plugin function that registers the CLI "--proc" flag.
+func ProcModeSetupCLI(rootCmd *cobra.Command) {
+	rootCmd.PersistentFlags().Var(
+		enumflag.New(&procNameMode, "proc", procNameModeIds, enumflag.EnumCaseSensitive),
+		"proc",
+		"process name style; can be 'name' (default if omitted), 'basename',\n"+
+			"or 'exe'")
+	rootCmd.PersistentFlags().Lookup("proc").NoOptDefVal = "name"
 }

@@ -23,6 +23,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// parseStyles parses a YAML string containing style information into the
+// package styles, such as MntStyle, et cetera.
 func parseStyles(configyaml string) {
 	yml := map[string]interface{}{}
 	err := yaml.Unmarshal([]byte(configyaml), &yml)
