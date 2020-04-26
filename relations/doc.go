@@ -5,9 +5,9 @@ namespaces (see also: http://man7.org/linux/man-pages/man2/ioctl_ns.2.html). For
 instance, for querying the parent namespace of a PID or user namespace, getting
 the ID of a namespace, et cetera.
 
-Linux-kernel namespaces can be referenced by filesystem path, open file
-descriptor, or *os.File. This package therefore defines the following three
-namespace reference types:
+A particular Linux-kernel namespace can be referenced by a filesystem path, an
+open file descriptor, or an *os.File. Thus, this package defines the following
+three namespace reference types:
 
     * NamespacePath
     * NamespaceFd
@@ -15,6 +15,7 @@ namespace reference types:
 
 All three types of namespace references define the following query operations:
 
+    * ID() returns the ID of the referenced namespace.
     * User() returns the user namespace owning the referenced namespace.
     * Parent() returns the parent namespace of the referenced namespace.
     * OwnerUID() returns the UID of the owner of the referenced namespace.
@@ -53,5 +54,27 @@ struct instead of a pointer to it we mimic the original handling as close as
 possible, avoiding situations where a non-nil NamespaceFile points to a nil
 *os.File.
 
+Namespace IDs Without Device Numbers
+
+Our package on purpose only returns the inode number of a namespace as its ID,
+without the filesystem device number.
+
+The reason lies in the way the Linux kernel manages namespaces: the IDs/inode
+numbers of namespaces are solely managed through the so-called "nsfs"
+filesystem. This "nsfs" filesystem is special in that it does not get listed as
+an available filesystem in /proc/filesystems, and (in consequence) it cannot be
+mounted at all. Instead, the kernel mounts it during startup automatically.
+There is always only exactly one instance of nsfs, period. Thus, the device
+number will be constant during the lifetime of a running Linux kernel and there
+is no need to store and shuffle around an otherwise completely useless device
+number, complicating the ID handling considerably ... as other namespace-related
+packages show for worse.
+
+With the knowledge about how the nsfs works under our belts comparing namespaces
+for equality is as simple as:
+
+    ns1.ID() == ns2.ID()
+
+No special Equal() methods, nothing, nada, zilch. Just plain "==".
 */
 package relations
