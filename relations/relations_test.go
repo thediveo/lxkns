@@ -37,24 +37,40 @@ func errof(v ...interface{}) error {
 
 var _ = Describe("Namespaces", func() {
 
-	It("return their types", func() {
-		Expect(errof(Type("/foobar"))).To(HaveOccurred())
-		Expect(errof(Type("/"))).To(HaveOccurred())
-		Expect(Type("/proc/self/ns/user")).To(Equal(nstypes.CLONE_NEWUSER))
+	It("wraps namespace *os.Files", func() {
+		f, err := NewNamespaceFile(os.Open("/foobar"))
+		Expect(err).To(HaveOccurred())
+		Expect(f).To(BeNil())
 
-		Expect(errof(Type(0))).To(HaveOccurred())
-		f, err := os.Open("/proc/self/ns/ipc")
+		f, err = NewNamespaceFile(os.Stdout, nil)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(f.Fd()).To(Equal(os.Stdout.Fd()))
+
+		_, err = NamespaceFileFromFd(^uint(0), nil)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("return their types", func() {
+		Expect(errof(NamespacePath("/foobar").Type())).To(HaveOccurred())
+		Expect(errof(NamespaceFd(0).Type())).To(HaveOccurred())
+
+		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(nstypes.CLONE_NEWUSER))
+
+		f, err := NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		Expect(Type(f.Fd())).To(Equal(nstypes.CLONE_NEWIPC))
+		Expect(NamespaceFd(f.Fd()).Type()).To(Equal(nstypes.CLONE_NEWIPC))
 
-		Expect(Type(f)).To(Equal(nstypes.CLONE_NEWIPC))
-
-		Expect(errof(Type(nil))).To(HaveOccurred())
+		Expect(f.Type()).To(Equal(nstypes.CLONE_NEWIPC))
 	})
 
 	It("return their identifiers", func() {
-		Expect(errof(ID("/foobar"))).To(HaveOccurred())
+		Expect(errof(NamespacePath("/foobar").ID())).To(HaveOccurred())
+		Expect(errof(NamespaceFd(^uintptr(0)).ID())).To(HaveOccurred())
+		nsf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
+		Expect(err).ToNot(HaveOccurred())
+		nsf.Close() // sic! make Fstat fail, that's why it is called "F"stat...
+		Expect(errof(nsf.ID())).To(HaveOccurred())
 
 		info, err := os.Stat("/proc/self/ns/cgroup")
 		Expect(err).ToNot(HaveOccurred())
@@ -62,48 +78,44 @@ var _ = Describe("Namespaces", func() {
 		Expect(ok).To(BeTrue())
 		nsid := nstypes.NamespaceID(stat.Ino)
 
-		Expect(ID("/proc/self/ns/cgroup")).To(Equal(nsid))
+		Expect(NamespacePath("/proc/self/ns/cgroup").ID()).To(Equal(nsid))
 
-		Expect(errof(ID(-1))).To(HaveOccurred())
-		f, err := os.Open("/proc/self/ns/cgroup")
+		f, err := NewNamespaceFile(os.Open("/proc/self/ns/cgroup"))
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		Expect(ID(f.Fd())).To(Equal(nsid))
-
-		Expect(ID(f)).To(Equal(nsid))
-
-		Expect(errof(ID(nil))).To(HaveOccurred())
+		Expect(NamespaceFd(f.Fd()).ID()).To(Equal(nsid))
+		Expect(f.ID()).To(Equal(nsid))
 	})
 
 	It("return their owning user namespace", func() {
-		Expect(errof(User("/foo"))).To(HaveOccurred())
-		Expect(errof(User("/"))).To(HaveOccurred())
+		Expect(errof(NamespacePath("/foo").User())).To(HaveOccurred())
+		Expect(errof(NamespacePath("/").User())).To(HaveOccurred())
+		Expect(errof(NamespaceFd(0).User())).To(HaveOccurred())
 
-		usernsid, err := ID("/proc/self/ns/user")
+		usernsid, err := NamespacePath("/proc/self/ns/user").ID()
 		Expect(err).ToNot(HaveOccurred())
-		ownerf, err := User("/proc/self/ns/net")
+		ownerfns, err := NamespacePath("/proc/self/ns/net").User()
+		Expect(err).ToNot(HaveOccurred())
+		defer ownerfns.Close()
+		Expect(ownerfns.ID()).To(Equal(usernsid))
+
+		ownerf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
 		Expect(err).ToNot(HaveOccurred())
 		defer ownerf.Close()
-		Expect(ID(ownerf)).To(Equal(usernsid))
-
-		ownerf, err = os.Open("/proc/self/ns/net")
-		Expect(err).ToNot(HaveOccurred())
-		defer ownerf.Close()
-		userf, err := User(ownerf.Fd())
+		userf, err := NamespaceFd(ownerf.Fd()).User()
 		Expect(err).ToNot(HaveOccurred())
 		defer userf.Close()
-		Expect(ID(userf)).To(Equal(usernsid))
+		Expect(userf.ID()).To(Equal(usernsid))
 
-		userf, err = User(ownerf)
+		userf, err = ownerf.User()
 		Expect(err).ToNot(HaveOccurred())
 		defer userf.Close()
-		Expect(ID(userf)).To(Equal(usernsid))
-
-		Expect(errof(User(0))).To(HaveOccurred())
-		Expect(errof(User(nil))).To(HaveOccurred())
+		Expect(userf.ID()).To(Equal(usernsid))
 	})
 
 	It("returns the parent of a user namespace", func() {
+		Expect(errof(NamespacePath("/proc/self/ns/foobar").Parent())).To(HaveOccurred())
+
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
@@ -127,21 +139,29 @@ read # wait for test to proceed()
 		cmd := scripts.Start("newparent")
 		defer cmd.Close()
 
-		var parentuserpath, leafuserpath string
+		var parentuserpath, leafuserpath NamespacePath
 		var parentusernsid, leafusernsid nstypes.NamespaceID
 		cmd.Decode(&parentuserpath)
 		cmd.Decode(&parentusernsid)
 		cmd.Decode(&leafuserpath)
 		cmd.Decode(&leafusernsid)
 
-		parentuserns, err := Parent(leafuserpath)
+		parentuserns, err := leafuserpath.Parent()
 		Expect(err).ToNot(HaveOccurred())
 		defer parentuserns.Close()
-		Expect(ID(parentuserns)).To(Equal(parentusernsid))
-		pp, err := Parent(parentuserns)
+		Expect(parentuserns.ID()).To(Equal(parentusernsid))
+		pp, err := parentuserns.Parent()
 		Expect(err).ToNot(HaveOccurred())
 		defer pp.Close()
-		Expect(nstest.Err(Parent(pp))).To(HaveOccurred())
+		Expect(nstest.Err(pp.Parent())).To(HaveOccurred())
+
+		leafuserf, err := os.Open(string(leafuserpath))
+		Expect(err).ToNot(HaveOccurred())
+		defer leafuserf.Close()
+		parentuserns2, err := NamespaceFd(leafuserf.Fd()).Parent()
+		Expect(err).ToNot(HaveOccurred())
+		defer parentuserns2.Close()
+		Expect(parentuserns2.ID()).To(Equal(parentusernsid))
 	})
 
 	It("finds the owner UID", func() {
@@ -158,23 +178,22 @@ read # wait for test to proceed()
 		cmd := scripts.Start("newuserns")
 		defer cmd.Close()
 
-		var userpath string
+		var userpath NamespacePath
 		cmd.Decode(&userpath)
 
-		uid, err := OwnerUID(userpath)
+		uid, err := userpath.OwnerUID()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(uid).To(Equal(os.Getuid()))
 
-		f, err := os.Open(userpath)
+		f, err := os.Open(string(userpath))
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
-		Expect(OwnerUID(f)).To(Equal(os.Getuid()))
+		Expect(NamespaceFile{*f}.OwnerUID()).To(Equal(os.Getuid()))
 
-		Expect(OwnerUID(f.Fd())).To(Equal(os.Getuid()))
+		Expect(NamespaceFd(f.Fd()).OwnerUID()).To(Equal(os.Getuid()))
 
-		Expect(nstest.Err(OwnerUID(0))).To(HaveOccurred())
-		Expect(nstest.Err(OwnerUID(nil))).To(HaveOccurred())
-		Expect(nstest.Err(OwnerUID("/foo"))).To(HaveOccurred())
+		Expect(nstest.Err(NamespaceFd(0).OwnerUID())).To(HaveOccurred())
+		Expect(nstest.Err(NamespacePath("/foo").OwnerUID())).To(HaveOccurred())
 	})
 
 })
