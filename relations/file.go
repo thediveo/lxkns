@@ -60,14 +60,14 @@ func (nsf NamespaceFile) ID() (nstypes.NamespaceID, error) {
 // reference. For user namespaces, User() behaves identical to Parent(). A Linux
 // kernel version 4.9 or later is required.
 func (nsf NamespaceFile) User() (*NamespaceFile, error) {
-	return NamespaceFileFromFd(ioctl(int(nsf.Fd()), _NS_GET_USERNS))
+	return namespaceFileFromFd(ioctl(int(nsf.Fd()), _NS_GET_USERNS))
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
 // PID and user namespaces. For user namespaces, Parent() and User() behave
 // identical. A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) Parent() (*NamespaceFile, error) {
-	return NamespaceFileFromFd(ioctl(int(nsf.Fd()), _NS_GET_PARENT))
+	return namespaceFileFromFd(ioctl(int(nsf.Fd()), _NS_GET_PARENT))
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
@@ -78,7 +78,7 @@ func (nsf NamespaceFile) OwnerUID() (int, error) {
 
 // Internal convenience helper which takes a file descriptor and an error,
 // returning a NamespaceFile reference if there is no error.
-func NamespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
+func namespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
 	if err != nil {
 		return nil, err
 	}

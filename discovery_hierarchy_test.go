@@ -43,7 +43,7 @@ read # wait for test to proceed()
 		allns := Discover(FullDiscovery)
 		userns := allns.Namespaces[UserNS][usernsid].(Hierarchy)
 		Expect(userns).NotTo(BeNil())
-		ppusernsid, _ := r.ID("/proc/self/ns/user")
+		ppusernsid, _ := r.NamespacePath("/proc/self/ns/user").ID()
 		Expect(userns.Parent().Parent().(Namespace).ID()).To(Equal(ppusernsid))
 	})
 

@@ -46,7 +46,7 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Fd()).To(Equal(os.Stdout.Fd()))
 
-		_, err = NamespaceFileFromFd(^uint(0), nil)
+		_, err = namespaceFileFromFd(^uint(0), nil)
 		Expect(err).To(HaveOccurred())
 	})
 

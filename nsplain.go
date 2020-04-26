@@ -18,7 +18,6 @@ package lxkns
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/thediveo/lxkns/nstypes"
@@ -48,7 +47,7 @@ var _ NamespaceStringer = (*plainNamespace)(nil)
 type NamespaceConfigurer interface {
 	AddLeader(proc *Process)               // adds yet another self-styled leader.
 	SetRef(string)                         // sets a filesystem path for referencing this namespace.
-	DetectOwner(nsf *os.File)              // detects owning user namespace id.
+	DetectOwner(nsf *rel.NamespaceFile)    // detects owning user namespace id.
 	SetOwner(usernsid nstypes.NamespaceID) // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
@@ -166,15 +165,18 @@ func (pns *plainNamespace) SetRef(ref string) {
 
 // DetectOwner gets the ownering user namespace id from Linux, and stores it for
 // later resolution, after when we have a complete map of all user namespaces.
-func (pns *plainNamespace) DetectOwner(nsf *os.File) {
+func (pns *plainNamespace) DetectOwner(nsf *rel.NamespaceFile) {
+	if nsf == nil {
+		return
+	}
 	// The User() call gives us an fd wrapped in an os.File, which we can then
 	// ask for its namespace ID.
-	usernsf, err := rel.User(nsf)
+	usernsf, err := nsf.User()
 	if err != nil {
 		return
 	}
 	defer usernsf.Close() // Do NOT leak.
-	pns.ownernsid, _ = rel.ID(usernsf)
+	pns.ownernsid, _ = usernsf.ID()
 }
 
 // SetOwner set the namespace ID of the user namespace owning this namespace.

@@ -30,12 +30,12 @@ var _ = Describe("Discover owning user namespaces", func() {
 		opts.SkipOwnership = false
 		allns := Discover(opts)
 
-		myusernsid, err := r.ID("/proc/self/ns/user")
+		myusernsid, err := r.NamespacePath("/proc/self/ns/user").ID()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(allns.Namespaces[UserNS]).To(HaveKey(myusernsid))
 		userns := allns.Namespaces[UserNS][myusernsid]
 		for _, nst := range []string{"cgroup", "ipc", "mnt", "net", "pid", "uts"} {
-			mynsid, err := r.ID("/proc/self/ns/" + nst)
+			mynsid, err := r.NamespacePath("/proc/self/ns/" + nst).ID()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(allns.Namespaces[TypeIndex(t.NameToType(nst))]).To(HaveKey(mynsid))
 			owneruserns := allns.Namespaces[TypeIndex(t.NameToType(nst))][mynsid].Owner()

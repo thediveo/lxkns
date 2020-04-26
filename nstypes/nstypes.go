@@ -77,7 +77,7 @@ const NaNS NamespaceType = 0
 // Name returns the type name string (such as "mnt", "net", ...) of a
 // namespace type value.
 func (nstype NamespaceType) Name() string {
-	name, _ := typeNames[nstype]
+	name := typeNames[nstype]
 	return name
 }
 
@@ -122,7 +122,7 @@ var typeNames = map[NamespaceType]string{
 // corresponding to the specified namespace type name (such as "mnt", "net",
 // et cetera).
 func NameToType(name string) NamespaceType {
-	t, _ := nameTypes[name]
+	t := nameTypes[name]
 	return t
 }
 

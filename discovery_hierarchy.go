@@ -66,7 +66,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 		// For climbing up the hierarchy, Linux wants us to give it file
 		// descriptors referencing the namespaces to be quieried for their
 		// parents.
-		nsf, err := os.OpenFile(ns.Ref(), os.O_RDONLY, 0)
+		nsf, err := rel.NewNamespaceFile(os.OpenFile(ns.Ref(), os.O_RDONLY, 0))
 		if err != nil {
 			continue
 		}
@@ -89,7 +89,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 			// we've reached the end of the road. Normally, this should be the
 			// initial user or PID namespace. But if we have insufficient
 			// capabilities, then we'll hit a brickwall earlier.
-			parentnsf, err := rel.Parent(nsf)
+			parentnsf, err := nsf.Parent()
 			if err != nil {
 				// There is no parent user/PID namespace, so we're done in
 				// this line. Let's move on to the next namespace. The reasons
@@ -98,7 +98,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 				// parent either.
 				break
 			}
-			parentnsid, err := rel.ID(parentnsf)
+			parentnsid, err := parentnsf.ID()
 			if err != nil {
 				// There is something severely rotten here, because the kernel
 				// just gave us a parent namespace reference which we cannot

@@ -56,7 +56,7 @@ func (nsp NamespacePath) User() (*NamespaceFile, error) {
 		return nil, err
 	}
 	defer syscall.Close(fd)
-	return NamespaceFileFromFd(ioctl(fd, _NS_GET_USERNS))
+	return namespaceFileFromFd(ioctl(fd, _NS_GET_USERNS))
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -68,7 +68,7 @@ func (nsp NamespacePath) Parent() (*NamespaceFile, error) {
 		return nil, err
 	}
 	defer syscall.Close(fd)
-	return NamespaceFileFromFd(ioctl(fd, _NS_GET_PARENT))
+	return namespaceFileFromFd(ioctl(fd, _NS_GET_PARENT))
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this

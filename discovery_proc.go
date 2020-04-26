@@ -63,11 +63,11 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		// to yet another goroutine, something which really doesn't help us
 		// here. Please note that we need the open fd further below in case we
 		// need to discover ownership.
-		nsf, err := os.OpenFile(nsref, os.O_RDONLY, 0)
+		nsf, err := rel.NewNamespaceFile(os.OpenFile(nsref, os.O_RDONLY, 0))
 		if err != nil {
 			continue
 		}
-		nsid, err := rel.ID(nsf)
+		nsid, err := nsf.ID()
 		if err != nil {
 			nsf.Close() // ...don't leak!
 			continue

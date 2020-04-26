@@ -84,8 +84,8 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 	// namespace we've started our discovery in, as this will otherwise be
 	// visited twice.
 	visitedmntns := map[nstypes.NamespaceID]bool{}
-	ownmntnsid, _ := rel.ID("/proc/self/ns/mnt")
-	ownusernsid, _ := rel.ID("/proc/self/ns/user")
+	ownmntnsid, _ := rel.NamespacePath("/proc/self/ns/mnt").ID()
+	ownusernsid, _ := rel.NamespacePath("/proc/self/ns/user").ID()
 	visitedmntns[ownmntnsid] = true
 	// Now try to clear the back log of mount namespaces to visit and to
 	// search for further bind-mounted namespaces. Because we marked the
@@ -110,8 +110,8 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 		// work. Simplicity if for the World's most stable genius, we're going
 		// for the real stuff instead.
 		enterns := []Namespace{mntns}
-		if usermntnsref, err := rel.User(mntns.Ref()); err == nil {
-			usernsid, _ := rel.ID(usermntnsref)
+		if usermntnsref, err := rel.NamespacePath(mntns.Ref()).User(); err == nil {
+			usernsid, _ := usermntnsref.ID()
 			usermntnsref.Close() // do not leak (again)
 			if userns, ok := result.Namespaces[UserNS][usernsid]; ok && userns.ID() != ownusernsid {
 				// Prepend the user namespace to the list of namespaces we
@@ -164,8 +164,8 @@ func ownedBindMounts() []OwnedMountInfo {
 		// While we're in the correct mount namespace, we need to collect also
 		// the information about the relation to the owning user space.
 		var ownernsid nstypes.NamespaceID
-		if usernsref, err := rel.User(bmnt.MountPoint); err == nil {
-			ownernsid, _ = rel.ID(usernsref)
+		if usernsref, err := rel.NamespacePath(bmnt.MountPoint).User(); err == nil {
+			ownernsid, _ = usernsref.ID()
 			usernsref.Close()
 		}
 		ownedbindmounts[idx].Mountinfo = bmnt

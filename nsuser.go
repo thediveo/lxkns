@@ -18,7 +18,6 @@ package lxkns
 
 import (
 	"fmt"
-	"os"
 	"os/user"
 	"strings"
 
@@ -72,8 +71,8 @@ func (uns *userNamespace) String() string {
 
 // detectUIDs takes an open file referencing a user namespace to query its
 // owner's UID and then stores it for this user namespace proxy.
-func (uns *userNamespace) detectUID(nsf *os.File) {
-	uns.owneruid, _ = rel.OwnerUID(nsf)
+func (uns *userNamespace) detectUID(nsf *rel.NamespaceFile) {
+	uns.owneruid, _ = nsf.OwnerUID()
 }
 
 // ResolveOwner sets the owning user namespace reference based on the owning
