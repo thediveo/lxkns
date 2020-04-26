@@ -18,7 +18,7 @@ import (
 	"fmt"
 )
 
-func Example_id() {
+func Example_iD() {
 	id, _ := NamespacePath("/proc/self/ns/net").ID()
 	fmt.Println("id of my network namespace:", id)
 }

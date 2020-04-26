@@ -23,9 +23,14 @@ All three types of namespace references define the following query operations:
 NamespacePath and NamespaceFd can be easily converted from or to string and
 uintptr respectively.
 
-NamespaceFile embeds os.File (note that it does not embed a pointer, but os.File
-directly). To create a *NamespaceFile from an *os.File, such as returned by
-os.Open(), simply use the NewNamespaceFile() wrapper:
+    netns := NamespacePath("/proc/self/ns/net")
+    path := string(netns)
+
+As NamespaceFile mirrors os.File it cannot be directly converted in the way
+NamespacePath and NamespaceFd can. However, things are not overly complex either
+when keeping the following conversion examples in mind. To create a
+*NamespaceFile from an *os.File, such as returned by os.Open(), simply use the
+NewNamespaceFile() wrapper:
 
     nsf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
 
@@ -36,6 +41,17 @@ nil *os.File.
 Please note that NewNamespaceFile() expects two parameters, an *os.File as well
 as an error. Simply specify a nil error in code contexts where there is clear
 that the *os.File is valid and there was no error in getting it.
+
+Getting back an *os.File in case it is explicitly required is also simple:
+
+    f := &nsf.File
+
+There's no need to panic because NamespaceFile embeds os.File, as opposed to
+*os.File, on purpose: os.File is a struct which consists solely of a single
+*os.file pointer to an implementation-internal structure. By embedding the outer
+struct instead of a pointer to it we mimic the original handling as close as
+possible, avoiding situations where a non-nil NamespaceFile points to a nil
+*os.File.
 
 */
 package relations
