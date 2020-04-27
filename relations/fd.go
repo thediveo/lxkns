@@ -70,3 +70,6 @@ func fdID(fd int) (nstypes.NamespaceID, error) {
 	}
 	return nstypes.NamespaceID(stat.Ino), nil
 }
+
+// Ensures that NamespaceFd implements the Relation interface.
+var _ Relation = (*NamespaceFd)(nil)

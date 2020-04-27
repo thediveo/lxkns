@@ -87,3 +87,6 @@ func namespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
 	}
 	return nil, errors.New("nil namespace file descriptor")
 }
+
+// Ensures that NamespaceFile implements the Relation interface.
+var _ Relation = (*NamespaceFile)(nil)

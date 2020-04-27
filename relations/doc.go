@@ -13,7 +13,8 @@ three namespace reference types:
     * NamespaceFd
     * NamespaceFile
 
-All three types of namespace references define the following query operations:
+All three types of namespace references define the following query operations
+from the Relation interface:
 
     * ID() returns the ID of the referenced namespace.
     * User() returns the user namespace owning the referenced namespace.

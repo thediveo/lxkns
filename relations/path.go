@@ -81,3 +81,6 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 	defer syscall.Close(fd)
 	return ownerUID(fd)
 }
+
+// Ensures that NamespacePath implements the Relation interface.
+var _ Relation = (*NamespacePath)(nil)
