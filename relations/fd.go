@@ -73,3 +73,10 @@ func fdID(fd int) (nstypes.NamespaceID, error) {
 
 // Ensures that NamespaceFd implements the Relation interface.
 var _ Relation = (*NamespaceFd)(nil)
+
+func (nsfd NamespaceFd) Open() (fd uintptr, close bool, err error) {
+	fd = uintptr(nsfd)
+	return
+}
+
+var _ Opener = (*NamespaceFd)(nil)

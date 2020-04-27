@@ -84,3 +84,13 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 
 // Ensures that NamespacePath implements the Relation interface.
 var _ Relation = (*NamespacePath)(nil)
+
+func (nsp NamespacePath) Open() (fd uintptr, close bool, err error) {
+	var fdi int
+	fdi, err = syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd = uintptr(fdi)
+	close = true
+	return
+}
+
+var _ Opener = (*NamespacePath)(nil)

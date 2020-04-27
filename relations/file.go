@@ -90,3 +90,10 @@ func namespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
 
 // Ensures that NamespaceFile implements the Relation interface.
 var _ Relation = (*NamespaceFile)(nil)
+
+func (nsf NamespaceFile) Open() (fd uintptr, close bool, err error) {
+	fd = nsf.Fd()
+	return
+}
+
+var _ Opener = (*NamespaceFile)(nil)
