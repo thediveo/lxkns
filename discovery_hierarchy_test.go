@@ -19,7 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	t "github.com/thediveo/lxkns/nstypes"
-	r "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/testbasher"
 )
 
@@ -43,7 +43,7 @@ read # wait for test to proceed()
 		allns := Discover(FullDiscovery)
 		userns := allns.Namespaces[UserNS][usernsid].(Hierarchy)
 		Expect(userns).NotTo(BeNil())
-		ppusernsid, _ := r.NamespacePath("/proc/self/ns/user").ID()
+		ppusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 		Expect(userns.Parent().Parent().(Namespace).ID()).To(Equal(ppusernsid))
 	})
 

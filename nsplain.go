@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/lxkns/nstypes"
-	rel "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/lxkns/ops"
 )
 
 // plainNamespace stores useful information about a concrete Linux kernel
@@ -47,7 +47,7 @@ var _ NamespaceStringer = (*plainNamespace)(nil)
 type NamespaceConfigurer interface {
 	AddLeader(proc *Process)               // adds yet another self-styled leader.
 	SetRef(string)                         // sets a filesystem path for referencing this namespace.
-	DetectOwner(nsf *rel.NamespaceFile)    // detects owning user namespace id.
+	DetectOwner(nsf *ops.NamespaceFile)    // detects owning user namespace id.
 	SetOwner(usernsid nstypes.NamespaceID) // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
@@ -165,7 +165,7 @@ func (pns *plainNamespace) SetRef(ref string) {
 
 // DetectOwner gets the ownering user namespace id from Linux, and stores it for
 // later resolution, after when we have a complete map of all user namespaces.
-func (pns *plainNamespace) DetectOwner(nsf *rel.NamespaceFile) {
+func (pns *plainNamespace) DetectOwner(nsf *ops.NamespaceFile) {
 	if nsf == nil {
 		return
 	}

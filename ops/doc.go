@@ -1,9 +1,9 @@
 /*
 
-Package relations provides a Golang-idiomatic API to Linux query operations on
-namespaces (see also: http://man7.org/linux/man-pages/man2/ioctl_ns.2.html). For
-instance, for querying the parent namespace of a PID or user namespace, getting
-the ID of a namespace, et cetera.
+Package ops provides a Golang-idiomatic API to query operations on Linux-kernel
+namespaces as well as switching namespaces.
+
+Namespace Queries
 
 A particular Linux-kernel namespace can be referenced by a filesystem path, an
 open file descriptor, or an *os.File. Thus, this package defines the following
@@ -14,7 +14,9 @@ three namespace reference types:
     * NamespaceFile
 
 All three types of namespace references define the following query operations
-from the Relation interface:
+from the Relation interface (which map to a set of ioctl() calls, see:
+http://man7.org/linux/man-pages/man2/ioctl_ns.2.html, with the exception of the
+ID query):
 
     * ID() returns the ID of the referenced namespace.
     * User() returns the user namespace owning the referenced namespace.
@@ -55,6 +57,13 @@ struct instead of a pointer to it we mimic the original handling as close as
 possible, avoiding situations where a non-nil NamespaceFile points to a nil
 *os.File.
 
+Switching Namespaces
+
+Switching namespaces is a slightly messy business in Golang and is subject to
+Golang runtime limitations, as well as Linux kernel restrictions imposed on
+multi-threaded processes. In particular, after the Golang runtime has started,
+threads cannot change their user namespaces and mount namespaces anymore.
+
 Namespace IDs Without Device Numbers
 
 Our package on purpose only returns the inode number of a namespace as its ID,
@@ -78,4 +87,4 @@ for equality is as simple as:
 
 No special Equal() methods, nothing, nada, zilch. Just plain "==".
 */
-package relations
+package ops

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package relations
+package ops
 
 import (
 	"syscall"
@@ -21,7 +21,10 @@ import (
 )
 
 // NamespaceFd references a Linux-kernel namespace via an open file descriptor.
-type NamespaceFd uintptr
+// Following Unix tradition for file descriptors, NamespaceFd is an alias for an
+// int (and not an uintptr, as in some cross-platform parts of the Golang
+// packages).
+type NamespaceFd int
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
@@ -74,8 +77,12 @@ func fdID(fd int) (nstypes.NamespaceID, error) {
 // Ensures that NamespaceFd implements the Relation interface.
 var _ Relation = (*NamespaceFd)(nil)
 
-func (nsfd NamespaceFd) Open() (fd uintptr, close bool, err error) {
-	fd = uintptr(nsfd)
+// Open returns an open file descriptor which references the namespace. In case
+// the close return value is truee, then the caller needs to close the file
+// descriptor when it doesn't need to reference the namespace anymore, in order
+// to avoid wasting file descriptors.
+func (nsfd NamespaceFd) Open() (fd int, close bool, err error) {
+	fd = int(nsfd)
 	return
 }
 

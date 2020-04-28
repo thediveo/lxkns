@@ -34,7 +34,7 @@ import (
 	"os"
 
 	"github.com/thediveo/lxkns/nstypes"
-	rel "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/lxkns/ops"
 )
 
 // discoverHierarchy unmasks the hierarchy of user and PID namespaces. All
@@ -66,7 +66,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 		// For climbing up the hierarchy, Linux wants us to give it file
 		// descriptors referencing the namespaces to be quieried for their
 		// parents.
-		nsf, err := rel.NewNamespaceFile(os.OpenFile(ns.Ref(), os.O_RDONLY, 0))
+		nsf, err := ops.NewNamespaceFile(os.OpenFile(ns.Ref(), os.O_RDONLY, 0))
 		if err != nil {
 			continue
 		}

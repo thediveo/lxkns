@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package relations
+package ops
 
 import (
 	"testing"
@@ -23,5 +23,5 @@ import (
 
 func TestRelations(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/relations package")
+	RunSpecs(t, "lxkns/ops package")
 }

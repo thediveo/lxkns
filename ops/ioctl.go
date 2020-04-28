@@ -17,7 +17,7 @@
 
 // +build linux
 
-package relations
+package ops
 
 import (
 	"errors"

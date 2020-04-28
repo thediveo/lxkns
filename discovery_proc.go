@@ -35,7 +35,7 @@ import (
 	"os"
 
 	"github.com/thediveo/lxkns/nstypes"
-	rel "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/lxkns/ops"
 )
 
 // discoverFromProc discovers Linux kernel namespaces from the process table,
@@ -63,7 +63,7 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		// to yet another goroutine, something which really doesn't help us
 		// here. Please note that we need the open fd further below in case we
 		// need to discover ownership.
-		nsf, err := rel.NewNamespaceFile(os.OpenFile(nsref, os.O_RDONLY, 0))
+		nsf, err := ops.NewNamespaceFile(os.OpenFile(nsref, os.O_RDONLY, 0))
 		if err != nil {
 			continue
 		}

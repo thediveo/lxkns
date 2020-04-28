@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	t "github.com/thediveo/lxkns/nstypes"
-	r "github.com/thediveo/lxkns/relations"
+	"github.com/thediveo/lxkns/ops"
 )
 
 var _ = Describe("Discover owning user namespaces", func() {
@@ -30,12 +30,12 @@ var _ = Describe("Discover owning user namespaces", func() {
 		opts.SkipOwnership = false
 		allns := Discover(opts)
 
-		myusernsid, err := r.NamespacePath("/proc/self/ns/user").ID()
+		myusernsid, err := ops.NamespacePath("/proc/self/ns/user").ID()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(allns.Namespaces[UserNS]).To(HaveKey(myusernsid))
 		userns := allns.Namespaces[UserNS][myusernsid]
 		for _, nst := range []string{"cgroup", "ipc", "mnt", "net", "pid", "uts"} {
-			mynsid, err := r.NamespacePath("/proc/self/ns/" + nst).ID()
+			mynsid, err := ops.NamespacePath("/proc/self/ns/" + nst).ID()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(allns.Namespaces[TypeIndex(t.NameToType(nst))]).To(HaveKey(mynsid))
 			owneruserns := allns.Namespaces[TypeIndex(t.NameToType(nst))][mynsid].Owner()

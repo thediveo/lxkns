@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package relations
+package ops
 
 import (
 	"os"
@@ -52,7 +52,7 @@ var _ = Describe("Namespaces", func() {
 
 	It("return their types", func() {
 		Expect(errof(NamespacePath("/foobar").Type())).To(HaveOccurred())
-		Expect(errof(NamespaceFd(0).Type())).To(HaveOccurred())
+		Expect(errof(NamespaceFd(-1).Type())).To(HaveOccurred())
 
 		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(nstypes.CLONE_NEWUSER))
 
@@ -66,7 +66,7 @@ var _ = Describe("Namespaces", func() {
 
 	It("return their identifiers", func() {
 		Expect(errof(NamespacePath("/foobar").ID())).To(HaveOccurred())
-		Expect(errof(NamespaceFd(^uintptr(0)).ID())).To(HaveOccurred())
+		Expect(errof(NamespaceFd(-1).ID())).To(HaveOccurred())
 		nsf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
 		Expect(err).ToNot(HaveOccurred())
 		nsf.Close() // sic! make Fstat fail, that's why it is called "F"stat...

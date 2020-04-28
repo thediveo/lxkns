@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package relations
+package ops
 
 import (
 	"syscall"
@@ -85,10 +85,14 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 // Ensures that NamespacePath implements the Relation interface.
 var _ Relation = (*NamespacePath)(nil)
 
-func (nsp NamespacePath) Open() (fd uintptr, close bool, err error) {
+// Open returns an open file descriptor which references the namespace. In case
+// the close return value is truee, then the caller needs to close the file
+// descriptor when it doesn't need to reference the namespace anymore, in order
+// to avoid wasting file descriptors.
+func (nsp NamespacePath) Open() (fd int, close bool, err error) {
 	var fdi int
 	fdi, err = syscall.Open(string(nsp), syscall.O_RDONLY, 0)
-	fd = uintptr(fdi)
+	fd = int(fdi)
 	close = true
 	return
 }

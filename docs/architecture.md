@@ -11,8 +11,8 @@ packages:
 
 - `lxkns`: namespace discovery and PID translation.
 - `lxkns/nytypes`: kernel-related namespace type definitions.
-- `lxkns/relations`: kernel API for discovering namespace relationships and
-  IDs.
+- `lxkns/ops`: kernel API for discovering namespace IDs, types and
+  relationships, and also (limited) namespaces switching.
 
 Auxiliary packages:
 

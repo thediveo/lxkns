@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package relations
+package ops
 
 import (
 	"errors"
@@ -91,8 +91,12 @@ func namespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
 // Ensures that NamespaceFile implements the Relation interface.
 var _ Relation = (*NamespaceFile)(nil)
 
-func (nsf NamespaceFile) Open() (fd uintptr, close bool, err error) {
-	fd = nsf.Fd()
+// Open returns an open file descriptor which references the namespace. In case
+// the close return value is truee, then the caller needs to close the file
+// descriptor when it doesn't need to reference the namespace anymore, in order
+// to avoid wasting file descriptors.
+func (nsf NamespaceFile) Open() (fd int, close bool, err error) {
+	fd = int(nsf.Fd())
 	return
 }
 

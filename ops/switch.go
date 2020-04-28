@@ -1,15 +1,29 @@
-package relations
+// Copyright 2020 Harald Albrecht.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package ops
 
 import (
 	"runtime"
 	"syscall"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"golang.org/x/sys/unix"
 )
 
 // ...
 type Opener interface {
-	Open() (fd uintptr, close bool, err error)
+	Open() (fd int, close bool, err error)
 }
 
 // Go runs the specified function as a new Go routine and from a locked OS
@@ -36,7 +50,7 @@ func Go(f func(), nsrefs ...Opener) error {
 				started <- err
 				return // ex-terminate ;)
 			}
-			err = Setns(fd, 0)
+			err = unix.Setns(fd, 0)
 			if close {
 				// Don't leak open file descriptors...
 				syscall.Close(int(fd))
@@ -56,28 +70,3 @@ func Go(f func(), nsrefs ...Opener) error {
 	// channel, but it will get garbage collected anyway.
 	return <-started
 }
-
-// Implements missing syscall.Setns.
-func Setns(fd uintptr, nst nstypes.NamespaceType) error {
-	_, _, e1 := syscall.Syscall(SYS_SETNS, fd, uintptr(nst), 0)
-	if e1 != 0 {
-		return e1
-	}
-	return nil
-}
-
-// CPU architecture-specific Linux syscall (trap) numbers taken from:
-// https://github.com/vishvananda/netns/blob/master/netns_linux.go
-var SYS_SETNS = map[string]uintptr{
-	"386":      346,
-	"amd64":    308,
-	"arm64":    268,
-	"arm":      375,
-	"mips":     4344,
-	"mipsle":   4344,
-	"mips64le": 4344,
-	"ppc64":    350,
-	"ppc64le":  350,
-	"riscv64":  268,
-	"s390x":    339,
-}[runtime.GOARCH]
