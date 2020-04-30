@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 )
 
 // plainNamespace stores useful information about a concrete Linux kernel
@@ -30,9 +30,9 @@ import (
 // interface leaderAdder. (There, I did it. I documented implemented
 // interfaces explicitly for clarity.)
 type plainNamespace struct {
-	nsid      nstypes.NamespaceID
-	nstype    nstypes.NamespaceType
-	ownernsid nstypes.NamespaceID
+	nsid      species.NamespaceID
+	nstype    species.NamespaceType
+	ownernsid species.NamespaceID
 	owner     Ownership
 	ref       string
 	leaders   []*Process
@@ -48,18 +48,18 @@ type NamespaceConfigurer interface {
 	AddLeader(proc *Process)               // adds yet another self-styled leader.
 	SetRef(string)                         // sets a filesystem path for referencing this namespace.
 	DetectOwner(nsf *ops.NamespaceFile)    // detects owning user namespace id.
-	SetOwner(usernsid nstypes.NamespaceID) // sets the owning user namespace id directly.
+	SetOwner(usernsid species.NamespaceID) // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
 
 // ID returns the namespace identifier. This identifier is basically an inode
 // number from the special "nsfs" namespace filesystem inside the Linux kernel.
 // IDs cannot be set as only the Linux allocates and manages them.
-func (pns *plainNamespace) ID() nstypes.NamespaceID { return pns.nsid }
+func (pns *plainNamespace) ID() species.NamespaceID { return pns.nsid }
 
 // Type returns the type of namespace in form of one of the NamespaceType, such
-// as nstypes.CLONE_NEWNS, nstypes.CLONE_NEWCGROUP, et cetera.
-func (pns *plainNamespace) Type() nstypes.NamespaceType { return pns.nstype }
+// as species.CLONE_NEWNS, species.CLONE_NEWCGROUP, et cetera.
+func (pns *plainNamespace) Type() species.NamespaceType { return pns.nstype }
 
 // Owner returns the user namespace "owning" this namespace. According to
 // Linux-kernel rules, the owner of a user namespace is the parent of that user
@@ -180,7 +180,7 @@ func (pns *plainNamespace) DetectOwner(nsf *ops.NamespaceFile) {
 }
 
 // SetOwner set the namespace ID of the user namespace owning this namespace.
-func (pns *plainNamespace) SetOwner(usernsid nstypes.NamespaceID) {
+func (pns *plainNamespace) SetOwner(usernsid species.NamespaceID) {
 	pns.ownernsid = usernsid
 }
 

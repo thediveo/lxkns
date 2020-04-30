@@ -15,8 +15,7 @@
 package lxkns
 
 import (
-	"github.com/thediveo/lxkns/nstypes"
-	t "github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -33,31 +32,31 @@ var _ = Describe("Discover", func() {
 
 	It("sorts namespace maps", func() {
 		nsmap := NamespaceMap{
-			5678: NewNamespace(nstypes.CLONE_NEWNET, 5678, ""),
-			1234: NewNamespace(nstypes.CLONE_NEWNET, 1234, ""),
+			5678: NewNamespace(species.CLONE_NEWNET, 5678, ""),
+			1234: NewNamespace(species.CLONE_NEWNET, 1234, ""),
 		}
 		dr := DiscoveryResult{}
 		dr.Namespaces[NetNS] = nsmap
 		sortedns := dr.SortedNamespaces(NetNS)
 		Expect(sortedns).To(HaveLen(2))
-		Expect(sortedns[0].ID()).To(Equal(nstypes.NamespaceID(1234)))
-		Expect(sortedns[1].ID()).To(Equal(nstypes.NamespaceID(5678)))
+		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID(1234)))
+		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID(5678)))
 	})
 
 	It("sorts namespace lists", func() {
 		nslist := []Namespace{
-			NewNamespace(nstypes.CLONE_NEWUSER, 5678, ""),
-			NewNamespace(nstypes.CLONE_NEWUSER, 1234, ""),
+			NewNamespace(species.CLONE_NEWUSER, 5678, ""),
+			NewNamespace(species.CLONE_NEWUSER, 1234, ""),
 		}
 		sortedns := SortNamespaces(nslist)
 		Expect(sortedns).To(HaveLen(2))
-		Expect(sortedns[0].ID()).To(Equal(nstypes.NamespaceID(1234)))
-		Expect(sortedns[1].ID()).To(Equal(nstypes.NamespaceID(5678)))
+		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID(1234)))
+		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID(5678)))
 
 		sortedhns := SortChildNamespaces([]Hierarchy{nslist[0].(Hierarchy), nslist[1].(Hierarchy)})
 		Expect(sortedhns).To(HaveLen(2))
-		Expect(sortedhns[0].(Namespace).ID()).To(Equal(nstypes.NamespaceID(1234)))
-		Expect(sortedhns[1].(Namespace).ID()).To(Equal(nstypes.NamespaceID(5678)))
+		Expect(sortedhns[0].(Namespace).ID()).To(Equal(species.NamespaceID(1234)))
+		Expect(sortedhns[1].(Namespace).ID()).To(Equal(species.NamespaceID(5678)))
 	})
 
 	It("rejects finding roots for plain namespaces", func() {
@@ -65,7 +64,7 @@ var _ = Describe("Discover", func() {
 		// nothing else.
 		opts := NoDiscovery
 		opts.SkipProcs = false
-		opts.NamespaceTypes = t.CLONE_NEWNET
+		opts.NamespaceTypes = species.CLONE_NEWNET
 		allns := Discover(opts)
 		Expect(func() { rootNamespaces(allns.Namespaces[NetNS]) }).To(Panic())
 	})

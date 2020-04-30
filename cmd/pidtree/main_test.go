@@ -23,8 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/nstypes"
-	t "github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -32,7 +31,7 @@ var _ = Describe("renders PID trees and branches", func() {
 
 	var scripts testbasher.Basher
 	var cmd *testbasher.TestCommand
-	var pidnsid t.NamespaceID
+	var pidnsid species.NamespaceID
 	var initpid, leafpid lxkns.PIDType
 
 	BeforeEach(func() {
@@ -76,7 +75,7 @@ echo "$$"
 
 	It("renders only a branch", func() {
 		out := bytes.Buffer{}
-		_ = renderPIDBranch(&out, lxkns.PIDType(initpid), nstypes.NamespaceID(pidnsid))
+		_ = renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID(pidnsid))
 		tree := out.String()
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)

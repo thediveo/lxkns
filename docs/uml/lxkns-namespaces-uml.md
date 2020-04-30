@@ -21,8 +21,8 @@ Hierarchy -[hidden] Ownership
 Ownership --> "*" Namespace : "Ownings"
 
 interface Namespace {
-  ID() nstypes.NamespaceID
-  Type() nstypes.NamespaceType
+  ID() species.NamespaceID
+  Type() species.NamespaceType
   L Owner() Hierarchy
   Ref() string
   L Leaders() []*Process

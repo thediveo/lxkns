@@ -18,7 +18,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespaceFile is an open os.File which references a Linux-kernel namespace.
@@ -45,14 +45,14 @@ func NewNamespaceFile(f *os.File, err error) (*NamespaceFile, error) {
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file. Please note that a Linux kernel version 4.11 or later is required.
-func (nsf NamespaceFile) Type() (nstypes.NamespaceType, error) {
+func (nsf NamespaceFile) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsf.Fd()), _NS_GET_NSTYPE)
-	return nstypes.NamespaceType(t), err
+	return species.NamespaceType(t), err
 }
 
 // ID returns the namespace ID in form of its inode number for any given
 // Linux kernel namespace reference.
-func (nsf NamespaceFile) ID() (nstypes.NamespaceID, error) {
+func (nsf NamespaceFile) ID() (species.NamespaceID, error) {
 	return fdID(int(nsf.Fd()))
 }
 

@@ -16,11 +16,13 @@
 
 // +build linux
 
-package nstypes
+package species
 
 import (
 	"strconv"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
 // Unfortunately, Go's syscall package for whatever reason lacks the const
@@ -60,15 +62,16 @@ func (nsid NamespaceID) String() string {
 // syscall options parameter.
 type NamespaceType uint64
 
-// The 7 type of Linux namespaces defined at this time.
+// The 7 type of Linux namespaces defined at this time (sic!). Well, the 8th
+// namespace for time is already ticking along...
 const (
-	CLONE_NEWNS     NamespaceType = 0x00020000 // identifies Linux mount namespaces.
-	CLONE_NEWCGROUP NamespaceType = 0x02000000 // identifies Linux cgroup namespaces.
-	CLONE_NEWUTS    NamespaceType = 0x04000000 // identifies Linux UTS (*nix timesharing system) namespaces.
-	CLONE_NEWIPC    NamespaceType = 0x08000000 // identifies Linux inter-process communication namespaces.
-	CLONE_NEWUSER   NamespaceType = 0x10000000 // identifies Linux user namespaces.
-	CLONE_NEWPID    NamespaceType = 0x20000000 // identifies Linux PID namespaces.
-	CLONE_NEWNET    NamespaceType = 0x40000000 // identifies Linux network namespaces.
+	CLONE_NEWNS     = NamespaceType(unix.CLONE_NEWNS)
+	CLONE_NEWCGROUP = NamespaceType(unix.CLONE_NEWCGROUP)
+	CLONE_NEWUTS    = NamespaceType(unix.CLONE_NEWUTS)
+	CLONE_NEWIPC    = NamespaceType(unix.CLONE_NEWIPC)
+	CLONE_NEWUSER   = NamespaceType(unix.CLONE_NEWUSER)
+	CLONE_NEWPID    = NamespaceType(unix.CLONE_NEWPID)
+	CLONE_NEWNET    = NamespaceType(unix.CLONE_NEWNET)
 )
 
 // NaNS identifies an invalid namespace type.

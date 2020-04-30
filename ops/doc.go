@@ -1,7 +1,7 @@
 /*
 
-Package ops provides a Golang-idiomatic API to query operations on Linux-kernel
-namespaces as well as switching namespaces.
+Package ops provides a Golang-idiomatic API to query and switching operations on
+Linux-kernel namespaces.
 
 Namespace Queries
 
@@ -59,10 +59,47 @@ possible, avoiding situations where a non-nil NamespaceFile points to a nil
 
 Switching Namespaces
 
-Switching namespaces is a slightly messy business in Golang and is subject to
-Golang runtime limitations, as well as Linux kernel restrictions imposed on
-multi-threaded processes. In particular, after the Golang runtime has started,
-threads cannot change their user namespaces and mount namespaces anymore.
+Switching namespaces is a slightly messy business in Golang: it is subject to
+both Golang runtime limitations as well as Linux kernel restrictions imposed
+especially on multi-threaded processes. In particular, after the Golang runtime
+has started, threads cannot change their user namespaces and mount namespaces
+anymore. Also, processes in general cannot switch themselves into a different
+PID namespace, but only their future child processes. Luckily, switching other
+types of namespaces is less restricted, such as switching a specific Go routine
+(rather, its locked OS thread) into another network namespace (and back again)
+is almost painless. However, OS threads need to hold both sufficient effective
+privileges for themselves as well as they must have sufficient (evaluated)
+capabilities in the namespace to switch to, please see
+http://man7.org/linux/man-pages/man2/setns.2.html and
+http://man7.org/linux/man-pages/man7/user_namespaces.7.html for details about
+the specific capabilities needed and how capabilities of a process with relation
+to a destination namespace are evaluated.
+
+The Go() function runs a function as a Go routine in the specified namespace(s).
+It returns an error in case switching into the specified namespaces fails,
+otherwise it simply returns nil. Please note that Go() doesn't call the
+specified function synchronously, but instead as a new Go routine.
+
+    netns := ops.NamespacePath("/proc/self/ns/net")
+    if err := ops.Go(func() {
+        fmt.Println("Nobody expects the Spanish Inquisition!")
+    }, netns)
+
+While this might seem inconvenient at first, this design actually is very robust
+in view of any problems that might pop up when trying to switch the current
+(locaked) OS thread back into its original namespaces; the OS thread would be
+unrecoverable, but without a way to disassociate its Go routine from it. The
+Go() function avoids this situation by executing the desired function in a
+throw-away Go routine, so the Golang runtime can easily throw away the tainted
+OS thread which is locked to it afterwards. Sometimes, throwing things away is
+much cleaner (and not only for certain types of PPE).
+
+If a Golang process needs to switch mount, PID, and user namespaces, we
+recommend using the gons package https://github.com/thediveo/gons in combination
+with its reexec subpackage (gons provide namespace switching before the Golang
+runtime starts, while reexec forks a Golang process and reexecutes it, with the
+reexecuted child then runnining a specific function only in the specified
+namespaces).
 
 Namespace IDs Without Device Numbers
 

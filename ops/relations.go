@@ -14,7 +14,7 @@
 
 package ops
 
-import "github.com/thediveo/lxkns/nstypes"
+import "github.com/thediveo/lxkns/species"
 
 // Relation defines query operations on Linux-kernel namespaces for discovering
 // relationships between namespaces as well as some properties, when only a
@@ -24,11 +24,11 @@ type Relation interface {
 	// Type of the referenced namespace, such as CLONE_NEWNET, et cetera.
 	// Returns an error in case of an invalid namespace reference (closed file
 	// descriptor, invalid path, et cetera).
-	Type() (nstypes.NamespaceType, error)
+	Type() (species.NamespaceType, error)
 
 	// ID (inode number) of the referenced namespace. Returns an error in case
 	// of an invalid namespace reference.
-	ID() (nstypes.NamespaceID, error)
+	ID() (species.NamespaceID, error)
 
 	// User namespace owning the referenced namespace. The owning user namespace
 	// is returned in form of a NamespaceFile reference when there was no error

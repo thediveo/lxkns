@@ -25,7 +25,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // We only have the root command, but no (sub) commands, as pidtree is a
@@ -56,20 +56,20 @@ var rootCmd = &cobra.Command{
 		// specified, in which the PID is valid. Then render only the branch
 		// leading from the initial PID namespace down to the PID namespace of
 		// PID, and the processes on this branch.
-		pidnsid := nstypes.NoneID
+		pidnsid := species.NoneID
 		if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
 			id, err := strconv.ParseUint(nst, 10, 64)
 			if err == nil {
-				pidnsid = nstypes.NamespaceID(id)
+				pidnsid = species.NamespaceID(id)
 			} else {
-				var t nstypes.NamespaceType
-				pidnsid, t = nstypes.IDwithType(nst)
-				if t == nstypes.NaNS {
+				var t species.NamespaceType
+				pidnsid, t = species.IDwithType(nst)
+				if t == species.NaNS {
 					return fmt.Errorf("not a valid PID namespace ID: %q", nst)
 				}
 			}
 		}
-		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), nstypes.NamespaceID(pidnsid))
+		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), species.NamespaceID(pidnsid))
 	},
 }
 
@@ -93,14 +93,14 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid nstypes.NamespaceID) error {
+func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.NamespaceID) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
 	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
-	if pidnsid != nstypes.NoneID {
+	if pidnsid != species.NoneID {
 		pidns, ok := allns.Namespaces[lxkns.PIDNS][pidnsid]
 		if !ok {
 			return fmt.Errorf("unknown PID namespace pid:[%d]", pidnsid)

@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	t "github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -54,7 +54,7 @@ mount --bind /proc/self/ns/net $bm
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var netnsid t.NamespaceID
+		var netnsid species.NamespaceID
 		cmd.Decode(&netnsid)
 		opts := NoDiscovery
 		opts.SkipBindmounts = false

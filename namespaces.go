@@ -24,7 +24,7 @@ package lxkns
 import (
 	"fmt"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespaceTypeIndex is an array index type for Linux kernel namespace types.
@@ -50,26 +50,26 @@ const (
 
 // typeIndices maps Linux' kernel namespace clone() syscall constants to
 // their corresponding AllNamespaces array indices.
-var typeIndices = map[nstypes.NamespaceType]NamespaceTypeIndex{
-	nstypes.CLONE_NEWNS:     MountNS,
-	nstypes.CLONE_NEWCGROUP: CgroupNS,
-	nstypes.CLONE_NEWUTS:    UTSNS,
-	nstypes.CLONE_NEWIPC:    IPCNS,
-	nstypes.CLONE_NEWUSER:   UserNS,
-	nstypes.CLONE_NEWPID:    PIDNS,
-	nstypes.CLONE_NEWNET:    NetNS,
+var typeIndices = map[species.NamespaceType]NamespaceTypeIndex{
+	species.CLONE_NEWNS:     MountNS,
+	species.CLONE_NEWCGROUP: CgroupNS,
+	species.CLONE_NEWUTS:    UTSNS,
+	species.CLONE_NEWIPC:    IPCNS,
+	species.CLONE_NEWUSER:   UserNS,
+	species.CLONE_NEWPID:    PIDNS,
+	species.CLONE_NEWNET:    NetNS,
 }
 
 // TypesByIndex maps Allnamespaces array indices to their corresponding Linux'
 // kernel namespace clone() syscall constants.
-var TypesByIndex = [NamespaceTypesCount]nstypes.NamespaceType{
-	nstypes.CLONE_NEWNS,
-	nstypes.CLONE_NEWCGROUP,
-	nstypes.CLONE_NEWUTS,
-	nstypes.CLONE_NEWIPC,
-	nstypes.CLONE_NEWUSER,
-	nstypes.CLONE_NEWPID,
-	nstypes.CLONE_NEWNET,
+var TypesByIndex = [NamespaceTypesCount]species.NamespaceType{
+	species.CLONE_NEWNS,
+	species.CLONE_NEWCGROUP,
+	species.CLONE_NEWUTS,
+	species.CLONE_NEWIPC,
+	species.CLONE_NEWUSER,
+	species.CLONE_NEWPID,
+	species.CLONE_NEWNET,
 }
 
 // TypeIndexLexicalOrder contains Namespace type indices in lexical order.
@@ -86,7 +86,7 @@ var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 // TypeIndex returns the AllNamespaces array index corresponding with the
 // specified Linux' kernel clone() syscall namespace constant. For instance,
 // for CLONE_NEWNET the index NetNS is then returned.
-func TypeIndex(nstype nstypes.NamespaceType) NamespaceTypeIndex {
+func TypeIndex(nstype species.NamespaceType) NamespaceTypeIndex {
 	if idx, ok := typeIndices[nstype]; ok {
 		return idx
 	}
@@ -112,7 +112,7 @@ type NamespacesSet [NamespaceTypesCount]Namespace
 // since the Linux kernel uses inode numbers from the special "nsfs"
 // filesystem, it is guaranteed that there are never two namespaces of
 // different type with the same identifier (=inode number).
-type NamespaceMap map[nstypes.NamespaceID]Namespace
+type NamespaceMap map[species.NamespaceID]Namespace
 
 // Namespace represents a Linux kernel namespace in terms of its unique
 // identifier, type, owning user namespace, joined (leader) processes, and some
@@ -122,10 +122,10 @@ type Namespace interface {
 	// identifier is basically an inode number from the special "nsfs" namespace
 	// filesystem inside the Linux kernel. IDs cannot be set as only the Linux
 	// allocates and manages them.
-	ID() nstypes.NamespaceID
+	ID() species.NamespaceID
 	// Type returns the type of namespace in form of one of the NamespaceType, such
-	// as nstypes.CLONE_NEWNS, nstypes.CLONE_NEWCGROUP, et cetera.
-	Type() nstypes.NamespaceType
+	// as species.CLONE_NEWNS, species.CLONE_NEWCGROUP, et cetera.
+	Type() species.NamespaceType
 	// Owner returns the user namespace "owning" this namespace. For user
 	// namespaces, Owner always returns nil; use Hierarchy.Parent() instead, as
 	// the owner of a user namespace is its parent user namespace.
@@ -199,9 +199,9 @@ type Ownership interface {
 // sense, because struct types don't support polymorphism. On the other hand,
 // thousands of blog posts and SO answers cannot be wrong, more so, the more
 // upvotes they accumulated ;)
-func NewNamespace(nstype nstypes.NamespaceType, nsid nstypes.NamespaceID, ref string) Namespace {
+func NewNamespace(nstype species.NamespaceType, nsid species.NamespaceID, ref string) Namespace {
 	switch nstype {
-	case nstypes.CLONE_NEWUSER:
+	case species.CLONE_NEWUSER:
 		// Someone please tell me that golang actually makes sense... at least
 		// some quantum of sense. Hmm, could be the title of next summer's
 		// blockbuster: "A Quantum of Sense". Erm, no. Won't ever fly in some
@@ -219,7 +219,7 @@ func NewNamespace(nstype nstypes.NamespaceType, nsid nstypes.NamespaceID, ref st
 			user.ownedns[idx] = NamespaceMap{}
 		}
 		return user
-	case nstypes.CLONE_NEWPID:
+	case species.CLONE_NEWPID:
 		return &hierarchicalNamespace{
 			plainNamespace: plainNamespace{
 				nsid:   nsid,

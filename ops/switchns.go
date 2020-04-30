@@ -1,3 +1,5 @@
+// Switching namespaces.
+
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,4 +71,17 @@ func Go(f func(), nsrefs ...Opener) error {
 	// invoke the specified function. We're lazy and are never closing the
 	// channel, but it will get garbage collected anyway.
 	return <-started
+}
+
+// Execute a function synchronously while switched into the specified
+// namespaces, then returns the interface{} outcome of calling the specified
+// function. If switching fails, Execute returns an error instead.
+func Execute(f func() interface{}, nsrefs ...Opener) (interface{}, error) {
+	result := make(chan interface{})
+	if err := Go(func() {
+		result <- f()
+	}, nsrefs...); err != nil {
+		return nil, err
+	}
+	return <-result, nil
 }

@@ -21,13 +21,13 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 var _ = Describe("namespaces", func() {
 
 	It("TypeIndex fails for invalid kernel namespace type", func() {
-		Expect(TypeIndex(nstypes.CLONE_NEWCGROUP | nstypes.CLONE_NEWNET)).To(
+		Expect(TypeIndex(species.CLONE_NEWCGROUP | species.CLONE_NEWNET)).To(
 			Equal(NamespaceTypeIndex(-1)))
 	})
 
@@ -36,7 +36,7 @@ var _ = Describe("namespaces", func() {
 		It("render details", func() {
 			pns := &plainNamespace{
 				nsid:   123,
-				nstype: nstypes.CLONE_NEWNET,
+				nstype: species.CLONE_NEWNET,
 			}
 			Expect(pns.TypeIDString()).To(Equal("net:[123]"))
 			Expect(pns.LeaderString()).To(Equal(""))
@@ -54,7 +54,7 @@ var _ = Describe("namespaces", func() {
 				hierarchicalNamespace: hierarchicalNamespace{
 					plainNamespace: plainNamespace{
 						nsid:   777,
-						nstype: nstypes.CLONE_NEWUSER,
+						nstype: species.CLONE_NEWUSER,
 					},
 				},
 			}
@@ -95,7 +95,7 @@ var _ = Describe("namespaces", func() {
 			hns := &hierarchicalNamespace{
 				plainNamespace: plainNamespace{
 					nsid:   123,
-					nstype: nstypes.CLONE_NEWPID,
+					nstype: species.CLONE_NEWPID,
 				},
 			}
 			s := hns.String()
@@ -106,7 +106,7 @@ var _ = Describe("namespaces", func() {
 			chns := &hierarchicalNamespace{
 				plainNamespace: plainNamespace{
 					nsid:   678,
-					nstype: nstypes.CLONE_NEWPID,
+					nstype: species.CLONE_NEWPID,
 				},
 			}
 			hns.AddChild(chns)
@@ -126,7 +126,7 @@ var _ = Describe("namespaces", func() {
 	Describe("user namespaces", func() {
 
 		It("render details", func() {
-			uns := NewNamespace(nstypes.CLONE_NEWUSER, nstypes.NamespaceID(1111), "").(*userNamespace)
+			uns := NewNamespace(species.CLONE_NEWUSER, species.NamespaceID(1111), "").(*userNamespace)
 			uns.owneruid = os.Getuid()
 			uns.AddLeader(&Process{
 				PID:  88888,
@@ -134,7 +134,7 @@ var _ = Describe("namespaces", func() {
 			})
 			uns.ownedns[NetNS][1234] = &plainNamespace{
 				nsid:   1234,
-				nstype: nstypes.CLONE_NEWNET,
+				nstype: species.CLONE_NEWNET,
 			}
 
 			Expect(uns.UID()).To(Equal(uns.owneruid))

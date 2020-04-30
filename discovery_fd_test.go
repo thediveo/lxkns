@@ -18,8 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/nstypes"
-	t "github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -42,7 +41,7 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var fdnetnsid, netnsid t.NamespaceID
+		var fdnetnsid, netnsid species.NamespaceID
 		cmd.Decode(&fdnetnsid)
 		cmd.Decode(&netnsid)
 		Expect(fdnetnsid).ToNot(Equal(netnsid))
@@ -72,12 +71,12 @@ read # wait for test to proceed()
 		r.Namespaces[NetNS] = NamespaceMap{}
 		discoverFromFd(0, "./test/fdscan/proc", &r)
 		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS]).To(HaveKey(nstypes.NamespaceID(12345678)))
+		Expect(r.Namespaces[NetNS]).To(HaveKey(species.NamespaceID(12345678)))
 
-		origns := r.Namespaces[NetNS][nstypes.NamespaceID(12345678)]
+		origns := r.Namespaces[NetNS][species.NamespaceID(12345678)]
 		discoverFromFd(0, "./test/fdscan/proc", &r)
 		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS][nstypes.NamespaceID(12345678)]).To(BeIdenticalTo(origns))
+		Expect(r.Namespaces[NetNS][species.NamespaceID(12345678)]).To(BeIdenticalTo(origns))
 	})
 
 })

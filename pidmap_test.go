@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	t "github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -55,7 +55,7 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var pidnsid t.NamespaceID
+		var pidnsid species.NamespaceID
 		cmd.Decode(&pidnsid)
 		var leafpid PIDType
 		cmd.Decode(&leafpid)

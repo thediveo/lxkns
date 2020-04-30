@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package nstypes
+package species
 
 import (
 	"testing"
@@ -23,5 +23,5 @@ import (
 
 func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/nstypes package")
+	RunSpecs(t, "lxkns/species package")
 }

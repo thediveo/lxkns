@@ -34,15 +34,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 )
 
 // discoverFromProc discovers Linux kernel namespaces from the process table,
 // using the namespace links inside the proc filesystem: "/proc/[PID]/ns/...".
 // It does not check any other places, as these are covered by separate
 // discovery functions.
-func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipProcs {
 		return
 	}
@@ -93,7 +93,7 @@ func discoverFromProc(nstype nstypes.NamespaceType, _ string, result *DiscoveryR
 		// things too awkward in the model, because then we would need to
 		// treat ownership differently for non-user namespaces versus user
 		// namespaces all the time. Thus, sorry, no user namespaces here.
-		if !result.Options.SkipOwnership && nstype != nstypes.CLONE_NEWUSER {
+		if !result.Options.SkipOwnership && nstype != species.CLONE_NEWUSER {
 			ns.(NamespaceConfigurer).DetectOwner(nsf)
 		}
 		// Don't leak... And no, defer won't help us here.

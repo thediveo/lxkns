@@ -17,8 +17,8 @@ package lxkns
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	t "github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 )
 
 var _ = Describe("Discover owning user namespaces", func() {
@@ -37,8 +37,8 @@ var _ = Describe("Discover owning user namespaces", func() {
 		for _, nst := range []string{"cgroup", "ipc", "mnt", "net", "pid", "uts"} {
 			mynsid, err := ops.NamespacePath("/proc/self/ns/" + nst).ID()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(allns.Namespaces[TypeIndex(t.NameToType(nst))]).To(HaveKey(mynsid))
-			owneruserns := allns.Namespaces[TypeIndex(t.NameToType(nst))][mynsid].Owner()
+			Expect(allns.Namespaces[TypeIndex(species.NameToType(nst))]).To(HaveKey(mynsid))
+			owneruserns := allns.Namespaces[TypeIndex(species.NameToType(nst))][mynsid].Owner()
 			Expect(owneruserns).To(BeIdenticalTo(userns))
 		}
 	})

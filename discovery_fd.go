@@ -27,14 +27,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // discoverFromFd discovers namespaces from process file descriptors
 // referencing them. Since file descriptors are per process only, but not per
 // task/thread, it sufficies to only iterate the process fd entries, leaving
 // out the copies in the task fd entries.
-func discoverFromFd(_ nstypes.NamespaceType, procfs string, result *DiscoveryResult) {
+func discoverFromFd(_ species.NamespaceType, procfs string, result *DiscoveryResult) {
 	if result.Options.SkipFds {
 		return
 	}
@@ -61,8 +61,8 @@ func discoverFromFd(_ nstypes.NamespaceType, procfs string, result *DiscoveryRes
 			// Does the "symbolic" link point to a Linux kernel namespace?
 			// This sorts out all other things, such as open sockets, et
 			// cetera.
-			nsid, nstype := nstypes.IDwithType(target)
-			if nstype == nstypes.NaNS {
+			nsid, nstype := species.IDwithType(target)
+			if nstype == species.NaNS {
 				continue
 			}
 			// Check if we already know this namespace, otherwise is a new

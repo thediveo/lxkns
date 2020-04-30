@@ -10,7 +10,7 @@ From an API user's perspective, there are the following three relevant
 packages:
 
 - `lxkns`: namespace discovery and PID translation.
-- `lxkns/nytypes`: kernel-related namespace type definitions.
+- `lxkns/species`: kernel-related namespace type definitions.
 - `lxkns/ops`: kernel API for discovering namespace IDs, types and
   relationships, and also (limited) namespaces switching.
 

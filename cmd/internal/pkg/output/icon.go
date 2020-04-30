@@ -4,19 +4,19 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespaceTypeIcons maps individual Linux-kernel namespace types
-// (nstypes.NNamespaceTypeIcons) to Unicode characters to be used as icons.
-var NamespaceTypeIcons = map[nstypes.NamespaceType]string{
-	nstypes.CLONE_NEWCGROUP: "🔧",
-	nstypes.CLONE_NEWIPC:    "✉ ",
-	nstypes.CLONE_NEWNS:     "📁",
-	nstypes.CLONE_NEWNET:    "⇄ ",
-	nstypes.CLONE_NEWPID:    "🏃",
-	nstypes.CLONE_NEWUSER:   "👤",
-	nstypes.CLONE_NEWUTS:    "💻",
+// (species.NNamespaceTypeIcons) to Unicode characters to be used as icons.
+var NamespaceTypeIcons = map[species.NamespaceType]string{
+	species.CLONE_NEWCGROUP: "🔧",
+	species.CLONE_NEWIPC:    "✉ ",
+	species.CLONE_NEWNS:     "📁",
+	species.CLONE_NEWNET:    "⇄ ",
+	species.CLONE_NEWPID:    "🏃",
+	species.CLONE_NEWUSER:   "👤",
+	species.CLONE_NEWUTS:    "💻",
 }
 
 // NamespaceIcon returns an Unicode string which can be displayed as an "icon"

@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	t "github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -38,7 +38,7 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var usernsid t.NamespaceID
+		var usernsid species.NamespaceID
 		cmd.Decode(&usernsid)
 		allns := Discover(FullDiscovery)
 		userns := allns.Namespaces[UserNS][usernsid].(Hierarchy)

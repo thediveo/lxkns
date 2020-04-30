@@ -17,7 +17,7 @@ package ops
 import (
 	"syscall"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespacePath references a Linux-kernel namespace via a filesystem path.
@@ -26,19 +26,19 @@ type NamespacePath string
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
 // required.
-func (nsp NamespacePath) Type() (nstypes.NamespaceType, error) {
+func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
 	if err != nil {
 		return 0, err
 	}
 	defer syscall.Close(fd)
 	t, err := ioctl(int(fd), _NS_GET_NSTYPE)
-	return nstypes.NamespaceType(t), err
+	return species.NamespaceType(t), err
 }
 
 // ID returns the namespace ID in form of its inode number for any given
 // Linux kernel namespace reference.
-func (nsp NamespacePath) ID() (nstypes.NamespaceID, error) {
+func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
 	if err != nil {
 		return 0, err

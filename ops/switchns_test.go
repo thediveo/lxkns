@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -45,11 +45,11 @@ read # wait for test to proceed()
 		defer cmd.Close()
 
 		var netnsref NamespacePath
-		var netnsid nstypes.NamespaceID
+		var netnsid species.NamespaceID
 		cmd.Decode(&netnsref)
 		cmd.Decode(&netnsid)
 
-		result := make(chan nstypes.NamespaceID)
+		result := make(chan species.NamespaceID)
 		Expect(Go(func() {
 			id, _ := NamespacePath(
 				fmt.Sprintf("/proc/%d/ns/net", syscall.Gettid())).
@@ -57,6 +57,15 @@ read # wait for test to proceed()
 			result <- id
 		}, netnsref)).NotTo(HaveOccurred())
 		Expect(<-result).To(Equal(netnsid))
+
+		res, err := Execute(func() interface{} {
+			id, _ := NamespacePath(
+				fmt.Sprintf("/proc/%d/ns/net", syscall.Gettid())).
+				ID()
+			return id
+		}, netnsref)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(res.(species.NamespaceID)).To(Equal(netnsid))
 	})
 
 })

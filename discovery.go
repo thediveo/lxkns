@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // DiscoverOpts gives control over the extend and thus time and resources
@@ -33,7 +33,7 @@ type DiscoverOpts struct {
 	// The types of namespaces to discover: this is an OR'ed combination of
 	// Linux kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et
 	// cetera. If zero, defaults to discovering all namespaces.
-	NamespaceTypes nstypes.NamespaceType
+	NamespaceTypes species.NamespaceType
 
 	// Where to scan (or not scan) for signs of namespaces?
 	SkipProcs      bool // Don't scan processes.
@@ -167,10 +167,10 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
 	if result.Options.NamespaceTypes == 0 {
-		result.Options.NamespaceTypes = nstypes.CLONE_NEWNS |
-			nstypes.CLONE_NEWCGROUP | nstypes.CLONE_NEWUTS |
-			nstypes.CLONE_NEWIPC | nstypes.CLONE_NEWUSER |
-			nstypes.CLONE_NEWPID | nstypes.CLONE_NEWNET
+		result.Options.NamespaceTypes = species.CLONE_NEWNS |
+			species.CLONE_NEWCGROUP | species.CLONE_NEWUTS |
+			species.CLONE_NEWIPC | species.CLONE_NEWUSER |
+			species.CLONE_NEWPID | species.CLONE_NEWNET
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
@@ -194,10 +194,10 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		}
 	}
 	// Fill in some additional convenience fields in the result.
-	if result.Options.NamespaceTypes&nstypes.CLONE_NEWUSER != 0 {
+	if result.Options.NamespaceTypes&species.CLONE_NEWUSER != 0 {
 		result.UserNSRoots = rootNamespaces(result.Namespaces[UserNS])
 	}
-	if result.Options.NamespaceTypes&nstypes.CLONE_NEWPID != 0 {
+	if result.Options.NamespaceTypes&species.CLONE_NEWPID != 0 {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[PIDNS])
 	}
 	// TODO: Find the initial namespaces...
@@ -209,7 +209,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 
 // discoveryFunc implements some Linux kernel namespace discovery
 // functionality.
-type discoveryFunc func(nstypes.NamespaceType, string, *DiscoveryResult)
+type discoveryFunc func(species.NamespaceType, string, *DiscoveryResult)
 
 // discoverer describes a single discoveryFunc and when to call it: once, per
 // each namespace type and for which namespace types in what sequence. Please

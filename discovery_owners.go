@@ -19,14 +19,14 @@
 
 package lxkns
 
-import "github.com/thediveo/lxkns/nstypes"
+import "github.com/thediveo/lxkns/species"
 
 // resolveOwnership unearths which non-user namespaces are owned by which user
 // namespaces. We only run the resolution phase after we've discovered a
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
-func resolveOwnership(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipOwnership || nstype == nstypes.CLONE_NEWUSER {
+func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
+	if result.Options.SkipOwnership || nstype == species.CLONE_NEWUSER {
 		return
 	}
 	// The namespace type discovery sequence guarantees us that by the

@@ -12,7 +12,7 @@ namespace lxkns {
   Discover ..> DiscoveryResult : "returns"
   
   class "DiscoverOpts" <<(S,YellowGreen)>> {
-    NamespaceTypes nstypes.NamespaceType
+    NamespaceTypes species.NamespaceType
     SkipProcs bool
     SkipTasks bool
     SkipFds bool

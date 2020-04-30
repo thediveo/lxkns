@@ -19,7 +19,7 @@ import (
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // Filter returns true if the given Linux-kernel namespace passes the namespace
@@ -35,29 +35,29 @@ func Filter(ns lxkns.Namespace) bool {
 
 // filterMask is a set of OR'ed namespace CLONE_NEWxx constants indicating the
 // type of namespaces allowed to pass the filter.
-var filterMask nstypes.NamespaceType
+var filterMask species.NamespaceType
 
 // The user-controlled namespace filters; they default to showing all types of
 // Linux-kernel namespaces.
-var namespaceFilters = []nstypes.NamespaceType{
-	nstypes.CLONE_NEWNS,
-	nstypes.CLONE_NEWCGROUP,
-	nstypes.CLONE_NEWUTS,
-	nstypes.CLONE_NEWIPC,
-	nstypes.CLONE_NEWUSER,
-	nstypes.CLONE_NEWPID,
-	nstypes.CLONE_NEWNET,
+var namespaceFilters = []species.NamespaceType{
+	species.CLONE_NEWNS,
+	species.CLONE_NEWCGROUP,
+	species.CLONE_NEWUTS,
+	species.CLONE_NEWIPC,
+	species.CLONE_NEWUSER,
+	species.CLONE_NEWPID,
+	species.CLONE_NEWNET,
 }
 
 // Maps namespace type names to their corresponding filter/type constants.
-var nsFilterIds = map[nstypes.NamespaceType][]string{
-	nstypes.CLONE_NEWNS:     {"mnt", "m"},
-	nstypes.CLONE_NEWCGROUP: {"cgroup", "c"},
-	nstypes.CLONE_NEWUTS:    {"uts", "u"},
-	nstypes.CLONE_NEWIPC:    {"ipc", "i"},
-	nstypes.CLONE_NEWUSER:   {"user", "U"},
-	nstypes.CLONE_NEWPID:    {"pid", "p"},
-	nstypes.CLONE_NEWNET:    {"net", "n"},
+var nsFilterIds = map[species.NamespaceType][]string{
+	species.CLONE_NEWNS:     {"mnt", "m"},
+	species.CLONE_NEWCGROUP: {"cgroup", "c"},
+	species.CLONE_NEWUTS:    {"uts", "u"},
+	species.CLONE_NEWIPC:    {"ipc", "i"},
+	species.CLONE_NEWUSER:   {"user", "U"},
+	species.CLONE_NEWPID:    {"pid", "p"},
+	species.CLONE_NEWNET:    {"net", "n"},
 }
 
 // Register our plugin functions for delayed registration of CLI flags we bring

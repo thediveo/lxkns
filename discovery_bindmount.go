@@ -25,8 +25,8 @@ import (
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 )
 
 // OwnedMountInfo augments bind-mount information with the owning user
@@ -34,13 +34,13 @@ import (
 // the discovery results.
 type OwnedMountInfo struct {
 	*mntinfo.Mountinfo
-	OwnernsID nstypes.NamespaceID `json:"ownernsid"`
+	OwnernsID species.NamespaceID `json:"ownernsid"`
 }
 
 // discoverBindmounts checks bind-mounts to discover namespaces we haven't
 // found so far in the process' joined namespaces. This discovery function is
 // designed to be run only once per discovery.
-func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipBindmounts {
 		return
 	}
@@ -48,8 +48,8 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 	// result.
 	updateNamespaces := func(ownedbindmounts []OwnedMountInfo) {
 		for _, bmnt := range ownedbindmounts {
-			nsid, nstype := nstypes.IDwithType(bmnt.Root)
-			if nstype == nstypes.NaNS {
+			nsid, nstype := species.IDwithType(bmnt.Root)
+			if nstype == species.NaNS {
 				continue // Play safe.
 			}
 			typeidx := TypeIndex(nstype)
@@ -63,7 +63,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
-			if nstype != nstypes.CLONE_NEWUSER && bmnt.OwnernsID != nstypes.NoneID {
+			if nstype != species.CLONE_NEWUSER && bmnt.OwnernsID != species.NoneID {
 				ns.(NamespaceConfigurer).SetOwner(bmnt.OwnernsID)
 			}
 		}
@@ -83,7 +83,7 @@ func discoverBindmounts(_ nstypes.NamespaceType, _ string, result *DiscoveryResu
 	// which mount namespaces not to visit again. This also includes the mount
 	// namespace we've started our discovery in, as this will otherwise be
 	// visited twice.
-	visitedmntns := map[nstypes.NamespaceID]bool{}
+	visitedmntns := map[species.NamespaceID]bool{}
 	ownmntnsid, _ := ops.NamespacePath("/proc/self/ns/mnt").ID()
 	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 	visitedmntns[ownmntnsid] = true
@@ -163,7 +163,7 @@ func ownedBindMounts() []OwnedMountInfo {
 		bmnt := &bindmounts[idx] // avoid copying the mount information.
 		// While we're in the correct mount namespace, we need to collect also
 		// the information about the relation to the owning user space.
-		var ownernsid nstypes.NamespaceID
+		var ownernsid species.NamespaceID
 		if usernsref, err := ops.NamespacePath(bmnt.MountPoint).User(); err == nil {
 			ownernsid, _ = usernsref.ID()
 			usernsref.Close()

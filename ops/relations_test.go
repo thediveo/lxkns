@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -54,14 +54,14 @@ var _ = Describe("Namespaces", func() {
 		Expect(errof(NamespacePath("/foobar").Type())).To(HaveOccurred())
 		Expect(errof(NamespaceFd(-1).Type())).To(HaveOccurred())
 
-		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(nstypes.CLONE_NEWUSER))
+		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(species.CLONE_NEWUSER))
 
 		f, err := NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		Expect(NamespaceFd(f.Fd()).Type()).To(Equal(nstypes.CLONE_NEWIPC))
+		Expect(NamespaceFd(f.Fd()).Type()).To(Equal(species.CLONE_NEWIPC))
 
-		Expect(f.Type()).To(Equal(nstypes.CLONE_NEWIPC))
+		Expect(f.Type()).To(Equal(species.CLONE_NEWIPC))
 	})
 
 	It("return their identifiers", func() {
@@ -76,7 +76,7 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).ToNot(HaveOccurred())
 		stat, ok := info.Sys().(*syscall.Stat_t)
 		Expect(ok).To(BeTrue())
-		nsid := nstypes.NamespaceID(stat.Ino)
+		nsid := species.NamespaceID(stat.Ino)
 
 		Expect(NamespacePath("/proc/self/ns/cgroup").ID()).To(Equal(nsid))
 
@@ -140,7 +140,7 @@ read # wait for test to proceed()
 		defer cmd.Close()
 
 		var parentuserpath, leafuserpath NamespacePath
-		var parentusernsid, leafusernsid nstypes.NamespaceID
+		var parentusernsid, leafusernsid species.NamespaceID
 		cmd.Decode(&parentuserpath)
 		cmd.Decode(&parentusernsid)
 		cmd.Decode(&leafuserpath)

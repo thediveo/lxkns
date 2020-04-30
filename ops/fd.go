@@ -17,7 +17,7 @@ package ops
 import (
 	"syscall"
 
-	"github.com/thediveo/lxkns/nstypes"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespaceFd references a Linux-kernel namespace via an open file descriptor.
@@ -29,16 +29,16 @@ type NamespaceFd int
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
 // required.
-func (nsfd NamespaceFd) Type() (nstypes.NamespaceType, error) {
+func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
-	return nstypes.NamespaceType(t), err
+	return species.NamespaceType(t), err
 }
 
 // ID returns the namespace ID in form of its inode number of the Linux-kernel
 // namespace referenced by this open file descriptor. Please be aware that ID
 // even returns an inode number if the file descriptor doesn't reference a
 // namespace but instead some other open file.
-func (nsfd NamespaceFd) ID() (nstypes.NamespaceID, error) {
+func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 	return fdID(int(nsfd))
 }
 
@@ -66,12 +66,12 @@ func (nsfd NamespaceFd) OwnerUID() (int, error) {
 
 // fdID stats the given file descriptor in order to get the inode number and
 // returns it as a NamespaceID.
-func fdID(fd int) (nstypes.NamespaceID, error) {
+func fdID(fd int) (species.NamespaceID, error) {
 	var stat syscall.Stat_t
 	if err := syscall.Fstat(fd, &stat); err != nil {
 		return 0, err
 	}
-	return nstypes.NamespaceID(stat.Ino), nil
+	return species.NamespaceID(stat.Ino), nil
 }
 
 // Ensures that NamespaceFd implements the Relation interface.

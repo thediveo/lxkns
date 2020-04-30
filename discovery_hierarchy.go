@@ -33,8 +33,8 @@ package lxkns
 import (
 	"os"
 
-	"github.com/thediveo/lxkns/nstypes"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 )
 
 // discoverHierarchy unmasks the hierarchy of user and PID namespaces. All
@@ -49,7 +49,7 @@ import (
 // hidden namespaces don't have file paths as references but instead can only
 // be referenced by fd's returned by the kernel namespace ioctl()s. This would
 // then force us to keep potentially a larger number of fd's open.
-func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverHierarchy(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipHierarchy {
 		return
 	}
@@ -82,7 +82,7 @@ func discoverHierarchy(nstype nstypes.NamespaceType, _ string, result *Discovery
 			// By the way ... if it's a user namespace, then get its owner's
 			// UID, as we just happen to have a useful fd referencing the
 			// namespace open anyway.
-			if nstype == nstypes.CLONE_NEWUSER {
+			if nstype == species.CLONE_NEWUSER {
 				ns.(*userNamespace).detectUID(nsf)
 			}
 			// See if there is a parent of this namespace at all, or whether
