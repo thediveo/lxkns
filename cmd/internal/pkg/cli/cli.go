@@ -19,7 +19,7 @@ import (
 	"github.com/thediveo/go-plugger"
 )
 
-// Addflags runs all registered SetupCLI plugin functions (in group "cli") in
+// AddFlags runs all registered SetupCLI plugin functions (in group "cli") in
 // order to register CLI flags with the root command.
 func AddFlags(rootCmd *cobra.Command) {
 	for _, plugf := range plugger.New("cli").Func("SetupCLI") {

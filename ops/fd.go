@@ -77,13 +77,13 @@ func fdID(fd int) (species.NamespaceID, error) {
 // Ensures that NamespaceFd implements the Relation interface.
 var _ Relation = (*NamespaceFd)(nil)
 
-// Open returns an open file descriptor which references the namespace. In case
-// the close return value is truee, then the caller needs to close the file
+// Reference returns an open file descriptor which references the namespace. In
+// case the close return value is truee, then the caller needs to close the file
 // descriptor when it doesn't need to reference the namespace anymore, in order
 // to avoid wasting file descriptors.
-func (nsfd NamespaceFd) Open() (fd int, close bool, err error) {
+func (nsfd NamespaceFd) Reference() (fd int, close bool, err error) {
 	fd = int(nsfd)
 	return
 }
 
-var _ Opener = (*NamespaceFd)(nil)
+var _ Referrer = (*NamespaceFd)(nil)

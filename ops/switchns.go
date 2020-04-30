@@ -23,9 +23,22 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// ...
-type Opener interface {
-	Open() (fd int, close bool, err error)
+// Referrer returns an open file descriptor to the namespace indicated in a
+// namespace reference type, such as NamespacePath, suitable for switching
+// namespaces using setns(2).
+type Referrer interface {
+	// Open returns a file descriptor referencing the namespace indicated in a
+	// namespace reference implementing the Opener interface. If the returned
+	// close is true, then the caller must close the file descriptor after it
+	// doesn't need it anymore. If false, the caller must not close the file
+	// descriptor. In case the Opener is unable to return a file descriptor to
+	// the referenced namespace, err is non-nil.
+	//
+	// The caller must make sure that the namespace reference object does not
+	// get garbage collected before the file descriptor is used, if in doubt,
+	// use runtime.KeepAlive(nsref), see also:
+	// https://golang.org/pkg/runtime/#KeepAlive.
+	Reference() (fd int, close bool, err error)
 }
 
 // Go runs the specified function as a new Go routine and from a locked OS
@@ -37,7 +50,7 @@ type Opener interface {
 // succeeded, else an error. Please note that Go() returns as soon as switching
 // namespaces has finished. The specified function is then run in its own Go
 // routine.
-func Go(f func(), nsrefs ...Opener) error {
+func Go(f func(), nsrefs ...Referrer) error {
 	started := make(chan error)
 	go func() {
 		// Lock, but never unlock the OS thread exclusively powering our Go
@@ -47,7 +60,16 @@ func Go(f func(), nsrefs ...Opener) error {
 		// Switch our highly exclusive OS thread into the specified
 		// namespaces...
 		for _, nsref := range nsrefs {
-			fd, close, err := nsref.Open()
+			// Important: since nsref.Reference() returns a file descriptor
+			// which potentially is derived from an open os.File, the latter
+			// must not get garbage collected while we attempt to use the file
+			// descriptor, as otherwise the os.File's finalizer will have closed
+			// the fd prematurely. Luckily (hopefully not!) the (varargs) slice
+			// won't be collectible until the iteration terminates, keeping its
+			// slice elements and thus its os.Files (if any) alive. In
+			// consequence, we don't need an explicit runtime.KeepAlive(...)
+			// here.
+			fd, close, err := nsref.Reference()
 			if err != nil {
 				started <- err
 				return // ex-terminate ;)
@@ -76,7 +98,7 @@ func Go(f func(), nsrefs ...Opener) error {
 // Execute a function synchronously while switched into the specified
 // namespaces, then returns the interface{} outcome of calling the specified
 // function. If switching fails, Execute returns an error instead.
-func Execute(f func() interface{}, nsrefs ...Opener) (interface{}, error) {
+func Execute(f func() interface{}, nsrefs ...Referrer) (interface{}, error) {
 	result := make(chan interface{})
 	if err := Go(func() {
 		result <- f()

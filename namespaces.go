@@ -187,7 +187,7 @@ type Ownership interface {
 	// UID returns the user ID of the process that created this user namespace.
 	UID() int
 	// Ownings returns all namespaces owned by this user namespace, with the
-	// execption of user namespaces. "Owned" user namespaces are actually child
+	// exception of user namespaces. "Owned" user namespaces are actually child
 	// user namespaces, so they are returned through Hierarchy.Children()
 	// instead.
 	Ownings() AllNamespaces
