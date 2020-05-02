@@ -33,9 +33,7 @@ var _ = Describe("Namespace IDs", func() {
 	It("parse namespace textual representations", func() {
 		id, t := IDwithType("net:[1]")
 		Expect(t).To(Equal(CLONE_NEWNET))
-		// The device ID of the nsfs is hardcoded on purpose in order to detect
-		// bugs related to its discovery.
-		Expect(id).To(Equal(NamespaceID{Dev: 4, Ino: 1}))
+		Expect(id).To(Equal(NamespaceIDfromInode(1)))
 	})
 
 	It("reject invalid textual representations", func() {
