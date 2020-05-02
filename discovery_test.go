@@ -32,31 +32,31 @@ var _ = Describe("Discover", func() {
 
 	It("sorts namespace maps", func() {
 		nsmap := NamespaceMap{
-			species.NamespaceID{1, 5678}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{1, 5678}, ""),
-			species.NamespaceID{1, 1234}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{1, 1234}, ""),
+			species.NamespaceID{Dev: 1, Ino: 5678}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			species.NamespaceID{Dev: 1, Ino: 1234}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		dr := DiscoveryResult{}
 		dr.Namespaces[NetNS] = nsmap
 		sortedns := dr.SortedNamespaces(NetNS)
 		Expect(sortedns).To(HaveLen(2))
-		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{1, 1234}))
-		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{1, 5678}))
+		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
+		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 	})
 
 	It("sorts namespace lists", func() {
 		nslist := []Namespace{
-			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{1, 5678}, ""),
-			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{1, 1234}, ""),
+			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		sortedns := SortNamespaces(nslist)
 		Expect(sortedns).To(HaveLen(2))
-		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{1, 1234}))
-		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{1, 5678}))
+		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
+		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 
 		sortedhns := SortChildNamespaces([]Hierarchy{nslist[0].(Hierarchy), nslist[1].(Hierarchy)})
 		Expect(sortedhns).To(HaveLen(2))
-		Expect(sortedhns[0].(Namespace).ID()).To(Equal(species.NamespaceID{1, 1234}))
-		Expect(sortedhns[1].(Namespace).ID()).To(Equal(species.NamespaceID{1, 5678}))
+		Expect(sortedhns[0].(Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
+		Expect(sortedhns[1].(Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 	})
 
 	It("rejects finding roots for plain namespaces", func() {

@@ -29,9 +29,9 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// NamespaceInfo describes a bind-mounted namespace in some (other) mount
-// namespace, including the owning user namespace ID, so we can later correctly
-// set up the ownership relations in the discovery results.
+// BindmountedNamespaceInfo describes a bind-mounted namespace in some (other)
+// mount namespace, including the owning user namespace ID, so we can later
+// correctly set up the ownership relations in the discovery results.
 type BindmountedNamespaceInfo struct {
 	ID        species.NamespaceID   `json:"id"`
 	Type      species.NamespaceType `json:"type"`
