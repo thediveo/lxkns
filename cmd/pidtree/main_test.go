@@ -70,18 +70,22 @@ echo "$$"
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
 [│ ]+└─ "stage2.sh" \(\d+/1\)
 [│ ]+└─ "stage2.sh" \(\d+/%d\)$`,
-			pidnsid, os.Geteuid(), leafpid)))
+			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
 	It("renders only a branch", func() {
 		out := bytes.Buffer{}
-		_ = renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID(pidnsid))
+		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NoneID)).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID{Ino: 123})).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceID{Ino: pidnsid.Ino})).To(HaveOccurred())
+
+		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID{Ino: pidnsid.Ino})).ToNot(HaveOccurred())
 		tree := out.String()
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
 \ +└─ "stage2.sh" \(\d+/1\)
 $`,
-			pidnsid, os.Geteuid())))
+			pidnsid.Ino, os.Geteuid())))
 	})
 
 })

@@ -131,7 +131,7 @@ func (pns *plainNamespace) String() string {
 // TypeIDString describes this instance of a Linux kernel namespace just by
 // its type and identifier, and nothing else.
 func (pns *plainNamespace) TypeIDString() string {
-	return fmt.Sprintf("%s:[%d]", pns.nstype.Name(), pns.nsid)
+	return fmt.Sprintf("%s:[%d]", pns.nstype.Name(), pns.nsid.Ino)
 }
 
 // LeaderString returns a textual list of leader process PIDs.

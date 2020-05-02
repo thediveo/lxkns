@@ -108,10 +108,7 @@ type AllNamespaces [NamespaceTypesCount]NamespaceMap
 type NamespacesSet [NamespaceTypesCount]Namespace
 
 // NamespaceMap indexes a bunch of Namespaces by their identifiers. Usually,
-// namespace indices will contain only namespaces of the same type. However,
-// since the Linux kernel uses inode numbers from the special "nsfs"
-// filesystem, it is guaranteed that there are never two namespaces of
-// different type with the same identifier (=inode number).
+// namespace indices will contain only namespaces of the same type.
 type NamespaceMap map[species.NamespaceID]Namespace
 
 // Namespace represents a Linux kernel namespace in terms of its unique
@@ -191,6 +188,23 @@ type Ownership interface {
 	// user namespaces, so they are returned through Hierarchy.Children()
 	// instead.
 	Ownings() AllNamespaces
+}
+
+// SloppyByIno looks up a namespace given only its inode number, lacking the
+// device ID which otherwise is necessary to unambiguously identify any
+// particular namespace. In order to avoid an expensive linear search through
+// the namespace map, SloppyByIno glances the device ID from an arbitrary map
+// entry and then tries to look up the namespace in question. This assumes that
+// a NamespaceMap stores only a single type and the caller absolutely
+// understands the limitations of this function.
+func (nsm NamespaceMap) SloppyByIno(nsid species.NamespaceID) Namespace {
+	if nsid.Dev != 0 {
+		return nsm[nsid]
+	}
+	for mnsid := range nsm {
+		return nsm[species.NamespaceID{Dev: mnsid.Dev, Ino: nsid.Ino}]
+	}
+	return nil
 }
 
 // NewNamespace returns a new zero'ed namespace object suitable for the
