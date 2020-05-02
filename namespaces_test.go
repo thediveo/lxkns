@@ -35,7 +35,7 @@ var _ = Describe("namespaces", func() {
 
 		It("render details", func() {
 			pns := &plainNamespace{
-				nsid:   123,
+				nsid:   species.NamespaceID{1, 123},
 				nstype: species.CLONE_NEWNET,
 			}
 			Expect(pns.TypeIDString()).To(Equal("net:[123]"))
@@ -53,7 +53,7 @@ var _ = Describe("namespaces", func() {
 			pns.owner = &userNamespace{
 				hierarchicalNamespace: hierarchicalNamespace{
 					plainNamespace: plainNamespace{
-						nsid:   777,
+						nsid:   species.NamespaceID{1, 777},
 						nstype: species.CLONE_NEWUSER,
 					},
 				},
@@ -94,7 +94,7 @@ var _ = Describe("namespaces", func() {
 		It("render details", func() {
 			hns := &hierarchicalNamespace{
 				plainNamespace: plainNamespace{
-					nsid:   123,
+					nsid:   species.NamespaceID{1, 123},
 					nstype: species.CLONE_NEWPID,
 				},
 			}
@@ -105,7 +105,7 @@ var _ = Describe("namespaces", func() {
 
 			chns := &hierarchicalNamespace{
 				plainNamespace: plainNamespace{
-					nsid:   678,
+					nsid:   species.NamespaceID{1, 678},
 					nstype: species.CLONE_NEWPID,
 				},
 			}
@@ -126,14 +126,14 @@ var _ = Describe("namespaces", func() {
 	Describe("user namespaces", func() {
 
 		It("render details", func() {
-			uns := NewNamespace(species.CLONE_NEWUSER, species.NamespaceID(1111), "").(*userNamespace)
+			uns := NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{1, 1111}, "").(*userNamespace)
 			uns.owneruid = os.Getuid()
 			uns.AddLeader(&Process{
 				PID:  88888,
 				Name: "foobar",
 			})
-			uns.ownedns[NetNS][1234] = &plainNamespace{
-				nsid:   1234,
+			uns.ownedns[NetNS][species.NamespaceID{1, 1234}] = &plainNamespace{
+				nsid:   species.NamespaceID{1, 1234},
 				nstype: species.CLONE_NEWNET,
 			}
 

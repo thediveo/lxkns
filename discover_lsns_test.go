@@ -18,8 +18,6 @@ import (
 	"encoding/json"
 	"os/exec"
 	"strconv"
-
-	"github.com/thediveo/lxkns/species"
 )
 
 // lsnsentry represents the JSON information for individual namespaces spit
@@ -27,12 +25,12 @@ import (
 // The older "v1" JSON schema serializes all properties as strings instead,
 // including the Number/integer-typed elements.
 type lsnsentry struct {
-	NS      species.NamespaceID `json:"ns"`
-	Type    string              `json:"type"`
-	NProcs  int                 `json:"nprocs"`
-	PID     PIDType             `json:"pid"`
-	User    string              `json:"user"`
-	Command string              `json:"command"`
+	NS      uint64  `json:"ns"`
+	Type    string  `json:"type"`
+	NProcs  int     `json:"nprocs"`
+	PID     PIDType `json:"pid"`
+	User    string  `json:"user"`
+	Command string  `json:"command"`
 }
 
 // lsnsdata represents the JSON top-level element spit out by "lsns --json".
@@ -48,10 +46,9 @@ func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 		return
 	}
 	var i uint64
-	if err = touint64(fields["ns"], &i); err != nil {
+	if err = touint64(fields["ns"], &e.NS); err != nil {
 		return
 	}
-	e.NS = species.NamespaceID(i)
 	if err = tostr(fields["type"], &e.Type); err != nil {
 		return
 	}

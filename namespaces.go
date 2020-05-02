@@ -116,9 +116,10 @@ type NamespaceMap map[species.NamespaceID]Namespace
 // more.
 type Namespace interface {
 	// ID returns the unique identifier of this Linux-kernel namespace. This
-	// identifier is basically an inode number from the special "nsfs" namespace
-	// filesystem inside the Linux kernel. IDs cannot be set as only the Linux
-	// allocates and manages them.
+	// identifier is basically a tuple consisting of an inode number from the
+	// special "nsfs" namespace filesystem inside the Linux kernel, together
+	// with the device ID of that nsfs filesystem. IDs cannot be set as only the
+	// Linux allocates and manages them.
 	ID() species.NamespaceID
 	// Type returns the type of namespace in form of one of the NamespaceType, such
 	// as species.CLONE_NEWNS, species.CLONE_NEWCGROUP, et cetera.

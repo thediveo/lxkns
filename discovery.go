@@ -113,7 +113,8 @@ func SortedNamespaces(nsmap NamespaceMap) []Namespace {
 
 // SortedNamespaces returns a sorted list of discovered namespaces of the
 // specified type. The namespaces are sorted by their identifier, which is an
-// inode number (on the special "nsfs" filesystem).
+// inode number (on the special "nsfs" filesystem), ignoring a namespace's
+// device ID.
 func (dr *DiscoveryResult) SortedNamespaces(nsidx NamespaceTypeIndex) []Namespace {
 	return SortedNamespaces(dr.Namespaces[nsidx])
 }

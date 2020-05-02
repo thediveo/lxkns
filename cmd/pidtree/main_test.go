@@ -75,7 +75,7 @@ echo "$$"
 
 	It("renders only a branch", func() {
 		out := bytes.Buffer{}
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NoneID)).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID{Ino: 123})).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceID{Ino: pidnsid.Ino})).To(HaveOccurred())
 

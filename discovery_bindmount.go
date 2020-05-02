@@ -29,42 +29,45 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// OwnedMountInfo augments bind-mount information with the owning user
-// namespace ID, so we can later correctly set up the ownership relations in
-// the discovery results.
-type OwnedMountInfo struct {
-	*mntinfo.Mountinfo
-	OwnernsID species.NamespaceID `json:"ownernsid"`
+// NamespaceInfo describes a bind-mounted namespace in some (other) mount
+// namespace, including the owning user namespace ID, so we can later correctly
+// set up the ownership relations in the discovery results.
+type BindmountedNamespaceInfo struct {
+	ID        species.NamespaceID   `json:"id"`
+	Type      species.NamespaceType `json:"type"`
+	Path      string                `json:"path"`
+	OwnernsID species.NamespaceID   `json:"ownernsid"`
 }
 
-// discoverBindmounts checks bind-mounts to discover namespaces we haven't
-// found so far in the process' joined namespaces. This discovery function is
-// designed to be run only once per discovery.
+// discoverBindmounts checks bind-mounts to discover namespaces we haven't found
+// so far in the process' joined namespaces. This discovery function is designed
+// to be run only once per discovery: but it will search not only in the current
+// mount namespace, but also in other mount namespaces (subject to having
+// capabilities in them).
 func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipBindmounts {
 		return
 	}
 	// Helper function which adds namespaces not yet known to the discovery
-	// result.
-	updateNamespaces := func(ownedbindmounts []OwnedMountInfo) {
-		for _, bmnt := range ownedbindmounts {
-			nsid, nstype := species.IDwithType(bmnt.Root)
-			if nstype == species.NaNS {
-				continue // Play safe.
-			}
-			typeidx := TypeIndex(nstype)
-			ns, ok := result.Namespaces[typeidx][nsid]
+	// result. We keep this inline in order to allow the helper to access the
+	// outer result.Namespaces map and easily update it.
+	updateNamespaces := func(ownedbindmounts []BindmountedNamespaceInfo) {
+		for _, bmntns := range ownedbindmounts {
+			// Now we can finally look up whether we have seen this bind-mounted
+			// namespace elsewhere...
+			typeidx := TypeIndex(bmntns.Type)
+			ns, ok := result.Namespaces[typeidx][bmntns.ID]
 			if !ok {
 				// As we haven't seen this namespace yet, record it with our
 				// results.
-				ns = NewNamespace(nstype, nsid, "")
-				result.Namespaces[typeidx][nsid] = ns
-				ns.(NamespaceConfigurer).SetRef(bmnt.MountPoint)
+				ns = NewNamespace(bmntns.Type, bmntns.ID, "")
+				result.Namespaces[typeidx][bmntns.ID] = ns
+				ns.(NamespaceConfigurer).SetRef(bmntns.Path)
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
-			if nstype != species.CLONE_NEWUSER && bmnt.OwnernsID != species.NoneID {
-				ns.(NamespaceConfigurer).SetOwner(bmnt.OwnernsID)
+			if bmntns.Type != species.CLONE_NEWUSER && bmntns.OwnernsID != species.NoneID {
+				ns.(NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
 			}
 		}
 	}
@@ -125,7 +128,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		// Finally, we can try to enter the mount namespace in order to find
 		// out which namespace-related bind mounts might be found there...
 		visitedmntns[mntns.ID()] = true
-		var ownedbindmounts []OwnedMountInfo
+		var ownedbindmounts []BindmountedNamespaceInfo
 		if err := ReexecIntoAction(
 			"discover-nsfs-bindmounts", enterns, &ownedbindmounts); err == nil {
 			// TODO: remember mount namespace for namespaces found, so we
@@ -154,21 +157,40 @@ func discoverNsfsBindmounts() {
 	}
 }
 
-// Returns a list of bind-mounts, including owning user namespace ID
-// information, which are namespace bind-mounts.
-func ownedBindMounts() []OwnedMountInfo {
+// Returns a list of bind-mounted namespaces, including owning user namespace ID
+// information.
+func ownedBindMounts() []BindmountedNamespaceInfo {
+	// Please note that while the mount details of /proc/mountinfo tell us about
+	// bind-mounted namespaces with their types and inodes, they don't tell us
+	// the device IDs of those namespaces. Argh, again we need to go through
+	// hoops and loops just in order to satisfy Eric Biederman's dire warning of
+	// a future where we will need to deal with multiple namespace filesystem
+	// types. Some like it complicated.
 	bindmounts := mntinfo.MountsOfType(-1, "nsfs")
-	ownedbindmounts := make([]OwnedMountInfo, len(bindmounts))
+	ownedbindmounts := make([]BindmountedNamespaceInfo, len(bindmounts))
 	for idx := range bindmounts {
-		bmnt := &bindmounts[idx] // avoid copying the mount information.
+		path := bindmounts[idx].MountPoint
+		// Get the type of namespace, but ignore the inode number, because it
+		// lacks the dev ID for a complete namespace ID.
+		_, ownedbindmounts[idx].Type = species.IDwithType(bindmounts[idx].Root)
+		// Make sure to get the full namespace ID, not just the inode number.
+		// Argh. We must do this while still inside the correct mount namespace,
+		// as otherwise the path might not exist, or even worse, it might point
+		// to another namespace.
+		ownedbindmounts[idx].Path = path
+		ns := ops.NamespacePath(path)
+		nsid, err := ns.ID()
+		if err != nil {
+			continue
+		}
+		ownedbindmounts[idx].ID = nsid
 		// While we're in the correct mount namespace, we need to collect also
 		// the information about the relation to the owning user space.
 		var ownernsid species.NamespaceID
-		if usernsref, err := ops.NamespacePath(bmnt.MountPoint).User(); err == nil {
+		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
 			usernsref.Close()
 		}
-		ownedbindmounts[idx].Mountinfo = bmnt
 		ownedbindmounts[idx].OwnernsID = ownernsid
 	}
 	return ownedbindmounts

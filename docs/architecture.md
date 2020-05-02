@@ -74,23 +74,29 @@ architecture of `lxkns`...
 
 ### Namespace Identifiers
 
-In a twist of irony, Linux kernel namespaces have no names. But they are at
-least unique identifyable by their [inode
-numbers](https://en.wikipedia.org/wiki/Inode). Each namespace has its own inode
-number, albeit after deleting one namespace, the next namespace being created my
-get the old inode number assigned (stackexchange: [When does Linux
-garbage-collect
+In a twist of irony, Linux kernel namespaces have no names.
+
+Instead they are only uniquely identifyable by their [inode
+numbers](https://en.wikipedia.org/wiki/Inode) and device ID. Each namespace has
+its own inode number, albeit after deleting one namespace, the next namespace
+being created my get the old inode number assigned (stackexchange: [When does
+Linux garbage-collect
 namespaces?](https://unix.stackexchange.com/questions/560912/when-does-linux-garbage-collect-namespaces)).
 
-Please note that it is sufficient to just use namespace inodes for identity.
-While some namespace-related packages also check a namespace's device number,
-this isn't strictly necessary. The reason is that the Linux kernel contains a
-special filesystem called `nsfs`: the namespace filesystem. `nsfs` cannot be
-mounted, unlike `proc` and many other filesystems. Instead, `nsfs` is tightly
-interwoven with the namespace management. The bottom line of this is: all
-namespaces have inodes exclusively on the single `nsfs` instance, so the device
-number is a “don't care”. In consequence, `lxkns` ignores the device numbers of
-namespace filesystem references to simplify the code, avoiding superfluous code.
+While the device ID of any namespace in current kernels always refer to the same
+single instance of the `nsfs` kernel namespace filesystem, the world has been
+warned of potentially using multiple namespace filesystem instances in the
+future. In a twist of irony the same dire kernel warners then left out the dev
+ID information in all places where the Linux kernel presents a textual
+representation of a namespace reference. That is, the kernel just exposes
+`net:[4026531905]` instead of something like maybe `net:[4,4026531905]`. This
+affects all references in `/proc`, including `/proc/mountinfo`. It's a mess.
+
+The core of `lxkns` works with (_dev-ID_, _inode_) namespace identifiers, but
+also has some limited support for looking up namespaces given only _inode_
+identity. The CLI tools always use the kernel's established current format for
+output as well as input parameters, that is, `net:[4026531905]`. After all,
+that's what also well-established tools like `lsns` do.
 
 Now there's an ugly problem with inodes: they're fine for identity, but they're
 useless for access or reference. You simply cannot give the Linux kernel the

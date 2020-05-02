@@ -52,9 +52,10 @@ type NamespaceConfigurer interface {
 	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
 
-// ID returns the namespace identifier. This identifier is basically an inode
-// number from the special "nsfs" namespace filesystem inside the Linux kernel.
-// IDs cannot be set as only the Linux allocates and manages them.
+// ID returns the namespace identifier. This identifier is basically a tuple
+// made of an inode number from the special "nsfs" namespace filesystem inside
+// the Linux kernel, together with the device ID of the nsfs. IDs cannot be set
+// as only the Linux allocates and manages them.
 func (pns *plainNamespace) ID() species.NamespaceID { return pns.nsid }
 
 // Type returns the type of namespace in form of one of the NamespaceType, such
@@ -198,10 +199,17 @@ func (pns *plainNamespace) ResolveOwner(usernsmap NamespaceMap) {
 // "subclass", that is the struct embedding the base class directly or
 // indirectly.
 func (pns *plainNamespace) resolveOwner(namespace Namespace, usernsmap NamespaceMap) {
-	// Only try to resolve when we actually got the user namespace id
-	// of the owner, otherwise we must skip resolution.
+	// Only try to resolve when we actually got the user namespace id of the
+	// owner, otherwise we must skip resolution. But even with a user namespace
+	// ID, this might have become stale during the discovery process, as
+	// discovery cannot be atomic. And we're not starting to worry about how the
+	// nsfs reuses namespace ids, no, no, no ... argh!!!
 	if pns.ownernsid != species.NoneID {
-		ownerns := usernsmap[pns.ownernsid].(*userNamespace)
+		owns := usernsmap[pns.ownernsid]
+		if owns == nil {
+			return
+		}
+		ownerns := owns.(*userNamespace)
 		pns.owner = ownerns
 		// Do NOT assign the receiver pointer, as this would clamp us to a
 		// plainNamespace, which sucks when we're in fact a PID or user

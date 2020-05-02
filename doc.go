@@ -56,19 +56,21 @@ identifier:
     // namespaces of a given type...
     for nsidx := range allns.Namespaces {
         for _, ns := range allns.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
-            println(ns.Type().Name(), ns.ID())
+            println(ns.Type().Name(), ns.ID().Ino)
         }
     }
 
 Because namespaces have no order defined, the discovery results "list" the
 namespaces in per-type maps, indexed by namespace identifiers. For convenience,
 SortedNamespaces() returns the namespaces of a specific type in a slice instead
-of a map, sorted numerically by the namespace identifiers.
+of a map, sorted numerically by the namespace identifiers (that is, sorting by
+inode numbers, ignoring dev IDs at this time).
 
-Technically, these namespace identifiers are 64bit unsigned inode numbers and
-come from the special "nsfs" namespace filesystem integrated with the Linux
-kernel. And before someone tries: nope, the nsfs cannot be mounted; and it even
-does not appear in the kernel's list of namespaces.
+Technically, these namespace identifiers are tuples consisting of 64bit unsigned
+inode numbers and (~64bit) device ID numbers, and come from the special "nsfs"
+namespace filesystem integrated with the Linux kernel. And before someone tries:
+nope, the nsfs cannot be mounted; and it even does not appear in the kernel's
+list of namespaces.
 
 Unprivileged Discovery and How To Not Panic
 

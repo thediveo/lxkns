@@ -101,27 +101,47 @@ runtime starts, while reexec forks a Golang process and reexecutes it, with the
 reexecuted child then runnining a specific function only in the specified
 namespaces).
 
-Namespace IDs Without Device Numbers
+Namespace IDs
 
-Our package on purpose only returns the inode number of a namespace as its ID,
-without the filesystem device number.
+This package works with namespace identifiers in the form of tuples made from
+the inode number of a namespace and the associated filesystem device number
+(device ID). While at this time the inode number would be sufficient, as
+currently all namespaces are solely managed through the so-called "nsfs"
+filesystem, the tuple-based model follows the advice from
+http://man7.org/linux/man-pages/man7/namespaces.7.html as well as the dire
+kernel developer warning to create more havoc by deploying multiple namespace
+filesystem instances.
 
-The reason lies in the way the Linux kernel manages namespaces: the IDs/inode
-numbers of namespaces are solely managed through the so-called "nsfs"
-filesystem. This "nsfs" filesystem is special in that it does not get listed as
-an available filesystem in /proc/filesystems, and (in consequence) it cannot be
-mounted at all. Instead, the kernel mounts it during startup automatically.
-There is always only exactly one instance of nsfs, period. Thus, the device
-number will be constant during the lifetime of a running Linux kernel and there
-is no need to store and shuffle around an otherwise completely useless device
-number, complicating the ID handling considerably ... as other namespace-related
-packages show for worse.
+Comparing namespaces for equality is as simple as, as long both identifiers come
+from an origin honoring the device IDs:
 
-With the knowledge about how the nsfs works under our belts comparing namespaces
-for equality is as simple as:
-
-    ns1.ID() == ns2.ID()
+    if ns1.ID() == ns2.ID() {}
 
 No special Equal() methods, nothing, nada, zilch. Just plain "==".
+
+Unfortunately, the same kernel devs ignored their own warnings and happily
+output any namespace textual reference using only the inode number, such as in
+`net:[4026531905]`. And they left it to us to face the music they're playing;
+CLI tools so far only use the kernel's incomplete textual format. In
+consequence, species.IDwithType("net:[...]") returns only incomplete namespace
+identifier information.
+
+To compare two namespace identifiers, where one might be incomplete:
+
+    if ns1.ID().SloppyEqual(ns2.ID()) {}
+
+If both namespace IDs have non-zero device IDs, then SloppyEqual works the same
+as "==", doing a full check for equality.
+
+To look up a namespace by incomplete ID, use:
+
+    allns.Namespaces[lxkns.PIDNS].SloppyByIno(ns1.ID())
+
+Please be aware that this method currently works by assuming that there
+currently is only a single `nsfs` instance and then taking the missing device ID
+from an arbitrary namespace map entry. However, if the dire warning might come
+true in the future, then the implementation of SloppyByIno() will be upgraded
+accordingly (together with IDwithType).
+
 */
 package ops

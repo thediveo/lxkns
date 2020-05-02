@@ -28,16 +28,23 @@ import (
 	"path/filepath"
 
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 )
 
-// discoverFromFd discovers namespaces from process file descriptors
-// referencing them. Since file descriptors are per process only, but not per
-// task/thread, it sufficies to only iterate the process fd entries, leaving
-// out the copies in the task fd entries.
-func discoverFromFd(_ species.NamespaceType, procfs string, result *DiscoveryResult) {
+// discoverFromFd discovers namespaces from process file descriptors referencing
+// them. Since file descriptors are per process only, but not per task/thread,
+// it sufficies to only iterate the process fd entries, leaving out the copies
+// in the task fd entries.
+func discoverFromFd(t species.NamespaceType, procfs string, result *DiscoveryResult) {
 	if result.Options.SkipFds {
 		return
 	}
+	scanFd(t, procfs, false, result)
+}
+
+// namespaceFromFd is discoverFromFd with special test harness handling enabled
+// or disabled.
+func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *DiscoveryResult) {
 	// Iterate over all known processes, and then over all of their open file
 	// descriptors. The /proc filesystem will give us the required
 	// information.
@@ -54,7 +61,14 @@ func discoverFromFd(_ species.NamespaceType, procfs string, result *DiscoveryRes
 			if fdentry.Mode()&os.ModeSymlink == 0 {
 				continue
 			}
-			target, err := os.Readlink(basepath + "/" + fdentry.Name())
+			// Unfortunately, we cannot simply do an os.Readlink() and then an
+			// IDwithType() on the result, as this doesn't give us any clue
+			// about the device ID of a namespace reference. So we must take the
+			// difficult route and get the device ID separately; but let's start
+			// with reading the link destination, as this allows us to filter
+			// out all references which aren't namespaces.
+			path := basepath + "/" + fdentry.Name()
+			target, err := os.Readlink(path)
 			if err != nil {
 				continue
 			}
@@ -65,6 +79,19 @@ func discoverFromFd(_ species.NamespaceType, procfs string, result *DiscoveryRes
 			if nstype == species.NaNS {
 				continue
 			}
+			// ...remember that we want to follow the link and get the stat
+			// information from where it points to; we don't want to get the
+			// stat for the fd entry itself.
+			var stat unix.Stat_t
+			if err := unix.Stat(path, &stat); err != nil {
+				if !fakeprocfs {
+					continue
+				}
+				if err := unix.Lstat(path, &stat); err != nil {
+					continue
+				}
+			}
+			nsid.Dev = stat.Dev
 			// Check if we already know this namespace, otherwise is a new
 			// discovery. Add such new discoveries and use the /proc fd path
 			// as a path reference in case we want later to make use of this

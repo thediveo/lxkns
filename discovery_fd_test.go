@@ -20,6 +20,7 @@ import (
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+	"golang.org/x/sys/unix"
 )
 
 var _ = Describe("Discover from fds", func() {
@@ -60,6 +61,9 @@ read # wait for test to proceed()
 	})
 
 	It("skips /proc/*/fd/* nonsense", func() {
+		var stat unix.Stat_t
+		Expect(unix.Stat("./test/fdscan/proc", &stat)).ToNot(HaveOccurred())
+		Expect(stat.Dev).NotTo(BeZero())
 		r := DiscoveryResult{
 			Options: NoDiscovery,
 			Processes: ProcessTable{
@@ -69,14 +73,14 @@ read # wait for test to proceed()
 		}
 		r.Options.SkipFds = false
 		r.Namespaces[NetNS] = NamespaceMap{}
-		discoverFromFd(0, "./test/fdscan/proc", &r)
+		scanFd(0, "./test/fdscan/proc", true, &r)
 		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS]).To(HaveKey(species.NamespaceID(12345678)))
+		Expect(r.Namespaces[NetNS]).To(HaveKey(species.NamespaceID{Dev: stat.Dev, Ino: 12345678}))
 
-		origns := r.Namespaces[NetNS][species.NamespaceID(12345678)]
-		discoverFromFd(0, "./test/fdscan/proc", &r)
+		origns := r.Namespaces[NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]
+		scanFd(0, "./test/fdscan/proc", true, &r)
 		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS][species.NamespaceID(12345678)]).To(BeIdenticalTo(origns))
+		Expect(r.Namespaces[NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]).To(BeIdenticalTo(origns))
 	})
 
 })
