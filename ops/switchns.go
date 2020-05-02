@@ -18,7 +18,6 @@ package ops
 
 import (
 	"runtime"
-	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -77,7 +76,7 @@ func Go(f func(), nsrefs ...Referrer) error {
 			err = unix.Setns(fd, 0)
 			if close {
 				// Don't leak open file descriptors...
-				syscall.Close(int(fd))
+				unix.Close(int(fd))
 			}
 			if err != nil {
 				started <- err

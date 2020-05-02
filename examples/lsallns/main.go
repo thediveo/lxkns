@@ -47,7 +47,7 @@ func main() {
 	for nsidx := range result.Namespaces {
 		for _, ns := range result.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
 			item := NamespaceRow{
-				ID:   uint64(ns.ID()),
+				ID:   uint64(ns.ID().Ino),
 				Type: ns.Type().Name(),
 			}
 			if procs := ns.Leaders(); len(procs) > 0 {

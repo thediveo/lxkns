@@ -15,9 +15,8 @@
 package ops
 
 import (
-	"syscall"
-
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 )
 
 // NamespaceFd references a Linux-kernel namespace via an open file descriptor.
@@ -64,21 +63,23 @@ func (nsfd NamespaceFd) OwnerUID() (int, error) {
 	return ownerUID(int(nsfd))
 }
 
-// fdID stats the given file descriptor in order to get the inode number and
-// returns it as a NamespaceID.
+// fdID stats the given file descriptor in order to get the dev and inode
+// numbers, and returns it as a NamespaceID. This is an internal convenience
+// function to avoid duplicate code and is used also by the NamespaceFile and
+// NamespacePath reference types.
 func fdID(fd int) (species.NamespaceID, error) {
-	var stat syscall.Stat_t
-	if err := syscall.Fstat(fd, &stat); err != nil {
-		return 0, err
+	var stat unix.Stat_t
+	if err := unix.Fstat(fd, &stat); err != nil {
+		return species.NoneID, err
 	}
-	return species.NamespaceID(stat.Ino), nil
+	return species.NamespaceID{Dev: stat.Dev, Ino: stat.Ino}, nil
 }
 
 // Ensures that NamespaceFd implements the Relation interface.
 var _ Relation = (*NamespaceFd)(nil)
 
 // Reference returns an open file descriptor which references the namespace. In
-// case the close return value is truee, then the caller needs to close the file
+// case the close return value is true, then the caller needs to close the file
 // descriptor when it doesn't need to reference the namespace anymore, in order
 // to avoid wasting file descriptors.
 func (nsfd NamespaceFd) Reference() (fd int, close bool, err error) {

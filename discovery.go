@@ -77,7 +77,7 @@ func SortNamespaces(nslist []Namespace) []Namespace {
 	newnslist := make([]Namespace, len(nslist))
 	copy(newnslist, nslist)
 	sort.Slice(newnslist, func(i, j int) bool {
-		return newnslist[i].ID() < newnslist[j].ID()
+		return newnslist[i].ID().Ino < newnslist[j].ID().Ino
 	})
 	return newnslist
 }
@@ -90,7 +90,7 @@ func SortChildNamespaces(nslist []Hierarchy) []Hierarchy {
 	newnslist := make([]Hierarchy, len(nslist))
 	copy(newnslist, nslist)
 	sort.Slice(newnslist, func(i, j int) bool {
-		return newnslist[i].(Namespace).ID() < newnslist[j].(Namespace).ID()
+		return newnslist[i].(Namespace).ID().Ino < newnslist[j].(Namespace).ID().Ino
 	})
 	return newnslist
 }
@@ -106,7 +106,7 @@ func SortedNamespaces(nsmap NamespaceMap) []Namespace {
 		idx++
 	}
 	sort.Slice(nslist, func(i, j int) bool {
-		return nslist[i].ID() < nslist[j].ID()
+		return nslist[i].ID().Ino < nslist[j].ID().Ino
 	})
 	return nslist
 }

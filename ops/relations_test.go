@@ -16,13 +16,13 @@ package ops
 
 import (
 	"os"
-	"syscall"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+	"golang.org/x/sys/unix"
 )
 
 func errof(v ...interface{}) error {
@@ -72,11 +72,9 @@ var _ = Describe("Namespaces", func() {
 		nsf.Close() // sic! make Fstat fail, that's why it is called "F"stat...
 		Expect(errof(nsf.ID())).To(HaveOccurred())
 
-		info, err := os.Stat("/proc/self/ns/cgroup")
-		Expect(err).ToNot(HaveOccurred())
-		stat, ok := info.Sys().(*syscall.Stat_t)
-		Expect(ok).To(BeTrue())
-		nsid := species.NamespaceID(stat.Ino)
+		var stat unix.Stat_t
+		Expect(unix.Stat("/proc/self/ns/cgroup", &stat)).ToNot(HaveOccurred())
+		nsid := species.NamespaceID{Dev: stat.Dev, Ino: stat.Ino}
 
 		Expect(NamespacePath("/proc/self/ns/cgroup").ID()).To(Equal(nsid))
 
@@ -85,6 +83,28 @@ var _ = Describe("Namespaces", func() {
 		defer f.Close()
 		Expect(NamespaceFd(f.Fd()).ID()).To(Equal(nsid))
 		Expect(f.ID()).To(Equal(nsid))
+	})
+
+	It("return a suitable file descriptor for referencing", func() {
+		nsf, err := os.Open("/proc/self/ns/net")
+		Expect(err).ToNot(HaveOccurred())
+		defer nsf.Close()
+
+		fd, close, err := (&NamespaceFile{*nsf}).Reference()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(close).To(BeFalse())
+		Expect(fd).To(Equal(int(nsf.Fd())))
+
+		fd, close, err = NamespaceFd(nsf.Fd()).Reference()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(close).To(BeFalse())
+		Expect(fd).To(Equal(int(nsf.Fd())))
+
+		fd, close, err = NamespacePath("/proc/self/ns/net").Reference()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(close).To(BeTrue())
+		defer unix.Close(fd)
+		Expect(fd).ToNot(BeZero())
 	})
 
 	It("return their owning user namespace", func() {

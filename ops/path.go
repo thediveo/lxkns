@@ -15,9 +15,8 @@
 package ops
 
 import (
-	"syscall"
-
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 )
 
 // NamespacePath references a Linux-kernel namespace via a filesystem path.
@@ -27,11 +26,11 @@ type NamespacePath string
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
 // required.
 func (nsp NamespacePath) Type() (species.NamespaceType, error) {
-	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return 0, err
 	}
-	defer syscall.Close(fd)
+	defer unix.Close(fd)
 	t, err := ioctl(int(fd), _NS_GET_NSTYPE)
 	return species.NamespaceType(t), err
 }
@@ -39,11 +38,11 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 // ID returns the namespace ID in form of its inode number for any given
 // Linux kernel namespace reference.
 func (nsp NamespacePath) ID() (species.NamespaceID, error) {
-	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
-		return 0, err
+		return species.NoneID, err
 	}
-	defer syscall.Close(fd)
+	defer unix.Close(fd)
 	return fdID(int(fd))
 }
 
@@ -51,11 +50,11 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 // reference. For user namespaces, User() behaves identical to Parent(). A Linux
 // kernel version 4.9 or later is required.
 func (nsp NamespacePath) User() (*NamespaceFile, error) {
-	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
-	defer syscall.Close(fd)
+	defer unix.Close(fd)
 	return namespaceFileFromFd(ioctl(fd, _NS_GET_USERNS))
 }
 
@@ -63,22 +62,22 @@ func (nsp NamespacePath) User() (*NamespaceFile, error) {
 // PID and user namespaces. For user namespaces, Parent() and User() behave
 // identical. A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) Parent() (*NamespaceFile, error) {
-	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
-	defer syscall.Close(fd)
+	defer unix.Close(fd)
 	return namespaceFileFromFd(ioctl(fd, _NS_GET_PARENT))
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
 // open file descriptor. A Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) OwnerUID() (int, error) {
-	fd, err := syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return 0, err
 	}
-	defer syscall.Close(fd)
+	defer unix.Close(fd)
 	return ownerUID(fd)
 }
 
@@ -91,7 +90,7 @@ var _ Relation = (*NamespacePath)(nil)
 // to avoid wasting file descriptors.
 func (nsp NamespacePath) Reference() (fd int, close bool, err error) {
 	var fdi int
-	fdi, err = syscall.Open(string(nsp), syscall.O_RDONLY, 0)
+	fdi, err = unix.Open(string(nsp), unix.O_RDONLY, 0)
 	fd = int(fdi)
 	close = true
 	return

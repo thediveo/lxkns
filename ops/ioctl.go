@@ -21,7 +21,8 @@ package ops
 
 import (
 	"errors"
-	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 /*
@@ -71,7 +72,7 @@ const (
 // Internal convenience wrapper for calling a NSIO-related ioctl function of a
 // file descriptor using only the particular NSIO command number.
 func ioctl(fd int, nr uint) (uint, error) {
-	nsfd, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+	nsfd, _, errno := unix.Syscall(unix.SYS_IOCTL,
 		uintptr(fd), uintptr(_IO(_NSIO, nr)), uintptr(0))
 	if errno != 0 {
 		return ^uint(0), errors.New(errno.Error())

@@ -20,42 +20,9 @@ package species
 
 import (
 	"strconv"
-	"strings"
 
 	"golang.org/x/sys/unix"
 )
-
-// Unfortunately, Go's syscall package for whatever reason lacks the const
-// definition for CLONE_NEWCGROUP. So we need to roll our own definitions
-// anyway.
-
-// Following are Linux namespace type constants; these are used with several
-// of the namespace-related functions, such as clone() in particular, but also
-// setns(), unshare(), and the NS_GET_NSTYPE ioctl(). The origin of our const
-// definitions is:
-// https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/sched.h
-
-// Oh, forgo golint with its helicopter parents patronizing about how names of
-// Linux kernel definitions have to look like. Go for something grown up, such
-// as golangci-lint, et cetera.
-
-// NamespaceID represents a Linux kernel namespace identifier. While namespace
-// identifiers currently use only 32bit values, we're playing safe here and
-// keep with the 64bit-ness of inode numbers, as which they originally appear.
-type NamespaceID uint64
-
-// NoneID is a convenience constant for signalling an invalid or non-existing
-// namespace identifier.
-const NoneID NamespaceID = 0
-
-// String returns the namespace identifier as text, or "NoneID", if it is
-// invalid.
-func (nsid NamespaceID) String() string {
-	if nsid != NoneID {
-		return "NamespaceID(" + strconv.FormatInt(int64(nsid), 10) + ")"
-	}
-	return "NoneID"
-}
 
 // NamespaceType mirrors the data type used in the Linux kernel for the
 // namespace type constants. These constants are actually part of the clone()
@@ -64,6 +31,15 @@ type NamespaceType uint64
 
 // The 7 type of Linux namespaces defined at this time (sic!). Well, the 8th
 // namespace for time is already ticking along...
+//
+// These constants are used with several of the namespace-related functions,
+// such as clone() in particular, but also setns(), unshare(), and the
+// NS_GET_NSTYPE ioctl(). The origin for their definitions is:
+// https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/sched.h
+//
+// Oh, forgo golint with its "helicopter parents" attitude patronizing us about
+// how names of Linux kernel definitions have to look like. Go for something
+// grown up, such as golangci-lint, and many more.
 const (
 	CLONE_NEWNS     = NamespaceType(unix.CLONE_NEWNS)
 	CLONE_NEWCGROUP = NamespaceType(unix.CLONE_NEWCGROUP)
@@ -139,24 +115,4 @@ var nameTypes = map[string]NamespaceType{
 	"user":   CLONE_NEWUSER,
 	"pid":    CLONE_NEWPID,
 	"net":    CLONE_NEWNET,
-}
-
-// IDwithType takes a string representation of a namespace instance, such as
-// "net:[1234]", and returns the ID together with the type of the namespace.
-// In case the string is malformed or contains an unknown namespace type, IDwithType
-// returns (NoneID, NaNS).
-func IDwithType(s string) (id NamespaceID, t NamespaceType) {
-	colon := strings.IndexRune(s, ':')
-	if colon < 3 || s[colon+1] != '[' || s[len(s)-1] != ']' {
-		return
-	}
-	t, ok := nameTypes[s[0:colon]]
-	if !ok {
-		return
-	}
-	value, err := strconv.ParseUint(s[colon+2:len(s)-1], 10, 64)
-	if err != nil || value <= 0 {
-		return 0, 0
-	}
-	return NamespaceID(value), t
 }

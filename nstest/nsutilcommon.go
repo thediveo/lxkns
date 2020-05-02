@@ -21,12 +21,13 @@ package nstest
 // NamespaceUtilsScript defines some convenience common script functions when
 // working with namespace test auxiliary scripts.
 const NamespaceUtilsScript = `
-# prints the namespace ID for the namespace referenced by path $1.
+# prints the namespace ID for the namespace referenced by path $1. The
+# namespace ID is printed in JSON format {"dev":..., "ino":...}.
 namespaceid () {
-	readlink $1 | sed -n -e 's/^.\+:\[\(.*\)\]/\1/p'
+	stat -L $1 | sed -n -e 's/^Device: [[:digit:]]*h\/\([[:digit:]]*\)d.*Inode: \([[:digit:]]*\).*$/{"dev":\1,"ino":\2}/p'
 }
 # prints the namespace ID for the namespace type $1 of the current shell process.
 process_namespaceid () {
-	readlink /proc/$$/ns/$1 | sed -n -e 's/^.\+:\[\(.*\)\]/\1/p'
+	stat -L /proc/$$/ns/$1 | sed -n -e 's/^Device: [[:digit:]]*h\/\([[:digit:]]*\)d.*Inode: \([[:digit:]]*\).*$/{"dev":\1,"ino":\2}/p'
 }
 `

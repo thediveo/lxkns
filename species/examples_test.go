@@ -59,7 +59,7 @@ func ExampleNameToType() {
 
 func ExampleIDwithType() {
 	id, t := IDwithType("mnt:[12345678]")
-	fmt.Printf("%q %d\n", t.Name(), id)
+	fmt.Printf("%q %d\n", t.Name(), id.Ino)
 	// "nonsense" namespace textual representations return an identifier of
 	// NoneID and a type of NaNS (not a namespace).
 	id, t = IDwithType("foo:[-1]")

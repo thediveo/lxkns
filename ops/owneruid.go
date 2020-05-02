@@ -20,8 +20,9 @@ package ops
 
 import (
 	"errors"
-	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 // ownerUID takes an open file descriptor which much reference a user namespace.
@@ -34,7 +35,9 @@ func ownerUID(fd int) (int, error) {
 	// 64bit Linux. See also:
 	// https://elixir.bootlin.com/linux/latest/source/include/linux/types.h#L32
 	var uid uint32 = ^uint32(0) - 42
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, uintptr(fd), uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid)))
+	_, _, errno := unix.Syscall(
+		unix.SYS_IOCTL, uintptr(fd),
+		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid)))
 	if errno != 0 {
 		return 0, errors.New(errno.Error())
 	}

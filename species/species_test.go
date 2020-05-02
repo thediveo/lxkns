@@ -21,29 +21,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Namespace Types and IDs", func() {
-
-	It("parse namespace textual representations", func() {
-		id, t := IDwithType("net:[1]")
-		Expect(t).To(Equal(CLONE_NEWNET))
-		Expect(id).To(Equal(NamespaceID(1)))
-	})
-
-	It("reject invalid textual representations", func() {
-		for _, text := range []string{
-			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1",
-		} {
-			id, t := IDwithType(text)
-			Expect(t).To(Equal(NaNS), "%s is not a namespace", text)
-			Expect(id).To(Equal(NoneID), "%s is not a namespace", text)
-		}
-	})
+var _ = Describe("Namespace types", func() {
 
 	It("stringify", func() {
 		Expect(CLONE_NEWNS.String()).To(Equal("CLONE_NEWNS"))
 		Expect((CLONE_NEWCGROUP | CLONE_NEWIPC).String()).
 			To(Equal(fmt.Sprintf("NamespaceType(%d)", CLONE_NEWCGROUP|CLONE_NEWIPC)))
-		Expect(NamespaceID(123).String()).To(Equal("NamespaceID(123)"))
 	})
 
 })

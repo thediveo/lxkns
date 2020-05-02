@@ -200,7 +200,7 @@ func (pns *plainNamespace) ResolveOwner(usernsmap NamespaceMap) {
 func (pns *plainNamespace) resolveOwner(namespace Namespace, usernsmap NamespaceMap) {
 	// Only try to resolve when we actually got the user namespace id
 	// of the owner, otherwise we must skip resolution.
-	if pns.ownernsid != 0 {
+	if pns.ownernsid != species.NoneID {
 		ownerns := usernsmap[pns.ownernsid].(*userNamespace)
 		pns.owner = ownerns
 		// Do NOT assign the receiver pointer, as this would clamp us to a

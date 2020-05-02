@@ -17,13 +17,13 @@ package ops
 import (
 	"fmt"
 	"os"
-	"syscall"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+	"golang.org/x/sys/unix"
 )
 
 var _ = Describe("Set Namespaces", func() {
@@ -52,7 +52,7 @@ read # wait for test to proceed()
 		result := make(chan species.NamespaceID)
 		Expect(Go(func() {
 			id, _ := NamespacePath(
-				fmt.Sprintf("/proc/%d/ns/net", syscall.Gettid())).
+				fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).
 				ID()
 			result <- id
 		}, netnsref)).NotTo(HaveOccurred())
@@ -60,7 +60,7 @@ read # wait for test to proceed()
 
 		res, err := Execute(func() interface{} {
 			id, _ := NamespacePath(
-				fmt.Sprintf("/proc/%d/ns/net", syscall.Gettid())).
+				fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).
 				ID()
 			return id
 		}, netnsref)
