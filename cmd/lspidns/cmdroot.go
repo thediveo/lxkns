@@ -25,9 +25,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "lspidns",
-	Short: "lspidns shows the tree of PID namespaces",
-	Args:  cobra.NoArgs,
+	Use:     "lspidns",
+	Short:   "lspidns shows the tree of PID namespaces",
+	Version: lxkns.SemVersion,
+	Args:    cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		return cli.BeforeCommand()
 	},

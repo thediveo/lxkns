@@ -25,9 +25,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "lsuns",
-	Short: "lsuns shows the tree of user namespaces, optionally with owned namespaces",
-	Args:  cobra.NoArgs,
+	Use:     "lsuns",
+	Short:   "lsuns shows the tree of user namespaces, optionally with owned namespaces",
+	Version: lxkns.SemVersion,
+	Args:    cobra.NoArgs,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		return cli.BeforeCommand()
 	},

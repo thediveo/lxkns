@@ -31,9 +31,10 @@ import (
 // We only have the root command, but no (sub) commands, as pidtree is a
 // simple command and not trying to become "ps".
 var rootCmd = &cobra.Command{
-	Use:   "pidtree",
-	Short: "pidtree shows the tree of PID namespaces together with PIDs",
-	Args:  cobra.NoArgs,
+	Use:     "pidtree",
+	Short:   "pidtree shows the tree of PID namespaces together with PIDs",
+	Version: lxkns.SemVersion,
+	Args:    cobra.NoArgs,
 	Example: `  pidtree
 	shows the PID namespaces hierarchy with the process inside them as a tree.
   pidtree -p 42
