@@ -30,7 +30,7 @@ var _ = Describe("Discover from processes", func() {
 		allns := Discover(opts)
 		for _, ns := range lsns() {
 			nsidx := TypeIndex(species.NameToType(ns.Type))
-			discons := allns.Namespaces[nsidx].SloppyByIno(species.NamespaceID{Ino: ns.NS})
+			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]
 			Expect(discons).NotTo(BeNil())
 			// rats ... lsns seems to take the numerically lowest PID number
 			// instead of the topmost PID in a namespace. This makes

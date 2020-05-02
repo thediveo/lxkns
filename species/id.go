@@ -21,6 +21,8 @@ package species
 import (
 	"strconv"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
 // NamespaceID represents a Linux kernel namespace identifier. NamespaceIDs can
@@ -48,24 +50,6 @@ type NamespaceID struct {
 // NoneID is a convenience for signalling an invalid or non-existing namespace
 // identifier.
 var NoneID = NamespaceID{}
-
-// SloppyNamespaceID returns a NamespaceID given only the namespace's inode
-// number, but no device ID.
-func SloppyNamespaceID(ino uint64) NamespaceID {
-	return NamespaceID{Dev: 0, Ino: ino}
-}
-
-// SloppyEqual compares two NamespaceIDs for equality, covering also the case
-// where one or both of the NamespaceIDs don't have information about the device
-// ID their namespace inodes are located on. This mess is caused by Eric
-// Biederman to reserve the right to have multiple namespace filesystems but
-// then didn't enforce a correct textual representation format.
-func (nsid NamespaceID) SloppyEqual(othernsid NamespaceID) bool {
-	if nsid.Dev == 0 || othernsid.Dev == 0 {
-		return nsid.Ino == othernsid.Ino
-	}
-	return nsid == othernsid
-}
 
 // String returns the namespace identifier in form of "NamespaceID(dev,#no)" as
 // text, or "NoneID", if it is invalid. Please note that String on purpose does
@@ -110,5 +94,45 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 		// when bailing out with an error...
 		return NoneID, 0
 	}
-	return NamespaceID{Dev: 0, Ino: value}, t
+	// In the current sorry state of affairs, we need to sneak in the device ID
+	// of the nsfs filesystem in order to get complete namespace identifiers.
+	if dev := nsfsDev(); dev != 0 {
+		return NamespaceID{Dev: dev, Ino: value}, t
+	}
+	return NoneID, 0
+}
+
+// NamespaceIDfromInode is an inconvenience helper that caters for the current
+// chaos in that several sources of inodes, such as the kernel's own textual
+// references and 3rd party CLI tools such as "lsns", only give a namespace's
+// inode number, but not its device ID. It does so by glimpsing the missing
+// device ID from one of our own process' namespaces and then adds that in the
+// hope that things still work correctly for the moment.
+func NamespaceIDfromInode(ino uint64) NamespaceID {
+	if dev := nsfsDev(); dev != 0 {
+		return NamespaceID{Dev: dev, Ino: ino}
+	}
+	return NoneID
+}
+
+// In order return correct NamespaceIDs given only the kernel's currently
+// incomplete textual format, we need to pick up the device ID of the kernel's
+// special nsfs filesystem. nsfs manages namespace identifiers. In order to
+// avoid a circual dependency, we cannot use ops.NamespacePath, but instead have
+// to use the underlying query directly to get the required device ID.
+var nsfsdev = ^uint64(0)
+
+// nsfsDev returns the device ID of the nsfs filesystem, to be used to fix
+// incomplete textual namespace references. This function dynamically discovers
+// the device ID and then caches it. It relies on a properly mounted /proc.
+func nsfsDev() uint64 {
+	if nsfsdev == ^uint64(0) {
+		var stat unix.Stat_t
+		if err := unix.Stat("/proc/self/ns/net", &stat); err != nil {
+			nsfsdev = 0
+		} else {
+			nsfsdev = stat.Dev
+		}
+	}
+	return nsfsdev
 }

@@ -25,20 +25,17 @@ var _ = Describe("Namespace IDs", func() {
 		ns1 := NamespaceID{Dev: 42, Ino: 123}
 		ns11 := NamespaceID{Dev: 42, Ino: 123}
 		Expect(ns1 == ns11).To(BeTrue())
-		Expect(ns1.SloppyEqual(ns11)).To(BeTrue())
 
 		ns2 := NamespaceID{Dev: 666, Ino: 123}
 		Expect(ns1 == ns2).To(BeFalse())
-
-		ns02 := SloppyNamespaceID(123)
-		Expect(ns2.SloppyEqual(ns02)).To(BeTrue())
-		Expect(ns02.SloppyEqual(ns2)).To(BeTrue())
 	})
 
 	It("parse namespace textual representations", func() {
 		id, t := IDwithType("net:[1]")
 		Expect(t).To(Equal(CLONE_NEWNET))
-		Expect(id).To(Equal(NamespaceID{Dev: 0, Ino: 1}))
+		// The device ID of the nsfs is hardcoded on purpose in order to detect
+		// bugs related to its discovery.
+		Expect(id).To(Equal(NamespaceID{Dev: 4, Ino: 1}))
 	})
 
 	It("reject invalid textual representations", func() {

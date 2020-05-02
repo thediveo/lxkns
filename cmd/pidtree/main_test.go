@@ -76,10 +76,10 @@ echo "$$"
 	It("renders only a branch", func() {
 		out := bytes.Buffer{}
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID{Ino: 123})).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceID{Ino: pidnsid.Ino})).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceID{Ino: pidnsid.Ino})).ToNot(HaveOccurred())
+		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(pidnsid.Ino))).ToNot(HaveOccurred())
 		tree := out.String()
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)

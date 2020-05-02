@@ -122,26 +122,21 @@ No special Equal() methods, nothing, nada, zilch. Just plain "==".
 Unfortunately, the same kernel devs ignored their own warnings and happily
 output any namespace textual reference using only the inode number, such as in
 `net:[4026531905]`. And they left it to us to face the music they're playing;
-CLI tools so far only use the kernel's incomplete textual format. In
-consequence, species.IDwithType("net:[...]") returns only incomplete namespace
-identifier information.
+CLI tools so far only use the kernel's incomplete textual format. To ease a
+future transition, species.IDwithType("net:[...]") returns complete namespace
+identifier information by supplying the missing device ID for the current nsfs
+filesystem itself.
 
-To compare two namespace identifiers, where one might be incomplete:
+In consequence, user code should avoid creating any NamespaceIDs directly, but
+instead through IDwithType, such as:
 
-    if ns1.ID().SloppyEqual(ns2.ID()) {}
+    nsid1, _ := ops.IDwithType("net:[4026531905]")
 
-If both namespace IDs have non-zero device IDs, then SloppyEqual works the same
-as "==", doing a full check for equality.
+or, given the inode as a number, not text:
 
-To look up a namespace by incomplete ID, use:
+    nsid1 := ops.NamespaceIDFromInode(4026531905)
 
-    allns.Namespaces[lxkns.PIDNS].SloppyByIno(ns1.ID())
-
-Please be aware that this method currently works by assuming that there
-currently is only a single `nsfs` instance and then taking the missing device ID
-from an arbitrary namespace map entry. However, if the dire warning might come
-true in the future, then the implementation of SloppyByIno() will be upgraded
-accordingly (together with IDwithType).
+Sigh.
 
 */
 package ops

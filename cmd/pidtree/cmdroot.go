@@ -56,20 +56,20 @@ var rootCmd = &cobra.Command{
 		// specified, in which the PID is valid. Then render only the branch
 		// leading from the initial PID namespace down to the PID namespace of
 		// PID, and the processes on this branch.
-		sloppypidnsid := species.NoneID
+		pidnsid := species.NoneID
 		if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
 			id, err := strconv.ParseUint(nst, 10, 64)
 			if err == nil {
-				sloppypidnsid = species.NamespaceID{Ino: id}
+				pidnsid, _ = species.IDwithType(strconv.FormatUint(id, 10))
 			} else {
 				var t species.NamespaceType
-				sloppypidnsid, t = species.IDwithType(nst)
+				pidnsid, t = species.IDwithType(nst)
 				if t == species.NaNS {
 					return fmt.Errorf("not a valid PID namespace ID: %q", nst)
 				}
 			}
 		}
-		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), sloppypidnsid)
+		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), pidnsid)
 	},
 }
 
@@ -93,22 +93,22 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func renderPIDBranch(out io.Writer, pid lxkns.PIDType, sloppypidnsid species.NamespaceID) error {
+func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.NamespaceID) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
 	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
-	if sloppypidnsid != species.NoneID {
-		pidns := allns.Namespaces[lxkns.PIDNS].SloppyByIno(sloppypidnsid)
+	if pidnsid != species.NoneID {
+		pidns := allns.Namespaces[lxkns.PIDNS][pidnsid]
 		if pidns == nil {
-			return fmt.Errorf("unknown PID namespace pid:[%d]", sloppypidnsid.Ino)
+			return fmt.Errorf("unknown PID namespace pid:[%d]", pidnsid.Ino)
 		}
 		rootpid := pidmap.Translate(pid, pidns, rootpidns)
 		if rootpid == 0 {
 			return fmt.Errorf("unknown process PID %d in pid:[%d]",
-				pid, sloppypidnsid.Ino)
+				pid, pidnsid.Ino)
 		}
 		pid = rootpid
 	}

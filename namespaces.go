@@ -191,23 +191,6 @@ type Ownership interface {
 	Ownings() AllNamespaces
 }
 
-// SloppyByIno looks up a namespace given only its inode number, lacking the
-// device ID which otherwise is necessary to unambiguously identify any
-// particular namespace. In order to avoid an expensive linear search through
-// the namespace map, SloppyByIno glances the device ID from an arbitrary map
-// entry and then tries to look up the namespace in question. This assumes that
-// a NamespaceMap stores only a single type and the caller absolutely
-// understands the limitations of this function.
-func (nsm NamespaceMap) SloppyByIno(nsid species.NamespaceID) Namespace {
-	if nsid.Dev != 0 {
-		return nsm[nsid]
-	}
-	for mnsid := range nsm {
-		return nsm[species.NamespaceID{Dev: mnsid.Dev, Ino: nsid.Ino}]
-	}
-	return nil
-}
-
 // NewNamespace returns a new zero'ed namespace object suitable for the
 // specified type of namespace. Now this is a real-world case where the
 // "nongonformist" rule of "accept interfaces, return structs" doesn't make
