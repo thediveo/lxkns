@@ -1,0 +1,3 @@
+Name:	foobar
+CapBnd:	0000003fffffffff
+Seccomp:	0
