@@ -9,7 +9,11 @@
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts.
 
-Tested with Go 1.13 and 1.14.
+In addition, `lxkns` comes with a set of unique CLI namespace discovery tools
+and also helps Go programs with switching namespaces.
+
+And all that tested with Go 1.13 and 1.14. And even with support for the new
+time namespaces.
 
 ## Comprehensive Namespace Discovery
 

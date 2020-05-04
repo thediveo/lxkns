@@ -2,23 +2,27 @@
 
 > Looking for the API
 > [![GoDoc](https://godoc.org/github.com/TheDiveO/lxkns?status.svg)](http://godoc.org/github.com/TheDiveO/lxkns)
-> instead? See [here](http://godoc.org/github.com/TheDiveO/lxkns).
+> instead? [lxkns reference docs](http://godoc.org/github.com/TheDiveO/lxkns).
 
 ## Package Overview
 
-From an API user's perspective, there are the following three relevant
+From an API user's perspective, there are the following "main" relevant
 packages:
 
 - `lxkns`: namespace discovery and PID translation.
-- `lxkns/species`: kernel-related namespace type definitions.
-- `lxkns/ops`: kernel API for discovering namespace IDs, types and
-  relationships, and also (limited) namespaces switching.
+- `lxkns/species`: supplies kernel-related namespace type and textual
+  representation definitions and convenience functions.
+- `lxkns/ops`: offers a Go-ish API to the kernel ioctl() API for discovering
+  namespace IDs, types and relationships; additionally offers (limited)
+  namespaces switching for individual Go routines (respective their specific
+  backing OS thread).
 
 Auxiliary packages:
 
-- `cmd`: the `lsuns` and `lspns` commands. These simultaneously serve as more
-  complex examples.
-- `examples`: examples illustrating the `lxkns` API usage.
+- `lxkns/cmd`: eating our own dog food, it is home to the  `lsuns`, `lspns`,
+  and `pidtree` commands. These namespace CLI tools simultaneously serve as
+  more complex real-world examples.
+- `lxkns/examples`: examples illustrating the `lxkns` API usage.
 
 ## Discovering Namespaces
 
@@ -72,31 +76,53 @@ that element names depicted are not any valid `lxkns` types):
 Some important peculiarities to keep in mind, as they influence the
 architecture of `lxkns`...
 
-### Namespace Identifiers
+### Namespace Identifiers (Horse ./. Barn Door)
 
 In a twist of irony, Linux kernel namespaces have no names.
 
 Instead they are only uniquely identifyable by their [inode
-numbers](https://en.wikipedia.org/wiki/Inode) and device ID. Each namespace has
-its own inode number, albeit after deleting one namespace, the next namespace
-being created my get the old inode number assigned (stackexchange: [When does
-Linux garbage-collect
-namespaces?](https://unix.stackexchange.com/questions/560912/when-does-linux-garbage-collect-namespaces)).
+numbers](https://en.wikipedia.org/wiki/Inode) and device ID. Each namespace
+has its own inode number, albeit after deleting one namespace, the next
+namespace being created may very well get the _old_ inode number re-assigned
+again. (See also [When does Linux garbage-collect
+namespaces?](https://unix.stackexchange.com/questions/560912/when-does-linux-garbage-collect-namespaces)
+on stackexchange).
 
-While the device ID of any namespace in current kernels always refer to the same
-single instance of the `nsfs` kernel namespace filesystem, the world has been
-warned of potentially using multiple namespace filesystem instances in the
-future. In a twist of irony the same dire kernel warners then left out the dev
-ID information in all places where the Linux kernel presents a textual
+While the device ID of any namespace in current kernels always refer to the
+same single instance of the `nsfs` kernel namespace filesystem, the world has
+been warned of potentially using multiple namespace filesystem instances in
+the future (“_I reserve the right for st_dev to be significant when comparing
+namespaces._”, https://lore.kernel.org/lkml/87poky5ca9.fsf@xmission.com/).
+
+In a twist of irony the same dire kernel warner then left out the dev ID
+information in all places where the Linux kernel presents a textual
 representation of a namespace reference. That is, the kernel just exposes
 `net:[4026531905]` instead of something like maybe `net:[4,4026531905]`. This
-affects all references in `/proc`, including `/proc/mountinfo`. It's a mess.
+affects all references in `/proc`, including `/proc/mountinfo`. The result:
+simply a (reserved) mess.
 
-The core of `lxkns` works with (_dev-ID_, _inode_) namespace identifiers, but
-also has some limited support for looking up namespaces given only _inode_
-identity. The CLI tools always use the kernel's established current format for
-output as well as input parameters, that is, `net:[4026531905]`. After all,
-that's what also well-established tools like `lsns` do.
+The core of `lxkns` works with (_dev-ID_, _inode_) namespace identifiers. The
+(only?) critical place is where namespace IDs are entering via textual
+representations only, because these lack the device ID for fully
+qualification. `lxkns` works around this mess as follows:
+
+- the CLI tools always use the kernel's established current format for output
+  _and_ input parameters, that is, `net:[4026531905]`. After all, that's what
+  all the well-established tools like `lsns` do.
+- `lxkns.species` defines two functions through which half-baked inode numbers
+  enter the namespace ID universe:
+  - `IDwithType(s string) (id NamespaceID, t NamespaceType)` parses a textual
+    namespace representation and then returns the full ID and type of
+    namespace. It creates a fully qualified namespace ID by looking at the
+    process' network namespace and then uses the device ID of it. In case the
+    kernel devs survive breaking namespace ID-related code all over the world,
+    then our hope is that at least our functional interface stays constant,
+    with only updates necessary to the inner workings of `IDwithType()`.
+  - `NamespaceIDfromInode(ino uint64) NamespaceID` works in the same vein as
+    `IDwithType()`, but taking only the inode number of a namespace, instead
+    of a textual representation. However, this convenience function will
+    surely break when the kernel devs go out on a limp and break all things
+    namespace identifiers.
 
 Now there's an ugly problem with inodes: they're fine for identity, but they're
 useless for access or reference. You simply cannot give the Linux kernel the
