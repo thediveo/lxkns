@@ -39,6 +39,26 @@
             "program": "${workspaceFolder}/examples/lsallns",
             "env": {},
             "args": []
-        }
+        },
+        {
+			"name": "Test package as root",
+			"type": "go",
+			"request": "launch",
+			"mode": "test",
+			"program": "${fileDirname}",
+			"env": {
+				"DEBUG_AS_ROOT": "true",
+			},
+		},
+        {
+			"name": "Debug package as root",
+			"type": "go",
+			"request": "launch",
+			"mode": "debug",
+			"program": "${fileDirname}",
+			"env": {
+				"DEBUG_AS_ROOT": "true",
+			},
+		},
     ]
 }

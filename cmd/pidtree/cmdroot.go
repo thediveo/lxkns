@@ -46,32 +46,36 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		return cli.BeforeCommand()
 	},
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		pid, _ := cmd.PersistentFlags().GetUint32("pid")
-		// If no PID was specified ("zero" PID), then render the usual full
-		// PID namespace and process tree.
-		if pid == 0 {
-			return renderPIDTreeWithNamespaces(os.Stdout)
-		}
-		// If there is a PID, then check next if there is also a PID namespace
-		// specified, in which the PID is valid. Then render only the branch
-		// leading from the initial PID namespace down to the PID namespace of
-		// PID, and the processes on this branch.
-		pidnsid := species.NoneID
-		if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
-			id, err := strconv.ParseUint(nst, 10, 64)
-			if err == nil {
-				pidnsid, _ = species.IDwithType(strconv.FormatUint(id, 10))
-			} else {
-				var t species.NamespaceType
-				pidnsid, t = species.IDwithType(nst)
-				if t == species.NaNS {
-					return fmt.Errorf("not a valid PID namespace ID: %q", nst)
-				}
+	RunE: runPidtree,
+}
+
+// runPidtree executes the pidtree command.
+func runPidtree(cmd *cobra.Command, _ []string) error {
+	out := cmd.OutOrStdout()
+	pid, _ := cmd.PersistentFlags().GetUint32("pid")
+	// If no PID was specified ("zero" PID), then render the usual full PID
+	// namespace and process tree.
+	if pid == 0 {
+		return renderPIDTreeWithNamespaces(out)
+	}
+	// If there is a PID, then check next if there is also a PID namespace
+	// specified, in which the PID is valid. Then render only the branch
+	// leading from the initial PID namespace down to the PID namespace of
+	// PID, and the processes on this branch.
+	pidnsid := species.NoneID
+	if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
+		id, err := strconv.ParseUint(nst, 10, 64)
+		if err == nil {
+			pidnsid, _ = species.IDwithType(fmt.Sprintf("pid:[%d]", id))
+		} else {
+			var t species.NamespaceType
+			pidnsid, t = species.IDwithType(nst)
+			if t != species.CLONE_NEWPID {
+				return fmt.Errorf("not a valid PID namespace ID: %q", nst)
 			}
 		}
-		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), pidnsid)
-	},
+	}
+	return renderPIDBranch(out, lxkns.PIDType(pid), pidnsid)
 }
 
 // Sets up the flags.

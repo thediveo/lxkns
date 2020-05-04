@@ -61,9 +61,11 @@ echo "$$"
 		scripts.Done()
 	})
 
-	It("renders a PID tree", func() {
+	It("CLI w/o args renders PID tree", func() {
 		out := bytes.Buffer{}
-		_ = renderPIDTreeWithNamespaces(&out)
+		rootCmd.SetOut(&out)
+		rootCmd.SetArgs([]string{})
+		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		tree := out.String()
 		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\)
@@ -79,13 +81,47 @@ echo "$$"
 		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(pidnsid.Ino))).ToNot(HaveOccurred())
-		tree := out.String()
-		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
+		for _, run := range []struct {
+			ns  string
+			m   OmegaMatcher
+			res OmegaMatcher
+		}{
+			{
+				ns: fmt.Sprintf("%d", pidnsid.Ino),
+				m:  Not(HaveOccurred()),
+				res: MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
 \ +└─ "stage2.sh" \(\d+/1\)
 $`,
-			pidnsid.Ino, os.Geteuid())))
+					pidnsid.Ino, os.Geteuid())),
+			},
+			{
+				ns:  "abc",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: not a valid PID namespace ID`),
+			},
+			{
+				ns:  "net:[12345]",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: not a valid PID namespace ID:`),
+			},
+			{
+				ns:  "pid:[12345]",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: unknown PID namespace pid:`),
+			},
+		} {
+			out.Reset()
+			rootCmd.SetOut(&out)
+			rootCmd.SetArgs([]string{
+				fmt.Sprintf("--pid=%d", initpid),
+				fmt.Sprintf("--ns=%s", run.ns),
+			})
+			err := rootCmd.Execute()
+			Expect(err).To(run.m, "pid %d, ns %v", initpid, run.ns)
+			tree := out.String()
+			Expect(tree).To(run.res)
+		}
 	})
 
 })

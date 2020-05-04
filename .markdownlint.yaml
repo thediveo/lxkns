@@ -1,0 +1,2 @@
+MD013: false # conflicts with long lines in tables
+MD040: false # code blocks without type; reality-check, anyone here?!
