@@ -36,7 +36,7 @@ type BranchVisitor struct {
 // Roots simply returns the specified branch as the only root, as the Get
 // visitor method will take care of all details.
 func (v *BranchVisitor) Roots(branch reflect.Value) (children []reflect.Value) {
-	return []reflect.Value{branch}
+	return []reflect.Value{branch.Index(0)}
 }
 
 // Label returns a node label text, which varies depending on whether the node

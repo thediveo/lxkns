@@ -62,6 +62,7 @@ echo "$$"
 	})
 
 	It("CLI w/o args renders PID tree", func() {
+		defer func() { rootCmd.SetOut(nil) }()
 		out := bytes.Buffer{}
 		rootCmd.SetOut(&out)
 		rootCmd.SetArgs([]string{})
@@ -75,12 +76,17 @@ echo "$$"
 			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
-	It("renders only a branch", func() {
+	It("CLI renders only a branch", func() {
 		out := bytes.Buffer{}
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
+		defer func() {
+			rootCmd.SetOut(nil)
+			_ = rootCmd.PersistentFlags().Set("pid", "0")
+			_ = rootCmd.PersistentFlags().Set("ns", "")
+		}()
 		for _, run := range []struct {
 			ns  string
 			m   OmegaMatcher
@@ -122,6 +128,40 @@ $`,
 			tree := out.String()
 			Expect(tree).To(run.res)
 		}
+	})
+
+	It("runs and fails correctly", func() {
+		oldArgs := os.Args
+		oldExit := osExit
+		defer func() {
+			osExit = oldExit
+			os.Args = oldArgs
+		}()
+		exit := 0
+		osExit = func(code int) { exit = code }
+
+		defer func() {
+			rootCmd.SetOut(nil)
+			_ = rootCmd.PersistentFlags().Set("pid", "0")
+			_ = rootCmd.PersistentFlags().Set("ns", "")
+		}()
+
+		out := bytes.Buffer{}
+		rootCmd.SetOut(&out)
+		rootCmd.SetArgs(nil)
+		os.Args = []string{os.Args[0], "--foobar"}
+		main()
+		Expect(exit).To(Equal(1))
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown flag: --foobar`))
+
+		out.Reset()
+		rootCmd.SetOut(&out)
+		rootCmd.SetArgs(nil)
+		os.Args = os.Args[:1]
+		exit = 0
+		main()
+		Expect(out.String()).To(MatchRegexp(`^pid:\[`))
+		Expect(exit).To(BeZero())
 	})
 
 })

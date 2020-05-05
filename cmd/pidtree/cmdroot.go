@@ -148,7 +148,7 @@ func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.Namespace
 	// Now render the whole branch...
 	fmt.Fprintln(out,
 		asciitree.Render(
-			branch,
+			[]SingleBranch{branch},
 			&BranchVisitor{
 				Details:   true,
 				PIDMap:    pidmap,

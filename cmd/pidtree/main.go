@@ -36,6 +36,8 @@ func main() {
 	// just plain wrong: it renders the error message twice, see also:
 	// https://github.com/spf13/cobra/issues/304
 	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
+		osExit(1)
 	}
 }
+
+var osExit = os.Exit
