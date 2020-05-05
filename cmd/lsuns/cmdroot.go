@@ -24,33 +24,33 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
-var rootCmd = &cobra.Command{
-	Use:     "lsuns",
-	Short:   "lsuns shows the tree of user namespaces, optionally with owned namespaces",
-	Version: lxkns.SemVersion,
-	Args:    cobra.NoArgs,
-	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return cli.BeforeCommand()
-	},
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		details, _ := cmd.PersistentFlags().GetBool("details")
-		// Run a full namespace discovery.
-		allns := lxkns.Discover(lxkns.FullDiscovery)
-		fmt.Println(
-			asciitree.Render(
-				allns.UserNSRoots,
-				&UserNSVisitor{
-					Details: details,
-				},
-				style.NamespaceStyler))
-		return nil
-	},
-}
-
-// Sets up the flags.
-func init() {
+func newRootCmd() (rootCmd *cobra.Command) {
+	rootCmd = &cobra.Command{
+		Use:     "lsuns",
+		Short:   "lsuns shows the tree of user namespaces, optionally with owned namespaces",
+		Version: lxkns.SemVersion,
+		Args:    cobra.NoArgs,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return cli.BeforeCommand()
+		},
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			details, _ := cmd.PersistentFlags().GetBool("details")
+			// Run a full namespace discovery.
+			allns := lxkns.Discover(lxkns.FullDiscovery)
+			fmt.Println(
+				asciitree.Render(
+					allns.UserNSRoots,
+					&UserNSVisitor{
+						Details: details,
+					},
+					style.NamespaceStyler))
+			return nil
+		},
+	}
+	// Sets up the flags.
 	rootCmd.PersistentFlags().BoolP(
 		"details", "d", false,
 		"shows details, such as owned namespaces")
 	cli.AddFlags(rootCmd)
+	return
 }

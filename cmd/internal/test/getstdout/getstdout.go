@@ -20,7 +20,8 @@ import (
 	"os"
 )
 
-// Stdout runs function f and then returns the output from stdout as a string.
+// Stdouterr runs function f and then returns the output from stdout and
+// stderr as a string.
 func Stdouterr(f func()) string {
 	// Stash away os.Stdout so we can restore it when leaving this capture
 	// function.

@@ -68,8 +68,7 @@ echo "$$"
 		rootCmd.SetOut(&out)
 		rootCmd.SetArgs([]string{})
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
-		tree := out.String()
-		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\)
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
 [│ ]+└─ "stage2.sh" \(\d+/1\)
