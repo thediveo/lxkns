@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package style
+package getstdout
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestStyle(t *testing.T) {
+func TestGetStdout(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "cmd/internal/pkg/style")
+	RunSpecs(t, "cmd/internal/test/getstdout")
 }

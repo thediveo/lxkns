@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -62,7 +63,7 @@ echo "$$"
 	})
 
 	It("CLI w/o args renders PID tree", func() {
-		defer func() { rootCmd.SetOut(nil) }()
+		rootCmd := newRootCmd()
 		out := bytes.Buffer{}
 		rootCmd.SetOut(&out)
 		rootCmd.SetArgs([]string{})
@@ -82,11 +83,6 @@ echo "$$"
 		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
-		defer func() {
-			rootCmd.SetOut(nil)
-			_ = rootCmd.PersistentFlags().Set("pid", "0")
-			_ = rootCmd.PersistentFlags().Set("ns", "")
-		}()
 		for _, run := range []struct {
 			ns  string
 			m   OmegaMatcher
@@ -118,6 +114,7 @@ $`,
 			},
 		} {
 			out.Reset()
+			rootCmd := newRootCmd()
 			rootCmd.SetOut(&out)
 			rootCmd.SetArgs([]string{
 				fmt.Sprintf("--pid=%d", initpid),
@@ -125,8 +122,7 @@ $`,
 			})
 			err := rootCmd.Execute()
 			Expect(err).To(run.m, "pid %d, ns %v", initpid, run.ns)
-			tree := out.String()
-			Expect(tree).To(run.res)
+			Expect(out.String()).To(run.res)
 		}
 	})
 
@@ -140,27 +136,15 @@ $`,
 		exit := 0
 		osExit = func(code int) { exit = code }
 
-		defer func() {
-			rootCmd.SetOut(nil)
-			_ = rootCmd.PersistentFlags().Set("pid", "0")
-			_ = rootCmd.PersistentFlags().Set("ns", "")
-		}()
-
-		out := bytes.Buffer{}
-		rootCmd.SetOut(&out)
-		rootCmd.SetArgs(nil)
 		os.Args = []string{os.Args[0], "--foobar"}
-		main()
+		out := getstdout.Stdouterr(main)
 		Expect(exit).To(Equal(1))
-		Expect(out.String()).To(MatchRegexp(`^Error: unknown flag: --foobar`))
+		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 
-		out.Reset()
-		rootCmd.SetOut(&out)
-		rootCmd.SetArgs(nil)
 		os.Args = os.Args[:1]
 		exit = 0
-		main()
-		Expect(out.String()).To(MatchRegexp(`^pid:\[`))
+		out = getstdout.Stdouterr(main)
+		Expect(out).To(MatchRegexp(`^pid:\[`))
 		Expect(exit).To(BeZero())
 	})
 

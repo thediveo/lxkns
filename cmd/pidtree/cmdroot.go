@@ -30,12 +30,13 @@ import (
 
 // We only have the root command, but no (sub) commands, as pidtree is a
 // simple command and not trying to become "ps".
-var rootCmd = &cobra.Command{
-	Use:     "pidtree",
-	Short:   "pidtree shows the tree of PID namespaces together with PIDs",
-	Version: lxkns.SemVersion,
-	Args:    cobra.NoArgs,
-	Example: `  pidtree
+func newRootCmd() (rootCmd *cobra.Command) {
+	rootCmd = &cobra.Command{
+		Use:     "pidtree",
+		Short:   "pidtree shows the tree of PID namespaces together with PIDs",
+		Version: lxkns.SemVersion,
+		Args:    cobra.NoArgs,
+		Example: `  pidtree
 	shows the PID namespaces hierarchy with the process inside them as a tree.
   pidtree -p 42
 	shows only those PID namespaces hierarchy and processes on the branch
@@ -43,10 +44,20 @@ var rootCmd = &cobra.Command{
   pidtree -n pid:[4026531836] -p 1
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
-	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return cli.BeforeCommand()
-	},
-	RunE: runPidtree,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return cli.BeforeCommand()
+		},
+		RunE: runPidtree,
+	}
+	// Sets up the flags.
+	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
+		"PID of process to show PID namespace tree and parent PIDs for")
+	rootCmd.PersistentFlags().StringP("ns", "n", "",
+		"PID namespace of PID, if not the initial PID namespace;\n"+
+			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
+			"PID namespace textual representation like \"pid:[4026531836]\"")
+	cli.AddFlags(rootCmd)
+	return
 }
 
 // runPidtree executes the pidtree command.
@@ -76,17 +87,6 @@ func runPidtree(cmd *cobra.Command, _ []string) error {
 		}
 	}
 	return renderPIDBranch(out, lxkns.PIDType(pid), pidnsid)
-}
-
-// Sets up the flags.
-func init() {
-	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
-		"PID of process to show PID namespace tree and parent PIDs for")
-	rootCmd.PersistentFlags().StringP("ns", "n", "",
-		"PID namespace of PID, if not the initial PID namespace;\n"+
-			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
-			"PID namespace textual representation like \"pid:[4026531836]\"")
-	cli.AddFlags(rootCmd)
 }
 
 // SingleBranch encodes a single branch from the initial/root PID namespace
