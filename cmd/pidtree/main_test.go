@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -61,11 +62,13 @@ echo "$$"
 		scripts.Done()
 	})
 
-	It("renders a PID tree", func() {
+	It("CLI w/o args renders PID tree", func() {
+		rootCmd := newRootCmd()
 		out := bytes.Buffer{}
-		_ = renderPIDTreeWithNamespaces(&out)
-		tree := out.String()
-		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
+		rootCmd.SetOut(&out)
+		rootCmd.SetArgs([]string{})
+		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\)
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
 [│ ]+└─ "stage2.sh" \(\d+/1\)
@@ -73,19 +76,75 @@ echo "$$"
 			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
-	It("renders only a branch", func() {
+	It("CLI renders only a branch", func() {
 		out := bytes.Buffer{}
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
 		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(pidnsid.Ino))).ToNot(HaveOccurred())
-		tree := out.String()
-		Expect(tree).To(MatchRegexp(fmt.Sprintf(`
+		for _, run := range []struct {
+			ns  string
+			m   OmegaMatcher
+			res OmegaMatcher
+		}{
+			{
+				ns: fmt.Sprintf("%d", pidnsid.Ino),
+				m:  Not(HaveOccurred()),
+				res: MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
 \ +└─ "stage2.sh" \(\d+/1\)
 $`,
-			pidnsid.Ino, os.Geteuid())))
+					pidnsid.Ino, os.Geteuid())),
+			},
+			{
+				ns:  "abc",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: not a valid PID namespace ID`),
+			},
+			{
+				ns:  "net:[12345]",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: not a valid PID namespace ID:`),
+			},
+			{
+				ns:  "pid:[12345]",
+				m:   HaveOccurred(),
+				res: MatchRegexp(`Error: unknown PID namespace pid:`),
+			},
+		} {
+			out.Reset()
+			rootCmd := newRootCmd()
+			rootCmd.SetOut(&out)
+			rootCmd.SetArgs([]string{
+				fmt.Sprintf("--pid=%d", initpid),
+				fmt.Sprintf("--ns=%s", run.ns),
+			})
+			err := rootCmd.Execute()
+			Expect(err).To(run.m, "pid %d, ns %v", initpid, run.ns)
+			Expect(out.String()).To(run.res)
+		}
+	})
+
+	It("runs and fails correctly", func() {
+		oldArgs := os.Args
+		oldExit := osExit
+		defer func() {
+			osExit = oldExit
+			os.Args = oldArgs
+		}()
+		exit := 0
+		osExit = func(code int) { exit = code }
+
+		os.Args = []string{os.Args[0], "--foobar"}
+		out := getstdout.Stdouterr(main)
+		Expect(exit).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
+
+		os.Args = os.Args[:1]
+		exit = 0
+		out = getstdout.Stdouterr(main)
+		Expect(out).To(MatchRegexp(`^pid:\[`))
+		Expect(exit).To(BeZero())
 	})
 
 })

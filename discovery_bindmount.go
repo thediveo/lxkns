@@ -135,7 +135,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			// still have a chance later to enter them by using the
 			// bind-mounted reference in a different mount namespace.
 			updateNamespaces(ownedbindmounts)
-		} else {
+		} else { //nolint:staticcheck
 			// TODO: for diagnosis:
 			// fmt.Fprintf(os.Stderr, "failed: %s\n", err.Error())
 		}

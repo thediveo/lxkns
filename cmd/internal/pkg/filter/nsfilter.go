@@ -77,6 +77,7 @@ func init() {
 // flag accepts a set of namespace type names, either separated by commas, or
 // specified using multiple "--filter" flags.
 func FilterSetupCLI(cmd *cobra.Command) {
+	filterMask = species.NamespaceType(0) // ensure clean initial state for testing
 	cmd.PersistentFlags().VarP(
 		enumflag.NewSlice(&namespaceFilters, "filter", nsFilterIds, enumflag.EnumCaseSensitive),
 		"filter", "f",

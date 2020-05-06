@@ -7,4 +7,5 @@ if ! command -v go-acc; then
 fi
 
 go-acc --covermode atomic -o coverage.txt ./... -- -v \
-    && go tool cover -html coverage.txt
+    && go tool cover -html coverage.txt -o coverage.html \
+    && xdg-open coverage.html

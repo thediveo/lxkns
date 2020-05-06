@@ -30,12 +30,13 @@ import (
 
 // We only have the root command, but no (sub) commands, as pidtree is a
 // simple command and not trying to become "ps".
-var rootCmd = &cobra.Command{
-	Use:     "pidtree",
-	Short:   "pidtree shows the tree of PID namespaces together with PIDs",
-	Version: lxkns.SemVersion,
-	Args:    cobra.NoArgs,
-	Example: `  pidtree
+func newRootCmd() (rootCmd *cobra.Command) {
+	rootCmd = &cobra.Command{
+		Use:     "pidtree",
+		Short:   "pidtree shows the tree of PID namespaces together with PIDs",
+		Version: lxkns.SemVersion,
+		Args:    cobra.NoArgs,
+		Example: `  pidtree
 	shows the PID namespaces hierarchy with the process inside them as a tree.
   pidtree -p 42
 	shows only those PID namespaces hierarchy and processes on the branch
@@ -43,39 +44,12 @@ var rootCmd = &cobra.Command{
   pidtree -n pid:[4026531836] -p 1
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
-	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		return cli.BeforeCommand()
-	},
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		pid, _ := cmd.PersistentFlags().GetUint32("pid")
-		// If no PID was specified ("zero" PID), then render the usual full
-		// PID namespace and process tree.
-		if pid == 0 {
-			return renderPIDTreeWithNamespaces(os.Stdout)
-		}
-		// If there is a PID, then check next if there is also a PID namespace
-		// specified, in which the PID is valid. Then render only the branch
-		// leading from the initial PID namespace down to the PID namespace of
-		// PID, and the processes on this branch.
-		pidnsid := species.NoneID
-		if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
-			id, err := strconv.ParseUint(nst, 10, 64)
-			if err == nil {
-				pidnsid, _ = species.IDwithType(strconv.FormatUint(id, 10))
-			} else {
-				var t species.NamespaceType
-				pidnsid, t = species.IDwithType(nst)
-				if t == species.NaNS {
-					return fmt.Errorf("not a valid PID namespace ID: %q", nst)
-				}
-			}
-		}
-		return renderPIDBranch(os.Stdout, lxkns.PIDType(pid), pidnsid)
-	},
-}
-
-// Sets up the flags.
-func init() {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return cli.BeforeCommand()
+		},
+		RunE: runPidtree,
+	}
+	// Sets up the flags.
 	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
 		"PID of process to show PID namespace tree and parent PIDs for")
 	rootCmd.PersistentFlags().StringP("ns", "n", "",
@@ -83,6 +57,36 @@ func init() {
 			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
 			"PID namespace textual representation like \"pid:[4026531836]\"")
 	cli.AddFlags(rootCmd)
+	return
+}
+
+// runPidtree executes the pidtree command.
+func runPidtree(cmd *cobra.Command, _ []string) error {
+	out := cmd.OutOrStdout()
+	pid, _ := cmd.PersistentFlags().GetUint32("pid")
+	// If no PID was specified ("zero" PID), then render the usual full PID
+	// namespace and process tree.
+	if pid == 0 {
+		return renderPIDTreeWithNamespaces(out)
+	}
+	// If there is a PID, then check next if there is also a PID namespace
+	// specified, in which the PID is valid. Then render only the branch
+	// leading from the initial PID namespace down to the PID namespace of
+	// PID, and the processes on this branch.
+	pidnsid := species.NoneID
+	if nst, _ := cmd.PersistentFlags().GetString("ns"); nst != "" {
+		id, err := strconv.ParseUint(nst, 10, 64)
+		if err == nil {
+			pidnsid, _ = species.IDwithType(fmt.Sprintf("pid:[%d]", id))
+		} else {
+			var t species.NamespaceType
+			pidnsid, t = species.IDwithType(nst)
+			if t != species.CLONE_NEWPID {
+				return fmt.Errorf("not a valid PID namespace ID: %q", nst)
+			}
+		}
+	}
+	return renderPIDBranch(out, lxkns.PIDType(pid), pidnsid)
 }
 
 // SingleBranch encodes a single branch from the initial/root PID namespace
@@ -144,7 +148,7 @@ func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.Namespace
 	// Now render the whole branch...
 	fmt.Fprintln(out,
 		asciitree.Render(
-			branch,
+			[]SingleBranch{branch},
 			&BranchVisitor{
 				Details:   true,
 				PIDMap:    pidmap,

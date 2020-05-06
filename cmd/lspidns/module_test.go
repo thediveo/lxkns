@@ -12,16 +12,28 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package style
+package main
 
 import (
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	rxtst "github.com/thediveo/gons/reexec/testing"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
-func TestStyle(t *testing.T) {
+func TestMain(m *testing.M) {
+	// Ensure that the registered handler is run in the re-executed child.
+	// This won't trigger the handler while we're in the parent. We're using
+	// gons' very special coverage profiling support for re-execution.
+	mm := &rxtst.M{M: m}
+	os.Exit(mm.Run())
+}
+
+func TestLsunsCmd(t *testing.T) {
+	style.PrepareForTest()
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "cmd/internal/pkg/style")
+	RunSpecs(t, "lspidns command")
 }

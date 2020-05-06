@@ -9,7 +9,11 @@
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts.
 
-Tested with Go 1.13 and 1.14.
+In addition, `lxkns` comes with a set of unique CLI namespace discovery tools
+and also helps Go programs with switching namespaces.
+
+And all that tested with Go 1.13 and 1.14. And even with support for the new
+time namespaces.
 
 ## Comprehensive Namespace Discovery
 
@@ -17,7 +21,8 @@ When compared to most well-known and openly available CLI tools, such as
 `lsns`, the `lxkns` package detects namespaces even in places of a running
 Linux system other tools typically do not consider. In particular:
 
-1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other tools do.
+1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other
+   tools do.
 2. bind-mounted namespaces, via `/proc/[PID]/mountinfo`. Our discovery method
    even finds bind-mounted namespaces in _other_ mount namespaces than the
    current one in which the discovery starts.
@@ -67,7 +72,10 @@ These are the CLI tools:
   Optionally, the owning user namespaces can be shown interleaved with the PID
   namespace hierarchy.
 
-- `pidtree` [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/pidtree): shows either the process hierarchy within the PID namespace hierarchy or a single branch only.
+- `pidtree`
+  [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/pidtree):
+  shows either the process hierarchy within the PID namespace hierarchy or a
+  single branch only.
 
 ### lsuns
 

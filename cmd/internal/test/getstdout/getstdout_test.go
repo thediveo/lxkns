@@ -12,16 +12,26 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package style
+package getstdout
 
 import (
-	"testing"
+	"os"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func TestStyle(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "cmd/internal/pkg/style")
-}
+var _ = Describe("captures stdout", func() {
+
+	It("captures really looooong output", func() {
+		s := strings.Repeat("Nobody expects the spanish inquisition! ", 10000)
+		os.Stdout.WriteString("foobar!")
+		out := Stdouterr(func() { os.Stdout.WriteString(s) })
+		os.Stdout.WriteString("foobar!")
+		Expect(out).To(Equal(s))
+		out = Stdouterr(func() { os.Stderr.WriteString(s) })
+		Expect(out).To(Equal(s))
+	})
+
+})

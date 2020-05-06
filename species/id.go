@@ -89,7 +89,7 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 		return
 	}
 	value, err := strconv.ParseUint(s[colon+2:len(s)-1], 10, 64)
-	if err != nil || value <= 0 {
+	if err != nil {
 		// As t might have been correctly set already, make sure to not leak it
 		// when bailing out with an error...
 		return NoneID, 0
