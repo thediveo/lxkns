@@ -95,7 +95,7 @@ func parseElementStyle(sty *Style, elementStyle interface{}) {
 				colorvalue, ok2 := color.(string)
 				if !ok1 || !ok2 {
 					fmt.Fprintf(os.Stderr,
-						"warning: unknown color %s: %q\n", colorname, colorvalue)
+						"warning: unknown color %v: %v\n", colorkey, color)
 					continue
 				}
 				switch colorname {
@@ -103,6 +103,9 @@ func parseElementStyle(sty *Style, elementStyle interface{}) {
 					sty.style = sty.style.Foreground(colorProfile.Color(colorvalue))
 				case "background":
 					sty.style = sty.style.Background(colorProfile.Color(colorvalue))
+				default:
+					fmt.Fprintf(os.Stderr,
+						"warning: unknown color type %q", colorname)
 				}
 			}
 		}
