@@ -37,4 +37,5 @@ func main() {
 	}
 }
 
+// For CLI unit tests...
 var osExit = os.Exit
