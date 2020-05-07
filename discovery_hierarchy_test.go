@@ -64,8 +64,15 @@ read
 		cmd.Decode(&ready)
 		allns := Discover(FullDiscovery)
 		for _, uns := range allns.Namespaces[UserNS] {
+			if parent := uns.(Hierarchy).Parent(); parent != nil {
+				// Make sure to trigger Golang's embedding fubar in case we made
+				// some mistake and are unexpectedly adding the embedded type as
+				// a parent instead of the expected user namespace type.
+				Expect(parent.(Ownership)).NotTo(BeNil())
+			}
 			children := uns.(Hierarchy).Children()
 			for chidx, child := range children {
+				Expect(child.(Ownership)).NotTo(BeNil())
 				for checkidx, checkchild := range children {
 					if child == checkchild && chidx != checkidx {
 						Fail("duplicate child")

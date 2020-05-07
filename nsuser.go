@@ -84,3 +84,17 @@ func (uns *userNamespace) detectUID(nsf *ops.NamespaceFile) {
 func (uns *userNamespace) ResolveOwner(usernsmap NamespaceMap) {
 	uns.resolveOwner(uns, usernsmap)
 }
+
+// AddChild adds a child namespace to this (parent) namespace. It panics in case
+// a child is tried to be added twice to either the same parent or different
+// parents.
+//
+// Note: we must reimplement this method here, as otherwise Golang will totally
+// fubar because it calls the embedded hierarchicalNamespace.AddChild and will
+// then set us not as a userNamespace parent, but instead as a
+// hierarchicalNamespace parent. If this Golang design isn't a fubar, then I
+// really don't know what a fubar is.
+func (uns *userNamespace) AddChild(child Hierarchy) {
+	child.(HierarchyConfigurer).SetParent(uns)
+	uns.children = append(uns.children, child)
+}
