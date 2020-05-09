@@ -20,8 +20,10 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -81,23 +83,40 @@ func newRootCmd() (rootCmd *cobra.Command) {
 				}
 				pid = rootpid
 			}
-			//
+			// Look up the specified process for further use; bail out if it cannot be found.
 			proc, ok := allns.Processes[pid]
 			if !ok {
 				return fmt.Errorf("unknown process PID %d", pid)
 			}
-			procbr, err := processbranch(proc)
-			if err != nil {
-				// FIXME:
-				panic(err)
-			}
+			procPID = pid
+			// Look up the specified target namespace, and bail out if we could
+			// not discover it.
 			tns, ok := allns.Namespaces[lxkns.TypeIndex(nst)][nsid]
 			if !ok {
 				return fmt.Errorf("unknown namespace %s", args[0])
 			}
-			tbr := targetbranch(tns)
+			// First determine whether the process will have no capabilities,
+			// its effective capabilities, or even full capabilities. As a side
+			// effect, this also gives us the process' effective UID, which
+			// we'll later use when displaying the process node.
+			tcaps, proceuid, err := caps(proc, tns)
+			if err != nil {
+				return err
+			}
+			// Next, create the separate process and target (node) branches,
+			// then combine them to the extend possible for rendering.
+			procbr, err := processbranch(proc, proceuid)
+			if err != nil {
+				return err
+			}
+			tbr := targetbranch(tns, tcaps)
 			root := combine(procbr, tbr)
-			fmt.Printf("%+v", root)
+			// Finally, we can render this mess.
+			fmt.Fprint(os.Stdout, // TODO: allow output redirection
+				asciitree.Render(
+					root,
+					&NodeVisitor{},
+					style.NamespaceStyler))
 			return nil
 		},
 	}
@@ -108,6 +127,21 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		"PID namespace of PID, if not the initial PID namespace;\n"+
 			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
 			"PID namespace textual representation like \"pid:[4026531836]\"")
+	rootCmd.PersistentFlags().BoolVar(&showProcCaps,
+		"proccaps", true,
+		"show the process' capabilities")
+	rootCmd.PersistentFlags().BoolVar(&briefCaps,
+		"brief", false,
+		"show only a summary statement for the capabilities in the target namespace")
 	cli.AddFlags(rootCmd)
 	return
 }
+
+// Show or hide the process' capabilities; please don't confuse this with the
+// capabilities of the process in the specified target namespace.
+var showProcCaps bool
+
+// Show either a capabilities list in the target, or just a short summary.
+var briefCaps bool
+
+var procPID lxkns.PIDType

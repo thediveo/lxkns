@@ -146,7 +146,7 @@ func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.Namespace
 		proc = pproc
 	}
 	// Now render the whole branch...
-	fmt.Fprintln(out,
+	fmt.Fprint(out,
 		asciitree.Render(
 			[]SingleBranch{branch},
 			&BranchVisitor{
@@ -185,7 +185,7 @@ func renderPIDTreeWithNamespaces(out io.Writer) error {
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
 	// the desired process tree with PID namespaces.
-	fmt.Fprintln(out,
+	fmt.Fprint(out,
 		asciitree.Render(
 			[]lxkns.Namespace{rootpidns}, // note to self: expects a slice of roots
 			&TreeVisitor{

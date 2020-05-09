@@ -37,7 +37,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			details, _ := cmd.PersistentFlags().GetBool("details")
 			// Run a full namespace discovery.
 			allns := lxkns.Discover(lxkns.FullDiscovery)
-			fmt.Println(
+			fmt.Print(
 				asciitree.Render(
 					allns.UserNSRoots,
 					&UserNSVisitor{

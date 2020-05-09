@@ -111,17 +111,18 @@ local PID "/???" will be shown.
 
 Colorization
 
-Unless specified otherwise using the "--color=none" flag, lsuns colorizes its
+Unless specified otherwise using the "--color=none" flag, pidtree colorizes its
 output in order to make different types of namespaces easier to differentiate.
-Colorization gets disabled if lsuns detects that stdout isn't connected to a
+Colorization gets disabled if pidtree detects that stdout isn't connected to a
 terminal, such as when piping into tools like "less".
 
-Out of the box (or rather, Gopher hole), lsuns supports two color themes, called
-"dark" and "light". Default is the dark theme, but it can be changed using
-"--theme light". In order to set a theme permanently, and to optionally adapt it
-later to personal preferences, the selected theme can be written to stdout:
+Out of the box (or rather, Gopher hole), pidtree supports two color themes,
+called "dark" and "light". Default is the dark theme, but it can be changed
+using "--theme light". In order to set a theme permanently, and to optionally
+adapt it later to personal preferences, the selected theme can be written to
+stdout:
 
-    lsuns --theme light --dump > ~/.lxknsrc.yaml
+    pidtree --theme light --dump > ~/.lxknsrc.yaml
 
 For each type of Linux-kernel namespace the styling file "~.lxknsrc.yaml"
 contains a top-level element:

@@ -32,6 +32,15 @@
             "args": []
         },
         {
+            "name": "Debug nscaps cmd",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/nscaps",
+            "env": {},
+            "args": ["net:[4026532353]"]
+        },
+        {
             "name": "Debug lsallns example",
             "type": "go",
             "request": "launch",

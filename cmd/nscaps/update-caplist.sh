@@ -13,8 +13,13 @@ echo "// DO NOT EDIT
 
 package main
 
+// CapNames maps the defined CAP_xxx constants to suitable capabilities names
+// in form of \"cap_xxx\".
 var CapNames = map[int]string{" > ${OUTFILE}
 sed -n -e 's/^#define\s\(CAP_[A-Z_]\+\)\s\+\([[:digit:]]\+\)/    \2: "\L\1",/p' \
     "/tmp/libcap-${LIBCAP_VERSION}/libcap/include/uapi/linux/capability.h" \
     >> ${OUTFILE}
 echo "}" >> ${OUTFILE}
+
+gofmt -s ${OUTFILE} > ${OUTFILE}.new
+mv -f ${OUTFILE}.new ${OUTFILE}

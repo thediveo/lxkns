@@ -55,7 +55,7 @@ type nsnode struct {
 	children   []node
 }
 
-func (n *nsnode) Children() []node { return n.children }
+func (n nsnode) Children() []node { return n.children }
 
 // processnode represents the "reference" process whose capabilities are to be
 // evaluated in a target namespace. A processnode always terminates a branch.
@@ -65,20 +65,19 @@ type processnode struct {
 	caps []string
 }
 
-func (p *processnode) Children() []node { return []node{} }
+func (p processnode) Children() []node { return []node{} }
 
 // processbranch returns the branch from the initial user namespace down to the
 // user namespace containing the specified process. So, the process branch
 // completely consists of namespace nodes with a final process node.
-func processbranch(proc *lxkns.Process) (n node, err error) {
+func processbranch(proc *lxkns.Process, euid int) (n node, err error) {
 	// Branch always ends in a user namespace node with a process node as its
 	// sole child.
 	userns, ok := proc.Namespaces[lxkns.UserNS].(lxkns.Ownership)
-	if !ok { // acutally, this means that the user namespace is really nil
+	if !ok { // actually, this means that the user namespace is really nil
 		return nil, fmt.Errorf(
 			"cannot access namespace information of process PID %d", proc.PID)
 	}
-	euid := processEuid(proc)
 	if euid < 0 {
 		return nil, fmt.Errorf("cannot query effective UID of process PID %d",
 			proc.PID)
@@ -115,7 +114,7 @@ func processbranch(proc *lxkns.Process) (n node, err error) {
 // ends in a non-user namespace node, again with istarget set. So, a target
 // branch always consists only of namespace nodes, with the final one having its
 // istarget flag set. All nodes, except maybe for the last, are user namespaces.
-func targetbranch(tns lxkns.Namespace) (n node) {
+func targetbranch(tns lxkns.Namespace, tcaps targetcaps) (n node) {
 	var userns lxkns.Ownership
 	if tns.Type() == species.CLONE_NEWUSER {
 		// Please note that the lxkns namespace model on purpose does not set
@@ -123,8 +122,9 @@ func targetbranch(tns lxkns.Namespace) (n node) {
 		// relationship instead.
 		userns = tns.(lxkns.Ownership)
 		n = &nsnode{
-			ns:       userns.(lxkns.Namespace),
-			istarget: true,
+			ns:         userns.(lxkns.Namespace),
+			istarget:   true,
+			targetcaps: tcaps,
 		}
 	} else {
 		// Non-user namespaces have their owning user namespace relationship set
@@ -134,8 +134,9 @@ func targetbranch(tns lxkns.Namespace) (n node) {
 			ns: userns.(lxkns.Namespace),
 			children: []node{
 				&nsnode{
-					ns:       tns,
-					istarget: true,
+					ns:         tns,
+					istarget:   true,
+					targetcaps: tcaps,
 				},
 			},
 		}
