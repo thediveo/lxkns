@@ -44,6 +44,8 @@ unknown:
 `
 
 const defaultLightTheme = `# light lxkns colorization theme
+
+# types of kernel namespaces
 user:
 - bold
 - background: '#dadada' # Schwitters would be delighted!
@@ -63,10 +65,22 @@ net:
 uts:
 - background: '#d9b3ff'
 
+# namespace-related elements
 process:
 - foreground: '#004000'
 owner:
 - foreground: '#808000'
 unknown:
 - foreground: '#800000'
+
+# process capabilities in namespaces
+user-nocaps:
+- background: '#800000'
+- foreground: '#ffffff'
+user-effcaps:
+- background: '#808000'
+- foreground: '#ffffff'
+user-fullcaps:
+- background: '#008000'
+- foreground: '#ffffff'
 `

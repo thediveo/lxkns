@@ -25,6 +25,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/species"
 )
 
 // NodeVisitor is an asciitree.Visitor which works on a node tree produced by
@@ -50,17 +51,41 @@ func (v *NodeVisitor) Label(n reflect.Value) (label string) {
 			style.ProcessStyle.V(style.ProcessName(pn.proc)),
 			pn.proc.PID)
 	}
-	ns := n.Interface().(nsnode).ns
-	ts := ""
-	if n.Interface().(nsnode).istarget {
-		ts = "target "
+	// We're looking at a namespace node.
+	nsn := n.Interface().(nsnode)
+	ns := nsn.ns
+	prefix := ""
+	// The style of the namespace label, or rather: the namespace type and ID
+	// style, depends for user namespaces on the position of that user namespace
+	// with relation to the process.
+	var sty *style.Style
+	if ns.Type() == species.CLONE_NEWUSER {
+		sty = nscapstyles[nsn.targetcaps]
+		prefix += nscapmarks[nsn.targetcaps] + " "
+	} else {
+		sty = style.Styles[ns.Type().Name()]
 	}
-	style := style.Styles[ns.Type().Name()]
+	if nsn.istarget {
+		prefix += "target "
+	}
+	// Finally return the rendered namespace label.
 	return fmt.Sprintf("%s%s%s %s",
-		ts,
+		prefix,
 		output.NamespaceIcon(ns),
-		style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
+		sty.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
 		output.NamespaceReferenceLabel(ns))
+}
+
+var nscapstyles = map[targetcaps]*style.Style{
+	incapable: &style.UserNoCapsStyle,
+	effcaps:   &style.UserEffCapsStyle,
+	allcaps:   &style.UserFullCapsStyle,
+}
+
+var nscapmarks = map[targetcaps]string{
+	incapable: "⛔",
+	effcaps:   "⛛",
+	allcaps:   "✓",
 }
 
 // Get is called on nodes which can be either (1) namespaces or (2)

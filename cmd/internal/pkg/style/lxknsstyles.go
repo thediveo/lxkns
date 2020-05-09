@@ -27,9 +27,13 @@ var (
 	CgroupStyle Style // styles cgroup: namespaces
 	UTSStyle    Style // styles uts: namespaces
 	IPCStyle    Style // styles ipc: namespaces
-	UserStyle   Style // styles utc: namespaces
+	UserStyle   Style // styles user: namespaces
 	PIDStyle    Style // styles pid: namespaces
 	NetStyle    Style // styles net: namespaces
+
+	UserNoCapsStyle   Style // user: namespaces without capabilities
+	UserEffCapsStyle  Style // user: namespaces with effective capabilities
+	UserFullCapsStyle Style // user: namespaces with full capabilities
 
 	OwnerStyle   Style // styles owner username and UID
 	ProcessStyle Style // styles process names
@@ -46,6 +50,10 @@ var Styles = map[string]*Style{
 	"user":   &UserStyle,
 	"pid":    &PIDStyle,
 	"net":    &NetStyle,
+
+	"user-nocaps":   &UserNoCapsStyle,
+	"user-effcaps":  &UserEffCapsStyle,
+	"user-fullcaps": &UserFullCapsStyle,
 
 	"owner":   &OwnerStyle,
 	"process": &ProcessStyle,
