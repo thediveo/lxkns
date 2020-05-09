@@ -25,158 +25,6 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// nodes are namespaces which can have 0, 1, or 2 child nodes. Following the
-// Linux kernel namespace model and especially the namespace capabilities model,
-// in this particular situation, only user namespaces can have child nodes.
-// Children can be either user namespaces, non-user namespaces (acting as
-// "targets"), and finally process nodes. There can be at most one namespace
-// child and one process child. Processes don't have child nodes in our
-// particular model here.
-type node interface {
-	Children() []node
-}
-
-// nsnode represents a namespace node, and either a user namespace node or a
-// non-user namespace node. A user namespace node can have child nodes. A
-// non-user namespace node cannot have children. A namespace node can act as a
-// target namespace.
-type nsnode struct {
-	ns       lxkns.Namespace
-	istarget bool
-	children []node
-}
-
-func (n *nsnode) Children() []node { return n.children }
-
-// processnode represents the "reference" process whose capabilities are to be
-// evaluated in a target namespace. A processnode always terminates a branch.
-type processnode struct {
-	proc *lxkns.Process
-}
-
-func (p *processnode) Children() []node { return []node{} }
-
-// processbranch returns the branch from the initial user namespace down to the
-// user namespace containing the specified process. So, the process branch
-// completely consists of namespace nodes with a final process node.
-func processbranch(proc *lxkns.Process) (n node) {
-	// Branch always ends in a user namespace node with a process node as its
-	// sole child.
-	userns := proc.Namespaces[lxkns.UserNS].(lxkns.Ownership)
-	n = &nsnode{
-		ns: userns.(lxkns.Namespace),
-		children: []node{
-			&processnode{
-				proc: proc,
-			},
-		},
-	}
-	// Now climb up the user namespace hierarchy, completing the branch
-	// "upwards" towards the root. Each parent user namespace has a sole child,
-	// its child user namespace.
-	for userns.(lxkns.Hierarchy).Parent() != nil {
-		userns = userns.(lxkns.Hierarchy).Parent().(lxkns.Ownership)
-		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
-			children: []node{
-				n,
-			},
-		}
-	}
-	return
-}
-
-// targetbranch returns the branch from the initial user namespace down to the
-// target namespace. Please note that for a user namespace target the branch
-// ends in a that type of namespace, with istarget set. Otherwise, the branch
-// ends in a non-user namespace node, again with istarget set. So, a target
-// branch always consists only of namespace nodes, with the final one having its
-// istarget flag set. All nodes, except maybe for the last, are user namespaces.
-func targetbranch(tns lxkns.Namespace) (n node) {
-	var userns lxkns.Ownership
-	if tns.Type() == species.CLONE_NEWUSER {
-		// Please note that the lxkns namespace model on purpose does not set
-		// the owner relationship on user namespaces: that's the parent
-		// relationship instead.
-		userns = tns.(lxkns.Ownership)
-		n = &nsnode{
-			ns:       userns.(lxkns.Namespace),
-			istarget: true,
-		}
-	} else {
-		// Non-user namespaces have their owning user namespace relationship set
-		// in the lxkns information model.
-		userns = tns.Owner()
-		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
-			children: []node{
-				&nsnode{
-					ns:       tns,
-					istarget: true,
-				},
-			},
-		}
-	}
-	// Now climb up the user namespace hierarchy, completing the branch
-	// "upwards" towards the root. Each parent user namespace has a sole child,
-	// its child user namespace.
-	for userns.(lxkns.Hierarchy).Parent() != nil {
-		userns = userns.(lxkns.Hierarchy).Parent().(lxkns.Ownership)
-		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
-			children: []node{
-				n,
-			},
-		}
-	}
-	return
-}
-
-// fork combines the process branch with the target namespace branch to the
-// extend that these branches share commong user namespaces, or even a target
-// user namespace.
-func fork(pbr node, tbr node) (root node) {
-	// TODO: process and target branching not sharing a common root?!
-	root = pbr
-	// If you find a fork in the road ... take it! Please note that we here now
-	// can rely on the fact that both branches always start with a user
-	// namespace, which should be the (true or fake) initial namespace.
-	ppbr := (*nsnode)(nil) // no parent process branch node yet.
-	for {
-		pnsnode, ok := pbr.(*nsnode)
-		if !ok {
-			// The process branch forks off here, as we've stumbled onto the
-			// final process node in the process branch. Thus, we need to add
-			// the target branch to our common parent user namespace node.
-			ppbr.children = append(ppbr.children, tbr)
-			break
-		}
-		if pnsnode.ns != tbr.(*nsnode).ns {
-			// The target branch forks off here; so add in the forking target
-			// branch at our parent, and then let's call it a day ;)
-			ppbr.children = append(ppbr.children, tbr)
-			break
-		}
-		// Both branches still share the same user namespace node. But make sure
-		// to take over the istarget flag from the target branch, as this might
-		// be the final node in the target branch.
-		pnsnode.istarget = tbr.(*nsnode).istarget
-		tbrch := tbr.Children()
-		if len(tbrch) == 0 {
-			// The target branch ends here, so we're done.
-			break
-		}
-		tbr = tbrch[0] // remember: at most one child node.
-		// At this point, we know that the current process branch node is a user
-		// namespace node, and thus must have still one child node: either another
-		// user namespace node, or a process node. So we can blindly take
-		// whatever child we get, sure that there actually is a child.
-		ppbr = pbr.(*nsnode)
-		pbr = pbr.Children()[0]
-	}
-	return
-}
-
 func newRootCmd() (rootCmd *cobra.Command) {
 	rootCmd = &cobra.Command{
 		Use:     "nscaps [flags] NAMESPACE",
@@ -238,13 +86,17 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			if !ok {
 				return fmt.Errorf("unknown process PID %d", pid)
 			}
-			procbr := processbranch(proc)
+			procbr, err := processbranch(proc)
+			if err != nil {
+				// FIXME:
+				panic(err)
+			}
 			tns, ok := allns.Namespaces[lxkns.TypeIndex(nst)][nsid]
 			if !ok {
 				return fmt.Errorf("unknown namespace %s", args[0])
 			}
 			tbr := targetbranch(tns)
-			root := fork(procbr, tbr)
+			root := combine(procbr, tbr)
 			fmt.Printf("%+v", root)
 			return nil
 		},
