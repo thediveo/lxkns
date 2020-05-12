@@ -6,6 +6,6 @@ if ! command -v go-acc; then
     fi
 fi
 
-go-acc --covermode atomic -o coverage.txt ./... -- -v \
+sudo env "PATH=$PATH" go-acc --covermode atomic -o coverage.txt ./... -- -v \
     && go tool cover -html coverage.txt -o coverage.html \
     && xdg-open coverage.html
