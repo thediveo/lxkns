@@ -30,6 +30,7 @@ var (
 	UserStyle   Style // styles utc: namespaces
 	PIDStyle    Style // styles pid: namespaces
 	NetStyle    Style // styles net: namespaces
+	TimeStyle   Style // styles time: namespaces
 
 	OwnerStyle   Style // styles owner username and UID
 	ProcessStyle Style // styles process names
@@ -46,6 +47,7 @@ var Styles = map[string]*Style{
 	"user":   &UserStyle,
 	"pid":    &PIDStyle,
 	"net":    &NetStyle,
+	"time":   &TimeStyle,
 
 	"owner":   &OwnerStyle,
 	"process": &ProcessStyle,

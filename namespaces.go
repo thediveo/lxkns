@@ -44,6 +44,7 @@ const (
 	UserNS                             // array index for user namespaces map
 	PIDNS                              // array index for PID namespaces map
 	NetNS                              // array index for net namespaces map
+	TimeNS                             // array index for time namespaces map
 
 	NamespaceTypesCount // number of namespace types
 )
@@ -58,6 +59,7 @@ var typeIndices = map[species.NamespaceType]NamespaceTypeIndex{
 	species.CLONE_NEWUSER:   UserNS,
 	species.CLONE_NEWPID:    PIDNS,
 	species.CLONE_NEWNET:    NetNS,
+	species.CLONE_NEWTIME:   TimeNS,
 }
 
 // TypesByIndex maps Allnamespaces array indices to their corresponding Linux'
@@ -70,6 +72,7 @@ var TypesByIndex = [NamespaceTypesCount]species.NamespaceType{
 	species.CLONE_NEWUSER,
 	species.CLONE_NEWPID,
 	species.CLONE_NEWNET,
+	species.CLONE_NEWTIME,
 }
 
 // TypeIndexLexicalOrder contains Namespace type indices in lexical order.
@@ -79,6 +82,7 @@ var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 	MountNS,
 	NetNS,
 	PIDNS,
+	TimeNS,
 	UserNS,
 	UTSNS,
 }

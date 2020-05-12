@@ -32,6 +32,8 @@ mnt:
 - background: '#000080'
 net:
 - background: '#008000'
+time:
+- background: '#804000'
 uts:
 - background: '#800080'
 
@@ -60,6 +62,8 @@ mnt:
 - background: '#e6e6ff'
 net:
 - background: '#ccffdd'
+time:
+- background: '#ffcc99'
 uts:
 - background: '#d9b3ff'
 
