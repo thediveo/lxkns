@@ -107,7 +107,12 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		// them. This will not remove the process from the process tree, rest
 		// assured.
 		if proc.Namespaces[nstypeidx] == nil {
-			delete(result.Processes, pid) // FIXME: really?
+			// Time namespaces are new since kernel 5.6, so many
+			// deployments won't have a kernel which supports them. Don't
+			// prune then, as we would end up with an empty process table :(
+			if nstypeidx != TimeNS {
+				delete(result.Processes, pid)
+			}
 			continue
 		}
 		// Find leader from this position in the process tree: a "leader" is
