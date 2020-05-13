@@ -80,6 +80,8 @@ func (nstype NamespaceType) String() string {
 		return "CLONE_NEWPID"
 	case CLONE_NEWNET:
 		return "CLONE_NEWNET"
+	case CLONE_NEWTIME:
+		return "CLONE_NEWTIME"
 	default:
 		return "NamespaceType(" + strconv.FormatInt(int64(nstype), 10) + ")"
 	}
@@ -95,6 +97,7 @@ var typeNames = map[NamespaceType]string{
 	CLONE_NEWUSER:   "user",
 	CLONE_NEWPID:    "pid",
 	CLONE_NEWNET:    "net",
+	CLONE_NEWTIME:   "time",
 }
 
 // NameToType returns the namespace type value (constant CLONE_NEWNS, ...)
@@ -115,4 +118,5 @@ var nameTypes = map[string]NamespaceType{
 	"user":   CLONE_NEWUSER,
 	"pid":    CLONE_NEWPID,
 	"net":    CLONE_NEWNET,
+	"time":   CLONE_NEWTIME,
 }

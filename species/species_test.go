@@ -29,4 +29,8 @@ var _ = Describe("Namespace types", func() {
 			To(Equal(fmt.Sprintf("NamespaceType(%d)", CLONE_NEWCGROUP|CLONE_NEWIPC)))
 	})
 
+	It("defines CLONE_NEWTIME", func() {
+		Expect(CLONE_NEWTIME).To(Equal(NamespaceType(0x80)))
+	})
+
 })

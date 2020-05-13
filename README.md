@@ -1,6 +1,4 @@
-<img style="float:right;width:10em;" src="docs/lxkns-gophers.jpeg">
-
-# Linux kernel Namespaces
+# Linux kernel Namespaces <img align="right" width="200" src="docs/lxkns-gophers.jpeg">
 
 [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns)
 [![Architecture](https://img.shields.io/badge/doc-architecture-blue)](docs/architecture.md)

@@ -30,6 +30,7 @@ var (
 	UserStyle   Style // styles user: namespaces
 	PIDStyle    Style // styles pid: namespaces
 	NetStyle    Style // styles net: namespaces
+	TimeStyle   Style // styles time: namespaces
 
 	UserNoCapsStyle   Style // user: namespaces without capabilities
 	UserEffCapsStyle  Style // user: namespaces with effective capabilities
@@ -50,6 +51,7 @@ var Styles = map[string]*Style{
 	"user":   &UserStyle,
 	"pid":    &PIDStyle,
 	"net":    &NetStyle,
+	"time":   &TimeStyle,
 
 	"user-nocaps":   &UserNoCapsStyle,
 	"user-effcaps":  &UserEffCapsStyle,

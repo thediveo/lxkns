@@ -171,7 +171,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		result.Options.NamespaceTypes = species.CLONE_NEWNS |
 			species.CLONE_NEWCGROUP | species.CLONE_NEWUTS |
 			species.CLONE_NEWIPC | species.CLONE_NEWUSER |
-			species.CLONE_NEWPID | species.CLONE_NEWNET
+			species.CLONE_NEWPID | species.CLONE_NEWNET | species.CLONE_NEWTIME
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {

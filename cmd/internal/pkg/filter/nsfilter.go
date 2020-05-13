@@ -47,6 +47,7 @@ var namespaceFilters = []species.NamespaceType{
 	species.CLONE_NEWUSER,
 	species.CLONE_NEWPID,
 	species.CLONE_NEWNET,
+	species.CLONE_NEWTIME,
 }
 
 // Maps namespace type names to their corresponding filter/type constants.
