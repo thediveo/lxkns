@@ -19,6 +19,9 @@ ns <|--- net
 class uts <<(L,LightBlue)>>
 note bottom: hostname and\ndomain name
 ns <|--- uts
+class time <<(L,LightBlue)>>
+note bottom: monotonic +\nboot-time clocks
+ns <|--- time
 
 cgroup -[hidden] ipc
 
