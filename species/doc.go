@@ -1,6 +1,6 @@
 /*
 
-Package species defines the type constants and type names of the 7 Linux kernel
+Package species defines the type constants and type names of the 8 Linux kernel
 namespace types ("species"). In addition, this package also defines how to
 represent namespace identifiers, which actually consist of not only an inode
 number, but also the device ID where a namespace inode is located on. This
@@ -12,7 +12,10 @@ Namespace Identifiers
 
 Caveat: currently, the textual representation of namespace identifiers employed
 by the Linux kernel and CLI tools ignores the device ID part of a complete
-namespace identifier.
+namespace identifier, but uses only the inode number.
+
+Internally, all lxkns packages work with both the inode number as well as the
+device ID of a namespace. Please see also the notes below.
 
 Namespace Type Constants
 
@@ -21,6 +24,12 @@ CLONE_NEWCGROUP constant (which was missing from the syscall package), this
 package still redefines the namespace-related CLONE_NEWxxx identifiers to be
 type-safe. This way, they cannot accidentally be mixed with other CLONE_xxx
 constants, or the CLONE_xxx flags in general.
+
+To provide backwards compatibility with older Go versions, namely Go 1.13, this
+package defines CLONE_NEWTIME itself when there is no underlying
+unix.CLONE_NEWTIME available. Applications using lxkns should thus only use
+species. CLONE_NEWTIME in order to be shielded from variations in Go's unix
+package.
 
 */
 package species

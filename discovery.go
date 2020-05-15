@@ -45,7 +45,9 @@ type DiscoverOpts struct {
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive
-// discovery process.
+// discovery process. This is the preferred option setup for most use cases,
+// unless you know exactly what you're doing and want to fine-tune the discovery
+// process by selectively switching off certain discovery elements.
 var FullDiscovery = DiscoverOpts{}
 
 // NoDiscovery set the discovery options to not discover anything. This option

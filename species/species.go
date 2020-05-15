@@ -29,8 +29,8 @@ import (
 // syscall options parameter.
 type NamespaceType uint64
 
-// The 7 type of Linux namespaces defined at this time (sic!). Well, the 8th
-// namespace for time is already ticking along...
+// The 8 type of Linux namespaces defined at this time (sic!). Please note that
+// the 8th namespace is only supported since Kernel 5.6+.
 //
 // These constants are used with several of the namespace-related functions,
 // such as clone() in particular, but also setns(), unshare(), and the
@@ -39,7 +39,8 @@ type NamespaceType uint64
 //
 // Oh, forgo golint with its "helicopter parents" attitude patronizing us about
 // how names of Linux kernel definitions have to look like. Go for something
-// grown up, such as golangci-lint, and many more.
+// grown up, such as golangci-lint, and many more, which hide the totally
+// childish behavior of golint.
 const (
 	CLONE_NEWNS     = NamespaceType(unix.CLONE_NEWNS)
 	CLONE_NEWCGROUP = NamespaceType(unix.CLONE_NEWCGROUP)
@@ -48,6 +49,7 @@ const (
 	CLONE_NEWUSER   = NamespaceType(unix.CLONE_NEWUSER)
 	CLONE_NEWPID    = NamespaceType(unix.CLONE_NEWPID)
 	CLONE_NEWNET    = NamespaceType(unix.CLONE_NEWNET)
+	CLONE_NEWTIME   = NamespaceType(clone_newtime)
 )
 
 // NaNS identifies an invalid namespace type.
@@ -110,13 +112,10 @@ func NameToType(name string) NamespaceType {
 
 // Maps Linux namespace type names (as used in the proc filesystem) to their
 // Linux kernel constants.
-var nameTypes = map[string]NamespaceType{
-	"mnt":    CLONE_NEWNS,
-	"cgroup": CLONE_NEWCGROUP,
-	"uts":    CLONE_NEWUTS,
-	"ipc":    CLONE_NEWIPC,
-	"user":   CLONE_NEWUSER,
-	"pid":    CLONE_NEWPID,
-	"net":    CLONE_NEWNET,
-	"time":   CLONE_NEWTIME,
+var nameTypes = map[string]NamespaceType{}
+
+func init() {
+	for species, name := range typeNames {
+		nameTypes[name] = species
+	}
 }

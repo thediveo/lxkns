@@ -38,10 +38,10 @@ import (
 // potential future with multiple namespace filesystems, as opposed to the
 // single "nsfs" namespace filesystem of today.
 //
-// However, there are some caveats to watch for, such as that the current
-// textual format used by the Linux kernel when rendering namespaces
-// (references) as text does not cater for the device ID, but only a namespace's
-// inode.
+// Note, there are some caveats to watch for, such as that the current textual
+// format used by the Linux kernel when rendering namespaces (references) as
+// text does not cater for the device ID, but only a namespace's inode. The
+// textual conversions in this package work around these limitations.
 type NamespaceID struct {
 	Dev uint64 // device ID maintaining the namespace (Golang insists on uint64)
 	Ino uint64 // inode number of this namespace.
@@ -72,10 +72,10 @@ func (nsid NamespaceID) String() string {
 //
 // There is an important gotcha to be aware of: the Linux kernel only uses a
 // namespace's inode number in its textual format, dropping the device ID where
-// the namespace is located on. In consquence, IDwithType returns a NamespaceID
-// with the dev field being zero. It thus cannot be compared directly using "=="
-// for equality with another NamespaceID which has its dev ID correctly
-// discovered.
+// the namespace is located on. To work around this oversight and to allow for
+// namespace IDs to be comparable using "==", IDwithType adds the missing device
+// ID by guessing it from the net namespace of the current process at the time
+// of its startup.
 func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 	// There must be a colon, immediately followed by an opening square bracket,
 	// as well as a terminating closing square bracket.
@@ -105,9 +105,10 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 // NamespaceIDfromInode is an inconvenience helper that caters for the current
 // chaos in that several sources of inodes, such as the kernel's own textual
 // references and 3rd party CLI tools such as "lsns", only give a namespace's
-// inode number, but not its device ID. It does so by glimpsing the missing
-// device ID from one of our own process' namespaces and then adds that in the
-// hope that things still work correctly for the moment.
+// inode number, but not its device ID. It does so by glancing the missing
+// device ID from one of our own process' net namespace (at the startup time)
+// and then adds that in the hope that things still work correctly for the
+// moment.
 func NamespaceIDfromInode(ino uint64) NamespaceID {
 	if dev := nsfsDev(); dev != 0 {
 		return NamespaceID{Dev: dev, Ino: ino}
@@ -136,3 +137,7 @@ func nsfsDev() uint64 {
 	}
 	return nsfsdev
 }
+
+// Prime the "cache" for the missing device ID in textual namespace IDs during
+// startup.
+var _ = nsfsDev()

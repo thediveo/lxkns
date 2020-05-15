@@ -1,18 +1,21 @@
 /*
 
-Package lxkns discovers Linux kernel namespaces (of types cgroup, ipc, mount,
-net, pid, user, and uts). This package discovers namespaces not only when
+Package lxkns discovers Linux kernel namespaces of types cgroup, ipc, mount,
+net, pid, time, user, and uts. This package discovers namespaces not only when
 processes have joined them, but also when namespaces have been bind-mounted or
-are only referenced anymore by process file descriptors.
+are only referenced anymore by process file descriptors or within a hierarchy
+(PID and user only).
 
 In case of PID and user namespaces, lxkns additionally discovers their
 hierarchies, except when running on a really ancient kernel before 4.9.
 Furthermore, for user namespaces the owning user ID and the owned namespaces
-will be discovered too.
+will be discovered too. Time namespaces require a kernel 5.6 or later.
 
 And finally, lxkns relates namespaces to the "leading" (or "root") processes
-joined to them; this relationship is basically derived from on the process tree
-hierarchy.
+joined to them; this relationship is basically derived for convenience from the
+process tree hierarchy. The kernel itself doesn't define any special
+relationship between namespaces and processes except for the "attachment" of
+processes joining namespaces.
 
 The namespace discovery process can be controlled in several aspects, according
 to the range of discovery of namespace types and places to search namespaces
@@ -46,11 +49,11 @@ main().
 Information Model, Base Level
 
 Not totally unexpectedly, the lxkns discovery information model at its most
-basic level comprises namespaces. In the previous code snippet, the information
-model returned is stored in the "allns" variable for further processing. The
-result organizes the namespaces found by type. For instance, the following code
-snippet prints all namespaces, sorted first by type and then by namespace
-identifier:
+basic level comprises ... namespaces. In the previous code snippet, the
+information model returned is stored in the "allns" variable for further
+processing. The result organizes the namespaces found by type. For instance, the
+following code snippet prints all namespaces, sorted first by type and then by
+namespace identifier:
 
     // Iterate over all 7 types of Linux-kernel namespaces, then over all
     // namespaces of a given type...
@@ -98,8 +101,8 @@ pro. You can find many examples in the sources for the "lsuns", "lspidns", and
 
 In-Capabilities
 
-It is possible to run full discoveries without being root, when executing the
-discovery process with the following effective capabilities:
+It is possible to run full discoveries without being root, when given the
+discovery process the following effective capabilities:
 
   * CAP_SYS_PTRACE -- no joking here, that's what needed for reading namespace
     references from /proc/[PID]/ns/*
