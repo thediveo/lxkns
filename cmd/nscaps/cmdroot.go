@@ -98,7 +98,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 			var t species.NamespaceType
 			pidnsid, t = species.IDwithType(nst)
 			if t != species.CLONE_NEWPID {
-				return fmt.Errorf("not a valid PID namespace ID: %q", nst)
+				return fmt.Errorf("not a valid PID namespace: %q", nst)
 			}
 		}
 	}

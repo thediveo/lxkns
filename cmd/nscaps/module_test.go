@@ -88,6 +88,19 @@ var _ = AfterSuite(func() {
 	targetscripts.Done()
 })
 
+var oldexit func(int)
+var exitcode int
+
+var _ = BeforeEach(func() {
+	oldexit = osExit
+	exitcode = 0
+	osExit = func(code int) { exitcode = code }
+})
+
+var _ = AfterEach(func() {
+	osExit = oldexit
+})
+
 func TestMain(m *testing.M) {
 	// Ensure that the registered handler is run in the re-executed child.
 	// This won't trigger the handler while we're in the parent. We're using

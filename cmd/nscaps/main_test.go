@@ -21,29 +21,88 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/lxkns/ops"
 )
 
 var _ = Describe("renders branches", func() {
 
 	It("CLI --foobar fails correctly", func() {
-		oldExit := osExit
-		defer func() { osExit = oldExit }()
-		exit := 0
-		osExit = func(code int) { exit = code }
 		os.Args = append(os.Args[:1], "--foobar")
 		out := getstdout.Stdouterr(main)
-		Expect(exit).To(Equal(1))
+		Expect(exitcode).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
+	It("CLI rejects invalid target namespaces", func() {
+		os.Args = append(os.Args[:1], "foo:[666]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: not a valid namespace:`))
+	})
+
+	It("CLI rejects invalid --ns", func() {
+		os.Args = append(os.Args[:1],
+			"--ns", "net:[666]",
+			"net:[12345678]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: not a valid PID namespace:`))
+	})
+
+	It("CLI rejects valid --ns ID without --pid", func() {
+		os.Args = append(os.Args[:1],
+			"--ns", "666",
+			"net:[12345678]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: --ns requires --pid`))
+	})
+
+	It("CLI rejects non-existing --ns ID", func() {
+		os.Args = append(os.Args[:1],
+			"--ns", "666",
+			"--pid", "666",
+			"net:[12345678]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: unknown PID namespace`))
+	})
+
+	It("CLI rejects non-existing PID", func() {
+		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
+		Expect(err).ToNot(HaveOccurred())
+		os.Args = append(os.Args[:1],
+			"--ns", fmt.Sprintf("%d", mypidns.Ino),
+			"--pid", fmt.Sprintf("%d", ^uint32(0)),
+			"net:[12345678]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: unknown process PID .* in`))
+
+		os.Args = append(os.Args[:1],
+			"--pid", fmt.Sprintf("%d", ^uint32(0)),
+			"net:[12345678]")
+		out = getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: unknown process PID .*`))
+	})
+
+	It("CLI rejects non-existing target namespace", func() {
+		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
+		Expect(err).ToNot(HaveOccurred())
+		os.Args = append(os.Args[:1],
+			"--ns", fmt.Sprintf("%d", mypidns.Ino),
+			"--pid", fmt.Sprintf("%d", os.Getpid()),
+			"net:[12345678]")
+		out := getstdout.Stdouterr(main)
+		Expect(exitcode).To(Equal(1))
+		Expect(out).To(MatchRegexp(`^Error: unknown namespace net:`))
+	})
+
 	It("CLI w/o args fails", func() {
-		oldExit := osExit
-		defer func() { osExit = oldExit }()
-		exit := 0
-		osExit = func(code int) { exit = code }
 		os.Args = os.Args[:1]
 		out := getstdout.Stdouterr(main)
-		Expect(exit).To(Equal(1))
+		Expect(exitcode).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: expects 1 arg, received 0`))
 	})
 
