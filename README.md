@@ -77,6 +77,13 @@ These are the CLI tools:
   shows either the process hierarchy within the PID namespace hierarchy or a
   single branch only.
 
+- `nscaps`
+  [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/nscaps):
+  determines a process' capabilities in a namespace, and then displays the
+  owning user namespace hierarchy (or hierarchies) of the process and target
+  namespace, together with the current process and namespace capabilities.
+
+
 ### lsuns
 
 In its simplest form, `lsuns` shows the hierarchy of user namespaces.
@@ -191,6 +198,53 @@ pid:[4026531836], owned by UID 0 ("root")
 
 Please see also the [pidtree
 command](https://godoc.org/github.com/thediveo/lxkns/cmd/pidtree)
+documentation.
+
+### nscaps
+
+`nscaps` calculates a process capabilities in another namespace, based on the
+owning user namespace hierarchy. It then displays both the process' and target
+namespace user namespace hierarchy for better visual reference how process and
+target namespace relate to each other.
+
+Examples like the one below will give unsuspecting security "experts" a series
+of fits -- despite this example being perfectly secure.
+
+```
+    ⛛ user:[4026531837] process "systemd" (129419)
+    ├─ process "nscaps" (210373)
+    │     ⋄─ (no capabilities)
+    └─ ✓ user:[4026532342] process "unshare" (176744)
+       └─ target net:[4026532353] process "unshare" (176744)
+            ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
+            ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
+            [...]
+            ⋄─ cap_syslog           cap_wake_alarm
+```
+
+...it's secure, because our superpower process can't do anything outside its
+realm. But the horror on the faces of security experts will be priceless.
+
+```
+    ⛔ user:[4026531837] process "systemd" (211474)
+    ├─ ⛛ user:[4026532468] process "unshare" (219837)
+    │  └─ process "unshare" (219837)
+    │        ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
+    │        ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
+    │        ⋄─ cap_fsetid           cap_ipc_lock         cap_ipc_owner        cap_kill
+    │        ⋄─ cap_lease            cap_linux_immutable  cap_mac_admin        cap_mac_override
+    │        ⋄─ cap_mknod            cap_net_admin        cap_net_bind_service cap_net_broadcast
+    │        ⋄─ cap_net_raw          cap_setfcap          cap_setgid           cap_setpcap
+    │        ⋄─ cap_setuid           cap_sys_admin        cap_sys_boot         cap_sys_chroot
+    │        ⋄─ cap_sys_module       cap_sys_nice         cap_sys_pacct        cap_sys_ptrace
+    │        ⋄─ cap_sys_rawio        cap_sys_resource     cap_sys_time         cap_sys_tty_config
+    │        ⋄─ cap_syslog           cap_wake_alarm
+    └─ target net:[4026531905] process "systemd" (211474)
+        ⋄─ (no capabilities)
+```
+
+Please see also the [nscaps
+command](https://godoc.org/github.com/thediveo/lxkns/cmd/nscaps)
 documentation.
 
 ## Package Usage
