@@ -49,7 +49,7 @@ const (
 	CLONE_NEWUSER   = NamespaceType(unix.CLONE_NEWUSER)
 	CLONE_NEWPID    = NamespaceType(unix.CLONE_NEWPID)
 	CLONE_NEWNET    = NamespaceType(unix.CLONE_NEWNET)
-	CLONE_NEWTIME   = NamespaceType(clone_newtime)
+	CLONE_NEWTIME   = NamespaceType(cloneNewtime)
 )
 
 // NaNS identifies an invalid namespace type.

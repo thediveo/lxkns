@@ -25,4 +25,4 @@ import (
 
 // Since Go 1.14 the unix package provides the required CLONE_NEWTIME constant,
 // so we're using it if possible, otherwise a fallback definition.
-const clone_newtime = NamespaceType(unix.CLONE_NEWTIME)
+const cloneNewtime = NamespaceType(unix.CLONE_NEWTIME)

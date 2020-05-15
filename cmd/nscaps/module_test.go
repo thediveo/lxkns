@@ -28,9 +28,12 @@ import (
 	"github.com/thediveo/testbasher"
 )
 
+var initusernsid species.NamespaceID
+
 var procscripts = testbasher.Basher{}
 var proccmd *testbasher.TestCommand
 var procpid lxkns.PIDType
+var procusernsid species.NamespaceID
 
 var targetscripts = testbasher.Basher{}
 var targetcmd *testbasher.TestCommand
@@ -42,14 +45,18 @@ var allns *lxkns.DiscoveryResult
 var _ = BeforeSuite(func() {
 	procscripts.Common(nstest.NamespaceUtilsScript)
 	procscripts.Script("main", `
+process_namespaceid user
 unshare -Ufr $stage2
 `)
 	procscripts.Script("stage2", `
 echo $$
+process_namespaceid user
 read
 `)
 	proccmd = procscripts.Start("main")
+	proccmd.Decode(&initusernsid)
 	proccmd.Decode(&procpid)
+	proccmd.Decode(&procusernsid)
 
 	targetscripts.Common(nstest.NamespaceUtilsScript)
 	targetscripts.Script("main", `

@@ -21,4 +21,4 @@
 package species
 
 // Fallback definition for missing CLONE_NEWTIME in Go before 1.14.
-const clone_newtime = NamespaceType(0x80)
+const cloneNewtime = NamespaceType(0x80)

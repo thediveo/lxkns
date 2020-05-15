@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/thediveo/lxkns"
@@ -44,6 +45,7 @@ func capsToNames(caps []byte) (capnames []string) {
 			capbit++
 		}
 	}
+	sort.Strings(capnames)
 	return capnames
 }
 
