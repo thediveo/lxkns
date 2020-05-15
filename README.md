@@ -211,36 +211,36 @@ Examples like the one below will give unsuspecting security "experts" a series
 of fits -- despite this example being perfectly secure.
 
 ```
-    ⛛ user:[4026531837] process "systemd" (129419)
-    ├─ process "nscaps" (210373)
-    │     ⋄─ (no capabilities)
-    └─ ✓ user:[4026532342] process "unshare" (176744)
-       └─ target net:[4026532353] process "unshare" (176744)
-            ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
-            ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
-            [...]
-            ⋄─ cap_syslog           cap_wake_alarm
+⛛ user:[4026531837] process "systemd" (129419)
+├─ process "nscaps" (210373)
+│     ⋄─ (no capabilities)
+└─ ✓ user:[4026532342] process "unshare" (176744)
+   └─ target net:[4026532353] process "unshare" (176744)
+         ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
+         ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
+         [...]
+         ⋄─ cap_syslog           cap_wake_alarm
 ```
 
 ...it's secure, because our superpower process can't do anything outside its
 realm. But the horror on the faces of security experts will be priceless.
 
 ```
-    ⛔ user:[4026531837] process "systemd" (211474)
-    ├─ ⛛ user:[4026532468] process "unshare" (219837)
-    │  └─ process "unshare" (219837)
-    │        ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
-    │        ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
-    │        ⋄─ cap_fsetid           cap_ipc_lock         cap_ipc_owner        cap_kill
-    │        ⋄─ cap_lease            cap_linux_immutable  cap_mac_admin        cap_mac_override
-    │        ⋄─ cap_mknod            cap_net_admin        cap_net_bind_service cap_net_broadcast
-    │        ⋄─ cap_net_raw          cap_setfcap          cap_setgid           cap_setpcap
-    │        ⋄─ cap_setuid           cap_sys_admin        cap_sys_boot         cap_sys_chroot
-    │        ⋄─ cap_sys_module       cap_sys_nice         cap_sys_pacct        cap_sys_ptrace
-    │        ⋄─ cap_sys_rawio        cap_sys_resource     cap_sys_time         cap_sys_tty_config
-    │        ⋄─ cap_syslog           cap_wake_alarm
-    └─ target net:[4026531905] process "systemd" (211474)
-        ⋄─ (no capabilities)
+⛔ user:[4026531837] process "systemd" (211474)
+├─ ⛛ user:[4026532468] process "unshare" (219837)
+│  └─ process "unshare" (219837)
+│        ⋄─ cap_audit_control    cap_audit_read       cap_audit_write      cap_block_suspend
+│        ⋄─ cap_chown            cap_dac_override     cap_dac_read_search  cap_fowner
+│        ⋄─ cap_fsetid           cap_ipc_lock         cap_ipc_owner        cap_kill
+│        ⋄─ cap_lease            cap_linux_immutable  cap_mac_admin        cap_mac_override
+│        ⋄─ cap_mknod            cap_net_admin        cap_net_bind_service cap_net_broadcast
+│        ⋄─ cap_net_raw          cap_setfcap          cap_setgid           cap_setpcap
+│        ⋄─ cap_setuid           cap_sys_admin        cap_sys_boot         cap_sys_chroot
+│        ⋄─ cap_sys_module       cap_sys_nice         cap_sys_pacct        cap_sys_ptrace
+│        ⋄─ cap_sys_rawio        cap_sys_resource     cap_sys_time         cap_sys_tty_config
+│        ⋄─ cap_syslog           cap_wake_alarm
+└─ target net:[4026531905] process "systemd" (211474)
+      ⋄─ (no capabilities)
 ```
 
 Please see also the [nscaps
