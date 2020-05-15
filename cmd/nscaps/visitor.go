@@ -99,6 +99,9 @@ func (v *NodeVisitor) Get(n reflect.Value) (
 	label = v.Label(n)
 	// Properties
 	if tns, ok := n.Interface().(nsnode); ok {
+		// It's a namespace node, but it is also the target? Only then add
+		// properties: we misuse the tree node properties to show the
+		// capabilities in the target namespace.
 		if tns.istarget {
 			switch tns.targetcaps {
 			case incapable:
@@ -108,6 +111,9 @@ func (v *NodeVisitor) Get(n reflect.Value) (
 					properties = []string{"(process effective capabilities)"}
 				} else {
 					properties = propcaps(ProcessCapabilities(procPID))
+					if len(properties) == 0 {
+						properties = []string{"(no effective capabilities)"}
+					}
 				}
 			case allcaps:
 				if briefCaps {
@@ -119,10 +125,12 @@ func (v *NodeVisitor) Get(n reflect.Value) (
 		}
 	} else {
 		if pn, ok := n.Interface().(processnode); ok && showProcCaps {
+			// It's the process node, so we want to show the effective
+			// capabilities of the process (mis)using the tree node properties.
 			if len(pn.caps) > 0 {
 				properties = propcaps(pn.caps)
 			} else {
-				properties = []string{"(no capabilities)"}
+				properties = []string{"(no effective capabilities)"}
 			}
 		}
 	}

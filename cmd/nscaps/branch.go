@@ -172,16 +172,20 @@ func combine(pbr node, tbr node) (root node) {
 			// The process branch forks off here, as we've stumbled onto the
 			// final process node in the process branch. Thus, we need to add
 			// the target branch to our common parent user namespace node.
+			//
+			//      U
+			//      |\
+			// pbr->P ?
 			ppbr.children = append(ppbr.children, tbr)
 			// Mark the parent user namespace, as well as all as descendent user
 			// name spaces down to the target namespace according to what extend
 			// the process will have capabilities in them.
 			ppbr.targetcaps = effcaps
 			for tbr != nil {
-				tbr.(*nsnode).targetcaps = allcaps
 				if tbr.(*nsnode).istarget {
 					break
 				}
+				tbr.(*nsnode).targetcaps = allcaps
 				tbr = tbr.Children()[0]
 			}
 			break

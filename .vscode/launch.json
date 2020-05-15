@@ -38,7 +38,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/nscaps",
             "env": {},
-            "args": ["net:[4026532353]"]
+            "args": ["net:[4026531905]"]
         },
         {
             "name": "Debug lsallns example",

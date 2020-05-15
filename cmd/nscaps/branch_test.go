@@ -76,6 +76,9 @@ var _ = Describe("(in)capability", func() {
 	})
 
 	It("rule #2, but not #3: process inside target's user namespace hierarchy, but different owner", func() {
+		if os.Geteuid() == 0 {
+			Skip("only non-root")
+		}
 		// need to fake this in case we're not ro(o)t.
 		fakeinit := &lxkns.Process{PID: 1}
 		fakeinit.Namespaces[lxkns.UserNS] =

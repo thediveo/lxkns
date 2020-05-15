@@ -106,12 +106,31 @@ var _ = Describe("renders branches", func() {
 		Expect(out).To(MatchRegexp(`^Error: expects 1 arg, received 0`))
 	})
 
-	It("CLI with target non-user namespace below process", func() {
+	It("CLI with target non-user namespace below process in owned user namespace", func() {
+		if os.Geteuid() == 0 {
+			Skip("only non-root")
+		}
+		mynetnsid, err := ops.NamespacePath("/proc/self/ns/net").ID()
+		Expect(err).NotTo(HaveOccurred())
+		os.Args = append(os.Args[:1], fmt.Sprintf("net:[%d]", mynetnsid.Ino))
+		out := getstdout.Stdouterr(main)
+		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
+├─ process .*
+│     ⋄─ \(no effective capabilities\)
+└─ target net:\[%d\] process .*
+      ⋄─ \(no effective capabilities\)$`,
+			initusernsid.Ino, mynetnsid.Ino)))
+	})
+
+	It("CLI with target non-user namespace below process in owned user namespace", func() {
+		if os.Geteuid() == 0 {
+			Skip("only non-root")
+		}
 		os.Args = append(os.Args[:1], fmt.Sprintf("net:[%d]", tnsid.Ino))
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
 ├─ process .*
-│     ⋄─ \(no capabilities\).*
+│     ⋄─ \(no effective capabilities\)
 └─ ✓ user:\[%d\] process .*
    └─ target net:\[%d\] process .*
          ⋄─ cap_audit_control .*$`,
