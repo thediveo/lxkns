@@ -84,16 +84,16 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 // Ensures that NamespacePath implements the Relation interface.
 var _ Relation = (*NamespacePath)(nil)
 
-// Reference returns an open file descriptor which references the namespace. In
-// case the close return value is truee, then the caller needs to close the file
-// descriptor when it doesn't need to reference the namespace anymore, in order
-// to avoid wasting file descriptors.
-func (nsp NamespacePath) Reference() (fd int, close bool, err error) {
+// Reference returns an open file descriptor which references the namespace.
+// After the file descriptor is no longer needed, the caller must call the
+// returned close function, in order to avoid wasting file descriptors.
+func (nsp NamespacePath) Reference() (fd int, cloze CloseFunc, err error) {
 	var fdi int
 	fdi, err = unix.Open(string(nsp), unix.O_RDONLY, 0)
-	fd = int(fdi)
-	close = true
-	return
+	if err != nil {
+		return fdi, nil, err
+	}
+	return int(fdi), func() { unix.Close(int(fdi)) }, nil
 }
 
 var _ Referrer = (*NamespacePath)(nil)

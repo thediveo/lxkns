@@ -92,18 +92,18 @@ var _ = Describe("Namespaces", func() {
 
 		fd, close, err := (&NamespaceFile{*nsf}).Reference()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(close).To(BeFalse())
+		Expect(close).ToNot(BeNil())
 		Expect(fd).To(Equal(int(nsf.Fd())))
 
 		fd, close, err = NamespaceFd(nsf.Fd()).Reference()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(close).To(BeFalse())
+		Expect(close).ToNot(BeNil())
 		Expect(fd).To(Equal(int(nsf.Fd())))
 
 		fd, close, err = NamespacePath("/proc/self/ns/net").Reference()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(close).To(BeTrue())
-		defer unix.Close(fd)
+		Expect(close).ToNot(BeNil())
+		defer close()
 		Expect(fd).ToNot(BeZero())
 	})
 

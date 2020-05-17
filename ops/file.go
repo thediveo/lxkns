@@ -91,13 +91,11 @@ func namespaceFileFromFd(fd uint, err error) (*NamespaceFile, error) {
 // Ensures that NamespaceFile implements the Relation interface.
 var _ Relation = (*NamespaceFile)(nil)
 
-// Reference returns an open file descriptor which references the namespace. In
-// case the close return value is truee, then the caller needs to close the file
-// descriptor when it doesn't need to reference the namespace anymore, in order
-// to avoid wasting file descriptors.
-func (nsf NamespaceFile) Reference() (fd int, close bool, err error) {
-	fd = int(nsf.Fd())
-	return
+// Reference returns an open file descriptor which references the namespace.
+// After the file descriptor is no longer needed, the caller must call the
+// returned close function, in order to avoid wasting file descriptors.
+func (nsf NamespaceFile) Reference() (fd int, cloze CloseFunc, err error) {
+	return int(nsf.Fd()), func() {}, nil
 }
 
 var _ Referrer = (*NamespaceFile)(nil)

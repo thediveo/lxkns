@@ -37,8 +37,12 @@ type Referrer interface {
 	// get garbage collected before the file descriptor is used, if in doubt,
 	// use runtime.KeepAlive(nsref), see also:
 	// https://golang.org/pkg/runtime/#KeepAlive.
-	Reference() (fd int, close bool, err error)
+	Reference() (fd int, cloze CloseFunc, err error)
 }
+
+// CloseFunc tells a referrer to close the file descriptor of a namespace
+// reference.
+type CloseFunc func()
 
 // Go runs the specified function as a new Go routine and from a locked OS
 // thread, while joined to the specified namespaces. When the specified function
@@ -68,16 +72,13 @@ func Go(f func(), nsrefs ...Referrer) error {
 			// slice elements and thus its os.Files (if any) alive. In
 			// consequence, we don't need an explicit runtime.KeepAlive(...)
 			// here.
-			fd, close, err := nsref.Reference()
+			fd, closeref, err := nsref.Reference()
 			if err != nil {
 				started <- err
 				return // ex-terminate ;)
 			}
 			err = unix.Setns(fd, 0)
-			if close {
-				// Don't leak open file descriptors...
-				unix.Close(int(fd))
-			}
+			closeref()
 			if err != nil {
 				started <- err
 				return
