@@ -1,7 +1,7 @@
 /*
 
-Package ops provides a Golang-idiomatic API to query and switching operations on
-Linux-kernel namespaces.
+Package ops provides a Golang-idiomatic API to the query and switching
+operations on Linux-kernel namespaces, hiding ioctl()s and syscalls.
 
 Namespace Queries
 
@@ -75,13 +75,36 @@ http://man7.org/linux/man-pages/man7/user_namespaces.7.html for details about
 the specific capabilities needed and how capabilities of a process with relation
 to a destination namespace are evaluated.
 
+This package provides three means to execute some Go code in an OS thread with
+namespaces switched as specified:
+
+    * Go(f, namespaces...) -- asynchronous f in the specified namespaces.
+    * Execute(f, namespaces...) -- synchronous f in the specified namespaces with result.
+    * Visit(f, namespaces...) -- synchronous f in the specified namespaces.
+
+These namespace-switching methods differ as follows: Go(f, namespaces...) acts
+very similar to the "go" statement in that it runs the given function f as a new
+go routine, but with its executing OS thread locked and switched into the
+specified namespaces.
+
+Execute(f, namespaces...) is a synchronous version of Go() which waits for the
+namespace-switched f() to complete and to return some result (in form of an
+interface{}). Execute then returns this result to the caller.
+
+Visit(f, namespaces...) is for those situations where the caller wants to avoid
+creating a new go routine, but is prepared to throw away its current go routine
+in case Visit() fails switching out of the namespaces afterwards, so the current
+OS thread and its go routine is toast.
+
+Go
+
 The Go() function runs a function as a Go routine in the specified namespace(s).
 It returns an error in case switching into the specified namespaces fails,
 otherwise it simply returns nil. Please note that Go() doesn't call the
 specified function synchronously, but instead as a new Go routine.
 
     netns := ops.NamespacePath("/proc/self/ns/net")
-    if err := ops.Go(func() {
+    err := ops.Go(func() {
         fmt.Println("Nobody expects the Spanish Inquisition!")
     }, netns)
 
@@ -100,6 +123,34 @@ with its reexec subpackage (gons provide namespace switching before the Golang
 runtime starts, while reexec forks a Golang process and reexecutes it, with the
 reexecuted child then runnining a specific function only in the specified
 namespaces).
+
+Execute
+
+Execute() is the synchronous twin of Go(): it waits for the namespace-switched
+function f() to complete and to return an interface{}. Execute() then passes on
+this result to its caller.
+
+    netns := ops.NamespacePath("/proc/self/ns/net")
+    result, err := ops.Execute(func() interface{} {
+        return "Nobody expects the Spanish Inquisition!"
+    }, netns)
+
+Visit
+
+If unsure, use Go() and Execute() instead. Only use Visit() if you understand
+that it can get you in really hot water and you are prepared to accept any
+consequences.
+
+In case a go routine wants to hop into a namespace and then out of it again,
+without the help of a new go-routine, then Visit() helps with that. However, due
+to Golang's runtime design, if getting back to the original namespaces before
+the call to Visit() fails, then any such go routine must be prepare to sacrifice
+itself, because by then it has a locked OS thread on its back in an unknown
+namespace attachment state, and further namespace hopping might end badly.
+
+If the caller is in a throw-away go routine itself and needs to run some code
+synchronously in other namespaces, then Visit() gives some optimization over
+Go() and especially Execute(), as it avoids spinning up another go routine.
 
 Namespace IDs
 

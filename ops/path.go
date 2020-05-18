@@ -87,7 +87,7 @@ var _ Relation = (*NamespacePath)(nil)
 // Reference returns an open file descriptor which references the namespace.
 // After the file descriptor is no longer needed, the caller must call the
 // returned close function, in order to avoid wasting file descriptors.
-func (nsp NamespacePath) Reference() (fd int, cloze CloseFunc, err error) {
+func (nsp NamespacePath) Reference() (fd int, closer CloseFunc, err error) {
 	var fdi int
 	fdi, err = unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {

@@ -81,7 +81,7 @@ var _ Relation = (*NamespaceFd)(nil)
 // Reference returns an open file descriptor which references the namespace.
 // After the file descriptor is no longer needed, the caller must call the
 // returned close function, in order to avoid wasting file descriptors.
-func (nsfd NamespaceFd) Reference() (fd int, cloze CloseFunc, err error) {
+func (nsfd NamespaceFd) Reference() (fd int, closer CloseFunc, err error) {
 	return int(nsfd), func() {}, nil
 }
 
