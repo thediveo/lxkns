@@ -17,8 +17,10 @@
 package ops
 
 import (
+	"fmt"
 	"runtime"
 
+	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
 
@@ -37,8 +39,12 @@ type Referrer interface {
 	// get garbage collected before the file descriptor is used, if in doubt,
 	// use runtime.KeepAlive(nsref), see also:
 	// https://golang.org/pkg/runtime/#KeepAlive.
-	Reference() (fd int, close bool, err error)
+	Reference() (fd int, cloze CloseFunc, err error)
 }
+
+// CloseFunc tells a referrer to close the file descriptor of a namespace
+// reference.
+type CloseFunc func()
 
 // Go runs the specified function as a new Go routine and from a locked OS
 // thread, while joined to the specified namespaces. When the specified function
@@ -68,16 +74,13 @@ func Go(f func(), nsrefs ...Referrer) error {
 			// slice elements and thus its os.Files (if any) alive. In
 			// consequence, we don't need an explicit runtime.KeepAlive(...)
 			// here.
-			fd, close, err := nsref.Reference()
+			fd, closer, err := nsref.Reference()
 			if err != nil {
 				started <- err
 				return // ex-terminate ;)
 			}
 			err = unix.Setns(fd, 0)
-			if close {
-				// Don't leak open file descriptors...
-				unix.Close(int(fd))
-			}
+			closer()
 			if err != nil {
 				started <- err
 				return
@@ -105,4 +108,109 @@ func Execute(f func() interface{}, nsrefs ...Referrer) (interface{}, error) {
 		return nil, err
 	}
 	return <-result, nil
+}
+
+// Visit locks the OS thread executing the current go routine, then switches the
+// thread into the specified namespaces, and executes f(). Afterwards, it
+// switches the namespaces back to their original settings and unlocks the
+// underlying OS thread.
+//
+// If switching namespaces back fails, then the OS thread is tainted and will
+// remain locked. As simple as this sounds, Visit() is a dangerous thing: as
+// long as the wheels keep spinning we're in the sunlit uplands. But as soon as
+// the gears jam ... good luck. Visit() mainly exists for those optimizations
+// where creating new OS threads is deemed to much overhead and namespace
+// switch-back usually is possible. However, such uses must be prepared for
+// Visit() to fail and then act accordingly: namely, terminate the Go routine so
+// the runtime can kill its locked OS thread.
+//
+// Visit() should never be called from the main Go routine, as any failure in
+// switching namespaces leaves us with a tainted OS thread for the main Go
+// routine. Yuk!
+func Visit(f func(), nsrefs ...Referrer) (err error) {
+	runtime.LockOSThread()
+	tid := unix.Gettid()
+	// Keep record of the namespaces we are leaving, so we can switch back
+	// afterwards. We're recording only those namespaces we're switching.
+	switchback := make([]origNS, 0, len(nsrefs))
+
+	// Ensure that switching back namespaces and error reporting is always done,
+	// even if f() panics. This tries to unwind the mess we've created before.
+	defer func() {
+		// Switch back into the original namespaces which were active when
+		// calling Visit(), but switch back in reverse order. If this causes an
+		// error and we haven't registered any error so far, then report the
+		// switch-back problem.
+		for idx := len(switchback) - 1; idx >= 0; idx-- {
+			if seterr := unix.Setns(switchback[idx].fd, 0); seterr != nil && err == nil {
+				// In case we didn't registered an err so far, take this ... but
+				// ignore any subsequent errs.
+				err = fmt.Errorf("cannot restore previous namespace: %s", seterr.Error())
+			}
+			switchback[idx].closer()
+		}
+		// If there was an error and we already switched at least one namespace,
+		// then this OS thread is toast and we won't unlock it.
+		if err == nil || len(switchback) == 0 {
+			runtime.UnlockOSThread()
+		}
+	}()
+
+	// With unwinding out of the way, let's start switching namespaces. This is
+	// ugly business as we need to record the originally active namespaces at
+	// the same time, and still handle potential errors everywhere. We cannot
+	// simply record all 8 original namespaces, but only those we're switching.
+	// And as we don't know the types of namespaces to switch into, we need to
+	// query that information too. Again, more error handling, without any
+	// chance to defer().
+	for _, nsref := range nsrefs {
+		// First, get the fd referencing the namespace to switch into.
+		var fd int
+		var closer CloseFunc
+		fd, closer, err = nsref.Reference() // no ":=", don't shadow err!
+		if err != nil {
+			return // ...unwind entangled namespaces
+		}
+		// Next, find out the type of namespace to switch into, so we can record
+		// the currently active namespace of this type in our OS thread ... so
+		// we can later switch back again.
+		var nstype species.NamespaceType
+		nstype, err = NamespaceFd(fd).Type()
+		if err != nil {
+			closer()
+			return // ...unwind entangled namespaces
+		}
+		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstype.Name()))
+		var oldfd int
+		var oldcloser CloseFunc
+		oldfd, oldcloser, err = oldnsref.Reference()
+		if err != nil {
+			closer()
+			return // ...unwind entangled namespaces
+		}
+		// Finally, we're ready to jump, erm, switch into this specific
+		// namespace.
+		err = unix.Setns(fd, 0)
+		closer() // ...not needed anymore
+		if err != nil {
+			oldcloser()
+			return // ...unwind entangled namespaces
+		}
+		// We succeeded, so record the old namespace to later switch back to it.
+		switchback = append(switchback, origNS{
+			nsref:  oldnsref, // ...keep it alive and away from early GC!
+			fd:     oldfd,
+			closer: oldcloser,
+		})
+	}
+	// Call the specified f() with namespaces switches as desired.
+	f()
+	return
+}
+
+// origNS stores information for switching back to a namespace and cleaning up.
+type origNS struct {
+	nsref  Referrer  // keeps the original namespace ref from getting gc'ed.
+	fd     int       // open fd referencing the original namespace.
+	closer CloseFunc // don't leak fds; this knows how to act correctly.
 }

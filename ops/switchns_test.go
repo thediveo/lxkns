@@ -17,6 +17,8 @@ package ops
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,7 +30,7 @@ import (
 
 var _ = Describe("Set Namespaces", func() {
 
-	It("goes into other namespaces", func() {
+	It("Go()es into other namespaces", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
@@ -36,12 +38,15 @@ var _ = Describe("Set Namespaces", func() {
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("newnetns", `
+		scripts.Script("main", `
+unshare -n $stage2
+`)
+		scripts.Script("stage2", `
 echo "\"/proc/$$/ns/net\""
 process_namespaceid net
 read # wait for test to proceed()
 `)
-		cmd := scripts.Start("newnetns")
+		cmd := scripts.Start("main")
 		defer cmd.Close()
 
 		var netnsref NamespacePath
@@ -66,6 +71,77 @@ read # wait for test to proceed()
 		}, netnsref)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res.(species.NamespaceID)).To(Equal(netnsid))
+	})
+
+	It("Visit()s other namespaces and then returns", func() {
+		if os.Geteuid() != 0 {
+			Skip("needs root")
+		}
+
+		scripts := testbasher.Basher{}
+		defer scripts.Done()
+		scripts.Common(nstest.NamespaceUtilsScript)
+		scripts.Script("main", `
+unshare -n $stage2
+`)
+		scripts.Script("stage2", `
+echo "\"/proc/$$/ns/net\""
+read # wait for test to proceed()
+`)
+		cmd := scripts.Start("main")
+		defer cmd.Close()
+
+		var netnsref NamespacePath
+		cmd.Decode(&netnsref)
+		initID, err := netnsref.ID()
+		Expect(err).ToNot(HaveOccurred())
+
+		var beforeID, visitedID, afterID species.NamespaceID
+		done := make(chan struct{})
+		var locked bool
+		// Don't do the Visit on the main go routine, mate!
+		go func() {
+			defer close(done)
+
+			// Record the network namespace the process is in (don't care about
+			// the specific OS thread here, as it isn't locked yet anyway).
+			beforeID, err = NamespacePath("/proc/self/ns/net").ID()
+			if err != nil {
+				return
+			}
+			var innererr error
+			err = Visit(func() {
+				// We now should be switched into the new network namespace, but
+				// only this locked OS thread is switched. Record the current
+				// network namespace so we can later check that the OS thread
+				// had switched into the correct network namespace.
+				visitedID, innererr = NamespacePath(
+					fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).ID()
+			}, netnsref)
+			if innererr != nil {
+				err = innererr
+				return
+			}
+			if err != nil {
+				return
+			}
+			// Find out whether the OS thread has been correctly unlocked, ...
+			// or not; this is an ugly hack, as there is no official API, so we
+			// check what stack trace is going to tell us...
+			locked = strings.Contains(string(debug.Stack()), ", locked to thread]")
+			// Finally record the network namespace after the visit; we'll later
+			// check that we're back in the process' network namespace.
+			afterID, err = NamespacePath("/proc/self/ns/net").ID()
+		}()
+		// Wait for Visit to complete on separate go routine with a throw-away
+		// OS thread.
+		<-done
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(visitedID).ToNot(Equal(beforeID), "didn't switch network namespace")
+		Expect(visitedID).To(Equal(initID), "switched into what???")
+		Expect(afterID).To(Equal(beforeID), "didn't switch back")
+		Expect(locked).To(BeFalse(), "didn't unlock OS thread")
 	})
 
 })
