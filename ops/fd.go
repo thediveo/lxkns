@@ -22,7 +22,8 @@ import (
 // NamespaceFd references a Linux-kernel namespace via an open file descriptor.
 // Following Unix tradition for file descriptors, NamespaceFd is an alias for an
 // int (and not an uintptr, as in some cross-platform parts of the Golang
-// packages).
+// packages). Please note that a NamespaceFd reference aliases a file
+// descriptor, but it does not take ownership of it.
 type NamespaceFd int
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
@@ -81,6 +82,13 @@ var _ Relation = (*NamespaceFd)(nil)
 // Reference returns an open file descriptor which references the namespace.
 // After the file descriptor is no longer needed, the caller must call the
 // returned close function, in order to avoid wasting file descriptors.
+//
+// Please note that in case of a NamespaceFd reference, this returns the
+// original open file descriptor (and doesn't make a copy of it). Aliasing a
+// file descriptor into a NamespaceFd does not take ownership, so control of the
+// lifetime of the aliased file descriptor is still up to its original creator.
+// In consequence, the closer returned for a namespace file descriptor will
+// leave original file descriptor untouched.
 func (nsfd NamespaceFd) Reference() (fd int, closer CloseFunc, err error) {
 	return int(nsfd), func() {}, nil
 }
