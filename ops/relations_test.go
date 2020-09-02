@@ -15,6 +15,7 @@
 package ops
 
 import (
+	"errors"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -35,28 +36,42 @@ func errof(v ...interface{}) error {
 	return v[1].(error)
 }
 
+func assertInvNSError(err error) {
+	var invnserr *InvalidNamespaceError
+	ExpectWithOffset(1, errors.As(err, &invnserr)).To(BeTrue(), "not an 'invalid namespace' error")
+}
+
 var _ = Describe("Namespaces", func() {
 
 	It("wraps namespace *os.Files", func() {
 		f, err := NewNamespaceFile(os.Open("/foobar"))
 		Expect(err).To(HaveOccurred())
+		assertInvNSError(err)
+		Expect(err).To(MatchError(MatchRegexp(`^lxkns: invalid namespace nil.+$`)))
+		Expect(errors.Unwrap(err)).NotTo(BeNil())
 		Expect(f).To(BeNil())
 
 		f, err = NewNamespaceFile(os.Stdout, nil)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Fd()).To(Equal(os.Stdout.Fd()))
 
-		_, err = namespaceFileFromFd(^uint(0), nil)
+		_, err = namespaceFileFromFd(f, ^uint(0), nil)
 		Expect(err).To(HaveOccurred())
+		assertInvNSError(err)
+		Expect(err).To(MatchError(MatchRegexp(`^.+lxkns: invalid namespace os.File.+$`)))
 	})
 
 	It("return their types", func() {
 		Expect(errof(NamespacePath("/foobar").Type())).To(HaveOccurred())
 		Expect(errof(NamespaceFd(-1).Type())).To(HaveOccurred())
+		f, err := NewNamespaceFile(os.Open("relations_test.go"))
+		Expect(err).To(Succeed())
+		defer f.Close()
+		Expect(errof(f.Type())).To(HaveOccurred())
 
 		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(species.CLONE_NEWUSER))
 
-		f, err := NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
+		f, err = NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
 		Expect(NamespaceFd(f.Fd()).Type()).To(Equal(species.CLONE_NEWIPC))
@@ -86,6 +101,11 @@ var _ = Describe("Namespaces", func() {
 	})
 
 	It("return a suitable file descriptor for referencing", func() {
+		ref := NamespacePath("foobar")
+		_, _, err := ref.Reference()
+		Expect(err).To(HaveOccurred())
+		assertInvNSError(err)
+
 		nsf, err := os.Open("/proc/self/ns/net")
 		Expect(err).ToNot(HaveOccurred())
 		defer nsf.Close()

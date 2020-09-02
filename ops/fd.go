@@ -15,6 +15,8 @@
 package ops
 
 import (
+	"fmt"
+
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -26,11 +28,22 @@ import (
 // descriptor, but it does not take ownership of it.
 type NamespaceFd int
 
+// String returns the textual representation for a namespace reference by file
+// descriptor. This does contain only the file descriptor, but not the
+// referenced namespace (ID), as we're here dealing with the references
+// themselves.
+func (nsfd NamespaceFd) String() string {
+	return fmt.Sprintf("fd %d", int(nsfd))
+}
+
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
 // required.
 func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
+	if err != nil {
+		err = newInvalidNamespaceError(nsfd, err)
+	}
 	return species.NamespaceType(t), err
 }
 
@@ -39,7 +52,7 @@ func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 // even returns an inode number if the file descriptor doesn't reference a
 // namespace but instead some other open file.
 func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
-	return fdID(int(nsfd))
+	return fdID(nsfd, int(nsfd))
 }
 
 // User returns the owning user namespace the namespace referenced by this open
@@ -47,7 +60,8 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 // NamespaceFile reference. For user namespaces, User() behaves identical to
 // Parent(). A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) User() (*NamespaceFile, error) {
-	return namespaceFileFromFd(ioctl(int(nsfd), _NS_GET_USERNS))
+	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
+	return namespaceFileFromFd(nsfd, fd, err)
 }
 
 // Parent returns the parent namespace of the Linux-kernel namespace referenced
@@ -55,23 +69,24 @@ func (nsfd NamespaceFd) User() (*NamespaceFile, error) {
 // PID or user. For user namespaces, Parent() and User() behave identical. A
 // Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) Parent() (*NamespaceFile, error) {
-	return namespaceFileFromFd(ioctl(int(nsfd), _NS_GET_PARENT))
+	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
+	return namespaceFileFromFd(nsfd, fd, err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
 // open file descriptor. A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) OwnerUID() (int, error) {
-	return ownerUID(int(nsfd))
+	return ownerUID(nsfd, int(nsfd))
 }
 
 // fdID stats the given file descriptor in order to get the dev and inode
 // numbers, and returns it as a NamespaceID. This is an internal convenience
 // function to avoid duplicate code and is used also by the NamespaceFile and
 // NamespacePath reference types.
-func fdID(fd int) (species.NamespaceID, error) {
+func fdID(ref Relation, fd int) (species.NamespaceID, error) {
 	var stat unix.Stat_t
 	if err := unix.Fstat(fd, &stat); err != nil {
-		return species.NoneID, err
+		return species.NoneID, newInvalidNamespaceError(ref, err)
 	}
 	return species.NamespaceID{Dev: stat.Dev, Ino: stat.Ino}, nil
 }
@@ -93,4 +108,5 @@ func (nsfd NamespaceFd) Reference() (fd int, closer CloseFunc, err error) {
 	return int(nsfd), func() {}, nil
 }
 
+// Make sure that we've fully implemented the Referrer interface.
 var _ Referrer = (*NamespaceFd)(nil)

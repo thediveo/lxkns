@@ -27,8 +27,9 @@ import (
 
 // ownerUID takes an open file descriptor which much reference a user namespace.
 // It then returns the UID of the user "owning" this user namespace, or an
-// error.
-func ownerUID(fd int) (int, error) {
+// error. The Relation reference is only needed in case of errors, to allow for
+// returning meaningful wrapped errors.
+func ownerUID(ref Relation, fd int) (int, error) {
 	// For the reason to use "int" to represent uid_t as the return value,
 	// see: https://github.com/golang/go/issues/6495; however, we must be
 	// careful with the Syscall(), giving it the correct uint32 -- even on
@@ -39,7 +40,7 @@ func ownerUID(fd int) (int, error) {
 		unix.SYS_IOCTL, uintptr(fd),
 		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid)))
 	if errno != 0 {
-		return 0, errors.New(errno.Error())
+		return 0, newInvalidNamespaceError(ref, errors.New(errno.Error()))
 	}
 	return int(uid), nil
 }

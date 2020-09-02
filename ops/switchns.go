@@ -17,12 +17,15 @@
 package ops
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
+
+var ErrSetNamespace = errors.New("cannot switch namespace")
 
 // Referrer returns an open file descriptor to the namespace indicated in a
 // namespace reference type, such as NamespacePath, suitable for switching

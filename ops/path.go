@@ -15,12 +15,22 @@
 package ops
 
 import (
+	"fmt"
+
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
 
 // NamespacePath references a Linux-kernel namespace via a filesystem path.
 type NamespacePath string
+
+// String returns the textual representation for a namespace reference by file
+// descriptor. This does contain only the file descriptor, but not the
+// referenced namespace (ID), as we're here dealing with the references
+// themselves.
+func (nsp NamespacePath) String() string {
+	return fmt.Sprintf("path %s", string(nsp))
+}
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor. Please note that a Linux kernel version 4.11 or later is
@@ -43,7 +53,7 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 		return species.NoneID, err
 	}
 	defer unix.Close(fd)
-	return fdID(int(fd))
+	return fdID(nsp, int(fd))
 }
 
 // User returns the owning user namespace of any namespace, as a NamespaceFile
@@ -55,7 +65,8 @@ func (nsp NamespacePath) User() (*NamespaceFile, error) {
 		return nil, err
 	}
 	defer unix.Close(fd)
-	return namespaceFileFromFd(ioctl(fd, _NS_GET_USERNS))
+	userfd, err := ioctl(fd, _NS_GET_USERNS)
+	return namespaceFileFromFd(nsp, userfd, err)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -67,7 +78,8 @@ func (nsp NamespacePath) Parent() (*NamespaceFile, error) {
 		return nil, err
 	}
 	defer unix.Close(fd)
-	return namespaceFileFromFd(ioctl(fd, _NS_GET_PARENT))
+	parentfd, err := ioctl(fd, _NS_GET_PARENT)
+	return namespaceFileFromFd(nsp, parentfd, err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
@@ -78,7 +90,7 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 		return 0, err
 	}
 	defer unix.Close(fd)
-	return ownerUID(fd)
+	return ownerUID(nsp, fd)
 }
 
 // Ensures that NamespacePath implements the Relation interface.
@@ -91,7 +103,7 @@ func (nsp NamespacePath) Reference() (fd int, closer CloseFunc, err error) {
 	var fdi int
 	fdi, err = unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
-		return fdi, nil, err
+		return fdi, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return int(fdi), func() { unix.Close(int(fdi)) }, nil
 }
