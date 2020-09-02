@@ -7,16 +7,16 @@ Namespace Queries
 
 A particular Linux-kernel namespace can be referenced by a filesystem path, an
 open file descriptor, or an *os.File. Thus, this package defines the following
-three namespace reference types:
+three (four) namespace reference types:
 
-    * NamespacePath
+    * NamespacePath (and TypedNamespacePath)
     * NamespaceFd
     * NamespaceFile
 
-All three types of namespace references define the following query operations
-from the Relation interface (which map to a set of ioctl() calls, see:
-http://man7.org/linux/man-pages/man2/ioctl_ns.2.html, with the exception of the
-ID query):
+All three (four) types of namespace references define the following query
+operations from the Relation interface (which map to a set of ioctl() calls,
+see: http://man7.org/linux/man-pages/man2/ioctl_ns.2.html, with the exception of
+the ID query):
 
     * ID() returns the ID of the referenced namespace.
     * User() returns the user namespace owning the referenced namespace.
@@ -29,6 +29,12 @@ uintptr respectively.
 
     netns := NamespacePath("/proc/self/ns/net")
     path := string(netns)
+
+In case you want to use the Visit() function for switching namespaces and you
+need to support Linux kernels before 4.11 (which lack a required ioctl) then you
+can resort to TypedNamespacePath instead of NamespacePath.
+
+    netns := TypedNamespacePath("/proc/self/ns/net", species.CLONE_NEWNET)
 
 As NamespaceFile mirrors os.File it cannot be directly converted in the way
 NamespacePath and NamespaceFd can. However, things are not overly complex either

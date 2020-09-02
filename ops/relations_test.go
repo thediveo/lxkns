@@ -71,6 +71,14 @@ var _ = Describe("Namespaces", func() {
 
 		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(species.CLONE_NEWUSER))
 
+		// Specifying a broken path is intended here in order to test that a
+		// typed namespace reference object always uses the explicitly specified
+		// type.
+		Expect(NewTypedNamespacePath("/proc/self/ns/foobar", species.CLONE_NEWUSER).
+			Type()).To(Equal(species.CLONE_NEWUSER))
+		Expect(NewTypedNamespacePath("/foobar", species.CLONE_NEWUSER).String()).To(
+			MatchRegexp(`path /foobar, type user`))
+
 		f, err = NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()

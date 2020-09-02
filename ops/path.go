@@ -32,9 +32,8 @@ func (nsp NamespacePath) String() string {
 	return fmt.Sprintf("path %s", string(nsp))
 }
 
-// Type returns the type of the Linux-kernel namespace referenced by this open
-// file descriptor. Please note that a Linux kernel version 4.11 or later is
-// required.
+// Type returns the type of the Linux-kernel namespace referenced by this file
+// path. Please note that a Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
