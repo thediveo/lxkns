@@ -6,6 +6,7 @@ require (
 	github.com/muesli/termenv v0.5.0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
+	github.com/pkg/errors v0.8.0
 	github.com/spf13/cobra v0.0.7
 	github.com/thediveo/enumflag v0.10.0
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039

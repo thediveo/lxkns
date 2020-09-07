@@ -30,6 +30,65 @@ import (
 
 var _ = Describe("Set Namespaces", func() {
 
+	It("Go()es with errors", func() {
+		err := Go(func() {}, NamespacePath("foobar"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path foobar`)))
+	})
+
+	It("Go()es with errors as non-root", func() {
+		if os.Geteuid() == 0 {
+			Skip("don't be roode.")
+		}
+
+		err := Go(func() {}, NamespacePath("/proc/1/ns/pid"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path`)))
+
+		err = Go(func() {}, NamespacePath("/proc/self/ns/pid"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot enter namespace path .+, operation not permitted`)))
+	})
+
+	It("Execute()s with errors", func() {
+		_, err := Execute(func() interface{} { return nil },
+			NamespacePath("foobar"))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Visit()s with errors", func() {
+		err := Visit(func() {}, NamespacePath("foobar"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path foobar`)))
+
+		err = Visit(func() {}, NamespacePath("doc.go"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot determine type.+ioctl`)))
+
+		err = Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", 0))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot determine type.+ioctl`)))
+	})
+
+	It("Visit()s with errors, part 2", func() {
+		if os.Geteuid() != 0 {
+			Skip("needs root")
+		}
+
+		netns := NamespacePath("/proc/self/ns/net")
+		_, closer, err := netns.Reference()
+		Expect(err).NotTo(HaveOccurred())
+		err = Visit(
+			func() { closer() },
+			netns)
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`hmpf`)))
+	})
+
+	It("Execute()s", func() {
+		Expect(Execute(func() interface{} { return nil })).NotTo(HaveOccurred())
+	})
+
 	It("Go()es into other namespaces", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")

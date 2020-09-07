@@ -16,6 +16,8 @@ package ops
 
 import (
 	"fmt"
+
+	r "github.com/thediveo/lxkns/ops/relations"
 )
 
 // InvalidNamespaceError wraps an underlying OS-related error when dealing with
@@ -29,7 +31,7 @@ type InvalidNamespaceError struct {
 
 // newInvalidNamespaceError returns a descriptive error, also wrapping an
 // underlying (OS-level) error giving more details when desired.
-func newInvalidNamespaceError(nsref Relation, err error) *InvalidNamespaceError {
+func newInvalidNamespaceError(nsref r.Relation, err error) *InvalidNamespaceError {
 	return &InvalidNamespaceError{nsref.(fmt.Stringer).String(), err}
 }
 
@@ -37,7 +39,7 @@ func newInvalidNamespaceError(nsref Relation, err error) *InvalidNamespaceError 
 func (e *InvalidNamespaceError) Error() string {
 	s := "lxkns: invalid namespace " + e.Ref
 	if e.Err != nil {
-		s += ":" + e.Err.Error()
+		s += ": " + e.Err.Error()
 	}
 	return s
 }

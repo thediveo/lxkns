@@ -17,6 +17,8 @@ package ops
 import (
 	"fmt"
 
+	o "github.com/thediveo/lxkns/ops/internal/opener"
+	r "github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -59,7 +61,7 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 // file descriptor. The owning user namespace is returned in form of a
 // NamespaceFile reference. For user namespaces, User() behaves identical to
 // Parent(). A Linux kernel version 4.9 or later is required.
-func (nsfd NamespaceFd) User() (*NamespaceFile, error) {
+func (nsfd NamespaceFd) User() (r.Relation, error) {
 	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
 	return namespaceFileFromFd(nsfd, fd, err)
 }
@@ -68,7 +70,7 @@ func (nsfd NamespaceFd) User() (*NamespaceFile, error) {
 // by this open file descriptor. The namespace references must be either of type
 // PID or user. For user namespaces, Parent() and User() behave identical. A
 // Linux kernel version 4.9 or later is required.
-func (nsfd NamespaceFd) Parent() (*NamespaceFile, error) {
+func (nsfd NamespaceFd) Parent() (r.Relation, error) {
 	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
 	return namespaceFileFromFd(nsfd, fd, err)
 }
@@ -83,7 +85,7 @@ func (nsfd NamespaceFd) OwnerUID() (int, error) {
 // numbers, and returns it as a NamespaceID. This is an internal convenience
 // function to avoid duplicate code and is used also by the NamespaceFile and
 // NamespacePath reference types.
-func fdID(ref Relation, fd int) (species.NamespaceID, error) {
+func fdID(ref r.Relation, fd int) (species.NamespaceID, error) {
 	var stat unix.Stat_t
 	if err := unix.Fstat(fd, &stat); err != nil {
 		return species.NoneID, newInvalidNamespaceError(ref, err)
@@ -91,10 +93,12 @@ func fdID(ref Relation, fd int) (species.NamespaceID, error) {
 	return species.NamespaceID{Dev: stat.Dev, Ino: stat.Ino}, nil
 }
 
-// Ensures that NamespaceFd implements the Relation interface.
-var _ Relation = (*NamespaceFd)(nil)
+//
+func (nsfd NamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+	return nil, nil, nil // TODO: implement!
+}
 
-// Reference returns an open file descriptor which references the namespace.
+// NsFd returns an open file descriptor which references the namespace.
 // After the file descriptor is no longer needed, the caller must call the
 // returned close function, in order to avoid wasting file descriptors.
 //
@@ -103,10 +107,15 @@ var _ Relation = (*NamespaceFd)(nil)
 // file descriptor into a NamespaceFd does not take ownership, so control of the
 // lifetime of the aliased file descriptor is still up to its original creator.
 // In consequence, the closer returned for a namespace file descriptor will
-// leave original file descriptor untouched.
-func (nsfd NamespaceFd) Reference() (fd int, closer CloseFunc, err error) {
+// leave the original file descriptor untouched.
+func (nsfd NamespaceFd) NsFd() (fd int, closer o.FdCloser, err error) {
 	return int(nsfd), func() {}, nil
 }
 
-// Make sure that we've fully implemented the Referrer interface.
-var _ Referrer = (*NamespaceFd)(nil)
+// Ensures that NamespaceFd implements the Relation interface.
+var _ r.Relation = (*NamespaceFd)(nil)
+
+// Make also sure that we've fully implemented the Opener interface. Golang
+// would really be great if at the same time it could ensure that we've also had
+// it implemented *correctly* :p
+var _ o.Opener = (*NamespaceFd)(nil)

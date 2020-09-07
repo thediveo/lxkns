@@ -22,6 +22,7 @@ import (
 	"errors"
 	"unsafe"
 
+	r "github.com/thediveo/lxkns/ops/relations"
 	"golang.org/x/sys/unix"
 )
 
@@ -29,7 +30,7 @@ import (
 // It then returns the UID of the user "owning" this user namespace, or an
 // error. The Relation reference is only needed in case of errors, to allow for
 // returning meaningful wrapped errors.
-func ownerUID(ref Relation, fd int) (int, error) {
+func ownerUID(ref r.Relation, fd int) (int, error) {
 	// For the reason to use "int" to represent uid_t as the return value,
 	// see: https://github.com/golang/go/issues/6495; however, we must be
 	// careful with the Syscall(), giving it the correct uint32 -- even on

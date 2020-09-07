@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ops
+package relations
 
 import "github.com/thediveo/lxkns/species"
 
@@ -33,13 +33,13 @@ type Relation interface {
 	// User namespace owning the referenced namespace. The owning user namespace
 	// is returned in form of a NamespaceFile reference when there was no error
 	// in retrieving the information.
-	User() (*NamespaceFile, error)
+	User() (Relation, error)
 
 	// Parent namespace of the referenced PID or user namespace. Returns an
 	// error if the parent doesn't exist, if the caller hasn't capabilities in
 	// the parent namespace, or if the referenced namespace is neither a PID nor
 	// a user namespace.
-	Parent() (*NamespaceFile, error)
+	Parent() (Relation, error)
 
 	// User ID of the process originally creating the referenced user namespace.
 	// Returns an error, if the referenced namespace is not a user namespace.
