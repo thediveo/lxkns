@@ -37,14 +37,14 @@ type PIDType int32
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID        PIDType       // this process' identifier.
-	PPID       PIDType       // parent's process identifier.
-	Parent     *Process      // our parent's process description.
-	Children   []*Process    // child processes.
-	Name       string        // synthesized name of process.
-	Cmdline    []string      // command line of process.
-	Namespaces NamespacesSet // the 7 namespaces joined by this process.
-	Starttime  uint64        // Time of process start, since the Kernel boot epoch.
+	PID        PIDType       `json:"pid"`       // this process' identifier.
+	PPID       PIDType       `json:"ppid"`      // parent's process identifier.
+	Parent     *Process      `json:"-"`         // our parent's process description.
+	Children   []*Process    `json:"-"`         // child processes.
+	Name       string        `json:"name"`      // synthesized name of process.
+	Cmdline    []string      `json:"cmdline"`   // command line of process.
+	Namespaces NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+	Starttime  uint64        `json:"starttime"` // Time of process start, since the Kernel boot epoch.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick
