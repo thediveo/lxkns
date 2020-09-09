@@ -69,7 +69,7 @@ func (nsp TypedNamespacePath) Type() (species.NamespaceType, error) {
 func (nsp TypedNamespacePath) Parent() (r.Relation, error) {
 	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY, 0)
 	if err != nil {
-		return nil, err
+		return nil, newInvalidNamespaceError(nsp, err)
 	}
 	defer unix.Close(fd)
 	parentfd, err := ioctl(fd, _NS_GET_PARENT)

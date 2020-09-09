@@ -165,6 +165,16 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(oref).NotTo(BeNil())
+
+		_, _, err = NewTypedNamespacePath("foobar", 0).OpenTypedReference()
+		Expect(err).To(MatchError(MatchRegexp("invalid namespace path")))
+		_, _, err = NewTypedNamespacePath("doc.go", 0).OpenTypedReference()
+		Expect(err).To(MatchError(MatchRegexp("invalid namespace path.+invalid namespace operation")))
+		pref, closer, err := NewTypedNamespacePath("/proc/self/ns/net", 0).OpenTypedReference()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(closer).NotTo(BeNil())
+		Expect(pref).NotTo(BeNil())
+		closer()
 	})
 
 	It("returns suitable file descriptors for referencing", func() {
@@ -263,6 +273,23 @@ read # wait for test to proceed()
 		Expect(err).ToNot(HaveOccurred())
 		defer pp.(io.Closer).Close()
 		Expect(nstest.Err(pp.Parent())).To(HaveOccurred())
+
+		_, err = NewTypedNamespacePath("foobar", 0).Parent()
+		Expect(err).To(MatchError(MatchRegexp("invalid namespace path")))
+
+		parentuserns, err = NewTypedNamespacePath(string(leafuserpath), species.CLONE_NEWUSER).Parent()
+		Expect(err).ToNot(HaveOccurred())
+		defer parentuserns.(io.Closer).Close()
+		Expect(parentuserns.ID()).To(Equal(parentusernsid))
+
+		f, err := os.Open(string(leafuserpath))
+		Expect(err).NotTo(HaveOccurred())
+		tleafuserns, err := NewTypedNamespaceFile(f, species.CLONE_NEWUSER)
+		Expect(err).NotTo(HaveOccurred())
+		parentuserns, err = tleafuserns.Parent()
+		Expect(err).NotTo(HaveOccurred())
+		defer parentuserns.(io.Closer).Close()
+		Expect(parentuserns.ID()).To(Equal(parentusernsid))
 
 		leafuserf, err := os.Open(string(leafuserpath))
 		Expect(err).ToNot(HaveOccurred())
