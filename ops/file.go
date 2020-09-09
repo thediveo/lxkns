@@ -140,7 +140,7 @@ func (nsf NamespaceFile) OwnerUID() (int, error) {
 func (nsf NamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
 	openref, err := NewTypedNamespaceFile(&nsf.File, 0)
 	if err != nil {
-		return nil, nil, newInvalidNamespaceError(nsf, err)
+		return nil, nil, err
 	}
 	return openref, func() {}, nil
 }

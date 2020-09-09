@@ -26,9 +26,7 @@ import (
 // descriptor.
 type TypedNamespaceFd struct {
 	NamespaceFd                       // underlying file descriptor referencing the namespace.
-	closer      o.ReferenceCloser     // optional closer for cleaning up the file descriptor.
 	nstype      species.NamespaceType // type of namespace.
-	oref        string                // optional original namespace reference for error reporting.
 }
 
 // NewTypedNamespaceFd FIXME: write doc
@@ -42,18 +40,12 @@ func NewTypedNamespaceFd(fd int, nstype species.NamespaceType) (*TypedNamespaceF
 		species.CLONE_NEWTIME,
 		species.CLONE_NEWUSER,
 		species.CLONE_NEWUTS:
-		return newTypedNamespaceFd(fd, nstype, nil, ""), nil
+		return &TypedNamespaceFd{
+			NamespaceFd: NamespaceFd(fd),
+			nstype:      nstype,
+		}, nil
 	}
 	return nil, fmt.Errorf("invalid namespace type %x", nstype)
-}
-
-func newTypedNamespaceFd(fd int, nstype species.NamespaceType, closer o.ReferenceCloser, oref string) *TypedNamespaceFd {
-	return &TypedNamespaceFd{
-		NamespaceFd: NamespaceFd(fd),
-		closer:      closer,
-		nstype:      nstype,
-		oref:        oref,
-	}
 }
 
 // String returns the textual representation for a typed namespace reference by
@@ -62,9 +54,6 @@ func newTypedNamespaceFd(fd int, nstype species.NamespaceType, closer o.Referenc
 // the references themselves. If a dedicated reference was given at creation
 // time (such as a filesystem path), then this is used instead of the fd number.
 func (nsfd TypedNamespaceFd) String() string {
-	if nsfd.oref != "" {
-		return fmt.Sprintf("%s (type %s)", nsfd.oref, nsfd.nstype.Name())
-	}
 	return fmt.Sprintf("fd %d (type %s)", int(nsfd.NamespaceFd), nsfd.nstype.Name())
 }
 
@@ -81,10 +70,7 @@ func (nsfd TypedNamespaceFd) Type() (species.NamespaceType, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsfd TypedNamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
-	if nsfd.closer != nil {
-		return nsfd, nsfd.closer, nil
-	}
+func (nsfd *TypedNamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
 	return nsfd, func() {}, nil
 }
 

@@ -42,6 +42,12 @@ func assertInvNSError(err error) {
 	ExpectWithOffset(1, errors.As(err, &invnserr)).To(BeTrue(), "not an 'invalid namespace' error")
 }
 
+func null() *os.File {
+	fnull, err := os.Open("/dev/null")
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "broken /dev/null")
+	return fnull
+}
+
 var _ = Describe("Namespaces", func() {
 
 	It("descriptively fails to wrap an invalid file descriptor", func() {
@@ -50,6 +56,8 @@ var _ = Describe("Namespaces", func() {
 	})
 
 	It("wraps namespace *os.Files", func() {
+		Expect(NamespaceFile{}.String()).To(MatchRegexp("zero os.File"))
+
 		f, err := NewNamespaceFile(os.Open("/foobar"))
 		Expect(err).To(HaveOccurred())
 		assertInvNSError(err)
@@ -57,9 +65,11 @@ var _ = Describe("Namespaces", func() {
 		Expect(errors.Unwrap(err)).NotTo(BeNil())
 		Expect(f).To(BeNil())
 
-		f, err = NewNamespaceFile(os.Stdout, nil)
+		fnull := null()
+		defer fnull.Close()
+		f, err = NewNamespaceFile(fnull, nil)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(f.Fd()).To(Equal(os.Stdout.Fd()))
+		Expect(f.Fd()).To(Equal(fnull.Fd()))
 
 		_, err = namespaceFileFromFd(f, ^uint(0), nil)
 		Expect(err).To(HaveOccurred())
@@ -116,7 +126,48 @@ var _ = Describe("Namespaces", func() {
 		Expect(f.ID()).To(Equal(nsid))
 	})
 
-	It("returns a suitable file descriptor for referencing", func() {
+	It("opens typed references", func() {
+		ref, err := NewTypedNamespaceFd(0, species.CLONE_NEWNS)
+		Expect(err).NotTo(HaveOccurred())
+		oref, closer, err := ref.OpenTypedReference()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(closer).NotTo(BeNil())
+		Expect(oref.(*TypedNamespaceFd)).To(BeIdenticalTo(ref))
+
+		fref := &NamespaceFile{*os.Stdout}
+		_, _, err = fref.OpenTypedReference()
+		Expect(err).To(MatchError(MatchRegexp("invalid namespace operation NS_GET_NSTYPE")))
+
+		fref, err = NewNamespaceFile(os.Open("/proc/self/ns/net"))
+		Expect(err).NotTo(HaveOccurred())
+		oref, closer, err = fref.OpenTypedReference()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(closer).NotTo(BeNil())
+		Expect(oref).NotTo(BeNil())
+
+		fnull := null()
+		defer fnull.Close()
+		tfref, err := NewTypedNamespaceFile(fnull, species.CLONE_NEWUSER)
+		Expect(err).NotTo(HaveOccurred())
+		oref, closer, err = tfref.OpenTypedReference()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(closer).NotTo(BeNil())
+		Expect(oref).NotTo(BeNil())
+
+		fdref := NamespaceFd(0)
+		_, _, err = fdref.OpenTypedReference()
+		Expect(err).To(MatchError(MatchRegexp("invalid namespace operation")))
+
+		fd, err := unix.Open("/proc/self/ns/net", unix.O_RDONLY, 0)
+		Expect(err).NotTo(HaveOccurred())
+		fdref = NamespaceFd(fd)
+		oref, closer, err = fdref.OpenTypedReference()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(closer).NotTo(BeNil())
+		Expect(oref).NotTo(BeNil())
+	})
+
+	It("returns suitable file descriptors for referencing", func() {
 		ref := NamespacePath("foobar")
 		_, _, err := ref.NsFd()
 		Expect(err).To(HaveOccurred())
@@ -256,10 +307,12 @@ read # wait for test to proceed()
 
 	It("tests helpers", func() {
 		Expect(errof(NewTypedNamespaceFd(0, 0))).Should(HaveOccurred())
-		Expect(newTypedNamespaceFd(42, species.CLONE_NEWNET, nil, "").String()).To(
-			MatchRegexp("fd 42.+type net"))
-		Expect(newTypedNamespaceFd(42, species.CLONE_NEWNET, nil, "foobarref").String()).To(
-			MatchRegexp("foobarref.+type net"))
+		ref, err := NewTypedNamespaceFd(42, species.CLONE_NEWNET)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ref.String()).To(MatchRegexp("fd 42.+type net"))
+
+		Expect(errof(typedNamespaceFileFromFd(ref, "", 0, 0, errors.New("foobar")))).To(
+			MatchError(MatchRegexp("invalid namespace fd")))
 	})
 
 })

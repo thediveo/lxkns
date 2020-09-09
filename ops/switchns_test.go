@@ -68,6 +68,10 @@ var _ = Describe("Set Namespaces", func() {
 		err = Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)))
 		Expect(err).To(HaveOccurred())
 		Expect(err).To(MatchError(MatchRegexp(`cannot determine type`)))
+
+		err = Visit(func() {}, NamespacePath("/proc/self/ns/mnt"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot enter namespace, (operation not permitted|invalid argument)`)))
 	})
 
 	It("Execute()s", func() {

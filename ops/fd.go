@@ -115,7 +115,7 @@ func fdID(ref r.Relation, fd int) (species.NamespaceID, error) {
 func (nsfd NamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
-		return nil, nil, newInvalidNamespaceError(nsfd, err)
+		return nil, nil, newNamespaceOperationError(nsfd, "NS_GET_NSTYPE", err)
 	}
 	openref, err := NewTypedNamespaceFd(int(nsfd), species.NamespaceType(t))
 	return openref, func() {}, err
