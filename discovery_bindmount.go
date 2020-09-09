@@ -21,6 +21,7 @@ package lxkns
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/thediveo/go-mntinfo"
@@ -115,7 +116,8 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		enterns := []Namespace{mntns}
 		if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {
 			usernsid, _ := usermntnsref.ID()
-			usermntnsref.Close() // do not leak (again)
+			// Do not leak, release user namespace immediately, as we're done with it.
+			usermntnsref.(io.Closer).Close()
 			if userns, ok := result.Namespaces[UserNS][usernsid]; ok && userns.ID() != ownusernsid {
 				// Prepend the user namespace to the list of namespaces we
 				// need to enter, due to the magic capabilities of entering
@@ -189,7 +191,7 @@ func ownedBindMounts() []BindmountedNamespaceInfo {
 		var ownernsid species.NamespaceID
 		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
-			usernsref.Close()
+			usernsref.(io.Closer).Close() // do not leak.
 		}
 		ownedbindmounts[idx].OwnernsID = ownernsid
 	}

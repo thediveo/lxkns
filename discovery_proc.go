@@ -63,10 +63,14 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		// to yet another goroutine, something which really doesn't help us
 		// here. Please note that we need the open fd further below in case we
 		// need to discover ownership.
-		nsf, err := ops.NewNamespaceFile(os.OpenFile(nsref, os.O_RDONLY, 0))
+		f, err := os.Open(nsref)
 		if err != nil {
 			continue
 		}
+		// Why not using a (typed) NamespacePath here? Because we want to carry
+		// out multiple query operations and avoid repeated opening and closing
+		// for each single query.
+		nsf, _ := ops.NewTypedNamespaceFile(f, nstype)
 		nsid, err := nsf.ID()
 		if err != nil {
 			nsf.Close() // ...don't leak!
