@@ -15,6 +15,7 @@
 package ops
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -23,10 +24,24 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
+	o "github.com/thediveo/lxkns/ops/internal/opener"
+	r "github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
 )
+
+type brokenref struct{ NamespacePath }
+
+func (b *brokenref) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+	return b, func() {}, nil
+}
+
+func (b brokenref) NsFd() (int, o.FdCloser, error) {
+	return 0, nil, errors.New("broken reference")
+}
+
+var _ o.Opener = (*brokenref)(nil)
 
 var _ = Describe("Set Namespaces", func() {
 
@@ -72,6 +87,10 @@ var _ = Describe("Set Namespaces", func() {
 		err = Visit(func() {}, NamespacePath("/proc/self/ns/mnt"))
 		Expect(err).To(HaveOccurred())
 		Expect(err).To(MatchError(MatchRegexp(`cannot enter namespace, (operation not permitted|invalid argument)`)))
+
+		err = Visit(func() {}, &brokenref{NamespacePath("/proc/self/ns/net")})
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, broken reference`)))
 	})
 
 	It("Execute()s", func() {

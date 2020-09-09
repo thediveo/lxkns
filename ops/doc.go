@@ -7,16 +7,23 @@ Namespace Queries
 
 A particular Linux-kernel namespace can be referenced by a filesystem path, an
 open file descriptor, or an *os.File. Thus, this package defines the following
-three (four) namespace reference types:
+three (six) namespace reference types:
 
     * NamespacePath (and TypedNamespacePath)
-    * NamespaceFd
-    * NamespaceFile
+    * NamespaceFd (and TypedNamespaceFd)
+    * NamespaceFile (and TypedNamespaceFile)
 
-All three (four) types of namespace references define the following query
-operations from the Relation interface (which map to a set of ioctl() calls,
-see: http://man7.org/linux/man-pages/man2/ioctl_ns.2.html, with the exception of
-the ID query):
+The only difference between the NamespaceXXX and TypedNamespaceXXX reference
+types are: if the the type of namespace referenced is known beforehand, then
+this knowledge might be used to either optimize Type() lookups, or support Linux
+kernels before 4.11 which lack the ability to query the type of namespace via an
+ioctl(). In particular, this allows using the Visit() function (see below) to be
+used on such older kernels.
+
+All these types of namespace references define the following query operations
+from the Relation interface (which map to a set of ioctl() calls, see:
+http://man7.org/linux/man-pages/man2/ioctl_ns.2.html, with the exception of the
+ID query):
 
     * ID() returns the ID of the referenced namespace.
     * User() returns the user namespace owning the referenced namespace.
@@ -86,7 +93,7 @@ namespaces switched as specified:
 
     * Go(f, namespaces...) -- asynchronous f in the specified namespaces.
     * Execute(f, namespaces...) -- synchronous f in the specified namespaces with result.
-    * Visit(f, namespaces...) -- synchronous f in the specified namespaces.
+    * Visit(f, namespaces...) -- synchronous f in the specified namespaces in same Go routine.
 
 These namespace-switching methods differ as follows: Go(f, namespaces...) acts
 very similar to the "go" statement in that it runs the given function f as a new
