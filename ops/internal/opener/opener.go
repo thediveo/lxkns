@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package opener provides access to the file descriptors of namespace
+// references.
+//
+// This internal interface optimizes fd-access in those usecases where the type
+// of namespace is known in advance, avoiding unnecessary ioctl() calls and
+// supporting Linux kernels 4.9 and 4.10 which lack the type ioctl().
 package opener
 
 import r "github.com/thediveo/lxkns/ops/relations"
 
 // Opener is a module-internal interface to namespace references, to get file
 // descriptor references to namespaces regardless of the particular type of
-// reference; be it path-based, file-based, or fd-based. Also optimizes those
-// usecases where the type of namespace is known in advance.
+// reference; be it path-based, file-based, or fd-based.
 type Opener interface {
 	// OpenTypedReference returns a typed and "opened" namespace reference,
 	// ready for reference in Linux syscalls by a file descriptor. When used on
@@ -51,10 +56,10 @@ type Opener interface {
 	NsFd() (int, FdCloser, error)
 }
 
-// ReferenceCloser is a module-internal function which needs to be called in
-// order to properly release process resources when done with a TypedReference.
+// ReferenceCloser is a function that needs to be called in order to properly
+// release process resources when done with a TypedReference.
 type ReferenceCloser func()
 
-// FdCloser is a module-internal function which needs to be called in order to
-// properly release process resources when done with a ops.Relation.
+// FdCloser is a function that needs to be called in order to properly release
+// process resources when done with a ops.Relation.
 type FdCloser func()

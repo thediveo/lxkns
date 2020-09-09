@@ -39,8 +39,9 @@ func (nsfd NamespaceFd) String() string {
 }
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
-// file descriptor. Please note that a Linux kernel version 4.11 or later is
-// required.
+// file descriptor.
+//
+// ℹ️ A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
@@ -60,23 +61,37 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 // User returns the owning user namespace the namespace referenced by this open
 // file descriptor. The owning user namespace is returned in form of a
 // NamespaceFile reference. For user namespaces, User() behaves identical to
-// Parent(). A Linux kernel version 4.9 or later is required.
+// Parent().
+//
+// ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) User() (r.Relation, error) {
-	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
-	return namespaceFileFromFd(nsfd, fd, err)
+	userfd, err := ioctl(int(nsfd), _NS_GET_USERNS)
+	// From the Linux namespace architecture, we already know that the owning
+	// namespace must be a user namespace (otherwise there is something really
+	// seriously broken), so we return the properly typed parent namespace
+	// reference object. And we're returning an os.File-based namespace
+	// reference, as this allows us to reuse the lifecycle control over the
+	// newly gotten file descriptor implemented in os.File.
+	return typedNamespaceFileFromFd(nsfd, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of the Linux-kernel namespace referenced
 // by this open file descriptor. The namespace references must be either of type
-// PID or user. For user namespaces, Parent() and User() behave identical. A
-// Linux kernel version 4.9 or later is required.
+// PID or user. For user namespaces, Parent() and User() behave identical.
+//
+// ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) Parent() (r.Relation, error) {
-	fd, err := ioctl(int(nsfd), _NS_GET_USERNS)
+	fd, err := ioctl(int(nsfd), _NS_GET_PARENT)
+	// We don't know the proper type, so return the parent namespace reference
+	// as an un-typed os.File-based reference, so we can reuse the lifecycle
+	// management of os.File.
 	return namespaceFileFromFd(nsfd, fd, err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
-// open file descriptor. A Linux kernel version 4.11 or later is required.
+// open file descriptor.
+//
+// ℹ️ A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) OwnerUID() (int, error) {
 	return ownerUID(nsfd, int(nsfd))
 }
@@ -93,9 +108,17 @@ func fdID(ref r.Relation, fd int) (species.NamespaceID, error) {
 	return species.NamespaceID{Dev: stat.Dev, Ino: stat.Ino}, nil
 }
 
-//
+// OpenTypedReference returns an open namespace reference, from which an
+// OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
+// internally used to allow optimizing switching namespaces under the condition
+// that additionally the type of namespace needs to be known at the same time.
 func (nsfd NamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
-	return nil, nil, nil // TODO: implement!
+	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
+	if err != nil {
+		return nil, nil, newInvalidNamespaceError(nsfd, err)
+	}
+	openref, err := NewTypedNamespaceFd(int(nsfd), species.NamespaceType(t))
+	return openref, func() {}, err
 }
 
 // NsFd returns an open file descriptor which references the namespace.

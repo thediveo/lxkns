@@ -43,7 +43,7 @@ func NewNamespaceFile(f *os.File, err error) (*NamespaceFile, error) {
 	if err == nil && f != nil {
 		return &NamespaceFile{*f}, nil
 	}
-	return nil, newInvalidNamespaceError(&NamespaceFile{}, err)
+	return nil, newInvalidNamespaceError(nil, err)
 }
 
 // Internal convenience helper that takes a file descriptor and an error,
@@ -80,7 +80,9 @@ func (nsf NamespaceFile) String() (s string) {
 }
 
 // Type returns the type of the Linux-kernel namespace referenced by this open
-// file. Please note that a Linux kernel version 4.11 or later is required.
+// file.
+//
+// ℹ️ A Linux kernel version 4.11 or later is required.
 func (nsf NamespaceFile) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsf.Fd()), _NS_GET_NSTYPE)
 	if err != nil {
@@ -101,7 +103,13 @@ func (nsf NamespaceFile) ID() (species.NamespaceID, error) {
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) User() (r.Relation, error) {
 	userfd, err := ioctl(int(nsf.Fd()), _NS_GET_USERNS)
-	return typedNamespaceFileFromFd(nsf, userfd, species.CLONE_NEWUSER, err)
+	// From the Linux namespace architecture, we already know that the owning
+	// namespace must be a user namespace (otherwise there is something really
+	// seriously broken), so we return the properly typed parent namespace
+	// reference object. And we're returning an os.File-based namespace
+	// reference, as this allows us to reuse the lifecycle control over the
+	// newly gotten file descriptor implemented in os.File.
+	return typedNamespaceFileFromFd(nsf, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -111,6 +119,9 @@ func (nsf NamespaceFile) User() (r.Relation, error) {
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) Parent() (r.Relation, error) {
 	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
+	// We don't know the proper type, so return the parent namespace reference
+	// as an un-typed os.File-based reference, so we can reuse the lifecycle
+	// management of os.File.
 	return namespaceFileFromFd(nsf, fd, err)
 }
 
@@ -131,7 +142,7 @@ func (nsf NamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceCloser, er
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsf, err)
 	}
-	return openref, func() { openref.Close() }, nil
+	return openref, func() {}, nil
 }
 
 // NsFd returns a file descriptor referencing the namespace indicated in a

@@ -16,6 +16,7 @@ package ops
 
 import (
 	"fmt"
+	"os"
 
 	o "github.com/thediveo/lxkns/ops/internal/opener"
 	r "github.com/thediveo/lxkns/ops/relations"
@@ -73,8 +74,27 @@ func (nsp TypedNamespacePath) Parent() (r.Relation, error) {
 	defer unix.Close(fd)
 	parentfd, err := ioctl(fd, _NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
-	// typed parent namespace reference object.
-	return typedNamespaceFileFromFd(nsp, parentfd, nsp.nstype, err)
+	// typed parent namespace reference object. And we're returning an
+	// os.File-based namespace reference, as this allows us to reuse the
+	// lifecycle control over the newly gotten file descriptor implemented in
+	// os.File.
+	return typedNamespaceFileFromFd(nsp, "NS_GET_PARENT", parentfd, nsp.nstype, err)
+}
+
+// OpenTypedReference returns an open namespace reference, from which an
+// OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
+// internally used to allow optimizing switching namespaces under the condition
+// that additionally the type of namespace needs to be known at the same time.
+func (nsp TypedNamespacePath) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+	f, err := os.Open(string(nsp.NamespacePath))
+	if err != nil {
+		return nil, nil, newInvalidNamespaceError(nsp, err)
+	}
+	openref, err := NewTypedNamespaceFile(f, nsp.nstype)
+	if err != nil {
+		return nil, nil, newInvalidNamespaceError(nsp, err)
+	}
+	return openref, func() { openref.Close() }, nil
 }
 
 // Ensures that TypedNamespacePath implements the Relation interface.

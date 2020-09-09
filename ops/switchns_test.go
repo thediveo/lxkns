@@ -33,7 +33,7 @@ var _ = Describe("Set Namespaces", func() {
 	It("Go()es with errors", func() {
 		err := Go(func() {}, NamespacePath("foobar"))
 		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path foobar`)))
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
 	})
 
 	It("Go()es with errors as non-root", func() {
@@ -59,30 +59,15 @@ var _ = Describe("Set Namespaces", func() {
 	It("Visit()s with errors", func() {
 		err := Visit(func() {}, NamespacePath("foobar"))
 		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path foobar`)))
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
 
 		err = Visit(func() {}, NamespacePath("doc.go"))
 		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(MatchRegexp(`cannot determine type.+ioctl`)))
+		Expect(err).To(MatchError(MatchRegexp(`cannot reference namespace.+NS_GET_NSTYPE.+ioctl`)))
 
-		err = Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", 0))
+		err = Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)))
 		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(MatchRegexp(`cannot determine type.+ioctl`)))
-	})
-
-	It("Visit()s with errors, part 2", func() {
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-
-		netns := NamespacePath("/proc/self/ns/net")
-		_, closer, err := netns.Reference()
-		Expect(err).NotTo(HaveOccurred())
-		err = Visit(
-			func() { closer() },
-			netns)
-		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(MatchRegexp(`hmpf`)))
+		Expect(err).To(MatchError(MatchRegexp(`cannot determine type`)))
 	})
 
 	It("Execute()s", func() {

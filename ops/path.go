@@ -32,24 +32,33 @@ type NamespacePath string
 // referenced namespace (ID), as we're here dealing with the references
 // themselves.
 func (nsp NamespacePath) String() string {
-	return fmt.Sprintf("path %s", string(nsp))
+	return fmt.Sprintf("path %q", string(nsp))
 }
 
 // Type returns the type of the Linux-kernel namespace referenced by this file
-// path. Please note that a Linux kernel version 4.11 or later is required.
+// path.
+//
+// ℹ️ A Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) Type() (species.NamespaceType, error) {
+	// Since we only need to temporarily open the namespace "file", we keep with
+	// unix.Open() and and plain file descriptors instead of os.Open() and
+	// os.File.
 	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
-		return 0, err
+		return 0, newInvalidNamespaceError(nsp, err)
 	}
 	defer unix.Close(fd)
 	t, err := ioctl(int(fd), _NS_GET_NSTYPE)
+	if err != nil {
+		err = newNamespaceOperationError(nsp, "NS_GET_TYPE", err)
+	}
 	return species.NamespaceType(t), err
 }
 
 // ID returns the namespace ID in form of its inode number for any given
 // Linux kernel namespace reference.
 func (nsp NamespacePath) ID() (species.NamespaceID, error) {
+	// See above for reasoning why unix.Open() instead of os.Open().
 	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return species.NoneID, err
@@ -63,13 +72,20 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) User() (r.Relation, error) {
+	// See above for reasoning why unix.Open() instead of os.Open().
 	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
 	defer unix.Close(fd)
 	userfd, err := ioctl(fd, _NS_GET_USERNS)
-	return typedNamespaceFileFromFd(nsp, userfd, species.CLONE_NEWUSER, err)
+	// From the Linux namespace architecture, we already know that the owning
+	// namespace must be a user namespace (otherwise there is something really
+	// seriously broken), so we return the properly typed parent namespace
+	// reference object. And we're returning an os.File-based namespace
+	// reference, as this allows us to reuse the lifecycle control over the
+	// newly gotten file descriptor implemented in os.File.
+	return typedNamespaceFileFromFd(nsp, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -84,6 +100,9 @@ func (nsp NamespacePath) Parent() (r.Relation, error) {
 	}
 	defer unix.Close(fd)
 	parentfd, err := ioctl(fd, _NS_GET_PARENT)
+	// We don't know the proper type, so return the parent namespace reference
+	// as an un-typed os.File-based reference, so we can reuse the lifecycle
+	// management of os.File.
 	return namespaceFileFromFd(nsp, parentfd, err)
 }
 

@@ -29,15 +29,35 @@ type InvalidNamespaceError struct {
 	Err error  // wrapped OS-level error.
 }
 
+type NamespaceOperationError struct {
+	InvalidNamespaceError
+	Op string // failed namespace ioctl operation
+}
+
 // newInvalidNamespaceError returns a descriptive error, also wrapping an
 // underlying (OS-level) error giving more details when desired.
 func newInvalidNamespaceError(nsref r.Relation, err error) *InvalidNamespaceError {
+	if nsref == nil {
+		return &InvalidNamespaceError{"", err}
+	}
 	return &InvalidNamespaceError{nsref.(fmt.Stringer).String(), err}
+}
+
+// newNamespaceOperationError returns a descriptive error, also wrapping an
+// underlying (OS-level) error giving more details when desired.
+func newNamespaceOperationError(nsref r.Relation, op string, err error) *NamespaceOperationError {
+	return &NamespaceOperationError{
+		InvalidNamespaceError{nsref.(fmt.Stringer).String(), err},
+		op,
+	}
 }
 
 // Error returns a textual description of this invalid namespace error.
 func (e *InvalidNamespaceError) Error() string {
-	s := "lxkns: invalid namespace " + e.Ref
+	s := "lxkns: invalid namespace"
+	if e.Ref != "" {
+		s += " " + e.Ref
+	}
 	if e.Err != nil {
 		s += ": " + e.Err.Error()
 	}
@@ -46,3 +66,13 @@ func (e *InvalidNamespaceError) Error() string {
 
 // Unwrap returns the error underlying an invalid namespace error.
 func (e *InvalidNamespaceError) Unwrap() error { return e.Err }
+
+// Error returns a textual description of this invalid namespace error.
+func (e *NamespaceOperationError) Error() string {
+	s := fmt.Sprintf("lxkns: invalid namespace operation %s on %s",
+		e.Op, e.Ref)
+	if e.Err != nil {
+		s += ": " + e.Err.Error()
+	}
+	return s
+}

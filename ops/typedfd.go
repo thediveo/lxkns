@@ -77,7 +77,10 @@ func (nsfd TypedNamespaceFd) Type() (species.NamespaceType, error) {
 	return nsfd.nstype, nil
 }
 
-// FIXME: write doc
+// OpenTypedReference returns an open namespace reference, from which an
+// OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
+// internally used to allow optimizing switching namespaces under the condition
+// that additionally the type of namespace needs to be known at the same time.
 func (nsfd TypedNamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
 	if nsfd.closer != nil {
 		return nsfd, nsfd.closer, nil

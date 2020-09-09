@@ -168,6 +168,14 @@ func Visit(f func(), nsrefs ...r.Relation) (err error) {
 			return // ...unwind entangled namespaces
 		}
 		nstype, _ := openref.Type() // already fetched during OpenTypedReference().
+		nstypename := nstype.Name()
+		if nstypename == "" {
+			fdcloser()
+			refcloser()
+			err = fmt.Errorf(
+				"lxkns.Visit: cannot determine type of %s", nsref)
+			return // ...unwind entangled namespaces
+		}
 		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstype.Name()))
 		var oldfd int
 		var oldfdcloser o.FdCloser

@@ -16,8 +16,9 @@ require (
 	github.com/thediveo/klo v0.0.0-20200201214446-23f1c697d426
 	github.com/thediveo/testbasher v0.0.0-20200213062358-4c41bdc89149
 	github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1 // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d
+	golang.org/x/tools v0.0.0-20200904185747-39188db58858 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

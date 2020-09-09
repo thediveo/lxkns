@@ -31,9 +31,11 @@
 package lxkns
 
 import (
+	"io"
 	"os"
 
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -55,8 +57,8 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 	}
 	nstypeidx := TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
-	for _, somens := range nsmap {
-		ns := somens // ...so we can later climb rung by rung.
+	for _, startns := range nsmap {
+		ns := startns // ...so we can later climb rung by rung.
 		if ns.(Hierarchy).Parent() != nil {
 			// Early exit: skip this user/PID namespace, if it has already
 			// been brought into the hierarchy as part of the
@@ -64,12 +66,14 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			continue
 		}
 		// For climbing up the hierarchy, Linux wants us to give it file
-		// descriptors referencing the namespaces to be quieried for their
+		// descriptors referencing the namespaces to be queried for their
 		// parents.
-		nsf, err := ops.NewNamespaceFile(os.OpenFile(ns.Ref(), os.O_RDONLY, 0))
+		f, err := os.Open(ns.Ref())
 		if err != nil {
 			continue
 		}
+		var nsf relations.Relation
+		nsf, _ = ops.NewTypedNamespaceFile(f, nstype)
 		// Now, go climbing up the hierarchy...
 		for {
 			// We already worked on this user/pid namespace, so we don't need
@@ -127,10 +131,10 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			// the hierarchy, and then prepare for the next rung...
 			parentns.(HierarchyConfigurer).AddChild(ns.(Hierarchy))
 			ns = parentns
-			nsf.Close()
+			nsf.(io.Closer).Close()
 			nsf = parentnsf
 		}
 		// Don't leak...
-		nsf.Close()
+		nsf.(io.Closer).Close()
 	}
 }

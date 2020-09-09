@@ -41,7 +41,7 @@ type TypedNamespaceFile struct {
 func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedNamespaceFile, error) {
 	if f != nil && nstype == 0 {
 		if t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE); err != nil {
-			return nil, newInvalidNamespaceError(&NamespaceFile{*f}, err)
+			return nil, newNamespaceOperationError(&NamespaceFile{*f}, "NS_GET_NSTYPE", err)
 		} else {
 			nstype = species.NamespaceType(t)
 		}
@@ -59,8 +59,11 @@ func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedName
 // particular. If there was an error instead, then this convenience functions
 // returns a suitable namespace-related error, additionally wrapping the
 // underlying OS-level error.
-func typedNamespaceFileFromFd(ref r.Relation, fd uint, nstype species.NamespaceType, err error) (*TypedNamespaceFile, error) {
+func typedNamespaceFileFromFd(ref r.Relation, op string, fd uint, nstype species.NamespaceType, err error) (*TypedNamespaceFile, error) {
 	if err != nil {
+		if op != "" {
+			return nil, newNamespaceOperationError(ref, op, err)
+		}
 		return nil, newInvalidNamespaceError(ref, err)
 	}
 	if f := os.NewFile(uintptr(fd), ""); f != nil {
@@ -70,8 +73,8 @@ func typedNamespaceFileFromFd(ref r.Relation, fd uint, nstype species.NamespaceT
 			nil
 	}
 	return nil, fmt.Errorf(
-		"xlkns ops.TypedNamespaceFile: all I got was a nil file wrapper for: %w",
-		newInvalidNamespaceError(ref, nil))
+		"xlkns ops.TypedNamespaceFile: invalid file descriptor %d: %w",
+		int(fd), newInvalidNamespaceError(ref, nil))
 }
 
 // Type returns the foreknown type of the Linux-kernel namespace set when this
@@ -92,7 +95,7 @@ func (nsf TypedNamespaceFile) Parent() (r.Relation, error) {
 	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
 	// typed parent namespace reference object.
-	return typedNamespaceFileFromFd(nsf, fd, nsf.nstype, err)
+	return typedNamespaceFileFromFd(nsf, "NS_GET_PARENT", fd, nsf.nstype, err)
 }
 
 // OpenTypedReference returns an open and typed namespace reference, from which

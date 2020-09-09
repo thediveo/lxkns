@@ -18,9 +18,10 @@ package lxkns
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
-	"github.com/thediveo/lxkns/ops"
+	r "github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -47,7 +48,7 @@ var _ NamespaceStringer = (*plainNamespace)(nil)
 type NamespaceConfigurer interface {
 	AddLeader(proc *Process)               // adds yet another self-styled leader.
 	SetRef(string)                         // sets a filesystem path for referencing this namespace.
-	DetectOwner(nsf *ops.NamespaceFile)    // detects owning user namespace id.
+	DetectOwner(nsr r.Relation)            // detects owning user namespace id.
 	SetOwner(usernsid species.NamespaceID) // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap NamespaceMap)   // resolves owner ns id into object reference.
 }
@@ -166,18 +167,21 @@ func (pns *plainNamespace) SetRef(ref string) {
 
 // DetectOwner gets the ownering user namespace id from Linux, and stores it for
 // later resolution, after when we have a complete map of all user namespaces.
-func (pns *plainNamespace) DetectOwner(nsf *ops.NamespaceFile) {
-	if nsf == nil {
+func (pns *plainNamespace) DetectOwner(nsr r.Relation) {
+	if nsr == nil {
 		return
 	}
 	// The User() call gives us an fd wrapped in an os.File, which we can then
 	// ask for its namespace ID.
-	usernsf, err := nsf.User()
+	usernsf, err := nsr.User()
 	if err != nil {
 		return
 	}
-	defer usernsf.Close() // Do NOT leak.
+	// Do not leak, so release user namespace (file) reference now, as we're
+	// done using it. And yes, we're blindly type asserting here, so the caller
+	// must pass in a closeable namespace reference object.
 	pns.ownernsid, _ = usernsf.ID()
+	usernsf.(io.Closer).Close()
 }
 
 // SetOwner set the namespace ID of the user namespace owning this namespace.
