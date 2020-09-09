@@ -21,7 +21,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/ops/relations"
 )
 
 // userNamespace stores ownership information in addition to the information
@@ -71,8 +71,8 @@ func (uns *userNamespace) String() string {
 
 // detectUIDs takes an open file referencing a user namespace to query its
 // owner's UID and then stores it for this user namespace proxy.
-func (uns *userNamespace) detectUID(nsf *ops.NamespaceFile) {
-	uns.owneruid, _ = nsf.OwnerUID()
+func (uns *userNamespace) detectUID(nsref relations.Relation) {
+	uns.owneruid, _ = nsref.OwnerUID()
 }
 
 // ResolveOwner sets the owning user namespace reference based on the owning

@@ -20,31 +20,10 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/thediveo/lxkns/species"
+	o "github.com/thediveo/lxkns/ops/internal/opener"
+	r "github.com/thediveo/lxkns/ops/relations"
 	"golang.org/x/sys/unix"
 )
-
-// Referrer returns an open file descriptor to the namespace indicated in a
-// namespace reference type, such as NamespacePath, suitable for switching
-// namespaces using setns(2).
-type Referrer interface {
-	// Open returns a file descriptor referencing the namespace indicated in a
-	// namespace reference implementing the Opener interface. If the returned
-	// close is true, then the caller must close the file descriptor after it
-	// doesn't need it anymore. If false, the caller must not close the file
-	// descriptor. In case the Opener is unable to return a file descriptor to
-	// the referenced namespace, err is non-nil.
-	//
-	// The caller must make sure that the namespace reference object does not
-	// get garbage collected before the file descriptor is used, if in doubt,
-	// use runtime.KeepAlive(nsref), see also:
-	// https://golang.org/pkg/runtime/#KeepAlive.
-	Reference() (fd int, cloze CloseFunc, err error)
-}
-
-// CloseFunc tells a referrer to close the file descriptor of a namespace
-// reference.
-type CloseFunc func()
 
 // Go runs the specified function as a new Go routine and from a locked OS
 // thread, while joined to the specified namespaces. When the specified function
@@ -55,7 +34,7 @@ type CloseFunc func()
 // succeeded, else an error. Please note that Go() returns as soon as switching
 // namespaces has finished. The specified function is then run in its own Go
 // routine.
-func Go(f func(), nsrefs ...Referrer) error {
+func Go(f func(), nsrefs ...r.Relation) error {
 	started := make(chan error)
 	go func() {
 		// Lock, but never unlock the OS thread exclusively powering our Go
@@ -74,15 +53,17 @@ func Go(f func(), nsrefs ...Referrer) error {
 			// slice elements and thus its os.Files (if any) alive. In
 			// consequence, we don't need an explicit runtime.KeepAlive(...)
 			// here.
-			fd, closer, err := nsref.Reference()
+			fd, closer, err := nsref.(o.Opener).NsFd()
 			if err != nil {
-				started <- err
+				started <- fmt.Errorf("lxkns.Go: cannot reference namespace, %w", err)
 				return // ex-terminate ;)
 			}
 			err = unix.Setns(fd, 0)
 			closer()
 			if err != nil {
-				started <- err
+				started <- fmt.Errorf(
+					"lxkns.Go: cannot enter namespace %s, %w",
+					nsref.(fmt.Stringer).String(), err)
 				return
 			}
 		}
@@ -100,7 +81,7 @@ func Go(f func(), nsrefs ...Referrer) error {
 // Execute a function synchronously while switched into the specified
 // namespaces, then returns the interface{} outcome of calling the specified
 // function. If switching fails, Execute returns an error instead.
-func Execute(f func() interface{}, nsrefs ...Referrer) (interface{}, error) {
+func Execute(f func() interface{}, nsrefs ...r.Relation) (interface{}, error) {
 	result := make(chan interface{})
 	if err := Go(func() {
 		result <- f()
@@ -127,7 +108,7 @@ func Execute(f func() interface{}, nsrefs ...Referrer) (interface{}, error) {
 // Visit() should never be called from the main Go routine, as any failure in
 // switching namespaces leaves us with a tainted OS thread for the main Go
 // routine. Yuk!
-func Visit(f func(), nsrefs ...Referrer) (err error) {
+func Visit(f func(), nsrefs ...r.Relation) (err error) {
 	runtime.LockOSThread()
 	tid := unix.Gettid()
 	// Keep record of the namespaces we are leaving, so we can switch back
@@ -145,7 +126,9 @@ func Visit(f func(), nsrefs ...Referrer) (err error) {
 			if seterr := unix.Setns(switchback[idx].fd, 0); seterr != nil && err == nil {
 				// In case we didn't registered an err so far, take this ... but
 				// ignore any subsequent errs.
-				err = fmt.Errorf("cannot restore previous namespace: %s", seterr.Error())
+				err = fmt.Errorf(
+					"lxkns.Visit: cannot switch back to previously active namespace: %w",
+					seterr)
 			}
 			switchback[idx].closer()
 		}
@@ -164,43 +147,61 @@ func Visit(f func(), nsrefs ...Referrer) (err error) {
 	// query that information too. Again, more error handling, without any
 	// chance to defer().
 	for _, nsref := range nsrefs {
-		// First, get the fd referencing the namespace to switch into.
-		var fd int
-		var closer CloseFunc
-		fd, closer, err = nsref.Reference() // no ":=", don't shadow err!
+		// Use the optimization which opens a typed namespace for us, so we get
+		// not only an OS-level file descriptor for referencing the namespace,
+		// but also its (optionally foretold) type.
+		var openref r.Relation
+		var refcloser o.ReferenceCloser
+		// no ":=", don't shadow err!
+		openref, refcloser, err = nsref.(o.Opener).OpenTypedReference()
 		if err != nil {
+			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
 			return // ...unwind entangled namespaces
 		}
-		// Next, find out the type of namespace to switch into, so we can record
-		// the currently active namespace of this type in our OS thread ... so
-		// we can later switch back again.
-		var nstype species.NamespaceType
-		nstype, err = NamespaceFd(fd).Type()
+		var fd int
+		var fdcloser o.FdCloser
+		// no ":=", don't shadow err!
+		fd, fdcloser, err = openref.(o.Opener).NsFd()
 		if err != nil {
-			closer()
+			refcloser()
+			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
+			return // ...unwind entangled namespaces
+		}
+		nstype, _ := openref.Type() // already fetched during OpenTypedReference().
+		nstypename := nstype.Name()
+		if nstypename == "" {
+			fdcloser()
+			refcloser()
+			err = fmt.Errorf(
+				"lxkns.Visit: cannot determine type of %s", nsref)
 			return // ...unwind entangled namespaces
 		}
 		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstype.Name()))
 		var oldfd int
-		var oldcloser CloseFunc
-		oldfd, oldcloser, err = oldnsref.Reference()
+		var oldfdcloser o.FdCloser
+		oldfd, oldfdcloser, err = oldnsref.NsFd()
 		if err != nil {
-			closer()
+			fdcloser()
+			refcloser()
+			err = fmt.Errorf(
+				"lxkns.Visit: cannot save currently active namespace, %w", err)
 			return // ...unwind entangled namespaces
 		}
 		// Finally, we're ready to jump, erm, switch into this specific
 		// namespace.
 		err = unix.Setns(fd, 0)
-		closer() // ...not needed anymore
+		fdcloser()
+		refcloser()
 		if err != nil {
-			oldcloser()
+			oldfdcloser()
+			err = fmt.Errorf("lxkns.Visit: cannot enter namespace, %w", err)
 			return // ...unwind entangled namespaces
 		}
 		// We succeeded, so record the old namespace to later switch back to it.
 		switchback = append(switchback, origNS{
 			nsref:  oldnsref, // ...keep it alive and away from early GC!
 			fd:     oldfd,
-			closer: oldcloser,
+			closer: oldfdcloser,
 		})
 	}
 	// Call the specified f() with namespaces switches as desired.
@@ -210,7 +211,7 @@ func Visit(f func(), nsrefs ...Referrer) (err error) {
 
 // origNS stores information for switching back to a namespace and cleaning up.
 type origNS struct {
-	nsref  Referrer  // keeps the original namespace ref from getting gc'ed.
-	fd     int       // open fd referencing the original namespace.
-	closer CloseFunc // don't leak fds; this knows how to act correctly.
+	nsref  r.Relation // keeps the original namespace ref from getting gc'ed.
+	fd     int        // open fd referencing the original namespace.
+	closer o.FdCloser // don't leak fds; this knows how to act correctly.
 }
