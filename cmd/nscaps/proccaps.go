@@ -8,18 +8,18 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 )
 
 // ProcessCapabilities returns the set of effective capabilities of the process
 // specified by pid.
-func ProcessCapabilities(pid lxkns.PIDType) []string {
+func ProcessCapabilities(pid model.PIDType) []string {
 	return capsToNames(processEffectiveCaps(pid))
 }
 
 // processEffectiveCaps returns the effective capabilities of process pid as
 // []byte, with the least significant byte, erm octet, first.
-func processEffectiveCaps(pid lxkns.PIDType) (b []byte) {
+func processEffectiveCaps(pid model.PIDType) (b []byte) {
 	f, err := os.Open(fmt.Sprintf("/proc/%d/status", pid))
 	if err != nil {
 		return

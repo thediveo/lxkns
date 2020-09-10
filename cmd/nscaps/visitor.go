@@ -22,9 +22,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -72,7 +72,7 @@ func (v *NodeVisitor) Label(n reflect.Value) (label string) {
 	return fmt.Sprintf("%s%s%s %s",
 		prefix,
 		output.NamespaceIcon(ns),
-		sty.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
+		sty.V(ns.(model.NamespaceStringer).TypeIDString()),
 		output.NamespaceReferenceLabel(ns))
 }
 

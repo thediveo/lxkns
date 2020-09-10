@@ -18,7 +18,7 @@
 
 // +build linux
 
-package lxkns
+package model
 
 import (
 	"bytes"

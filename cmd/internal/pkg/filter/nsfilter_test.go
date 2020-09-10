@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -47,8 +47,8 @@ var _ = Describe("--filter flag", func() {
 			species.CLONE_NEWUTS,
 			species.CLONE_NEWUSER,
 		))
-		Expect(Filter(lxkns.NewNamespace(species.CLONE_NEWNET, species.NamespaceID{}, ""))).To(BeFalse())
-		Expect(Filter(lxkns.NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{}, ""))).To(BeTrue())
+		Expect(Filter(namespaces.New(species.CLONE_NEWNET, species.NamespaceID{}, ""))).To(BeFalse())
+		Expect(Filter(namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{}, ""))).To(BeTrue())
 	})
 
 })

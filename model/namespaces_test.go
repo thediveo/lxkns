@@ -1,5 +1,3 @@
-// General package definitions.
-
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -14,7 +12,19 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package model
 
-// SemVersion is the semantic version string of the lxkns module.
-const SemVersion = "0.14.0"
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/species"
+)
+
+var _ = Describe("model", func() {
+
+	It("TypeIndex() fails for invalid kernel namespace type", func() {
+		Expect(TypeIndex(species.CLONE_NEWCGROUP | species.CLONE_NEWNET)).To(
+			Equal(NamespaceTypeIndex(-1)))
+	})
+
+})

@@ -26,19 +26,20 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 )
 
 // ProcessLabel returns the text label for a Process, rendering such
 // information such as not only the PID and process name, but also translating
 // the PID into the process' "own" PID namespace, if it differs from the
 // initial/root PID namespace.
-func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Namespace) string {
+func ProcessLabel(proc *model.Process, pidmap *lxkns.PIDMap, rootpidns model.Namespace) string {
 	// Do we have namespace information for it? If yes, then we can translate
 	// between the process-local PID namespace and the "initial" PID
 	// namespace. For convenience, we show all PIDs in all PID namespaces,
 	// from the initial PID namespace down to the PID namespace this process
 	// is joined to.
-	if procpidns := proc.Namespaces[lxkns.PIDNS]; procpidns != nil {
+	if procpidns := proc.Namespaces[model.PIDNS]; procpidns != nil {
 		pids := []string{}
 		for _, el := range pidmap.NamespacedPIDs(proc.PID, rootpidns) {
 			pids = append(pids, strconv.FormatUint(uint64(el.PID), 10))
@@ -64,11 +65,11 @@ func ProcessLabel(proc *lxkns.Process, pidmap *lxkns.PIDMap, rootpidns lxkns.Nam
 // PIDNamespaceLabel returns the text label for a PID namespace, giving not
 // only the details about type (always PID) and ID, but additionally the
 // owner's UID and user name.
-func PIDNamespaceLabel(pidns lxkns.Namespace) (label string) {
+func PIDNamespaceLabel(pidns model.Namespace) (label string) {
 	label = output.NamespaceIcon(pidns) +
-		style.PIDStyle.S(pidns.(lxkns.NamespaceStringer).TypeIDString())
+		style.PIDStyle.S(pidns.(model.NamespaceStringer).TypeIDString())
 	if pidns.Owner() != nil {
-		uid := pidns.Owner().(lxkns.Ownership).UID()
+		uid := pidns.Owner().(model.Ownership).UID()
 		var userstr string
 		if u, err := user.LookupId(fmt.Sprintf("%d", uid)); err == nil {
 			userstr = fmt.Sprintf(" (%q)", style.OwnerStyle.V(u.Username))

@@ -15,6 +15,8 @@
 package lxkns
 
 import (
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo"
@@ -31,32 +33,32 @@ var _ = Describe("Discover", func() {
 	})
 
 	It("sorts namespace maps", func() {
-		nsmap := NamespaceMap{
-			species.NamespaceID{Dev: 1, Ino: 5678}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
-			species.NamespaceID{Dev: 1, Ino: 1234}: NewNamespace(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
+		nsmap := model.NamespaceMap{
+			species.NamespaceID{Dev: 1, Ino: 5678}: namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			species.NamespaceID{Dev: 1, Ino: 1234}: namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		dr := DiscoveryResult{}
-		dr.Namespaces[NetNS] = nsmap
-		sortedns := dr.SortedNamespaces(NetNS)
+		dr.Namespaces[model.NetNS] = nsmap
+		sortedns := dr.SortedNamespaces(model.NetNS)
 		Expect(sortedns).To(HaveLen(2))
 		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
 		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 	})
 
 	It("sorts namespace lists", func() {
-		nslist := []Namespace{
-			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
-			NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
+		nslist := []model.Namespace{
+			namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		sortedns := SortNamespaces(nslist)
 		Expect(sortedns).To(HaveLen(2))
 		Expect(sortedns[0].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
 		Expect(sortedns[1].ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 
-		sortedhns := SortChildNamespaces([]Hierarchy{nslist[0].(Hierarchy), nslist[1].(Hierarchy)})
+		sortedhns := SortChildNamespaces([]model.Hierarchy{nslist[0].(model.Hierarchy), nslist[1].(model.Hierarchy)})
 		Expect(sortedhns).To(HaveLen(2))
-		Expect(sortedhns[0].(Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
-		Expect(sortedhns[1].(Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
+		Expect(sortedhns[0].(model.Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 1234}))
+		Expect(sortedhns[1].(model.Namespace).ID()).To(Equal(species.NamespaceID{Dev: 1, Ino: 5678}))
 	})
 
 	It("rejects finding roots for plain namespaces", func() {
@@ -66,21 +68,21 @@ var _ = Describe("Discover", func() {
 		opts.SkipProcs = false
 		opts.NamespaceTypes = species.CLONE_NEWNET
 		allns := Discover(opts)
-		Expect(func() { rootNamespaces(allns.Namespaces[NetNS]) }).To(Panic())
+		Expect(func() { rootNamespaces(allns.Namespaces[model.NetNS]) }).To(Panic())
 	})
 
 	It("returns namespaces in correct slots, implementing correct interfaces", func() {
 		allns := Discover(FullDiscovery)
-		for _, nstype := range TypeIndexLexicalOrder {
+		for _, nstype := range model.TypeIndexLexicalOrder {
 			for _, ns := range allns.Namespaces[nstype] {
-				Expect(TypesByIndex[nstype]).To(Equal(ns.Type()))
-				Expect(ns.(Namespace)).NotTo(BeNil())
+				Expect(model.TypesByIndex[nstype]).To(Equal(ns.Type()))
+				Expect(ns.(model.Namespace)).NotTo(BeNil())
 				switch nstype {
-				case PIDNS:
-					Expect(ns.(Hierarchy)).NotTo(BeNil())
-				case UserNS:
-					Expect(ns.(Hierarchy)).NotTo(BeNil())
-					Expect(ns.(Ownership)).NotTo(BeNil())
+				case model.PIDNS:
+					Expect(ns.(model.Hierarchy)).NotTo(BeNil())
+				case model.UserNS:
+					Expect(ns.(model.Hierarchy)).NotTo(BeNil())
+					Expect(ns.(model.Ownership)).NotTo(BeNil())
 				}
 			}
 		}

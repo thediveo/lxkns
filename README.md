@@ -260,12 +260,13 @@ import (
     "fmt"
     "github.com/thediveo/gons/reexec"
     "github.com/thediveo/lxkns"
+    "github.com/thediveo/lxkns/model"
 )
 
 func main() {
     reexec.CheckAction() // must be called before a full discovery
     result := lxkns.Discover(lxkns.FullDiscovery)
-    for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
+    for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
             fmt.Println(ns.String())
         }

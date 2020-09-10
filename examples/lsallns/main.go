@@ -22,6 +22,7 @@ import (
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 )
 
 // NamespaceRow stores information about a single namespace, to be printed
@@ -45,7 +46,7 @@ func main() {
 	// namespaces organized by type of namespace.
 	list := []NamespaceRow{}
 	for nsidx := range result.Namespaces {
-		for _, ns := range result.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
+		for _, ns := range result.SortedNamespaces(model.NamespaceTypeIndex(nsidx)) {
 			item := NamespaceRow{
 				ID:   uint64(ns.ID().Ino),
 				Type: ns.Type().Name(),

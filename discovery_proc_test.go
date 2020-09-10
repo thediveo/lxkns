@@ -19,6 +19,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -29,7 +30,7 @@ var _ = Describe("Discover from processes", func() {
 		opts.SkipProcs = false
 		allns := Discover(opts)
 		for _, ns := range lsns() {
-			nsidx := TypeIndex(species.NameToType(ns.Type))
+			nsidx := model.TypeIndex(species.NameToType(ns.Type))
 			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]
 			Expect(discons).NotTo(BeNil())
 			// rats ... lsns seems to take the numerically lowest PID number
@@ -42,7 +43,7 @@ var _ = Describe("Discover from processes", func() {
 			Expect(ok).To(BeTrue(), "unknown PID %d", ns.PID)
 			leaders := discons.LeaderPIDs()
 			func() {
-				pids := []PIDType{}
+				pids := []model.PIDType{}
 				for p != nil {
 					pids = append(pids, p.PID)
 					for _, lPID := range leaders {

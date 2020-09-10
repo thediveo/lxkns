@@ -21,8 +21,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -33,7 +33,7 @@ var _ = Describe("renders PID trees and branches", func() {
 	var scripts testbasher.Basher
 	var cmd *testbasher.TestCommand
 	var pidnsid species.NamespaceID
-	var initpid, leafpid lxkns.PIDType
+	var initpid, leafpid model.PIDType
 
 	BeforeEach(func() {
 		cmd = nil
@@ -51,7 +51,7 @@ echo "$$"
 		cmd = scripts.Start("main")
 		cmd.Decode(&pidnsid)
 		cmd.Decode(&initpid)
-		Expect(initpid).To(Equal(lxkns.PIDType(1)))
+		Expect(initpid).To(Equal(model.PIDType(1)))
 		cmd.Decode(&leafpid)
 	})
 
@@ -78,9 +78,9 @@ echo "$$"
 
 	It("CLI renders only a branch", func() {
 		out := bytes.Buffer{}
-		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NoneID)).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
 		for _, run := range []struct {
 			ns  string

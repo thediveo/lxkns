@@ -25,6 +25,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 )
 
 // PIDNSVisitor is an asciitree.Visitor which starts from a list (slice) of root
@@ -38,7 +39,7 @@ type PIDNSVisitor struct {
 // be honest, it returns the owning user namespaces instead in case user
 // namespaces should be shown too.
 func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	pidroots := lxkns.SortNamespaces(roots.Interface().([]lxkns.Namespace))
+	pidroots := lxkns.SortNamespaces(roots.Interface().([]model.Namespace))
 	if !v.ShowUserNS {
 		// When only showing PID namespaces, then sort all PID "root" namespaces
 		// numerically and then visit them, descending down the hierarchy.
@@ -52,13 +53,13 @@ func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 	// When showing the owning user namespaces in the tree, find the (unique)
 	// user namespaces for all PID "root" namespaces, so we start with the user
 	// namespaces.
-	userns := map[lxkns.Namespace]bool{}
+	userns := map[model.Namespace]bool{}
 	for _, pidns := range pidroots {
-		userns[pidns.Owner().(lxkns.Namespace)] = true
+		userns[pidns.Owner().(model.Namespace)] = true
 	}
-	userroots := []lxkns.Namespace{}
+	userroots := []model.Namespace{}
 	for uns := range userns {
-		userroots = append(userroots, uns.(lxkns.Namespace))
+		userroots = append(userroots, uns.(model.Namespace))
 	}
 	userroots = lxkns.SortNamespaces(userroots)
 	count := len(userroots)
@@ -72,14 +73,14 @@ func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 // Label returns the text label for a namespace node. Everything else will have
 // no label.
 func (v *PIDNSVisitor) Label(node reflect.Value) (label string) {
-	if ns, ok := node.Interface().(lxkns.Namespace); ok {
+	if ns, ok := node.Interface().(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
 		label = fmt.Sprintf("%s%s %s",
 			output.NamespaceIcon(ns),
-			style.V(ns.(lxkns.NamespaceStringer).TypeIDString()),
+			style.V(ns.(model.NamespaceStringer).TypeIDString()),
 			output.NamespaceReferenceLabel(ns))
 	}
-	if uns, ok := node.Interface().(lxkns.Ownership); ok {
+	if uns, ok := node.Interface().(model.Ownership); ok {
 		username := ""
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
 			username = fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
@@ -104,12 +105,12 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 	// topmost level. Now, a "topmost" owned PID namespace is one that either
 	// has no parent PID namespace, or the parent PID namespace has a different
 	// owner. That's all that's to it.
-	if uns, ok := node.Interface().(lxkns.Ownership); ok {
-		clist := []lxkns.Namespace{}
-		for _, ns := range uns.Ownings()[lxkns.PIDNS] {
-			pidns := ns.(lxkns.Hierarchy)
+	if uns, ok := node.Interface().(model.Ownership); ok {
+		clist := []model.Namespace{}
+		for _, ns := range uns.Ownings()[model.PIDNS] {
+			pidns := ns.(model.Hierarchy)
 			ppidns := pidns.Parent()
-			if ppidns == nil || ppidns.(lxkns.Namespace).Owner() != uns.(lxkns.Ownership) {
+			if ppidns == nil || ppidns.(model.Namespace).Owner() != uns.(model.Ownership) {
 				clist = append(clist, ns)
 			}
 		}
@@ -120,7 +121,7 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 	// namespaces in case a child PID namespace lives in a different user
 	// namespace.
 	clist := []interface{}{}
-	if hns, ok := node.Interface().(lxkns.Hierarchy); ok {
+	if hns, ok := node.Interface().(model.Hierarchy); ok {
 		if !v.ShowUserNS {
 			// Show only the PID namespace hierarchy: this is easy, as we all we
 			// need to do is to take all child PID namespaces and return them.
@@ -131,9 +132,9 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 		} else {
 			// Insert user namespaces into the PID namespace hierarchy, whenever
 			// there is a change of user namespaces in the PID hierarchy.
-			userns := node.Interface().(lxkns.Namespace).Owner()
+			userns := node.Interface().(model.Namespace).Owner()
 			for _, cpidns := range lxkns.SortChildNamespaces(hns.Children()) {
-				if ownerns := cpidns.(lxkns.Namespace).Owner(); ownerns == userns {
+				if ownerns := cpidns.(model.Namespace).Owner(); ownerns == userns {
 					// The child PID namespace is still in the same user namespace,
 					// so we take it as a direct child.
 					clist = append(clist, cpidns)

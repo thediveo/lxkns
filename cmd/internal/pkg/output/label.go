@@ -19,8 +19,8 @@ package output
 import (
 	"fmt"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 )
 
 // NamespaceReferenceLabel returns a string describing a reference to the
@@ -29,7 +29,7 @@ import (
 //
 // TODO: allow styling with simplified versus full representation (ealdorman
 // versus all leader processes)
-func NamespaceReferenceLabel(ns lxkns.Namespace) string {
+func NamespaceReferenceLabel(ns model.Namespace) string {
 	if ancient := ns.Ealdorman(); ancient != nil {
 		return fmt.Sprintf("process %q (%d)",
 			style.ProcessStyle.V(style.ProcessName(ancient)),

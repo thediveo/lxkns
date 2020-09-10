@@ -1,5 +1,3 @@
-// General package definitions.
-
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -14,7 +12,4 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
-
-// SemVersion is the semantic version string of the lxkns module.
-const SemVersion = "0.14.0"
+package types

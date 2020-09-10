@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -96,11 +98,11 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Dis
 			// discovery. Add such new discoveries and use the /proc fd path
 			// as a path reference in case we want later to make use of this
 			// namespace.
-			nstypeidx := TypeIndex(nstype)
+			nstypeidx := model.TypeIndex(nstype)
 			if _, ok := result.Namespaces[nstypeidx][nsid]; ok {
 				continue
 			}
-			result.Namespaces[nstypeidx][nsid] = NewNamespace(
+			result.Namespaces[nstypeidx][nsid] = namespaces.New(
 				nstype, nsid, basepath+"/"+fdentry.Name())
 		}
 	}

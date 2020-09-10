@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"os/exec"
 	"strconv"
+
+	"github.com/thediveo/lxkns/model"
 )
 
 // lsnsentry represents the JSON information for individual namespaces spit
@@ -25,12 +27,12 @@ import (
 // The older "v1" JSON schema serializes all properties as strings instead,
 // including the Number/integer-typed elements.
 type lsnsentry struct {
-	NS      uint64  `json:"ns"`
-	Type    string  `json:"type"`
-	NProcs  int     `json:"nprocs"`
-	PID     PIDType `json:"pid"`
-	User    string  `json:"user"`
-	Command string  `json:"command"`
+	NS      uint64        `json:"ns"`
+	Type    string        `json:"type"`
+	NProcs  int           `json:"nprocs"`
+	PID     model.PIDType `json:"pid"`
+	User    string        `json:"user"`
+	Command string        `json:"command"`
 }
 
 // lsnsdata represents the JSON top-level element spit out by "lsns --json".
@@ -59,7 +61,7 @@ func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	if err = touint64(fields["pid"], &i); err != nil {
 		return
 	}
-	e.PID = PIDType(i)
+	e.PID = model.PIDType(i)
 	if err = tostr(fields["user"], &e.User); err != nil {
 		return
 	}

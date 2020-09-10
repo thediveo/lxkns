@@ -19,17 +19,18 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
-var proc1 = &lxkns.Process{
+var proc1 = &model.Process{
 	PID:        1,
 	PPID:       0,
 	Cmdline:    []string{"/sbin/domination", "--world"},
 	Name:       "(init)",
 	Starttime:  123,
-	Namespaces: namespaces,
+	Namespaces: namespaceset,
 }
 
 const proc1JSON = `{
@@ -52,13 +53,13 @@ const proc1JSON = `{
 	"starttime": 123
 }`
 
-var proc2 = &lxkns.Process{
+var proc2 = &model.Process{
 	PID:        666,
 	PPID:       proc1.PID,
 	Cmdline:    []string{"/sbin/fool"},
 	Name:       "fool",
 	Starttime:  666666,
-	Namespaces: namespaces,
+	Namespaces: namespaceset,
 }
 
 const proc2JSON = `{
@@ -80,14 +81,14 @@ const proc2JSON = `{
 	"starttime": 666666
 }`
 
-var namespaces = lxkns.NamespacesSet{
-	lxkns.NewNamespace(species.CLONE_NEWNS, species.NamespaceID{Dev: 666, Ino: 66610}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWCGROUP, species.NamespaceID{Dev: 666, Ino: 66611}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWUTS, species.NamespaceID{Dev: 666, Ino: 66612}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWIPC, species.NamespaceID{Dev: 666, Ino: 66613}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 666, Ino: 66614}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWPID, species.NamespaceID{Dev: 666, Ino: 66615}, ""),
-	lxkns.NewNamespace(species.CLONE_NEWNET, species.NamespaceID{Dev: 666, Ino: 66616}, ""),
+var namespaceset = model.NamespacesSet{
+	namespaces.New(species.CLONE_NEWNS, species.NamespaceID{Dev: 666, Ino: 66610}, ""),
+	namespaces.New(species.CLONE_NEWCGROUP, species.NamespaceID{Dev: 666, Ino: 66611}, ""),
+	namespaces.New(species.CLONE_NEWUTS, species.NamespaceID{Dev: 666, Ino: 66612}, ""),
+	namespaces.New(species.CLONE_NEWIPC, species.NamespaceID{Dev: 666, Ino: 66613}, ""),
+	namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 666, Ino: 66614}, ""),
+	namespaces.New(species.CLONE_NEWPID, species.NamespaceID{Dev: 666, Ino: 66615}, ""),
+	namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 666, Ino: 66616}, ""),
 	nil,
 }
 
@@ -101,16 +102,16 @@ const namespacesJSON = `{
 	"net": 66616
 }`
 
-var _ = Describe("JSON", func() {
+var _ = Describe("process JSON", func() {
 
 	It("marshals NamespacesSetReferences", func() {
-		j, err := json.Marshal((*NamespacesSetReferences)(&namespaces))
+		j, err := json.Marshal((*NamespacesSetReferences)(&namespaceset))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(namespacesJSON))
 	})
 
 	It("unmarshals NamespacesSetReferences", func() {
-		allns := lxkns.NewAllNamespaces()
+		allns := model.NewAllNamespaces()
 		nsrefs := &NamespacesSetReferences{}
 
 		// This must NOT work...
@@ -124,27 +125,27 @@ var _ = Describe("JSON", func() {
 		// the namespace dictionary for later reuse?
 		Expect(nsrefs.unmarshalJSON([]byte(namespacesJSON), allns)).NotTo(HaveOccurred())
 		for _, i := range []struct {
-			idx lxkns.NamespaceTypeIndex
+			idx model.NamespaceTypeIndex
 			len int
 		}{
-			{lxkns.MountNS, 1},
-			{lxkns.CgroupNS, 1},
-			{lxkns.UTSNS, 1},
-			{lxkns.IPCNS, 1},
-			{lxkns.UserNS, 1},
-			{lxkns.PIDNS, 1},
-			{lxkns.NetNS, 1},
-			{lxkns.TimeNS, 0},
+			{model.MountNS, 1},
+			{model.CgroupNS, 1},
+			{model.UTSNS, 1},
+			{model.IPCNS, 1},
+			{model.UserNS, 1},
+			{model.PIDNS, 1},
+			{model.NetNS, 1},
+			{model.TimeNS, 0},
 		} {
 			Expect(allns[i.idx]).To(HaveLen(i.len),
-				"wrong length of namespace map type %s", lxkns.TypesByIndex[i.idx])
+				"wrong length of namespace map type %s", model.TypesByIndex[i.idx])
 		}
 
 		// Does a second unmarshalling reuse the already known namespace
 		// objects?
 		nsrefs2 := &NamespacesSetReferences{}
 		Expect(nsrefs2.unmarshalJSON([]byte(`{"mnt": 66610}`), allns)).NotTo(HaveOccurred())
-		Expect(nsrefs2[lxkns.MountNS]).To(BeIdenticalTo(nsrefs[lxkns.MountNS]))
+		Expect(nsrefs2[model.MountNS]).To(BeIdenticalTo(nsrefs[model.MountNS]))
 	})
 
 	It("un/marshals Process", func() {
@@ -156,6 +157,7 @@ var _ = Describe("JSON", func() {
 		// Check correct failure...
 		Expect(dummy.unmarshalJSON([]byte(`"foobar"`), nil)).To(HaveOccurred())
 		Expect(dummy.unmarshalJSON([]byte(`{}`), nil)).To(HaveOccurred())
+		Expect(dummy.unmarshalJSON([]byte(`{"foobar":"foobar"}`), nil)).To(HaveOccurred())
 		Expect(dummy.unmarshalJSON([]byte(`{"pid":1,"namespaces":{"foobar":666}}`), nil)).To(HaveOccurred())
 
 		// First establish that serialization works as expected...
@@ -163,7 +165,7 @@ var _ = Describe("JSON", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(proc1JSON))
 		// Next, deserialize the correct JSON textural serialization again...
-		allns := lxkns.NewAllNamespaces()
+		allns := model.NewAllNamespaces()
 		p := &Process{}
 		Expect(p.unmarshalJSON(j, allns)).NotTo(HaveOccurred())
 		// ...but how to we know it deserialization worked as expected? By
@@ -176,7 +178,7 @@ var _ = Describe("JSON", func() {
 
 	It("marshals ProcessTable", func() {
 		pt := &ProcessTable{
-			ProcessTable: lxkns.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
+			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
 		}
 		j, err := json.Marshal(pt)
 		Expect(err).NotTo(HaveOccurred())
@@ -191,24 +193,24 @@ var _ = Describe("JSON", func() {
 
 		// To unmarshal ... we need to ... marshal first!
 		pt := &ProcessTable{
-			ProcessTable: lxkns.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
+			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
 		}
 		j, err := json.Marshal(pt)
 		Expect(err).NotTo(HaveOccurred())
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
-		pt2 := &ProcessTable{Namespaces: lxkns.NewAllNamespaces()}
+		pt2 := &ProcessTable{Namespaces: model.NewAllNamespaces()}
 		Expect(json.Unmarshal(j, pt2)).NotTo(HaveOccurred())
 		Expect(pt2.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
 		// Ensure that the namespace dictionary has been correctly updated and
 		// that processes with the same namespaces share the same namespace
 		// objects.
-		Expect(pt2.Namespaces[lxkns.MountNS]).To(HaveLen(1))
-		Expect(pt2.Namespaces[lxkns.TimeNS]).To(HaveLen(0))
-		Expect(pt2.ProcessTable[proc1.PID].Namespaces[lxkns.CgroupNS]).NotTo(BeNil())
-		Expect(pt2.ProcessTable[proc1.PID].Namespaces[lxkns.CgroupNS]).To(
-			BeIdenticalTo(pt2.ProcessTable[proc2.PID].Namespaces[lxkns.CgroupNS]))
+		Expect(pt2.Namespaces[model.MountNS]).To(HaveLen(1))
+		Expect(pt2.Namespaces[model.TimeNS]).To(HaveLen(0))
+		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).NotTo(BeNil())
+		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).To(
+			BeIdenticalTo(pt2.ProcessTable[proc2.PID].Namespaces[model.CgroupNS]))
 	})
 
 })

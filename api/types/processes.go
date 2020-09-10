@@ -17,11 +17,11 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -33,8 +33,8 @@ import (
 // share the namespace objects with the same ID between individual process
 // objects in the table.
 type ProcessTable struct {
-	lxkns.ProcessTable
-	Namespaces *lxkns.AllNamespaces // aux. namespace information
+	model.ProcessTable
+	Namespaces *model.AllNamespaces // aux. namespace information
 }
 
 // MarshalJSON emits the JSON textual representation of a complete process
@@ -79,20 +79,20 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 	// json package can still do the generic JSON parsing part for us here so
 	// that we don't need to count brackets, quotes, handle escapes, and the
 	// other JSON hell.
-	aux := map[lxkns.PIDType]json.RawMessage{}
+	aux := map[model.PIDType]json.RawMessage{}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 	if p.ProcessTable == nil {
-		p.ProcessTable = lxkns.ProcessTable{}
+		p.ProcessTable = model.ProcessTable{}
 	}
 	for _, rawproc := range aux {
-		proc := &lxkns.Process{}
+		proc := &model.Process{}
 		if err := (*Process)(proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
 			return err
 		}
 		p.ProcessTable[proc.PID] = proc
-		proc.Children = []*lxkns.Process{}
+		proc.Children = []*model.Process{}
 	}
 	// Scan through the processes and resolve the parent-child process
 	// relationships, based on the PPIDs and PIDs.
@@ -107,7 +107,7 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 
 // Process is the JSON representation of the information about a single
 // process.
-type Process lxkns.Process
+type Process model.Process
 
 // MarshalJSON emits the textual JSON representation of a single process.
 //
@@ -126,10 +126,10 @@ func (p *Process) MarshalJSON() ([]byte, error) {
 	// first-class data elements.
 	return json.Marshal(&struct {
 		Namespaces *NamespacesSetReferences `json:"namespaces"`
-		*lxkns.Process
+		*model.Process
 	}{
 		Namespaces: (*NamespacesSetReferences)(&p.Namespaces),
-		Process:    (*lxkns.Process)(p),
+		Process:    (*model.Process)(p),
 	})
 }
 
@@ -144,24 +144,20 @@ func (p *Process) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON reads in the textual JSON representation of a single process.
 // It uses the associated namespace dictionary to resolve existing references
 // into namespace objects and also adds missing namespaces.
-func (p *Process) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
+func (p *Process) unmarshalJSON(data []byte, allns *model.AllNamespaces) error {
 	// While we unmarshal "most" of the process data using json's automated
 	// mechanics, we need to deal with the namespaces a process is attached to
 	// separately. Because we need context for the namespaces, we do it
 	// manually and then extract only the parts we need here.
 	aux := struct {
 		Namespaces json.RawMessage `json:"namespaces"`
-		*lxkns.Process
+		*model.Process
 	}{
-		Process: (*lxkns.Process)(p),
+		Process: (*model.Process)(p),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	if aux.Process == nil {
-		return errors.New("missing or invalid process information")
-	}
-	//p.Process = aux.Process
 	if err := (*NamespacesSetReferences)(&p.Namespaces).unmarshalJSON(aux.Namespaces, allns); err != nil {
 		return err
 	}
@@ -169,12 +165,12 @@ func (p *Process) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
 }
 
 // NamespacesSetReferences is the JSON representation of a set of typed
-// namespace ID references and thus the JSON face to lxkns.NamespaceSet. The
+// namespace ID references and thus the JSON face to model.NamespaceSet. The
 // set of namespaces is represented in form of a JSON object with the object
 // keys being the namespace types and the IDs then being the number values.
 // Other namespace details are completely ignored, these are on purpose not
 // repeated for each and every process in a potentially large process table.
-type NamespacesSetReferences lxkns.NamespacesSet
+type NamespacesSetReferences model.NamespacesSet
 
 // MarshalJSON emits the textual JSON representation of a set of typed
 // namespace references. Please note that it emits only references in form of
@@ -200,7 +196,7 @@ func (n *NamespacesSetReferences) MarshalJSON() ([]byte, error) {
 			b.WriteRune(',')
 		}
 		b.WriteRune('"')
-		b.WriteString(lxkns.TypesByIndex[nsidx].Name())
+		b.WriteString(model.TypesByIndex[nsidx].Name())
 		b.WriteString(`":`)
 		nsjson, err := json.Marshal(ns.ID().Ino)
 		if err != nil {
@@ -224,7 +220,7 @@ func (n NamespacesSetReferences) UnmarshalJSON(data []byte) error {
 // unmarshalJSON reads in the textual JSON representation of a set of typed
 // namespace references. It uses a namespace object dictionary in order to
 // reuse already existing namespace objects and also updates missing entries.
-func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
+func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *model.AllNamespaces) error {
 	// Just get the typed namespace references as a properly key-value typed
 	// map, so we can easily work on it next.
 	rawns := map[string]uint64{}
@@ -239,7 +235,7 @@ func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *lxkns.AllNam
 		if nstype == 0 {
 			return fmt.Errorf("invalid namespace type %q", nstypename)
 		}
-		nstypeidx := lxkns.TypeIndex(nstype)
+		nstypeidx := model.TypeIndex(nstype)
 		nsid := species.NamespaceIDfromInode(id)
 		ns, ok := allns[nstypeidx][nsid]
 		if !ok {
@@ -247,7 +243,7 @@ func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *lxkns.AllNam
 			// ID, the remaining information needs to be filled in elsewhere
 			// when unmarshalling the complete namespace information. Here,
 			// we're just creating the "hulls".
-			ns = lxkns.NewNamespace(nstype, nsid, "")
+			ns = namespaces.New(nstype, nsid, "")
 			allns[nstypeidx][nsid] = ns
 		}
 		n[nstypeidx] = ns

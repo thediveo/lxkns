@@ -26,6 +26,9 @@ import (
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/gons/reexec"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	nsp "github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 )
@@ -56,19 +59,19 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		for _, bmntns := range ownedbindmounts {
 			// Now we can finally look up whether we have seen this bind-mounted
 			// namespace elsewhere...
-			typeidx := TypeIndex(bmntns.Type)
+			typeidx := model.TypeIndex(bmntns.Type)
 			ns, ok := result.Namespaces[typeidx][bmntns.ID]
 			if !ok {
 				// As we haven't seen this namespace yet, record it with our
 				// results.
-				ns = NewNamespace(bmntns.Type, bmntns.ID, "")
+				ns = namespaces.New(bmntns.Type, bmntns.ID, "")
 				result.Namespaces[typeidx][bmntns.ID] = ns
-				ns.(NamespaceConfigurer).SetRef(bmntns.Path)
+				ns.(nsp.NamespaceConfigurer).SetRef(bmntns.Path)
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
 			if bmntns.Type != species.CLONE_NEWUSER && bmntns.OwnernsID != species.NoneID {
-				ns.(NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
+				ns.(nsp.NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
 			}
 		}
 	}
@@ -79,8 +82,8 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	// because we need to visit them in order to potentially discover more
 	// bind-mounted namespaces. These will then be added to the backlog if not
 	// already known by then. And yes, this is ugly.
-	mountnsBacklog := make([]Namespace, 0, len(result.Namespaces[MountNS]))
-	for _, mntns := range result.Namespaces[MountNS] {
+	mountnsBacklog := make([]model.Namespace, 0, len(result.Namespaces[model.MountNS]))
+	for _, mntns := range result.Namespaces[model.MountNS] {
 		mountnsBacklog = append(mountnsBacklog, mntns)
 	}
 	// In order to avoid multiple visits to the same namespace, keep track of
@@ -99,7 +102,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	// Go runtime which makes switching mount namespaces impossible after it
 	// has spun up).
 	for len(mountnsBacklog) > 0 {
-		var mntns Namespace // NEVER merge this into the following pop operation!
+		var mntns model.Namespace // NEVER merge this into the following pop operation!
 		mntns, mountnsBacklog = mountnsBacklog[0], mountnsBacklog[1:]
 		if _, ok := visitedmntns[mntns.ID()]; ok {
 			continue // We already visited you ... next one!
@@ -113,18 +116,19 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		// and especially the user namespaces and setns() are supposed to
 		// work. Simplicity if for the World's most stable genius, we're going
 		// for the real stuff instead.
-		enterns := []Namespace{mntns}
+		enterns := []model.Namespace{mntns}
 		if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {
 			usernsid, _ := usermntnsref.ID()
 			// Do not leak, release user namespace immediately, as we're done with it.
 			usermntnsref.(io.Closer).Close()
-			if userns, ok := result.Namespaces[UserNS][usernsid]; ok && userns.ID() != ownusernsid {
+			if userns, ok := result.Namespaces[model.UserNS][usernsid]; ok &&
+				userns.ID() != ownusernsid {
 				// Prepend the user namespace to the list of namespaces we
 				// need to enter, due to the magic capabilities of entering
 				// user namespaces. And, by the way, worst programming
 				// language syntax ever, even more so than Perl. TECO isn't in
 				// the competition, though.
-				enterns = append([]Namespace{userns}, enterns...)
+				enterns = append([]model.Namespace{userns}, enterns...)
 			}
 		}
 		// Finally, we can try to enter the mount namespace in order to find

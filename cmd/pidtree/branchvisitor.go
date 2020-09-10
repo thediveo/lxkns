@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 )
 
 // BranchVisitor is an asciitree.Visitor which works on a single branch from
@@ -30,7 +31,7 @@ import (
 type BranchVisitor struct {
 	Details   bool
 	PIDMap    *lxkns.PIDMap
-	RootPIDNS lxkns.Namespace
+	RootPIDNS model.Namespace
 }
 
 // Roots simply returns the specified branch as the only root, as the Get
@@ -48,10 +49,10 @@ func (v *BranchVisitor) Roots(branch reflect.Value) (children []reflect.Value) {
 // Process).
 func (v *BranchVisitor) Label(branch reflect.Value) (label string) {
 	nodeif := branch.Interface().(SingleBranch).Branch[0]
-	if proc, ok := nodeif.(*lxkns.Process); ok {
+	if proc, ok := nodeif.(*model.Process); ok {
 		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS)
 	}
-	return PIDNamespaceLabel(nodeif.(lxkns.Namespace))
+	return PIDNamespaceLabel(nodeif.(model.Namespace))
 }
 
 // Get is called on nodes which can be either (1) PID namespaces or (2)

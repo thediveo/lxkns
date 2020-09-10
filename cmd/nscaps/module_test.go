@@ -23,6 +23,7 @@ import (
 	rxtst "github.com/thediveo/gons/reexec/testing"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -32,12 +33,12 @@ var initusernsid species.NamespaceID
 
 var procscripts = testbasher.Basher{}
 var proccmd *testbasher.TestCommand
-var procpid lxkns.PIDType
+var procpid model.PIDType
 var procusernsid species.NamespaceID
 
 var targetscripts = testbasher.Basher{}
 var targetcmd *testbasher.TestCommand
-var tpid lxkns.PIDType
+var tpid model.PIDType
 var tuserid, tnsid species.NamespaceID
 
 var allns *lxkns.DiscoveryResult

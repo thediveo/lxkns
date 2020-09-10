@@ -19,7 +19,11 @@
 
 package lxkns
 
-import "github.com/thediveo/lxkns/species"
+import (
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
+)
 
 // resolveOwnership unearths which non-user namespaces are owned by which user
 // namespaces. We only run the resolution phase after we've discovered a
@@ -32,10 +36,10 @@ func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryR
 	// The namespace type discovery sequence guarantees us that by the
 	// time we got here, the user namespaces already have been fully
 	// discovered, so we have a complete map of them.
-	usernsmap := result.Namespaces[UserNS]
-	nstypeidx := TypeIndex(nstype)
+	usernsmap := result.Namespaces[model.UserNS]
+	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	for _, ns := range nsmap {
-		ns.(NamespaceConfigurer).ResolveOwner(usernsmap)
+		ns.(namespaces.NamespaceConfigurer).ResolveOwner(usernsmap)
 	}
 }
