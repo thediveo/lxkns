@@ -233,3 +233,13 @@ func NewNamespace(nstype species.NamespaceType, nsid species.NamespaceID, ref st
 		return &plainNamespace{nsid: nsid, nstype: nstype, ref: ref}
 	}
 }
+
+// NewAllNamespaces returns a fully initialized AllNamespaces object, ready to
+// be filled with funny namespaces, such as "Kevin" and "Chantal".
+func NewAllNamespaces() *AllNamespaces {
+	allns := &AllNamespaces{}
+	for idx := NamespaceTypeIndex(0); idx < NamespaceTypesCount; idx++ {
+		allns[idx] = NamespaceMap{}
+	}
+	return allns
+}
