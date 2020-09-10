@@ -28,14 +28,18 @@ import (
 // ProcessTable is the JSON serializable (digital!) twin to the process table
 // returned from discoveries. The processes (process tree) is represented in
 // JSON as a JSON object, where the members (keys) are the stringified PIDs
-// and the values are process objects.
+// and the values are process objects. In order to unmarshal a ProcessTable a
+// namespace dictionary which can either be prefilled or empty: it is used to
+// share the namespace objects with the same ID between individual process
+// objects in the table.
 type ProcessTable struct {
 	lxkns.ProcessTable
-	Namespaces lxkns.AllNamespaces // aux. namespace information
+	Namespaces *lxkns.AllNamespaces // aux. namespace information
 }
 
-// MarshalJSON returns the JSON textual representation of a process table.
-func (p ProcessTable) MarshalJSON() ([]byte, error) {
+// MarshalJSON emits the JSON textual representation of a complete process
+// table.
+func (p *ProcessTable) MarshalJSON() ([]byte, error) {
 	// Similar to Golang's mapEncoder.encode, we iterate over the key-value
 	// pairs ourselves, because we need to serialize alias types for the
 	// individual process values, not the process values verbatim. By
@@ -53,7 +57,7 @@ func (p ProcessTable) MarshalJSON() ([]byte, error) {
 		b.WriteRune('"')
 		b.WriteString(strconv.Itoa(int(proc.PID)))
 		b.WriteString(`":`)
-		procjson, err := json.Marshal(proc)
+		procjson, err := json.Marshal((*Process)(proc))
 		if err != nil {
 			return nil, err
 		}
@@ -63,13 +67,47 @@ func (p ProcessTable) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// Process is the JSON representation of the information about a single
-// process. It is the stock lxkns.Process struct, but with an additional
-// namespace set context required for unmarshalling.
-type Process struct {
-	*lxkns.Process
-	AllNamespaces *lxkns.AllNamespaces `json:"-"`
+// UnmarshalJSON reads in the textual JSON representation of a complete
+// process table. It makes use of the namespace object dictionary associated
+// with this process table instance.
+func (p *ProcessTable) UnmarshalJSON(data []byte) error {
+	// Unmarshal all the processes using our "JSON-empowered" type of Process,
+	// which we will later need to post-process in order to resolve the
+	// process fields which we don't serialize and which allow easy
+	// navigation, et cetera. Since a process table consists of objects of
+	// objects of objects, we play it safe by using json.RawMessage, so the
+	// json package can still do the generic JSON parsing part for us here so
+	// that we don't need to count brackets, quotes, handle escapes, and the
+	// other JSON hell.
+	aux := map[lxkns.PIDType]json.RawMessage{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if p.ProcessTable == nil {
+		p.ProcessTable = lxkns.ProcessTable{}
+	}
+	for _, rawproc := range aux {
+		proc := &lxkns.Process{}
+		if err := (*Process)(proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
+			return err
+		}
+		p.ProcessTable[proc.PID] = proc
+		proc.Children = []*lxkns.Process{}
+	}
+	// Scan through the processes and resolve the parent-child process
+	// relationships, based on the PPIDs and PIDs.
+	for _, proc := range p.ProcessTable {
+		if pproc, ok := p.ProcessTable[proc.PPID]; ok {
+			proc.Parent = pproc
+			pproc.Children = append(pproc.Children, proc)
+		}
+	}
+	return nil
 }
+
+// Process is the JSON representation of the information about a single
+// process.
+type Process lxkns.Process
 
 // MarshalJSON emits the textual JSON representation of a single process.
 //
@@ -79,26 +117,34 @@ type Process struct {
 // as a Process contains some more data "beyond two ints", we don't want them
 // to be passed around as values all the time, copying and copying again.
 //
-// And now some tangarine somewhere surely is claiming this total Golang
-// design fubar to be so GREAT and AWESOME...
+// And now some sour tangarine somewhere surely is claiming this total Golang
+// design fubar to be absolutely great, innit?
 func (p *Process) MarshalJSON() ([]byte, error) {
 	// Using an anonymous alias structure allows us to override serialization
 	// of the namespaces the process is attached to: we just want them as
 	// typed references (namespace type and ID), not as deeply serialized
 	// first-class data elements.
 	return json.Marshal(&struct {
-		Namespaces *TypedNamespacesSet `json:"namespaces"`
+		Namespaces *NamespacesSetReferences `json:"namespaces"`
 		*lxkns.Process
 	}{
-		Namespaces: (*TypedNamespacesSet)(&p.Process.Namespaces),
-		Process:    p.Process,
+		Namespaces: (*NamespacesSetReferences)(&p.Namespaces),
+		Process:    (*lxkns.Process)(p),
 	})
+}
+
+// UnmarshalJSON simply panics in order to clearly indicate that Process is
+// not to be unmarshalled without a namespace dictionary to find existing
+// namespaces in or add new ones just learnt to. Unfortunately, Golang's
+// generic json (un)marshalling mechanism doesn't allow "contexts".
+func (p *Process) UnmarshalJSON(data []byte) error {
+	panic("cannot directly unmarshal TypedNamespacesSet")
 }
 
 // UnmarshalJSON reads in the textual JSON representation of a single process.
 // It uses the associated namespace dictionary to resolve existing references
 // into namespace objects and also adds missing namespaces.
-func (p *Process) UnmarshalJSON(data []byte) error {
+func (p *Process) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
 	// While we unmarshal "most" of the process data using json's automated
 	// mechanics, we need to deal with the namespaces a process is attached to
 	// separately. Because we need context for the namespaces, we do it
@@ -107,7 +153,7 @@ func (p *Process) UnmarshalJSON(data []byte) error {
 		Namespaces json.RawMessage `json:"namespaces"`
 		*lxkns.Process
 	}{
-		Process: p.Process,
+		Process: (*lxkns.Process)(p),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
@@ -115,23 +161,36 @@ func (p *Process) UnmarshalJSON(data []byte) error {
 	if aux.Process == nil {
 		return errors.New("missing or invalid process information")
 	}
-	p.Process = aux.Process
-	if err := (*TypedNamespacesSet)(&p.Process.Namespaces).unmarshalJSON(aux.Namespaces, p.AllNamespaces); err != nil {
+	//p.Process = aux.Process
+	if err := (*NamespacesSetReferences)(&p.Namespaces).unmarshalJSON(aux.Namespaces, allns); err != nil {
 		return err
 	}
 	return nil
 }
 
-// TypedNamespaceSet is the JSON representation a set of typed
-// namespace IDs. The set is represented as a JSON object, with the keys being
-// the namespace types and the IDs then being the number values.
-type TypedNamespacesSet lxkns.NamespacesSet
+// NamespacesSetReferences is the JSON representation of a set of typed
+// namespace ID references and thus the JSON face to lxkns.NamespaceSet. The
+// set of namespaces is represented in form of a JSON object with the object
+// keys being the namespace types and the IDs then being the number values.
+// Other namespace details are completely ignored, these are on purpose not
+// repeated for each and every process in a potentially large process table.
+type NamespacesSetReferences lxkns.NamespacesSet
 
-func (n TypedNamespacesSet) MarshalJSON() ([]byte, error) {
+// MarshalJSON emits the textual JSON representation of a set of typed
+// namespace references. Please note that it emits only references in form of
+// namespace IDs only (without device numbers, see also the discussion about
+// bolted horses from open barn dors in the architecture documentation).
+func (n *NamespacesSetReferences) MarshalJSON() ([]byte, error) {
+	// Since we don't to marshal all the namespace object details, but only
+	// references, we need to do everything manually. While we could slightly
+	// simplify things by first building a suitable object which we then could
+	// marshal using json.Marshal() we instead directly emit the final JSON
+	// textual representation without an intermediate object.
 	b := bytes.Buffer{}
 	b.WriteRune('{')
 	first := true
 	for nsidx, ns := range n {
+		// Skip unreferenced namespace types to avoid unnecessary noise.
 		if ns == nil {
 			continue
 		}
@@ -153,15 +212,19 @@ func (n TypedNamespacesSet) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// FIXME: implement
-func (n TypedNamespacesSet) UnmarshalJSON(data []byte) error {
-	panic("do not directly unmarshal TypedNamespacesSet")
+// UnmarshalJSON simply panics in order to clearly indicate that
+// TypedNamespacesSet are not to be unmarshalled without a namespace
+// dictionary to find existing namespaces in or add new ones just learnt to.
+// Unfortunately, Golang's generic json (un)marshalling mechanism doesn't
+// allow "contexts".
+func (n NamespacesSetReferences) UnmarshalJSON(data []byte) error {
+	panic("cannot directly unmarshal TypedNamespacesSet")
 }
 
-// unmarshalJSON reads in the textual representation of a set of typed
+// unmarshalJSON reads in the textual JSON representation of a set of typed
 // namespace references. It uses a namespace object dictionary in order to
 // reuse already existing namespace objects and also updates missing entries.
-func (n *TypedNamespacesSet) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
+func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *lxkns.AllNamespaces) error {
 	// Just get the typed namespace references as a properly key-value typed
 	// map, so we can easily work on it next.
 	rawns := map[string]uint64{}
