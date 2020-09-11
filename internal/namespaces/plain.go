@@ -28,6 +28,7 @@ type PlainNamespace struct {
 var (
 	_ model.Namespace         = (*PlainNamespace)(nil)
 	_ model.NamespaceStringer = (*PlainNamespace)(nil)
+	_ NamespaceConfigurer     = (*PlainNamespace)(nil)
 )
 
 // ID returns the namespace identifier. This identifier is basically a tuple

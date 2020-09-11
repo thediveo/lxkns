@@ -18,14 +18,22 @@ type UserNamespace struct {
 	ownedns  model.AllNamespaces
 }
 
+// Ensure that our "class" *does* implement the required interfaces.
 var (
 	_ model.Namespace         = (*UserNamespace)(nil)
 	_ model.NamespaceStringer = (*UserNamespace)(nil)
 	_ model.Hierarchy         = (*UserNamespace)(nil)
 	_ model.Ownership         = (*UserNamespace)(nil)
+	_ NamespaceConfigurer     = (*UserNamespace)(nil)
+	_ HierarchyConfigurer     = (*UserNamespace)(nil)
 )
 
-func (uns *UserNamespace) UID() int                     { return uns.owneruid }
+// UID returns the user ID of the process that created this user namespace.
+func (uns *UserNamespace) UID() int { return uns.owneruid }
+
+// Ownings returns all namespaces owned by this user namespace, with the
+// exception of user namespaces. "Owned" user namespaces are actually child
+// user namespaces, so they are returned through Hierarchy.Children() instead.
 func (uns *UserNamespace) Ownings() model.AllNamespaces { return uns.ownedns }
 
 // String describes this instance of a user namespace, with its parent,
@@ -59,7 +67,7 @@ func (uns *UserNamespace) String() string {
 		owneds)
 }
 
-// DetectUIDs takes an open file referencing a user namespace to query its
+// DetectUID takes an open file referencing a user namespace to query its
 // owner's UID and then stores it for this user namespace proxy.
 func (uns *UserNamespace) DetectUID(nsref relations.Relation) {
 	uns.owneruid, _ = nsref.OwnerUID()

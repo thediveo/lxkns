@@ -16,3 +16,10 @@ type NamespaceConfigurer interface {
 	SetOwner(usernsid species.NamespaceID)     // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap model.NamespaceMap) // resolves owner ns id into object reference.
 }
+
+// HierarchyConfigurer allows discovery mechanisms to configure the
+// information hold by hierarchical namespaces.
+type HierarchyConfigurer interface {
+	AddChild(child model.Hierarchy)
+	SetParent(parent model.Hierarchy)
+}

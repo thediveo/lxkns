@@ -16,18 +16,22 @@ type HierarchicalNamespace struct {
 	children []model.Hierarchy
 }
 
-var _ model.Namespace = (*HierarchicalNamespace)(nil)
-var _ model.NamespaceStringer = (*HierarchicalNamespace)(nil)
-var _ model.Hierarchy = (*HierarchicalNamespace)(nil)
+// Ensure that our "class" *does* implement the required interfaces.
+var (
+	_ model.Namespace         = (*HierarchicalNamespace)(nil)
+	_ model.NamespaceStringer = (*HierarchicalNamespace)(nil)
+	_ model.Hierarchy         = (*HierarchicalNamespace)(nil)
+	_ NamespaceConfigurer     = (*HierarchicalNamespace)(nil)
+	_ HierarchyConfigurer     = (*HierarchicalNamespace)(nil)
+)
 
-// HierarchyConfigurer allows discovery mechanisms to configure the
-// information hold by hierarchical namespaces.
-type HierarchyConfigurer interface {
-	AddChild(child model.Hierarchy)
-	SetParent(parent model.Hierarchy)
-}
+// Parent returns the parent user or PID namespace of this user or PID
+// namespace. If there is no parent namespace or the parent namespace in
+// inaccessible, then Parent returns nil.
+func (hns *HierarchicalNamespace) Parent() model.Hierarchy { return hns.parent }
 
-func (hns *HierarchicalNamespace) Parent() model.Hierarchy     { return hns.parent }
+// Children returns a list of child PID or user namespaces for this PID or
+// user namespace.
 func (hns *HierarchicalNamespace) Children() []model.Hierarchy { return hns.children }
 
 // String describes this instance of a hierarchical Linux kernel namespace,
