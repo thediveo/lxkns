@@ -46,7 +46,7 @@ discovery. In order to implement this mechanism as painless as possible, process
 using lxkns need to call reexec.CheckAction() as early as possible from their
 main().
 
-Information Model, Base Level
+Basics of the lxkns Information Model
 
 Not totally unexpectedly, the lxkns discovery information model at its most
 basic level comprises ... namespaces. In the previous code snippet, the

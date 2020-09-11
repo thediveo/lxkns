@@ -6,7 +6,7 @@ if ! command -v go-acc; then
     if ! command -v go-acc; then
         # Don't touch our local module dependencies, so run installation from
         # somewhere else...
-        (cd /tmp && go get github.com/ory/go-acc)
+        (cd /tmp && go get -v github.com/ory/go-acc)
     fi
 fi
 
