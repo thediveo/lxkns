@@ -19,6 +19,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -211,6 +212,29 @@ var _ = Describe("process JSON", func() {
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).NotTo(BeNil())
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).To(
 			BeIdenticalTo(pt2.ProcessTable[proc2.PID].Namespaces[model.CgroupNS]))
+
+		// Check that preloading/priming with empty process objects works as
+		// expected: the pre-existing process object must be reused, and
+		// properly updated in its state.
+		proc := &model.Process{}
+		pt3 := &ProcessTable{
+			ProcessTable: model.ProcessTable{
+				proc1.PID: proc,
+			},
+			Namespaces: model.NewAllNamespaces(),
+		}
+		Expect(pt3.ProcessTable[proc1.PID].PID).To(Equal(model.PIDType(0)))
+		Expect(json.Unmarshal(j, pt3)).NotTo(HaveOccurred())
+		Expect(pt3.ProcessTable).To(HaveKey(proc1.PID))
+		preproc1 := pt3.ProcessTable[proc1.PID]
+		Expect(preproc1).To(BeIdenticalTo(proc))
+		Expect(preproc1.PID).To(Equal(proc1.PID))
+		Expect(preproc1.Children).To(HaveLen(1))
+		// What did we laugh about Cobol ... and here come Gomega matchers.
+		Expect(preproc1.Children).To(ContainElement(PointTo(
+			MatchFields(IgnoreExtras, Fields{
+				"Cmdline": Equal(proc2.Cmdline),
+			})))) // ...and about bracket Lisp"ing".
 	})
 
 })

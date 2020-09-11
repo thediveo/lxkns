@@ -15,9 +15,132 @@
 package types
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
-	//. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/testbasher"
 )
 
+var (
+	allns      *lxkns.DiscoveryResult
+	scripts    = testbasher.Basher{}
+	scriptscmd *testbasher.TestCommand
+	userns     model.Namespace
+)
+
+var _ = BeforeSuite(func() {
+	scripts.Common(nstest.NamespaceUtilsScript)
+	scripts.Script("main", `
+unshare -Ur $stage2 # create a new user ns.
+	`)
+	scripts.Script("stage2", `
+process_namespaceid user # prints the user namespace ID of "the" process.
+read # wait for test to proceed()
+`)
+	scriptscmd = scripts.Start("main")
+	var usernsid species.NamespaceID
+	scriptscmd.Decode(&usernsid)
+
+	disco := lxkns.FullDiscovery
+	disco.SkipBindmounts = true
+	disco.SkipFds = true
+	disco.SkipTasks = true
+	allns = lxkns.Discover(disco) // "nearlyallns"
+
+	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)
+	Expect(userns).NotTo(BeNil())
+})
+
+var _ = AfterSuite(func() {
+	if scriptscmd != nil {
+		scriptscmd.Close()
+	}
+	scripts.Done()
+})
+
+func pidlist(pids []model.PIDType) string {
+	s := []string{}
+	for _, pid := range pids {
+		s = append(s, fmt.Sprint(pid))
+	}
+	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
+}
+
+func childlist(hns model.Hierarchy) string {
+	s := []string{}
+	for _, child := range hns.Children() {
+		s = append(s, fmt.Sprint(child.(model.Namespace).ID().Ino))
+	}
+	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
+}
+
 var _ = Describe("namespaces JSON", func() {
+
+	It("marshals Namespace", func() {
+		// A non-user and non-PID namespace must not contain parent and UID
+		// information. But it must contain a owner user namespace reference.
+		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
+		Expect(ns).NotTo(BeNil())
+		j, err := MarshalNamespace(ns)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(j).To(MatchJSON(fmt.Sprintf(`{
+				"nsid": %d,
+				"type": "net",
+				"owner": %d,
+				"reference": %q,
+				"leaders": %s
+			}`,
+			ns.ID().Ino,
+			ns.Owner().(model.Namespace).ID().Ino,
+			ns.Ref(),
+			pidlist(ns.LeaderPIDs()),
+		)))
+
+		// In contrast, a user namespace must contain parent and UID
+		// information. But it must not contain an owner reference, this is
+		// the parent reference instead.
+		parentuserns := userns.(model.Hierarchy).Parent().(model.Namespace)
+		j, err = MarshalNamespace(userns)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(j).To(MatchJSON(fmt.Sprintf(`{
+				"nsid": %d,
+				"type": "user",
+				"reference": %q,
+				"leaders": %s,
+				"parent": %d,
+				"user-uid": %d
+			}`,
+			userns.ID().Ino,
+			userns.Ref(),
+			pidlist(userns.LeaderPIDs()),
+			parentuserns.ID().Ino,
+			userns.(model.Ownership).UID(),
+		)))
+
+		// Check for the correct child list of the parent user namespace.
+		j, err = MarshalNamespace(parentuserns)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(j).To(MatchJSON(fmt.Sprintf(`{
+				"nsid": %d,
+				"type": "user",
+				"reference": %q,
+				"leaders": %s,
+				"children": %s,
+				"user-uid": %d
+			}`,
+			parentuserns.ID().Ino,
+			parentuserns.Ref(),
+			pidlist(parentuserns.LeaderPIDs()),
+			childlist(parentuserns.(model.Hierarchy)),
+			parentuserns.(model.Ownership).UID(),
+		)))
+	})
+
 })

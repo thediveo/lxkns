@@ -28,10 +28,14 @@ import (
 // ProcessTable is the JSON serializable (digital!) twin to the process table
 // returned from discoveries. The processes (process tree) is represented in
 // JSON as a JSON object, where the members (keys) are the stringified PIDs
-// and the values are process objects. In order to unmarshal a ProcessTable a
-// namespace dictionary which can either be prefilled or empty: it is used to
-// share the namespace objects with the same ID between individual process
-// objects in the table.
+// and the values are process objects.
+//
+// In order to unmarshal a ProcessTable a namespace dictionary is required,
+// which can either be prefilled or empty: it is used to share the namespace
+// objects with the same ID between individual process objects in the table.
+//
+// Additionally, a ProcessTable can be primed with Process objects. In this
+// case, these process objects will be reused and updated with the new state.
 type ProcessTable struct {
 	model.ProcessTable
 	Namespaces *model.AllNamespaces // aux. namespace information
@@ -91,7 +95,18 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 		if err := (*Process)(proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
 			return err
 		}
-		p.ProcessTable[proc.PID] = proc
+		// Allow for preloading (priming) a process table with "placeholder"
+		// process objects in case a process gets referenced in some other
+		// part of the JSON information model before the process table with
+		// the details can be unmarshalled. In this case, do not replace the
+		// original placeholder object, as there might be already other
+		// references to it, but instead overwrite its dummy state with the
+		// final process information.
+		if placeholder, ok := p.ProcessTable[proc.PID]; ok {
+			*placeholder = *proc
+		} else {
+			p.ProcessTable[proc.PID] = proc
+		}
 		proc.Children = []*model.Process{}
 	}
 	// Scan through the processes and resolve the parent-child process
@@ -242,7 +257,7 @@ func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *model.AllNam
 			// While we can already create the namespace object with type and
 			// ID, the remaining information needs to be filled in elsewhere
 			// when unmarshalling the complete namespace information. Here,
-			// we're just creating the "hulls".
+			// we're just creating the "hull".
 			ns = namespaces.New(nstype, nsid, "")
 			allns[nstypeidx][nsid] = ns
 		}
