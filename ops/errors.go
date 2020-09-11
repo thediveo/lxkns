@@ -29,6 +29,9 @@ type InvalidNamespaceError struct {
 	Err error  // wrapped OS-level error.
 }
 
+// NamespaceOperationError wraps an invalid namespace operation, giving
+// information about the failed operation both on a high level, as well as the
+// underlying invalid namespace and OS-level errors.
 type NamespaceOperationError struct {
 	InvalidNamespaceError
 	Op string // failed namespace ioctl operation

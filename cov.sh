@@ -4,7 +4,9 @@ set -e
 if ! command -v go-acc; then
     PATH="$(go env GOPATH)/bin:$PATH"
     if ! command -v go-acc; then
-        go get github.com/ory/go-acc
+        # Don't touch our local module dependencies, so run installation from
+        # somewhere else...
+        (cd /tmp && go get github.com/ory/go-acc)
     fi
 fi
 

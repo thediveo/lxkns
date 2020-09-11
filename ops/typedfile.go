@@ -33,18 +33,18 @@ type TypedNamespaceFile struct {
 	nstype species.NamespaceType // foreknown type of Linux kernel namespace
 }
 
-// NewTypedNamespaceFile, given an open(!) os.File and the type of namespace
-// referenced, returns a new typed namespace reference object. If the namespace
-// type is left zero, then this convenience helper will auto-detect it, unless
-// when on a pre-4.11 kernel, where auto-detection is impossible due to the
-// missing specific ioctl().
+// NewTypedNamespaceFile takes an open(!) os.File plus the type of namespace
+// referenced and returns a new typed namespace reference object. If the
+// namespace type is left zero, then this convenience helper will auto-detect
+// it, unless when on a pre-4.11 kernel, where auto-detection is impossible
+// due to the missing specific ioctl().
 func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedNamespaceFile, error) {
 	if f != nil && nstype == 0 {
-		if t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE); err != nil {
+		t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE)
+		if err != nil {
 			return nil, newNamespaceOperationError(&NamespaceFile{*f}, "NS_GET_NSTYPE", err)
-		} else {
-			nstype = species.NamespaceType(t)
 		}
+		nstype = species.NamespaceType(t)
 	}
 	return &TypedNamespaceFile{
 		NamespaceFile: NamespaceFile{*f},
