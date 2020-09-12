@@ -19,10 +19,29 @@ func (d *DiscoveryResult) MarshalJSON() ([]byte, error) {
 	nsdict.ProcessTable.Namespaces = nsdict
 	aux := struct {
 		Namespaces *NamespacesDict `json:"namespaces"`
-		Processes  ProcessTable    `json:"processes"`
+		Processes  *ProcessTable   `json:"processes"`
 	}{
 		Namespaces: nsdict,
-		Processes:  nsdict.ProcessTable,
+		Processes:  &nsdict.ProcessTable,
 	}
 	return json.Marshal(aux)
+}
+
+func (d *DiscoveryResult) UnmarshalJSON(data []byte) error {
+	nsdict := &NamespacesDict{
+		AllNamespaces: &d.Namespaces,
+		ProcessTable: ProcessTable{
+			ProcessTable: d.Processes,
+			Namespaces:   nil,
+		},
+	}
+	nsdict.ProcessTable.Namespaces = nsdict
+	aux := struct {
+		Namespaces *NamespacesDict `json:"namespaces"`
+		Processes  *ProcessTable   `json:"processes"`
+	}{
+		Namespaces: nsdict,
+		Processes:  &nsdict.ProcessTable,
+	}
+	return json.Unmarshal(data, &aux)
 }

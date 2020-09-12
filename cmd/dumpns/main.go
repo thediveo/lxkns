@@ -24,13 +24,12 @@ import (
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 )
 
-// dump emits the namespace and process discovery results as JSON. It takes
+// dumpns emits the namespace and process discovery results as JSON. It takes
 // formatting options into account, such as not indenting output, or using
 // tabs or a specific number of spaces for indentation.
-func dump(cmd *cobra.Command, _ []string) error {
+func dumpns(cmd *cobra.Command, _ []string) error {
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	var j []byte
 	var err error
@@ -67,7 +66,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "dumpns outputs discovered namespaces and processes as JSON",
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
-		RunE:    dump,
+		RunE:    dumpns,
 	}
 	// Sets up the flags.
 	rootCmd.PersistentFlags().BoolP(
@@ -79,7 +78,6 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	rootCmd.PersistentFlags().UintP(
 		"indent", "i", 2,
 		"use the given number of spaces (no more than 8) for indentation")
-	cli.AddFlags(rootCmd)
 	return
 }
 

@@ -167,7 +167,7 @@ func init() {
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
 func Discover(opts DiscoverOpts) *DiscoveryResult {
-	result := &DiscoveryResult{
+	result := &DiscoveryResult{ // TODO: convenience f()
 		Options:   opts,
 		Processes: model.NewProcessTable(),
 	}
