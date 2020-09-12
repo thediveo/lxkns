@@ -26,6 +26,7 @@ var (
 	_ model.Ownership         = (*UserNamespace)(nil)
 	_ NamespaceConfigurer     = (*UserNamespace)(nil)
 	_ HierarchyConfigurer     = (*UserNamespace)(nil)
+	_ UserConfigurer          = (*UserNamespace)(nil)
 )
 
 // UID returns the user ID of the process that created this user namespace.
@@ -71,6 +72,12 @@ func (uns *UserNamespace) String() string {
 // owner's UID and then stores it for this user namespace proxy.
 func (uns *UserNamespace) DetectUID(nsref relations.Relation) {
 	uns.owneruid, _ = nsref.OwnerUID()
+}
+
+// SetOwnerUID sets the user ID which originally created this user namespace
+// and thus is its owner.
+func (uns *UserNamespace) SetOwnerUID(uid int) {
+	uns.owneruid = uid
 }
 
 // ResolveOwner sets the owning user namespace reference based on the owning

@@ -6,9 +6,9 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// NamespaceConfigurer allows discovery mechanisms to set up the information for
-// a namespace. This is a lxkns-internal interface needed by other lxkns
-// subpackages.
+// NamespaceConfigurer allows discovery and unmarshalling mechanisms to set up
+// the information for a namespace. This is a lxkns-internal interface needed
+// by other lxkns subpackages.
 type NamespaceConfigurer interface {
 	AddLeader(proc *model.Process)             // adds yet another self-styled leader.
 	SetRef(string)                             // sets a filesystem path for referencing this namespace.
@@ -17,9 +17,15 @@ type NamespaceConfigurer interface {
 	ResolveOwner(usernsmap model.NamespaceMap) // resolves owner ns id into object reference.
 }
 
-// HierarchyConfigurer allows discovery mechanisms to configure the
-// information hold by hierarchical namespaces.
+// HierarchyConfigurer allows discovery and unmarshalling mechanisms to
+// configure the information hold by hierarchical namespaces.
 type HierarchyConfigurer interface {
 	AddChild(child model.Hierarchy)
 	SetParent(parent model.Hierarchy)
+}
+
+// UserConfigurer allows discovery and unmarshalling mechanisms to configure
+// the information hold by user namespaces.
+type UserConfigurer interface {
+	SetOwnerUID(uid int)
 }

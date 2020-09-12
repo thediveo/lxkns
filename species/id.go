@@ -110,7 +110,7 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 // and then adds that in the hope that things still work correctly for the
 // moment.
 func NamespaceIDfromInode(ino uint64) NamespaceID {
-	if dev := nsfsDev(); dev != 0 {
+	if dev := nsfsDev(); dev != 0 && ino != 0 {
 		return NamespaceID{Dev: dev, Ino: ino}
 	}
 	return NoneID

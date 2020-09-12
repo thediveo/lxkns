@@ -38,7 +38,7 @@ var (
 var _ = BeforeSuite(func() {
 	scripts.Common(nstest.NamespaceUtilsScript)
 	scripts.Script("main", `
-unshare -Ur $stage2 # create a new user ns.
+unshare -Ur unshare -U $stage2 # create a new user ns inside another user ns (so we get a proper owner relationship).
 	`)
 	scripts.Script("stage2", `
 process_namespaceid user # prints the user namespace ID of "the" process.
@@ -131,16 +131,77 @@ var _ = Describe("namespaces JSON", func() {
 				"nsid": %d,
 				"type": "user",
 				"reference": %q,
-				"leaders": %s,
+				"parent": %d,
 				"children": %s,
 				"user-uid": %d
 			}`,
 			parentuserns.ID().Ino,
 			parentuserns.Ref(),
-			pidlist(parentuserns.LeaderPIDs()),
+			parentuserns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			childlist(parentuserns.(model.Hierarchy)),
 			parentuserns.(model.Ownership).UID(),
 		)))
+
+		// Also check the grandparent user namespace.
+		grandpa := parentuserns.(model.Hierarchy).Parent().(model.Namespace)
+		j, err = MarshalNamespace(grandpa)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(j).To(MatchJSON(fmt.Sprintf(`{
+				"nsid": %d,
+				"type": "user",
+				"reference": %q,
+				"leaders": %s,
+				"children": %s,
+				"user-uid": %d
+			}`,
+			grandpa.ID().Ino,
+			grandpa.Ref(),
+			pidlist(grandpa.LeaderPIDs()),
+			childlist(grandpa.(model.Hierarchy)),
+			grandpa.(model.Ownership).UID(),
+		)))
+	})
+
+	It("unmarshals Namespace", func() {
+		// This unmarshalling MUST fail...
+		_, err := UnmarshalNamespace([]byte(`""`), nil, nil)
+		Expect(err).To(HaveOccurred())
+		_, err = UnmarshalNamespace([]byte(`{"type":"foobar"}`), nil, nil)
+		Expect(err).To(HaveOccurred())
+		_, err = UnmarshalNamespace([]byte(`{"nsid":0,"type":"net"}`), nil, nil)
+		Expect(err).To(HaveOccurred())
+
+		// First create a JSON textual representation for a user namespace we
+		// want to unmarshal next...
+		j, err := MarshalNamespace(userns)
+		Expect(err).NotTo(HaveOccurred())
+
+		// ...now check that unmarshalling correctly works.
+		nsdict := NewNamespacesDict()
+		procs := model.ProcessTable{}
+		uns, err := UnmarshalNamespace(j, nsdict, procs)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(uns).NotTo(BeNil())
+		Expect(uns.ID()).To(Equal(userns.ID()))
+		Expect(uns.Type()).To(Equal(userns.Type()))
+		Expect(uns.Ref()).To(Equal(userns.Ref()))
+
+		Expect(uns.(model.Hierarchy).Parent().(model.Namespace).ID()).To(
+			Equal(userns.(model.Hierarchy).Parent().(model.Namespace).ID()))
+		Expect(uns.LeaderPIDs()).To(Equal(userns.LeaderPIDs()))
+
+		// Check that unmarshalling a (flat) namespace also works correctly.
+		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
+		j, err = MarshalNamespace(ns)
+		Expect(err).NotTo(HaveOccurred())
+
+		ns2, err := UnmarshalNamespace(j, nsdict, procs)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ns2).NotTo(BeNil())
+		Expect(ns2.ID()).To(Equal(ns.ID()))
+		Expect(ns2.Type()).To(Equal(ns.Type()))
+		Expect(ns2.Ref()).To(Equal(ns.Ref()))
+		Expect(ns2.Owner().(model.Namespace).ID()).To(Equal(ns.Owner().(model.Namespace).ID()))
 	})
 
 })
