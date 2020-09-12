@@ -83,6 +83,10 @@ These are the CLI tools:
   owning user namespace hierarchy (or hierarchies) of the process and target
   namespace, together with the current process and namespace capabilities.
 
+- `dumpns`
+  [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/dumpns):
+  runs a namespace (and process) discovery and then dumps the results as JSON.
+
 
 ### lsuns
 
@@ -246,6 +250,36 @@ realm. But the horror on the faces of security experts will be priceless.
 Please see also the [nscaps
 command](https://godoc.org/github.com/thediveo/lxkns/cmd/nscaps)
 documentation.
+
+### dumpns
+
+`dumpns` runs a discovery and then dumps the results as JSON.
+
+```
+$ dumpns
+{
+  "namespaces": {
+    "4026531840": {
+      "nsid": 4026531840,
+      "type": "mnt",
+      "owner": 4026531837,
+      "reference": "/proc/2849/ns/mnt",
+      "leaders": [
+        2849,
+        2770,
+        2662,
+        2847
+      ]
+    },
+    "4026531835": {
+      "nsid": 4026531835,
+      "type": "cgroup",
+      "owner": 4026531837,
+      "reference": "/proc/2849/ns/cgroup",
+      "leaders": [
+        2849,
+...
+```
 
 ## Package Usage
 
