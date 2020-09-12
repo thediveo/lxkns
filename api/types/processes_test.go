@@ -105,6 +105,18 @@ const namespacesJSON = `{
 
 var _ = Describe("process JSON", func() {
 
+	It("always gets a Process from the ProcessTable", func() {
+		pt := &ProcessTable{
+			ProcessTable: model.ProcessTable{proc1.PID: proc1},
+		}
+		p1 := pt.Get(proc1.PID)
+		Expect(p1).To(BeIdenticalTo(p1))
+
+		p2 := pt.Get(model.PIDType(666))
+		Expect(p2).NotTo(BeNil())
+		Expect(p2.PID).To(Equal(model.PIDType(666)))
+	})
+
 	It("marshals NamespacesSetReferences", func() {
 		j, err := json.Marshal((*NamespacesSetReferences)(&namespaceset))
 		Expect(err).NotTo(HaveOccurred())
@@ -112,7 +124,7 @@ var _ = Describe("process JSON", func() {
 	})
 
 	It("unmarshals NamespacesSetReferences", func() {
-		allns := model.NewAllNamespaces()
+		allns := NewNamespacesDict()
 		nsrefs := &NamespacesSetReferences{}
 
 		// This must NOT work...
@@ -138,7 +150,7 @@ var _ = Describe("process JSON", func() {
 			{model.NetNS, 1},
 			{model.TimeNS, 0},
 		} {
-			Expect(allns[i.idx]).To(HaveLen(i.len),
+			Expect(allns.AllNamespaces[i.idx]).To(HaveLen(i.len),
 				"wrong length of namespace map type %s", model.TypesByIndex[i.idx])
 		}
 
@@ -166,7 +178,7 @@ var _ = Describe("process JSON", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(proc1JSON))
 		// Next, deserialize the correct JSON textural serialization again...
-		allns := model.NewAllNamespaces()
+		allns := NewNamespacesDict()
 		p := &Process{}
 		Expect(p.unmarshalJSON(j, allns)).NotTo(HaveOccurred())
 		// ...but how to we know it deserialization worked as expected? By
@@ -201,14 +213,14 @@ var _ = Describe("process JSON", func() {
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
-		pt2 := &ProcessTable{Namespaces: model.NewAllNamespaces()}
+		pt2 := &ProcessTable{Namespaces: NewNamespacesDict()}
 		Expect(json.Unmarshal(j, pt2)).NotTo(HaveOccurred())
 		Expect(pt2.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
 		// Ensure that the namespace dictionary has been correctly updated and
 		// that processes with the same namespaces share the same namespace
 		// objects.
-		Expect(pt2.Namespaces[model.MountNS]).To(HaveLen(1))
-		Expect(pt2.Namespaces[model.TimeNS]).To(HaveLen(0))
+		Expect(pt2.Namespaces.AllNamespaces[model.MountNS]).To(HaveLen(1))
+		Expect(pt2.Namespaces.AllNamespaces[model.TimeNS]).To(HaveLen(0))
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).NotTo(BeNil())
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).To(
 			BeIdenticalTo(pt2.ProcessTable[proc2.PID].Namespaces[model.CgroupNS]))
@@ -221,7 +233,7 @@ var _ = Describe("process JSON", func() {
 			ProcessTable: model.ProcessTable{
 				proc1.PID: proc,
 			},
-			Namespaces: model.NewAllNamespaces(),
+			Namespaces: NewNamespacesDict(),
 		}
 		Expect(pt3.ProcessTable[proc1.PID].PID).To(Equal(model.PIDType(0)))
 		Expect(json.Unmarshal(j, pt3)).NotTo(HaveOccurred())

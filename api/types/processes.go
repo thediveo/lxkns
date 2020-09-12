@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -34,11 +33,30 @@ import (
 // which can either be prefilled or empty: it is used to share the namespace
 // objects with the same ID between individual process objects in the table.
 //
-// Additionally, a ProcessTable can be primed with Process objects. In this
-// case, these process objects will be reused and updated with the new state.
+// Additionally, a ProcessTable can be primed with ("preliminary") Process
+// objects. In this case, these process objects will be reused and updated
+// with the new state. Please see also the Get() method, which will
+// automatically do priming for yet unknown PIDs.
 type ProcessTable struct {
 	model.ProcessTable
-	Namespaces *model.AllNamespaces // aux. namespace information
+	Namespaces *NamespacesDict // for resolving (and priming) namespace references
+}
+
+// Get always(!) returns a Process object with the given PID. When the process
+// is already known, then it is returned, else a new preliminary process
+// object gets created, registered, and returned instead. Preliminary process
+// objects have only their PID set, but nothing else with the sole exception
+// for the list of child processes being initialized.
+func (p *ProcessTable) Get(pid model.PIDType) *model.Process {
+	proc, ok := p.ProcessTable[pid]
+	if !ok {
+		proc = &model.Process{
+			PID:      pid,
+			Children: []*model.Process{},
+		}
+		p.ProcessTable[pid] = proc
+	}
+	return proc
 }
 
 // MarshalJSON emits the JSON textual representation of a complete process
@@ -91,23 +109,11 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 		p.ProcessTable = model.ProcessTable{}
 	}
 	for _, rawproc := range aux {
-		proc := &model.Process{}
-		if err := (*Process)(proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
+		proc := model.Process{}
+		if err := (*Process)(&proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
 			return err
 		}
-		// Allow for preloading (priming) a process table with "placeholder"
-		// process objects in case a process gets referenced in some other
-		// part of the JSON information model before the process table with
-		// the details can be unmarshalled. In this case, do not replace the
-		// original placeholder object, as there might be already other
-		// references to it, but instead overwrite its dummy state with the
-		// final process information.
-		if placeholder, ok := p.ProcessTable[proc.PID]; ok {
-			*placeholder = *proc
-		} else {
-			p.ProcessTable[proc.PID] = proc
-		}
-		proc.Children = []*model.Process{}
+		*p.Get(proc.PID) = proc
 	}
 	// Scan through the processes and resolve the parent-child process
 	// relationships, based on the PPIDs and PIDs.
@@ -159,7 +165,7 @@ func (p *Process) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON reads in the textual JSON representation of a single process.
 // It uses the associated namespace dictionary to resolve existing references
 // into namespace objects and also adds missing namespaces.
-func (p *Process) unmarshalJSON(data []byte, allns *model.AllNamespaces) error {
+func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	// While we unmarshal "most" of the process data using json's automated
 	// mechanics, we need to deal with the namespaces a process is attached to
 	// separately. Because we need context for the namespaces, we do it
@@ -235,7 +241,7 @@ func (n NamespacesSetReferences) UnmarshalJSON(data []byte) error {
 // unmarshalJSON reads in the textual JSON representation of a set of typed
 // namespace references. It uses a namespace object dictionary in order to
 // reuse already existing namespace objects and also updates missing entries.
-func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *model.AllNamespaces) error {
+func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	// Just get the typed namespace references as a properly key-value typed
 	// map, so we can easily work on it next.
 	rawns := map[string]uint64{}
@@ -252,16 +258,7 @@ func (n *NamespacesSetReferences) unmarshalJSON(data []byte, allns *model.AllNam
 		}
 		nstypeidx := model.TypeIndex(nstype)
 		nsid := species.NamespaceIDfromInode(id)
-		ns, ok := allns[nstypeidx][nsid]
-		if !ok {
-			// While we can already create the namespace object with type and
-			// ID, the remaining information needs to be filled in elsewhere
-			// when unmarshalling the complete namespace information. Here,
-			// we're just creating the "hull".
-			ns = namespaces.New(nstype, nsid, "")
-			allns[nstypeidx][nsid] = ns
-		}
-		n[nstypeidx] = ns
+		n[nstypeidx] = allns.Get(nsid, nstype)
 	}
 	return nil
 }
