@@ -26,6 +26,7 @@ import (
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
+	. "github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
@@ -199,14 +200,7 @@ var _ = Describe("namespaces JSON", func() {
 		nsdict := NewNamespacesDict()
 		uns, err := nsdict.UnmarshalNamespace(j)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(uns).NotTo(BeNil())
-		Expect(uns.ID()).To(Equal(userns.ID()))
-		Expect(uns.Type()).To(Equal(userns.Type()))
-		Expect(uns.Ref()).To(Equal(userns.Ref()))
-
-		Expect(uns.(model.Hierarchy).Parent().(model.Namespace).ID()).To(
-			Equal(userns.(model.Hierarchy).Parent().(model.Namespace).ID()))
-		Expect(uns.LeaderPIDs()).To(Equal(userns.LeaderPIDs()))
+		Expect(uns).To(EqualNamespace(userns))
 
 		// Check that unmarshalling a (flat) namespace also works correctly.
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
