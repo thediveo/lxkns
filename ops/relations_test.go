@@ -44,7 +44,7 @@ func assertInvNSError(err error) {
 
 func null() *os.File {
 	fnull, err := os.Open("/dev/null")
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "broken /dev/null")
+	ExpectWithOffset(1, err).To(Succeed(), "broken /dev/null")
 	return fnull
 }
 
@@ -68,7 +68,7 @@ var _ = Describe("Namespaces", func() {
 		fnull := null()
 		defer fnull.Close()
 		f, err = NewNamespaceFile(fnull, nil)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(f.Fd()).To(Equal(fnull.Fd()))
 
 		_, err = namespaceFileFromFd(f, ^uint(0), nil)
@@ -85,7 +85,7 @@ var _ = Describe("Namespaces", func() {
 
 		Expect(errof(NamespaceFd(-1).Type())).To(HaveOccurred())
 		ref, err := NewTypedNamespaceFd(-1, species.CLONE_NEWNET)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(ref.Type()).To(Equal(species.CLONE_NEWNET))
 
 		f, err := NewNamespaceFile(os.Open("relations_test.go"))
@@ -128,9 +128,9 @@ var _ = Describe("Namespaces", func() {
 
 	It("opens typed references", func() {
 		ref, err := NewTypedNamespaceFd(0, species.CLONE_NEWNS)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		oref, closer, err := ref.OpenTypedReference()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
 		Expect(oref.(*TypedNamespaceFd)).To(BeIdenticalTo(ref))
 
@@ -139,18 +139,18 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).To(MatchError(MatchRegexp("invalid namespace operation NS_GET_NSTYPE")))
 
 		fref, err = NewNamespaceFile(os.Open("/proc/self/ns/net"))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		oref, closer, err = fref.OpenTypedReference()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
 		Expect(oref).NotTo(BeNil())
 
 		fnull := null()
 		defer fnull.Close()
 		tfref, err := NewTypedNamespaceFile(fnull, species.CLONE_NEWUSER)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		oref, closer, err = tfref.OpenTypedReference()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
 		Expect(oref).NotTo(BeNil())
 
@@ -159,10 +159,10 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).To(MatchError(MatchRegexp("invalid namespace operation")))
 
 		fd, err := unix.Open("/proc/self/ns/net", unix.O_RDONLY, 0)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		fdref = NamespaceFd(fd)
 		oref, closer, err = fdref.OpenTypedReference()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
 		Expect(oref).NotTo(BeNil())
 
@@ -171,7 +171,7 @@ var _ = Describe("Namespaces", func() {
 		_, _, err = NewTypedNamespacePath("doc.go", 0).OpenTypedReference()
 		Expect(err).To(MatchError(MatchRegexp("invalid namespace path.+invalid namespace operation")))
 		pref, closer, err := NewTypedNamespacePath("/proc/self/ns/net", 0).OpenTypedReference()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
 		Expect(pref).NotTo(BeNil())
 		closer()
@@ -283,11 +283,11 @@ read # wait for test to proceed()
 		Expect(parentuserns.ID()).To(Equal(parentusernsid))
 
 		f, err := os.Open(string(leafuserpath))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		tleafuserns, err := NewTypedNamespaceFile(f, species.CLONE_NEWUSER)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		parentuserns, err = tleafuserns.Parent()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		defer parentuserns.(io.Closer).Close()
 		Expect(parentuserns.ID()).To(Equal(parentusernsid))
 
@@ -322,7 +322,7 @@ read # wait for test to proceed()
 		Expect(uid).To(Equal(os.Getuid()))
 
 		f, err := os.Open(string(userpath))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		defer f.Close()
 		Expect(NamespaceFile{*f}.OwnerUID()).To(Equal(os.Getuid()))
 
@@ -335,7 +335,7 @@ read # wait for test to proceed()
 	It("tests helpers", func() {
 		Expect(errof(NewTypedNamespaceFd(0, 0))).Should(HaveOccurred())
 		ref, err := NewTypedNamespaceFd(42, species.CLONE_NEWNET)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(ref.String()).To(MatchRegexp("fd 42.+type net"))
 
 		Expect(errof(typedNamespaceFileFromFd(ref, "", 0, 0, errors.New("foobar")))).To(

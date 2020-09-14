@@ -119,7 +119,7 @@ var _ = Describe("process JSON", func() {
 
 	It("marshals NamespacesSetReferences", func() {
 		j, err := json.Marshal((*NamespacesSetReferences)(&namespaceset))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(namespacesJSON))
 	})
 
@@ -136,7 +136,7 @@ var _ = Describe("process JSON", func() {
 
 		// Do we correctly all the references and are they also entered into
 		// the namespace dictionary for later reuse?
-		Expect(nsrefs.unmarshalJSON([]byte(namespacesJSON), allns)).NotTo(HaveOccurred())
+		Expect(nsrefs.unmarshalJSON([]byte(namespacesJSON), allns)).To(Succeed())
 		for _, i := range []struct {
 			idx model.NamespaceTypeIndex
 			len int
@@ -157,7 +157,7 @@ var _ = Describe("process JSON", func() {
 		// Does a second unmarshalling reuse the already known namespace
 		// objects?
 		nsrefs2 := &NamespacesSetReferences{}
-		Expect(nsrefs2.unmarshalJSON([]byte(`{"mnt": 66610}`), allns)).NotTo(HaveOccurred())
+		Expect(nsrefs2.unmarshalJSON([]byte(`{"mnt": 66610}`), allns)).To(Succeed())
 		Expect(nsrefs2[model.MountNS]).To(BeIdenticalTo(nsrefs[model.MountNS]))
 	})
 
@@ -175,17 +175,17 @@ var _ = Describe("process JSON", func() {
 
 		// First establish that serialization works as expected...
 		j, err := json.Marshal((*Process)(proc1))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(proc1JSON))
 		// Next, deserialize the correct JSON textural serialization again...
 		allns := NewNamespacesDict()
 		p := &Process{}
-		Expect(p.unmarshalJSON(j, allns)).NotTo(HaveOccurred())
+		Expect(p.unmarshalJSON(j, allns)).To(Succeed())
 		// ...but how to we know it deserialization worked as expected? By
 		// serializing the deserialized Process object again, seeing if we end
 		// up with the same JSON textual representation.
 		j2, err := json.Marshal(p)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(j2).To(MatchJSON(j))
 	})
 
@@ -194,7 +194,7 @@ var _ = Describe("process JSON", func() {
 			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
 		}
 		j, err := json.Marshal(pt)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(`{"1":` + proc1JSON + `,"666":` + proc2JSON + `}`))
 	})
 
@@ -209,12 +209,12 @@ var _ = Describe("process JSON", func() {
 			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
 		}
 		j, err := json.Marshal(pt)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
 		pt2 := &ProcessTable{Namespaces: NewNamespacesDict()}
-		Expect(json.Unmarshal(j, pt2)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(j, pt2)).To(Succeed())
 		Expect(pt2.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
 		// Ensure that the namespace dictionary has been correctly updated and
 		// that processes with the same namespaces share the same namespace
@@ -236,7 +236,7 @@ var _ = Describe("process JSON", func() {
 			Namespaces: NewNamespacesDict(),
 		}
 		Expect(pt3.ProcessTable[proc1.PID].PID).To(Equal(model.PIDType(0)))
-		Expect(json.Unmarshal(j, pt3)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(j, pt3)).To(Succeed())
 		Expect(pt3.ProcessTable).To(HaveKey(proc1.PID))
 		preproc1 := pt3.ProcessTable[proc1.PID]
 		Expect(preproc1).To(BeIdenticalTo(proc))

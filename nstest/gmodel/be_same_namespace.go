@@ -1,3 +1,17 @@
+// Copyright 2020 Harald Albrecht.
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy
+// of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
 package gmodel
 
 import (
@@ -8,27 +22,31 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// EqualNamespace returns a GomegaMatcher which compares an actual namespace to
-// an expected namespace.
-func EqualNamespace(expectedns interface{}) types.GomegaMatcher {
-	return &equalNamespaceMatcher{expected: expectedns}
+// BeSameNamespace returns a GomegaMatcher which compares an actual namespace
+// to an expected namespace. A namespace is anything supporting at least the
+// model.Namespace interface, as well as optionally (and depending on the type
+// of namespace) model.Hierarchy and model.Ownership.
+func BeSameNamespace(expectedns interface{}) types.GomegaMatcher {
+	return &beSameNamespaceMatcher{expected: expectedns}
 }
 
-type equalNamespaceMatcher struct {
+type beSameNamespaceMatcher struct {
 	expected interface{}
 }
 
-func (m *equalNamespaceMatcher) Match(actual interface{}) (bool, error) {
-	if actual == m.expected {
+func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
+	if actual == matcher.expected {
 		return true, nil
 	}
 	actualns, ok := actual.(model.Namespace)
 	if !ok {
-		return false, fmt.Errorf("SameNamespace expects a model.Namespace")
+		return false, fmt.Errorf(
+			"BeSameNamespace expects a model.Namespace, not a %T", actual)
 	}
-	expectedns, ok := m.expected.(model.Namespace)
+	expectedns, ok := matcher.expected.(model.Namespace)
 	if !ok {
-		return false, fmt.Errorf("SameNamespace must be passed a model.Namespace")
+		return false, fmt.Errorf(
+			"BeSameNamespace must be passed a model.Namespace, not a %T", matcher.expected)
 	}
 	match := sameIDType(actualns, expectedns) &&
 		actualns.Ref() == expectedns.Ref() &&
@@ -49,16 +67,16 @@ func (m *equalNamespaceMatcher) Match(actual interface{}) (bool, error) {
 	return match, nil
 }
 
-func (m *equalNamespaceMatcher) FailureMessage(actual interface{}) string {
+func (matcher *beSameNamespaceMatcher) FailureMessage(actual interface{}) string {
 	return fmt.Sprintf(
 		"Expected namespace\n\t%s\nto match actual namespace\n\t%s",
-		actual, m.expected)
+		actual, matcher.expected)
 }
 
-func (m *equalNamespaceMatcher) NegatedFailureMessage(actual interface{}) string {
+func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual interface{}) string {
 	return fmt.Sprintf(
 		"Expected namespace\n\t%s\nto not match actual namespace\n\t%s",
-		actual, m.expected)
+		actual, matcher.expected)
 }
 
 // sameIDType returns true if both namespaces have the same ID and type, or if
@@ -68,6 +86,15 @@ func sameIDType(ns1, ns2 interface{}) bool {
 		(ns1 != nil && ns2 != nil &&
 			ns1.(model.Namespace).ID() == ns2.(model.Namespace).ID() &&
 			ns1.(model.Namespace).Type() == ns2.(model.Namespace).Type())
+}
+
+func similarNamespacesSets(nsset1, nsset2 model.NamespacesSet) bool {
+	for idx := model.NamespaceTypeIndex(0); idx < model.NamespaceTypesCount; idx++ {
+		if !sameIDType(nsset1[idx], nsset2[idx]) {
+			return false
+		}
+	}
+	return true
 }
 
 // sameLeaders returns true if both lists of PIDs contain the same PIDs.

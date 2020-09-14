@@ -25,6 +25,13 @@ import (
 
 var _ = Describe("Process", func() {
 
+	It("stringifies", func() {
+		var p *Process
+		Expect(p.String()).To(MatchRegexp(`<nil>`))
+
+		Expect(NewProcess(1)).To(MatchRegexp(`PID 1.+PPID 0`))
+	})
+
 	It("rejects invalid /proc/[PID] status lines", func() {
 		// Test various invalid field combinations
 		for _, badstat := range []string{
@@ -137,15 +144,11 @@ var _ = Describe("ProcessTable", func() {
 var _ = Describe("ProcessListByPID", func() {
 
 	It("sorts Process lists", func() {
+		p1 := &Process{PID: 1, Name: "foo"}
+		p42 := &Process{PID: 42, Name: "bar"}
 		pls := [][]*Process{
-			{
-				&Process{PID: 1, Name: "foo"},
-				&Process{PID: 42, Name: "bar"},
-			},
-			{
-				&Process{PID: 42, Name: "bar"},
-				&Process{PID: 1, Name: "foo"},
-			},
+			{p1, p42},
+			{p42, p1},
 		}
 		for _, pl := range pls {
 			sort.Sort(ProcessListByPID(pl))

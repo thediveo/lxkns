@@ -23,5 +23,5 @@ import (
 
 func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/nstest/gnamespaces package")
+	RunSpecs(t, "lxkns/nstest/gnamespaces matchers package")
 }

@@ -184,8 +184,10 @@ func (p *Process) Valid() bool {
 
 // String praises a Process object with a text hymn.
 func (p *Process) String() string {
-	return fmt.Sprintf("process PID %d %q, PPID %d",
-		p.PID, p.Name, p.PPID)
+	if p == nil {
+		return "Process <nil>"
+	}
+	return fmt.Sprintf("process PID %d %q, PPID %d", p.PID, p.Name, p.PPID)
 }
 
 // NewProcessTable takes returns the currently available processes (as usual,

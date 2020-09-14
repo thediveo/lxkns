@@ -94,7 +94,7 @@ var _ = Describe("Set Namespaces", func() {
 	})
 
 	It("Execute()s", func() {
-		Expect(Execute(func() interface{} { return nil })).NotTo(HaveOccurred())
+		Expect(Execute(func() interface{} { return nil })).To(Succeed())
 	})
 
 	It("Go()es into other namespaces", func() {
@@ -127,7 +127,7 @@ read # wait for test to proceed()
 				fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).
 				ID()
 			result <- id
-		}, netnsref)).NotTo(HaveOccurred())
+		}, netnsref)).To(Succeed())
 		Expect(<-result).To(Equal(netnsid))
 
 		res, err := Execute(func() interface{} {
