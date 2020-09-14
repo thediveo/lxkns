@@ -155,9 +155,9 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 	if len(fields) < 22-2 {
 		return nil
 	}
-	// Extract the Parent PID. Please note that we've chopped off two fields,
-	// and array indices start at 0: so the index is 3 less than the field
-	// number.
+	// Extract the Parent PID (field 4). Please note that we've chopped off
+	// two fields, and array indices start at 0: so the index is 3 less than
+	// the field number.
 	ppid, err := strconv.Atoi(fields[4-3])
 	if err != nil || ppid < 0 {
 		return nil

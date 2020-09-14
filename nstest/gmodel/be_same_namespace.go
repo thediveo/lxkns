@@ -60,8 +60,9 @@ func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
 				expectedns.(model.Hierarchy).Parent()) &&
 				sameChildren(actualns.(model.Hierarchy).Children(),
 					expectedns.(model.Hierarchy).Children())
-			match = match && (actualns.Type() == species.CLONE_NEWUSER) &&
-				actualns.(model.Ownership).UID() == expectedns.(model.Ownership).UID()
+			if match && actualns.Type() == species.CLONE_NEWUSER {
+				match = actualns.(model.Ownership).UID() == expectedns.(model.Ownership).UID()
+			}
 		}
 	}
 	return match, nil
@@ -70,7 +71,7 @@ func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
 func (matcher *beSameNamespaceMatcher) FailureMessage(actual interface{}) string {
 	return fmt.Sprintf(
 		"Expected namespace\n\t%s\nto match actual namespace\n\t%s",
-		actual, matcher.expected)
+		actual.(model.NamespaceStringer).String(), matcher.expected.(model.NamespaceStringer).String())
 }
 
 func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual interface{}) string {
@@ -126,7 +127,7 @@ func sameChildren(l1, l2 []model.Hierarchy) bool {
 	for _, child1 := range l1 {
 		found := false
 		for _, child2 := range l2 {
-			if child1 == child2 {
+			if sameIDType(child1, child2) {
 				found = true
 				break
 			}

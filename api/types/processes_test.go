@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -181,9 +182,10 @@ var _ = Describe("process JSON", func() {
 		allns := NewNamespacesDict()
 		p := &Process{}
 		Expect(p.unmarshalJSON(j, allns)).To(Succeed())
-		// ...but how to we know it deserialization worked as expected? By
-		// serializing the deserialized Process object again, seeing if we end
-		// up with the same JSON textual representation.
+		// ...but how to we know it deserialization worked as expected?
+		Expect((*model.Process)(p)).To(gmodel.BeSameProcess((*model.Process)(proc1)))
+		// Or check by serializing the deserialized Process object again,
+		// seeing if we end up with the same JSON textual representation.
 		j2, err := json.Marshal(p)
 		Expect(err).To(Succeed())
 		Expect(j2).To(MatchJSON(j))
@@ -247,6 +249,29 @@ var _ = Describe("process JSON", func() {
 			MatchFields(IgnoreExtras, Fields{
 				"Cmdline": Equal(proc2.Cmdline),
 			})))) // ...and about bracket Lisp"ing".
+	})
+
+	It("does a full round trip without any hiccup", func() {
+		pt := &ProcessTable{
+			ProcessTable: model.NewProcessTable(),
+			Namespaces:   NewNamespacesDict(),
+		}
+		j, err := json.Marshal(pt)
+		Expect(err).To(Succeed())
+
+		jpt := &ProcessTable{
+			ProcessTable: model.ProcessTable{},
+			Namespaces:   NewNamespacesDict(),
+		}
+		Expect(json.Unmarshal(j, jpt)).To(Succeed())
+
+		// Run through the tables and check that the actual and expected
+		// process match within their process trees, including the resolved
+		// parent/children Process references.
+		Expect(jpt.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
+		for _, proc := range jpt.ProcessTable {
+			Expect(proc).To(gmodel.BeSameTreeProcess(pt.ProcessTable[proc.PID]))
+		}
 	})
 
 })

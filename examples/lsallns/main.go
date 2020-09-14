@@ -50,9 +50,12 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 				ID:   uint64(ns.ID().Ino),
 				Type: ns.Type().Name(),
 			}
-			if procs := ns.Leaders(); len(procs) > 0 {
-				item.PID = int(procs[0].PID)
-				item.ProcName = procs[0].Name
+			// Try to be consistent by always showing the "most senior"
+			// process joined to a particular namespace. And yes, namespaces
+			// might be kind of a Last Kingdom ;)
+			if proc := ns.Ealdorman(); proc != nil {
+				item.PID = int(proc.PID)
+				item.ProcName = proc.Name
 			}
 			list = append(list, item)
 		}

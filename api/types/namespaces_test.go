@@ -26,6 +26,7 @@ import (
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/nstest/gmodel"
 	. "github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -209,11 +210,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		ns2, err := nsdict.UnmarshalNamespace(j)
 		Expect(err).To(Succeed())
-		Expect(ns2).NotTo(BeNil())
-		Expect(ns2.ID()).To(Equal(ns.ID()))
-		Expect(ns2.Type()).To(Equal(ns.Type()))
-		Expect(ns2.Ref()).To(Equal(ns.Ref()))
-		Expect(ns2.Owner().(model.Namespace).ID()).To(Equal(ns.Owner().(model.Namespace).ID()))
+		Expect(ns2).To(gmodel.BeSameNamespace(ns))
 	})
 
 	It("marshals NamespacesDict", func() {
@@ -281,9 +278,7 @@ var _ = Describe("namespaces JSON", func() {
 			nsset := allns.Namespaces[idx]
 			Expect(allns2[idx]).To(HaveLen(len(nsset)))
 			for _, ns := range allns2[idx] {
-				ns2 := nsset[ns.ID()]
-				Expect(ns.Ref()).To(Equal(ns2.Ref()))
-				Expect(ns.LeaderPIDs()).To(Equal(ns2.LeaderPIDs()))
+				Expect(ns).To(gmodel.BeSameNamespace(nsset[ns.ID()]))
 			}
 		}
 	})

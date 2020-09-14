@@ -27,16 +27,27 @@ import (
 // BeSameProcess returns a GomegaMatcher which compares an actual Process to
 // an expected Process, using only a (semi-) flat comparism for equality. In
 // particular, PID, PPID, Name, Cmdline, and Starttime are compared directly,
-// since they are "flat" types. The Parent and Children Process(es) are
-// compared only for their PIDs (but not grandchildren, and so on). And the
-// (joined) Namespaces are also only compared for their ID and type, but not
-// anything beyond those two main properties.
+// since they are "flat" types. Additionally, it also checks the joined
+// Namespaces for their IDs and types. But this matcher doesn't check the
+// related Parent and Children Process objects; use BeSameTreeProcess instead.
 func BeSameProcess(expectedprocess interface{}) types.GomegaMatcher {
-	return &beSameProcessMatcher{expected: expectedprocess}
+	return &beSameProcessMatcher{expected: expectedprocess, intree: false}
+}
+
+// BeSameTreeProcess returns a GomegaMatcher which compares an actual Process
+// to an expected Process, using only a (semi-) flat comparism for equality.
+// In particular, PID, PPID, Name, Cmdline, and Starttime are compared
+// directly, since they are "flat" types. The Parent and Children Process(es)
+// are compared only for their PIDs (but not grandchildren, and so on). And
+// the (joined) Namespaces are also only compared for their ID and type, but
+// not anything beyond those two main properties.
+func BeSameTreeProcess(expectedprocess interface{}) types.GomegaMatcher {
+	return &beSameProcessMatcher{expected: expectedprocess, intree: true}
 }
 
 type beSameProcessMatcher struct {
 	expected interface{}
+	intree   bool // check Parent and Children?
 }
 
 var dummyproc = model.Process{}
@@ -55,14 +66,17 @@ func (matcher *beSameProcessMatcher) Match(actual interface{}) (bool, error) {
 	}
 	if actval.Type() != processT {
 		return false, fmt.Errorf(
-			"BeSameProcess expects a model.Process, not a %T", actual)
+			"BeSame(Tree)Process expects a model.Process, not a %T", actual)
 	}
 	if expval.Type() != processT {
 		return false, fmt.Errorf(
-			"BeSameProcess must be passed a model.Process, not a %T", matcher.expected)
+			"BeSame(Tree)Process must be passed a model.Process, not a %T", matcher.expected)
 	}
 	actproc := actval.Interface().(model.Process)
 	expproc := expval.Interface().(model.Process)
+	if match := similarProcess(&actproc, &expproc); !match || !matcher.intree {
+		return match, nil
+	}
 	// The actual process should be similar to the expected process, and their
 	// parents should be similar too. Please note that "similar" doesn't mean
 	// deeply equal, but a limited "flat equality".

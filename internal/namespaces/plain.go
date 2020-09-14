@@ -75,6 +75,16 @@ func (pns *PlainNamespace) Ealdorman() (p *model.Process) {
 			p = proc
 		} else if proc.Starttime < p.Starttime {
 			p = proc
+		} else if proc.Starttime == p.Starttime && proc.PID < p.PID {
+			// Ensure stable results in case two processes have the exactly
+			// same start time, as will be the case for the initial process 1
+			// and kthredd 2. Otherwise, as the list of leader PIDs isn't
+			// sorted, we would end up with non-deterministic ealdormen; this
+			// is because the process table is a Golang map and we collect the
+			// leader processes by iterating over this process table map (and
+			// seeing which parent is the topmost parent still in the same
+			// namespace). And Golang maps randomize iteration order.
+			p = proc
 		}
 	}
 	return

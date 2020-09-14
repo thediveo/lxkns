@@ -59,34 +59,36 @@ var namespaceset = model.NamespacesSet{
 var _ = Describe("Process", func() {
 
 	It("handles mistakes", func() {
-		_, err := BeSameProcess(nil).Match(nil)
+		_, err := BeSameTreeProcess(nil).Match(nil)
 		Expect(err).To(MatchError(MatchRegexp(`use BeNil()`)))
-		_, err = BeSameProcess(proc1).Match("foo")
+		_, err = BeSameTreeProcess(proc1).Match("foo")
 		Expect(err).To(MatchError(MatchRegexp(`expects a model.Process, not a string`)))
-		_, err = BeSameProcess("foo").Match(proc1)
+		_, err = BeSameTreeProcess("foo").Match(proc1)
 		Expect(err).To(MatchError(MatchRegexp(`must be passed a model.Process, not a string`)))
 	})
 
 	It("matches", func() {
-		Expect(proc1).NotTo(BeSameProcess(nil))
+		Expect(proc1).NotTo(BeSameTreeProcess(nil))
 
-		// Expect BeSameProcess to "unpack" a pointer'ed Process.
-		Expect(*proc1).To(BeSameProcess(proc1))
+		// Expect BeSameTreeProcess to "unpack" a pointer'ed Process.
+		Expect(*proc1).To(BeSameTreeProcess(proc1))
 
-		// Expect that the parents are checked to be similar.
+		// Expect that the parents are checked to be similar. This is an ugly
+		// hack of a test: we modify the parent reference, but not the PPID ;)
 		proc := *proc1
 		proc.Parent = proc1
-		Expect(proc).NotTo(BeSameProcess(*proc1))
+		Expect(proc).NotTo(BeSameTreeProcess(*proc1))
+		Expect(proc).To(BeSameProcess(*proc1))
 
 		// Expect that the children are also checked to be similar.
 		proc = *proc1
 		proc.Children = append(proc.Children, proc1)
-		Expect(proc).NotTo(BeSameProcess(*proc1))
+		Expect(proc).NotTo(BeSameTreeProcess(*proc1))
 
 		// Expect that the same (similar) namespaces have been joined.
 		proc = *proc1
 		proc.Namespaces[model.UserNS] = nil
-		Expect(proc).NotTo(BeSameProcess(*proc1))
+		Expect(proc).NotTo(BeSameTreeProcess(*proc1))
 	})
 
 })
