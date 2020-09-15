@@ -22,6 +22,7 @@ import (
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
 )
 
 // TreeVisitor is an asciitree.Visitor which works on discovery results and
@@ -78,10 +79,10 @@ func (v *TreeVisitor) Get(node reflect.Value) (
 	// still in the same namespace and (b) child PID namespaces.
 	clist := []interface{}{}
 	if proc, ok := node.Interface().(*model.Process); ok {
-		// TODO:
 		pidns := proc.Namespaces[model.PIDNS]
 		childprocesses := model.ProcessListByPID(proc.Children)
 		sort.Sort(childprocesses)
+		childpidns := map[species.NamespaceID]bool{}
 		for _, childproc := range childprocesses {
 			if childproc.Namespaces[model.PIDNS] == pidns {
 				clist = append(clist, childproc)
@@ -95,9 +96,14 @@ func (v *TreeVisitor) Get(node reflect.Value) (
 				// namespace's leader processes.
 				cpidns := childproc.Namespaces[model.PIDNS]
 				if cpidns == nil {
+					// PID namespace is not known.
 					clist = append(clist, childproc)
 				} else {
-					clist = append(clist, cpidns)
+					// Ensure to add the same PID namespace only once.
+					if _, ok := childpidns[cpidns.ID()]; !ok {
+						clist = append(clist, cpidns)
+						childpidns[cpidns.ID()] = true
+					}
 				}
 			}
 		}
