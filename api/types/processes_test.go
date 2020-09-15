@@ -52,16 +52,18 @@ const proc1JSON = `{
 	  "/sbin/domination",
 	  "--world"
 	],
-	"starttime": 123
+	"starttime": 123,
+	"cgroup": ""
 }`
 
 var proc2 = &model.Process{
-	PID:        666,
-	PPID:       proc1.PID,
-	Cmdline:    []string{"/sbin/fool"},
-	Name:       "fool",
-	Starttime:  666666,
-	Namespaces: namespaceset,
+	PID:          666,
+	PPID:         proc1.PID,
+	Cmdline:      []string{"/sbin/fool"},
+	Name:         "fool",
+	Starttime:    666666,
+	Namespaces:   namespaceset,
+	Controlgroup: "süstem.sluice",
 }
 
 const proc2JSON = `{
@@ -80,7 +82,8 @@ const proc2JSON = `{
 	"cmdline": [
 	  "/sbin/fool"
 	],
-	"starttime": 666666
+	"starttime": 666666,
+	"cgroup": "süstem.sluice"
 }`
 
 var namespaceset = model.NamespacesSet{

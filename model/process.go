@@ -21,11 +21,16 @@
 package model
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/thediveo/go-mntinfo"
 )
 
 // PIDType expresses things more clearly. And no, that's not a "PidType" since
@@ -37,14 +42,15 @@ type PIDType int32
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID        PIDType       `json:"pid"`       // this process' identifier.
-	PPID       PIDType       `json:"ppid"`      // parent's process identifier.
-	Parent     *Process      `json:"-"`         // our parent's process description.
-	Children   []*Process    `json:"-"`         // child processes.
-	Name       string        `json:"name"`      // synthesized name of process.
-	Cmdline    []string      `json:"cmdline"`   // command line of process.
-	Namespaces NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
-	Starttime  uint64        `json:"starttime"` // Time of process start, since the Kernel boot epoch.
+	PID          PIDType       `json:"pid"`       // this process' identifier.
+	PPID         PIDType       `json:"ppid"`      // parent's process identifier.
+	Parent       *Process      `json:"-"`         // our parent's process description.
+	Children     []*Process    `json:"-"`         // child processes.
+	Name         string        `json:"name"`      // synthesized name of process.
+	Cmdline      []string      `json:"cmdline"`   // command line of process.
+	Namespaces   NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+	Starttime    uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
+	Controlgroup string        `json:"cgroup"`    // (relative) path of control group for this process.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick
@@ -231,6 +237,8 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 			parent.Children = append(parent.Children, proc)
 		}
 	}
+	// Scan for the control groups of the processes in the table.
+	_ = pt.scanCgroups()
 	// Phew: done.
 	return
 }
@@ -243,4 +251,75 @@ func (l ProcessListByPID) Len() int      { return len(l) }
 func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l ProcessListByPID) Less(i, j int) bool {
 	return l[i].PID < l[j].PID
+}
+
+// scanCgroups scans all processes for their control groups; it scans only on a
+// specific type of controller, the "cpu" v1 controller on the assumption that
+// this controller is widely used. In contrast, the "memory" controller has been
+// unfortunately been disabled on some architectures (ARM) for some time.
+func (p ProcessTable) scanCgroups() error {
+	base, err := cgroupMountpath("cpu")
+	if err != nil {
+		return err
+	}
+	p.scanCgroupDirectory(base, "")
+	return nil
+}
+
+// scanCgroupDirectory finds the tasks under control of a specific cgroup
+// directory and sets the cgroup (relative) paths of these Process objects.
+func (p ProcessTable) scanCgroupDirectory(base, group string) {
+	dir, err := os.Open(filepath.Join(base, group))
+	if err != nil {
+		return
+	}
+	defer dir.Close()
+	fileinfos, err := dir.Readdir(-1)
+	if err != nil {
+		return
+	}
+	for _, fileinfo := range fileinfos {
+		if fileinfo.IsDir() {
+			// recursively scan all subgroups for processes (tasks) under
+			// control of such a group.
+			p.scanCgroupDirectory(base, filepath.Join(group, fileinfo.Name()))
+		} else if group != "" {
+			// read list of tasks (TIDs) and then try to find them in our
+			// process table.
+			tasks, err := os.Open(filepath.Join(base, group, "tasks"))
+			if err == nil {
+				scanner := bufio.NewScanner(tasks)
+				for scanner.Scan() {
+					tid, err := strconv.ParseUint(scanner.Text(), 10, 64)
+					if err == nil {
+						pid := PIDType(tid)
+						if proc, ok := p[pid]; ok {
+							proc.Controlgroup = group
+						}
+					}
+				}
+				tasks.Close()
+			}
+		}
+	}
+}
+
+// cgroupMountpath returns the base path where a specific (v1) controller is
+// mounted on. If the controller isn't mounted, then an error is returned
+// instead.
+func cgroupMountpath(controller string) (string, error) {
+	// The required information can be glanced from either /proc/[PID]/mounts or
+	// /proc/[PID]/mountinfo. Since we already have the (go-)mntinfo module, we
+	// don't need to reinvent parsing (/proc/[PID]/mounts) and reuse mntinfo
+	// instead. Please note that mntinfo gets its data from
+	// /proc/[PID]/mountinfo. The type of cgroup controller can be glanced from
+	// the mount super options.
+	for _, mnt := range mntinfo.MountsOfType(-1, "cgroup") {
+		for _, opt := range strings.Split(mnt.SuperOptions, ",") {
+			if opt == controller {
+				return mnt.MountPoint, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("cgroup v1 controller %q not mounted", controller)
 }

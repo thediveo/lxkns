@@ -31,9 +31,13 @@ import (
 // versus all leader processes)
 func NamespaceReferenceLabel(ns model.Namespace) string {
 	if ancient := ns.Ealdorman(); ancient != nil {
-		return fmt.Sprintf("process %q (%d)",
+		s := fmt.Sprintf("process %q (%d)",
 			style.ProcessStyle.V(style.ProcessName(ancient)),
 			ancient.PID)
+		if ancient.Controlgroup != "" {
+			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ancient.Controlgroup))
+		}
+		return s
 	}
 	if ref := ns.Ref(); ref != "" {
 		// TODO: deal with references in other mount namespaces :)

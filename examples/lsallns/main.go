@@ -37,6 +37,7 @@ type NamespaceRow struct {
 	Type     string
 	PID      int
 	ProcName string
+	Comment  string
 }
 
 func dumpresult(result *lxkns.DiscoveryResult) error {
@@ -56,6 +57,9 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 			if proc := ns.Ealdorman(); proc != nil {
 				item.PID = int(proc.PID)
 				item.ProcName = proc.Name
+				item.Comment = proc.Controlgroup
+			} else if ns.Ref() != "" {
+				item.Comment = "bound:" + ns.Ref()
 			}
 			list = append(list, item)
 		}
@@ -64,7 +68,7 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 	// the "kubectl-like outputter". The DefaultColumnSpec specifies the table
 	// headers in the form of "<Headertext>:{<JSON-Path-Expression>}".
 	prn, err := klo.PrinterFromFlag("",
-		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},PID:{.PID},PROCESS:{.ProcName}"})
+		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},PID:{.PID},PROCESS:{.ProcName},COMMENT:{.Comment}"})
 	if err != nil {
 		return err
 	}
