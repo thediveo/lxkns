@@ -54,7 +54,7 @@ func ProcessLabel(proc *model.Process, pidmap *lxkns.PIDMap, rootpidns model.Nam
 				style.ProcessStyle.V(style.ProcessName(proc)), proc.PID)
 		}
 		if proc.Controlgroup != "" {
-			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(proc.Controlgroup))
+			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(output.ControlgroupDisplayName(proc.Controlgroup)))
 		}
 		return s
 	}

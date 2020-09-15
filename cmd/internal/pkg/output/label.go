@@ -18,7 +18,13 @@ package output
 
 import (
 	"fmt"
+	"sort"
+	"strings"
+	"unicode"
 
+	"github.com/spf13/cobra"
+	"github.com/thediveo/enumflag"
+	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
 )
@@ -26,16 +32,37 @@ import (
 // NamespaceReferenceLabel returns a string describing a reference to the
 // specified namespace, either in form of a (leader) process name and PID, or if
 // there is no such process then in form of a filesystem reference.
-//
-// TODO: allow styling with simplified versus full representation (ealdorman
-// versus all leader processes)
 func NamespaceReferenceLabel(ns model.Namespace) string {
 	if ancient := ns.Ealdorman(); ancient != nil {
-		s := fmt.Sprintf("process %q (%d)",
-			style.ProcessStyle.V(style.ProcessName(ancient)),
-			ancient.PID)
-		if ancient.Controlgroup != "" {
-			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ancient.Controlgroup))
+		// The earldorman always comes first ... age before beauty.
+		procs := []*model.Process{ancient}
+		if allLeaders {
+			// Sort the leader processes by their PID and then add the other
+			// leaders afterwards, so without doubt we can term these leaders
+			// "trailers" or "followers"...
+			leaders := ns.Leaders()
+			sorted := make([]*model.Process, len(leaders))
+			copy(sorted, leaders)
+			sort.Slice(sorted, func(i, j int) bool {
+				return sorted[i].PID < sorted[j].PID
+			})
+			for _, proc := range leaders {
+				if proc != ancient {
+					procs = append(procs, proc)
+				}
+			}
+		}
+		s := "process "
+		for idx, proc := range procs {
+			if idx > 0 {
+				s += ", "
+			}
+			s += fmt.Sprintf("%q (%d)",
+				style.ProcessStyle.V(style.ProcessName(proc)),
+				proc.PID)
+			if proc.Controlgroup != "" {
+				s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ControlgroupDisplayName(proc.Controlgroup)))
+			}
 		}
 		return s
 	}
@@ -47,22 +74,67 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 	return ""
 }
 
-/*
-	if leaders := ns.Leaders(); len(leaders) > 0 {
-			sorted := make([]*lxkns.Process, len(leaders))
-			copy(sorted, leaders)
-			sort.Slice(sorted, func(i, j int) bool {
-				return sorted[i].PID < sorted[j].PID
-			})
-			s := []string{}
-			for _, leader := range sorted {
-				s = append(s, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
-			}
-			procs = strings.Join(s, ", ")
-			if len(leaders) > 1 {
-				procs = "processes " + procs
-			} else {
-				procs = "process " + procs
-			}
+func ControlgroupDisplayName(s string) string {
+	if controlGroupNames == CgroupComplete {
+		return s
 	}
-*/
+	labels := strings.Split(s, "/")
+	for idx, label := range labels {
+		if len(label) == 64 && ishex(label) {
+			labels[idx] = label[:12] + "…"
+		}
+	}
+	return strings.Join(labels, "/")
+}
+
+func ishex(hex string) bool {
+	for _, char := range hex {
+		if !unicode.In(char, unicode.ASCII_Hex_Digit) {
+			return false
+		}
+	}
+	return true
+}
+
+var allLeaders bool
+
+// controlGroupNames switches between control group name shorting and full glory.
+var controlGroupNames ControlGroupNames
+
+type ControlGroupNames enumflag.Flag
+
+const (
+	CgroupShortened ControlGroupNames = iota
+	CgroupComplete
+)
+
+var ControlGroupNameModes = map[ControlGroupNames][]string{
+	CgroupShortened: {"short"},
+	CgroupComplete:  {"full", "complete"},
+}
+
+// Register our plugin functions for delayed registration of CLI flags we bring
+// into the game and the things to check or carry out before the selected
+// command is finally run.
+func init() {
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "controlgroup",
+		Group: "cli",
+		Symbols: []plugger.Symbol{
+			plugger.NamedSymbol{Name: "SetupCLI", Symbol: LabelSetupCLI},
+		},
+	})
+}
+
+// LabelSetupCLI adds the flags ...
+func LabelSetupCLI(cmd *cobra.Command) {
+	controlGroupNames = CgroupComplete // ensure clean initial state for testing
+	cmd.PersistentFlags().Var(
+		enumflag.New(&controlGroupNames, "cgformat", ControlGroupNameModes, enumflag.EnumCaseInsensitive),
+		"cgroup",
+		"control group name display; can be 'full' or 'short' (default if omitted)")
+	cmd.PersistentFlags().Lookup("cgroup").NoOptDefVal = "short"
+	allLeaders = false
+	cmd.PersistentFlags().BoolVar(&allLeaders, "all-leaders", false,
+		"show all leader processes instead of only the most senior one")
+}
