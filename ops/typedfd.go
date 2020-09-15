@@ -29,7 +29,12 @@ type TypedNamespaceFd struct {
 	nstype      species.NamespaceType // type of namespace.
 }
 
-// NewTypedNamespaceFd FIXME: write doc
+// NewTypedNamespaceFd wraps a OS-level file descriptor referencing a
+// Linux-kernel namespace, as well as the type of namespace. NewTypedNamespaceFd
+// can be used in those situations where the type of namespace is already known,
+// where later access to the type is of reference required and the namespace
+// type query ioctl() is to be avoided (such as to support 4.9 to pre-4.11 Linux
+// kernels).
 func NewTypedNamespaceFd(fd int, nstype species.NamespaceType) (*TypedNamespaceFd, error) {
 	switch nstype {
 	case species.CLONE_NEWCGROUP,

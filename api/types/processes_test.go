@@ -128,7 +128,7 @@ var _ = Describe("process JSON", func() {
 	})
 
 	It("unmarshals NamespacesSetReferences", func() {
-		allns := NewNamespacesDict()
+		allns := NewNamespacesDict(nil)
 		nsrefs := &NamespacesSetReferences{}
 
 		// This must NOT work...
@@ -182,7 +182,7 @@ var _ = Describe("process JSON", func() {
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(proc1JSON))
 		// Next, deserialize the correct JSON textural serialization again...
-		allns := NewNamespacesDict()
+		allns := NewNamespacesDict(nil)
 		p := &Process{}
 		Expect(p.unmarshalJSON(j, allns)).To(Succeed())
 		// ...but how to we know it deserialization worked as expected?
@@ -218,7 +218,7 @@ var _ = Describe("process JSON", func() {
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
-		pt2 := &ProcessTable{Namespaces: NewNamespacesDict()}
+		pt2 := &ProcessTable{Namespaces: NewNamespacesDict(nil)}
 		Expect(json.Unmarshal(j, pt2)).To(Succeed())
 		Expect(pt2.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
 		// Ensure that the namespace dictionary has been correctly updated and
@@ -238,7 +238,7 @@ var _ = Describe("process JSON", func() {
 			ProcessTable: model.ProcessTable{
 				proc1.PID: proc,
 			},
-			Namespaces: NewNamespacesDict(),
+			Namespaces: NewNamespacesDict(nil),
 		}
 		Expect(pt3.ProcessTable[proc1.PID].PID).To(Equal(model.PIDType(0)))
 		Expect(json.Unmarshal(j, pt3)).To(Succeed())
@@ -257,24 +257,17 @@ var _ = Describe("process JSON", func() {
 	It("does a full round trip without any hiccup", func() {
 		pt := &ProcessTable{
 			ProcessTable: model.NewProcessTable(),
-			Namespaces:   NewNamespacesDict(),
+			Namespaces:   NewNamespacesDict(nil),
 		}
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 
 		jpt := &ProcessTable{
 			ProcessTable: model.ProcessTable{},
-			Namespaces:   NewNamespacesDict(),
+			Namespaces:   NewNamespacesDict(nil),
 		}
 		Expect(json.Unmarshal(j, jpt)).To(Succeed())
-
-		// Run through the tables and check that the actual and expected
-		// process match within their process trees, including the resolved
-		// parent/children Process references.
-		Expect(jpt.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
-		for _, proc := range jpt.ProcessTable {
-			Expect(proc).To(gmodel.BeSameTreeProcess(pt.ProcessTable[proc.PID]))
-		}
+		Expect(jpt.ProcessTable).To(gmodel.BeSameProcessTable(pt.ProcessTable))
 	})
 
 })

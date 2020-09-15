@@ -7,13 +7,15 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
-nook and cranny of your Linux hosts.
+nook and cranny of your Linux hosts. This package also features marshalling and
+unmarshalling namespace discovery results to and from JSON – which is especially
+useful to separate the super-privileged scanner from non-root frontends.
 
 In addition, `lxkns` comes with a set of unique CLI namespace discovery tools
 and also helps Go programs with switching namespaces.
 
-And all that tested with Go 1.13 and 1.14. And even with support for the new
-time namespaces.
+And all that tested with Go 1.13-1.15. And even with support for the new time
+namespaces.
 
 ## Comprehensive Namespace Discovery
 
@@ -21,7 +23,7 @@ When compared to most well-known and openly available CLI tools, such as
 `lsns`, the `lxkns` package detects namespaces even in places of a running
 Linux system other tools typically do not consider. In particular:
 
-1. from the procfs filesystem in `/proc/[PID]/ns/*` -- as `lsns` and other
+1. from the procfs filesystem in `/proc/[PID]/ns/*` – as `lsns` and other
    tools do.
 2. bind-mounted namespaces, via `/proc/[PID]/mountinfo`. Our discovery method
    even finds bind-mounted namespaces in _other_ mount namespaces than the
@@ -33,7 +35,7 @@ Linux system other tools typically do not consider. In particular:
    ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
 
 | tool | `/proc/[PID]/ns/*` ① | bind mounts ② | `/proc/[PID]/fd/*` ③ | hierarchy ④ | owning user namespaces ⑤ |
-| -- | -- | -- | -- | -- | -- |
+| --- | --- | --- | --- | --- | --- |
 | `lsns` | ✓ | | | |
 | `lxkns` | ✓ | ✓ | ✓ | ✓ | ✓ |
 
@@ -49,6 +51,15 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > discovery methods thus **must** call `reexec.CheckAction()` as early as
 > possible in their `main()` function. For this, you need to `import
 > "github.com/thediveo/gons/reexec"`.
+
+In addition, lxkns also discovers some control group information for the
+processes attached to namespaces. In particular, the discovery will relate
+processes to the control groups created for the "cpu" v1 controller type. To a
+limited extend, the names of these control groups will relate to the
+partitioning of processes using Linux kernel namespaces. For instance, processes
+in Docker containers will show control group names in the form of `docker/<id>`,
+where the id is the usual 64 hex char string. Plain containerd container
+processes will show up with `<namespace>/<id>` control group names.
 
 ## gons CLI tools
 
@@ -94,9 +105,25 @@ In its simplest form, `lsuns` shows the hierarchy of user namespaces.
 
 ```
 $ sudo lsuns
-user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
-└─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
+user:[4026531837] process "systemd" (1) created by UID 0 ("root")
+├─ user:[4026532454] process "unshare" (98171) controlled by "user.slice" created by UID 1000 ("harald")
+└─ user:[4026532517] process "upowerd" (96159) controlled by "system.slice/upower.service" created by UID 0 ("root")
 ```
+
+> **Note:** `lsuns` does not only show the user namespaces with their IDs and
+> hierarchy. It also shows the "most senior" process attached to the particular
+> user namespace, as well as the user "owning" the user namespace. The "most
+> senior" process is the top-most process in the process tree still attached to
+> a (user) namespace; in case of multiple top-most processes – such as init(1)
+> and kthreadd(2) – the older process will be choosen (or the one if the lowest
+> PID as in case of the same-age init and kthreadd).
+
+The control group name ("controlled by ...") is the name of the v1 "cpu" control
+sub-group controlling a particular most senior process. This name is relative to
+the root of the control group filesystem (such as `/sys/fs/cgroup`). The root is
+left out in order to reduce clutter.
+
+#### Showing Owned (Non-User) Namespaces
 
 It gets more interesting with the `-d` (details) flag: `lsuns` then additionally
 displays all non-user namespaces owned by the user namespaces. In Linux-kernel
@@ -107,59 +134,91 @@ alphabetically by type, and second numerically by namespace IDs.
 
 ```
 $ sudo lsuns -d
-user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
+user:[4026531837] process "systemd" (1) created by UID 0 ("root")
 │  ⋄─ cgroup:[4026531835] process "systemd" (1)
-│  ⋄─ ipc:[4026531839] process "kthreadd" (2)
+│  ⋄─ ipc:[4026531839] process "systemd" (1)
+│  ⋄─ ipc:[4026532332] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  ⋄─ ipc:[4026532397] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
 │  ⋄─ mnt:[4026531840] process "systemd" (1)
-│  ⋄─ mnt:[4026531860] process "kdevtmpfs" (29)
-│  ⋄─ mnt:[4026532156] process "systemd-udevd" (161)
-│  ⋄─ mnt:[4026532256] process "systemd-timesyn" (298)
-│  ⋄─ mnt:[4026532271] process "bluetoothd" (472)
-│  ⋄─ mnt:[4026532273] process "unshare" (11697)
-│  ⋄─ mnt:[4026532275] process "unshare" (11818)
-│  ⋄─ net:[4026531905] process "kthreadd" (2)
-│  ⋄─ pid:[4026531836] process "kthreadd" (2)
-│  ⋄─ pid:[4026532274] process "bash" (11698)
-│  ⋄─ pid:[4026532276] process "bash" (11819)
+│  ⋄─ mnt:[4026531860] process "kdevtmpfs" (33)
+│  ⋄─ mnt:[4026532184] process "systemd-udevd" (946) controlled by "system.slice/systemd-udevd.service"
+│  ⋄─ mnt:[4026532245] process "haveged" (1688) controlled by "system.slice/haveged.service"
+│  ⋄─ mnt:[4026532246] process "systemd-timesyn" (1689) controlled by "system.slice/systemd-timesyncd.service"
+│  ⋄─ mnt:[4026532248] process "systemd-network" (1709) controlled by "system.slice/systemd-networkd.service"
+│  ⋄─ mnt:[4026532267] process "systemd-resolve" (1711) controlled by "system.slice/systemd-resolved.service"
+│  ⋄─ mnt:[4026532268] process "NetworkManager" (1757) controlled by "system.slice/NetworkManager.service"
+│  ⋄─ mnt:[4026532269] bind-mounted at "/run/snapd/ns/lxd.mnt"
+│  ⋄─ mnt:[4026532325] process "irqbalance" (1761) controlled by "system.slice/irqbalance.service"
+│  ⋄─ mnt:[4026532326] process "systemd-logind" (1779) controlled by "system.slice/systemd-logind.service"
+│  ⋄─ mnt:[4026532327] process "ModemManager" (1840) controlled by "system.slice/ModemManager.service"
+│  ⋄─ mnt:[4026532330] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  ⋄─ mnt:[4026532388] process "bluetoothd" (2239) controlled by "system.slice/bluetooth.service"
+│  ⋄─ mnt:[4026532395] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+│  ⋄─ mnt:[4026532513] process "colord" (83614) controlled by "system.slice/colord.service"
+│  ⋄─ mnt:[4026532516] process "upowerd" (96159) controlled by "system.slice/upower.service"
+│  ⋄─ net:[4026531905] process "systemd" (1)
+│  ⋄─ net:[4026532191] process "haveged" (1688) controlled by "system.slice/haveged.service"
+│  ⋄─ net:[4026532274] process "rtkit-daemon" (2211) controlled by "system.slice/rtkit-daemon.service"
+│  ⋄─ net:[4026532335] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  ⋄─ net:[4026532400] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+│  ⋄─ pid:[4026531836] process "systemd" (1)
+│  ⋄─ pid:[4026532333] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  ⋄─ pid:[4026532398] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
 │  ⋄─ uts:[4026531838] process "systemd" (1)
-└─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
-      ⋄─ mnt:[4026532278] process "unshare" (15736)
-      ⋄─ mnt:[4026532280] process "unshare" (15747)
-      ⋄─ pid:[4026532279] process "bash" (15737)
-      ⋄─ pid:[4026532281] process "bash" (15748)
+│  ⋄─ uts:[4026532185] process "systemd-udevd" (946) controlled by "system.slice/systemd-udevd.service"
+│  ⋄─ uts:[4026532247] process "systemd-timesyn" (1689) controlled by "system.slice/systemd-timesyncd.service"
+│  ⋄─ uts:[4026532324] process "systemd-logind" (1779) controlled by "system.slice/systemd-logind.service"
+│  ⋄─ uts:[4026532331] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  ⋄─ uts:[4026532396] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+├─ user:[4026532454] process "unshare" (98171) controlled by "user.slice" created by UID 1000 ("harald")
+│     ⋄─ mnt:[4026532455] process "unshare" (98171) controlled by "user.slice"
+│     ⋄─ mnt:[4026532457] process "unshare" (98172) controlled by "user.slice"
+│     ⋄─ pid:[4026532456] process "unshare" (98172) controlled by "user.slice"
+│     ⋄─ pid:[4026532458] process "bash" (98173) controlled by "user.slice"
+└─ user:[4026532517] process "upowerd" (96159) controlled by "system.slice/upower.service" created by UID 0 ("root")
 ```
 
 ### lspidns
 
-On its surface, `lspidns` might appear to be `lsuns` twin, but for PID namespaces.
+On its surface, `lspidns` might appear to be `lsuns` twin, but now for PID namespaces.
 
 ```
-pid:[4026531836] process "kthreadd" (2)
-└─ pid:[4026532274] process "bash" (11698)
-   └─ pid:[4026532276] process "bash" (11819)
-      └─ pid:[4026532279] process "bash" (15737)
-         └─ pid:[4026532281] process "bash" (15748)
+pid:[4026531836] process "systemd" (1)
+├─ pid:[4026532333] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  └─ pid:[4026532398] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+└─ pid:[4026532456] process "unshare" (99577) controlled by "user.slice"
+   └─ pid:[4026532459] process "unshare" (99578) controlled by "user.slice"
+      └─ pid:[4026532460] process "bash" (99579) controlled by "user.slice"
 ```
+
+> **Nota Bene:** if you look closely at the control group names of the PID
+> namespace processes, then you might notice that there is an outer Docker
+> container with an inner container. This inner container happens to be a
+> containerd container in the "default" namespace.
+
+#### User-PID Hierarchy
 
 But hidden beneath the surface lies the `-u` flag; "u" as in user namespace. Now
 what have user namespaces to do with PID namespaces? Like other non-user
-namespaces, also PID namespaces are owned by user namespaces. `-u` now tells
+namespaces, also PID namespaces are *owned* by user namespaces. `-u` now tells
 `lspidns` to show a "synthesized" hierarchy where owning user namespaces and
 owned PID namespaces are laid out in a single tree.
 
 ```
-user:[4026531837] process "kthreadd" (2) created by UID 0 ("root")
-└─ pid:[4026531836] process "kthreadd" (2)
-   └─ pid:[4026532274] process "bash" (11698)
-      └─ pid:[4026532276] process "bash" (11819)
-         └─ user:[4026532277] process "unshare" (15736) created by UID 0 ("root")
-            └─ pid:[4026532279] process "bash" (15737)
-               └─ pid:[4026532281] process "bash" (15748)
+user:[4026531837] process "systemd" (1) created by UID 0 ("root")
+└─ pid:[4026531836] process "systemd" (1)
+   ├─ pid:[4026532333] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+   │  └─ pid:[4026532398] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+   └─ user:[4026532454] process "unshare" (99576) controlled by "user.slice" created by UID 1000 ("harald")
+      └─ pid:[4026532456] process "unshare" (99577) controlled by "user.slice"
+         └─ user:[4026532457] process "unshare" (99577) controlled by "user.slice" created by UID 1000 ("harald")
+            └─ pid:[4026532459] process "unshare" (99578) controlled by "user.slice"
+               └─ pid:[4026532460] process "bash" (99579) controlled by "user.slice"
 ```
 
-Please note that this representation is only possible because the capabilities
-rules for user and PID namespaces forbid user namespaces criss-crossing PID
-namespaces and vice versa.
+> **Note:** this tree-like representation is possible because the capabilities
+> rules for user and PID namespaces forbid user namespaces criss-crossing PID
+> namespaces and vice versa.
 
 ### pidtree
 
@@ -172,32 +231,38 @@ inside the initial (root) PID namespace the PID is 24446 instead.
 ```
 $ sudo pidtree
 pid:[4026531836], owned by UID 0 ("root")
-├─ "systemd" (1974)
-│  ├─ "dbus-daemon" (2030)
-│  ├─ "kglobalaccel5" (2128)
+├─ "systemd" (1)
+│  ├─ "systemd-journal" (910) controlled by "system.slice/systemd-journald.service"
+│  ├─ "systemd-udevd" (946) controlled by "system.slice/systemd-udevd.service"
 ...
-│  ├─ "containerd" (1480)
-│  │  ├─ "containerd-shim" (21411)
-│  │  │  └─ "foobar" (21434)
-│  │  ├─ "containerd-shim" (24173)
-│  │  │  └─ pid:[4026533005], owned by UID 0 ("root")
-│  │  │     └─ "systemd" (24191/1)
-│  │  │        ├─ "systemd-journal" (24366/70)
-│  │  │        ├─ "containerd" (24446/78)
+│  ├─ "containerd" (1836) controlled by "system.slice/containerd.service"
+│  │  └─ "containerd-shim" (5472) controlled by "system.slice/containerd.service"
+│  │     └─ pid:[4026532333], owned by UID 0 ("root")
+│  │        ├─ "systemd" (5492/1) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+│  │        │  ├─ "systemd-journal" (5642/66) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/systemd-journald.service"
+│  │        │  ├─ "containerd" (5709/72) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/containerd.service"
+│  │        │  ├─ "setup.sh" (5712/73) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/testing.service"
+│  │        │  │  └─ "ctr" (5978/107) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/testing.service"
+│  │        │  └─ "containerd-shim" (5999/126) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/containerd.service"
+│  │        │     └─ pid:[4026532398], owned by UID 0 ("root")
+│  │        │        ├─ "sleep" (6025/146/1) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
+│  │        │        └─ "sh" (6427/235/7) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
 ```
   
 Alternatively, it can show just a single branch down to a PID inside a
 specific PID namespace.
 
 ```
-$ sudo pidtree -n pid:[4026532512] -p 3
+$ sudo pidtree -n pid:[4026532398] -p 7
 pid:[4026531836], owned by UID 0 ("root")
 └─ "systemd" (1)
-    └─ "kdeinit5" (2098)
-      └─ "code" (20384)
-          └─ pid:[4026532512], owned by UID 1000 ("harald")
-            └─ "code" (20387/1)
-                └─ "code" (20389/3)
+   └─ "containerd" (1836) controlled by "system.slice/containerd.service"
+      └─ "containerd-shim" (5472) controlled by "system.slice/containerd.service"
+         └─ pid:[4026532333], owned by UID 0 ("root")
+            └─ "systemd" (5492/1) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
+               └─ "containerd-shim" (5999/126) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/system.slice/containerd.service"
+                  └─ pid:[4026532398], owned by UID 0 ("root")
+                     └─ "sh" (6427/235/7) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
 ```
 
 Please see also the [pidtree
@@ -253,7 +318,9 @@ documentation.
 
 ### dumpns
 
-`dumpns` runs a discovery and then dumps the results as JSON.
+The lxkns namespace discovery information can also be easily made available to
+your own scripts, et cetera. Without having to integrate the Go package, simply
+run the `dumpns` CLI binary: it dumps fresh discovery results as JSON.
 
 ```
 $ dumpns
@@ -283,6 +350,11 @@ $ dumpns
 
 ## Package Usage
 
+For the really gory stuff, take a look at the `examples/` and `cmd/`
+directories. 😁
+
+### Discovery
+
 The following example code runs a full namespace discovery using
 `Discover(FullDiscovery)` and then prints all namespaces found, sorted by
 their type, then by their ID.
@@ -307,6 +379,34 @@ func main() {
     }
 }
 ```
+
+### Marshalling and Unmarshalling
+
+`lxkns` supports un/marshalling discovery results from/to JSON, this handles
+both the namespaces and process information.
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/thediveo/gons/reexec"
+    "github.com/thediveo/lxkns"
+    apitypes "github.com/thediveo/lxkns/api/types"
+)
+
+func main() {
+    reexec.CheckAction() // only for discovery, not for unmarshalling
+    b, _ := json.Marshal(apitypes.NewDiscoveryResult(lxkns.Discover(lxkns.FullDiscovery)))
+
+    dr := apitypes.NewDiscoveryResult(nil)
+    _ = json.Unmarshal(b, &dr)
+    result := (*lxkns.DiscoveryResult)(dr)
+}
+```
+
+> **Note:** discovery results need to be "wrapped" in order to be
+> un/marshal-able.
 
 ## Copyright and License
 

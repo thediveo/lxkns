@@ -88,7 +88,7 @@ func childlist(hns model.Hierarchy) string {
 var _ = Describe("namespaces JSON", func() {
 
 	It("always gets a Namespace from the dictionary", func() {
-		d := NewNamespacesDict()
+		d := NewNamespacesDict(nil)
 		uns := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
 		d.AllNamespaces[model.UserNS][uns.ID()] = uns
 
@@ -107,7 +107,7 @@ var _ = Describe("namespaces JSON", func() {
 		// information. But it must contain a owner user namespace reference.
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
 		Expect(ns).NotTo(BeNil())
-		d := NewNamespacesDict()
+		d := NewNamespacesDict(nil)
 		j, err := d.MarshalNamespace(ns)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
@@ -183,7 +183,7 @@ var _ = Describe("namespaces JSON", func() {
 	})
 
 	It("unmarshals Namespace", func() {
-		d := NewNamespacesDict()
+		d := NewNamespacesDict(nil)
 		// This unmarshalling MUST fail...
 		_, err := d.UnmarshalNamespace([]byte(`""`))
 		Expect(err).To(HaveOccurred())
@@ -198,7 +198,7 @@ var _ = Describe("namespaces JSON", func() {
 		Expect(err).To(Succeed())
 
 		// ...now check that unmarshalling correctly works.
-		nsdict := NewNamespacesDict()
+		nsdict := NewNamespacesDict(nil)
 		uns, err := nsdict.UnmarshalNamespace(j)
 		Expect(err).To(Succeed())
 		Expect(uns).To(BeSameNamespace(userns))
@@ -214,7 +214,7 @@ var _ = Describe("namespaces JSON", func() {
 	})
 
 	It("marshals NamespacesDict", func() {
-		d := NewNamespacesDict()
+		d := NewNamespacesDict(nil)
 		d.AllNamespaces[model.UserNS][userns.ID()] = userns
 		j, err := json.Marshal(d)
 		Expect(err).To(Succeed())
@@ -237,19 +237,19 @@ var _ = Describe("namespaces JSON", func() {
 	})
 
 	It("unmarshals NamespacesDict", func() {
-		d := NewNamespacesDict()
+		d := NewNamespacesDict(nil)
 		// This must NOT succeed...
 		Expect(d.UnmarshalJSON([]byte(`""`))).To(HaveOccurred())
 		Expect(d.UnmarshalJSON([]byte(`{"123":{"type":"foobar"}}`))).To(HaveOccurred())
 
 		// To unmarshal, we first need some JSON, so let's marshal...
-		d = NewNamespacesDict()
+		d = NewNamespacesDict(nil)
 		d.AllNamespaces[model.UserNS][userns.ID()] = userns
 		j, err := json.Marshal(d)
 		Expect(err).To(Succeed())
 
 		// ...now unmarshal again and see what nonsense we got...
-		d2 := NewNamespacesDict()
+		d2 := NewNamespacesDict(nil)
 		Expect(d2.UnmarshalJSON(j)).To(Succeed())
 		uns := d2.AllNamespaces[model.UserNS][userns.ID()]
 		Expect(uns).NotTo(BeNil())
@@ -261,16 +261,12 @@ var _ = Describe("namespaces JSON", func() {
 	})
 
 	It("survives a NamespacesDict roundtrip", func() {
-		d := &NamespacesDict{ // TODO: use convenience helper?
-			AllNamespaces: &allns.Namespaces,
-			ProcessTable:  ProcessTable{allns.Processes, nil},
-		}
-		d.ProcessTable.Namespaces = d
+		d := NewNamespacesDict(allns)
 		j, err := json.Marshal(d)
 		Expect(err).To(Succeed())
 		Expect(j).NotTo(HaveLen(0))
 
-		d2 := NewNamespacesDict()
+		d2 := NewNamespacesDict(nil)
 		Expect(json.Unmarshal(j, &d2)).To(Succeed())
 
 		allns2 := (*model.AllNamespaces)(d2.AllNamespaces)

@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/api/types"
+	apitypes "github.com/thediveo/lxkns/api/types"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes
@@ -35,7 +35,7 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 	var err error
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.
-		j, err = json.Marshal((*types.DiscoveryResult)(allns))
+		j, err = json.Marshal((*apitypes.DiscoveryResult)(allns))
 	} else {
 		// Pretty-printed JSON output, with either tabs or spaces for
 		// indentation.
@@ -49,7 +49,7 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 			}
 			indent = strings.Repeat(" ", int(spaces))
 		}
-		j, err = json.MarshalIndent((*types.DiscoveryResult)(allns), "", indent)
+		j, err = json.MarshalIndent((*apitypes.DiscoveryResult)(allns), "", indent)
 	}
 	if err != nil {
 		return err

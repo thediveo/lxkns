@@ -37,7 +37,7 @@ var _ = Describe("cgrouping", func() {
 		Expect(cpu).To(Equal(cpuacct))
 	})
 
-	FIt("finds control groups of processes", func() {
+	It("finds control groups of processes", func() {
 		procs := NewProcessTable()
 		Expect(procs).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
 			"Controlgroup": Not(BeEmpty()),

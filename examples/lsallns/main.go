@@ -26,7 +26,7 @@ import (
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/api/types"
+	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -40,6 +40,8 @@ type NamespaceRow struct {
 	Comment  string
 }
 
+// dumpresult takes discovery results, extracts the required fields, and then
+// dumps the extracted data to stdout in a neat ASCII table.
 func dumpresult(result *lxkns.DiscoveryResult) error {
 	// Prepare output list from the discovery results. For this, we iterate
 	// over all types of namespaces, because the discovery results contain the
@@ -80,6 +82,10 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 	return nil
 }
 
+// lsallns works on the given CLI flags to decide whether to run its own
+// Linux-kernel namespaces discovery or to load existing results in JSON format
+// from a file (or stdin). It then dumps the discovery results in a neat ASCII
+// table to stdout.
 func lsallns(cmd *cobra.Command, _ []string) error {
 	var result *lxkns.DiscoveryResult
 	if input, _ := cmd.PersistentFlags().GetString("input"); input != "" {
@@ -94,11 +100,7 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 			defer f.Close()
 			r = f
 		}
-		// TODO: use correct discovery result method.
-		dr := (*types.DiscoveryResult)(&lxkns.DiscoveryResult{
-			Namespaces: *model.NewAllNamespaces(),
-			Processes:  model.ProcessTable{},
-		})
+		dr := apitypes.NewDiscoveryResult(nil)
 		if err := json.NewDecoder(r).Decode(dr); err != nil {
 			return fmt.Errorf("cannot decode discovery results, %w", err)
 		}

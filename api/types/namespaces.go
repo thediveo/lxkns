@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -33,12 +34,22 @@ type NamespacesDict struct {
 	ProcessTable // our enhanced process table ;)
 }
 
-// NewNamespacesDict returns a new and properly initialized NamespacesDict
-// ready for use.
-func NewNamespacesDict() *NamespacesDict {
-	d := &NamespacesDict{
-		AllNamespaces: model.NewAllNamespaces(),
-		ProcessTable:  ProcessTable{model.ProcessTable{}, nil},
+// NewNamespacesDict returns a new and properly initialized NamespacesDict ready
+// for use. It will be empty if nil discovery results are specified; otherwise,
+// the information from the discovery results will be used by this namespace
+// dictionary.
+func NewNamespacesDict(discoveryresults *lxkns.DiscoveryResult) *NamespacesDict {
+	var d *NamespacesDict
+	if discoveryresults == nil {
+		d = &NamespacesDict{
+			AllNamespaces: model.NewAllNamespaces(),
+			ProcessTable:  ProcessTable{model.ProcessTable{}, nil},
+		}
+	} else {
+		d = &NamespacesDict{
+			AllNamespaces: &discoveryresults.Namespaces,
+			ProcessTable:  ProcessTable{discoveryresults.Processes, nil},
+		}
 	}
 	d.ProcessTable.Namespaces = d
 	return d
@@ -60,6 +71,8 @@ func (d NamespacesDict) Get(nsid species.NamespaceID, nstype species.NamespaceTy
 	return ns
 }
 
+// MarshalJSON emits a Linux-kernel namespace dictionary as JSON, with details
+// about the individual namespaces.
 func (d *NamespacesDict) MarshalJSON() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteRune('{')
@@ -85,6 +98,8 @@ func (d *NamespacesDict) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// UnmarshalJSON unmarshals a Linux-kernel namespace dictionary from its JSON
+// textual representation.
 func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 	aux := map[uint64]json.RawMessage{}
 	if err := json.Unmarshal(data, &aux); err != nil {
@@ -166,9 +181,9 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 	})
 }
 
-// Unmarshal retrieves a Namespace from the given textual representation,
-// making use of the additionally specified namespace dictionary to resolve
-// references to other namespaces (if needed, by creating preliminary
+// UnmarshalNamespace retrieves a Namespace from the given textual
+// representation, making use of the additionally specified namespace dictionary
+// to resolve references to other namespaces (if needed, by creating preliminary
 // namespace objects so they can be referenced in advance). Moreover, it also
 // resolves references to (leader) processes, priming the process table if
 // necessary with preliminary process objects.
