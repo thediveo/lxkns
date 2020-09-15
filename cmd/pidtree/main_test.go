@@ -69,10 +69,10 @@ echo "$$"
 		rootCmd.SetArgs([]string{})
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
-(?m)^[│ ]+└─ "unshare" \(\d+\)
+(?m)^[│ ]+└─ "unshare" \(\d+\).*
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
-[│ ]+└─ "stage2.sh" \(\d+/1\)
-[│ ]+└─ "stage2.sh" \(\d+/%d\)$`,
+[│ ]+└─ "stage2.sh" \(\d+/1\).*
+[│ ]+└─ "stage2.sh" \(\d+/%d\).*$`,
 			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
@@ -92,7 +92,7 @@ echo "$$"
 				m:  Not(HaveOccurred()),
 				res: MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
-\ +└─ "stage2.sh" \(\d+/1\)
+\ +└─ "stage2.sh" \(\d+/1\).*
 $`,
 					pidnsid.Ino, os.Geteuid())),
 			},
