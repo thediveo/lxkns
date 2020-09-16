@@ -45,7 +45,7 @@ func (nsfd NamespaceFd) String() string {
 func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
-		err = newInvalidNamespaceError(nsfd, err)
+		return 0, newInvalidNamespaceError(nsfd, err)
 	}
 	return species.NamespaceType(t), err
 }

@@ -24,10 +24,10 @@ var _ = Describe("Namespace IDs", func() {
 	It("compares namespace IDs", func() {
 		ns1 := NamespaceID{Dev: 42, Ino: 123}
 		ns11 := NamespaceID{Dev: 42, Ino: 123}
-		Expect(ns1 == ns11).To(BeTrue())
+		Expect(ns1).To(Equal(ns11))
 
 		ns2 := NamespaceID{Dev: 666, Ino: 123}
-		Expect(ns1 == ns2).To(BeFalse())
+		Expect(ns1).NotTo(Equal(ns2))
 	})
 
 	It("parses namespace textual representations", func() {

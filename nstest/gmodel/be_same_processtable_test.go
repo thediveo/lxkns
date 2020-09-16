@@ -17,6 +17,7 @@ package gmodel
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -30,12 +31,10 @@ var (
 var _ = Describe("ProcessTable", func() {
 
 	It("handles mistakes", func() {
-		_, err := BeSameProcessTable(nil).Match(nil)
-		Expect(err).To(MatchError(MatchRegexp(`use BeNil()`)))
-		_, err = BeSameProcessTable(pt1).Match("foo")
-		Expect(err).To(MatchError(MatchRegexp(`expects a model.ProcessTable, not a string`)))
-		_, err = BeSameProcessTable("foo").Match(pt1)
-		Expect(err).To(MatchError(MatchRegexp(`must be passed a model.ProcessTable, not a string`)))
+		Errxpect(BeSameProcessTable(nil).Match(nil)).To(MatchError(MatchRegexp(`use BeNil()`)))
+		Errxpect(BeSameProcessTable(pt1).Match("foo")).To(MatchError(
+			MatchRegexp(`expects a model.ProcessTable, not a string`)))
+		Errxpect(BeSameProcessTable("foo").Match(pt1)).To(MatchError(MatchRegexp(`must be passed a model.ProcessTable, not a string`)))
 	})
 
 	It("matches, or not", func() {

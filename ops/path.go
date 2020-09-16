@@ -50,7 +50,7 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	defer unix.Close(fd)
 	t, err := ioctl(int(fd), _NS_GET_NSTYPE)
 	if err != nil {
-		err = newNamespaceOperationError(nsp, "NS_GET_TYPE", err)
+		return 0, newNamespaceOperationError(nsp, "NS_GET_TYPE", err)
 	}
 	return species.NamespaceType(t), err
 }

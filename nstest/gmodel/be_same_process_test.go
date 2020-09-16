@@ -17,6 +17,7 @@ package gmodel
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -59,12 +60,11 @@ var namespaceset = model.NamespacesSet{
 var _ = Describe("Process", func() {
 
 	It("handles mistakes", func() {
-		_, err := BeSameTreeProcess(nil).Match(nil)
-		Expect(err).To(MatchError(MatchRegexp(`use BeNil()`)))
-		_, err = BeSameTreeProcess(proc1).Match("foo")
-		Expect(err).To(MatchError(MatchRegexp(`expects a model.Process, not a string`)))
-		_, err = BeSameTreeProcess("foo").Match(proc1)
-		Expect(err).To(MatchError(MatchRegexp(`must be passed a model.Process, not a string`)))
+		Errxpect(BeSameTreeProcess(nil).Match(nil)).To(MatchError(MatchRegexp(`use BeNil()`)))
+		Errxpect(BeSameTreeProcess(proc1).Match("foo")).To(
+			MatchError(MatchRegexp(`expects a model.Process, not a string`)))
+		Errxpect(BeSameTreeProcess("foo").Match(proc1)).To(
+			MatchError(MatchRegexp(`must be passed a model.Process, not a string`)))
 	})
 
 	It("matches", func() {

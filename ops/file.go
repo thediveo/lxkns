@@ -86,7 +86,7 @@ func (nsf NamespaceFile) String() (s string) {
 func (nsf NamespaceFile) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsf.Fd()), _NS_GET_NSTYPE)
 	if err != nil {
-		err = newInvalidNamespaceError(nsf, err)
+		return 0, newInvalidNamespaceError(nsf, err)
 	}
 	return species.NamespaceType(t), err
 }

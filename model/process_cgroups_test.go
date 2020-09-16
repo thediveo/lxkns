@@ -18,13 +18,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	. "github.com/thediveo/errxpect"
 )
 
 var _ = Describe("cgrouping", func() {
 
 	It("finds hidden hierarchical user namespaces", func() {
-		_, err := cgroupMountpath("cgroupv666fooobarcontroller")
-		Expect(err).To(MatchError(MatchRegexp(`controller .+ not mounted`)))
+		Errxpect(cgroupMountpath("cgroupv666fooobarcontroller")).To(
+			MatchError(MatchRegexp(`controller .+ not mounted`)))
 
 		cpu, err := cgroupMountpath("cpu")
 		Expect(err).To(Succeed())

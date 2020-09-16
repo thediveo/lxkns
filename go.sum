@@ -190,6 +190,8 @@ github.com/thediveo/enumflag v0.10.0 h1:CQIGWQYgFIKTUvRf5FL3K5ksQzzBag/HSUCu3Oin
 github.com/thediveo/enumflag v0.10.0/go.mod h1:zbsjXNJ3Np5ZXjUDgXeXsF2THwQd6ybEKMLw9XnQZ8o=
 github.com/thediveo/enumflag v0.10.1 h1:DB3Ag69VZ7BCv6jzKECrZ0ebZrHLzFRMIFYt96s4OxM=
 github.com/thediveo/enumflag v0.10.1/go.mod h1:KyVhQUPzreSw85oJi2uSjFM0ODLKXBH0rPod7zc2pmI=
+github.com/thediveo/errxpect v0.9.0 h1:IsEkly1gmUKoTyyiIK+4PUvY4sYoZJ9J/tIDVhnS9c0=
+github.com/thediveo/errxpect v0.9.0/go.mod h1:7cWG5zXn9VNba3oio9Hp39n3l++xeuV0bgCyssn+sm4=
 github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039 h1:9eZXgLbbEU5m3UNnOSrPYOZmc37gor4bDdlaY4HnPnY=
 github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039/go.mod h1:HOo87Dns4ivT4i3Ya1/Q3D/O4uPcm2ebO5HvGdTr4bA=
 github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6 h1:zUz5+dbOOwCWmGi3osQIygTjyVW8Xig36nEc7KwAB6I=

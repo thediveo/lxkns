@@ -10,6 +10,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/thediveo/enumflag v0.10.1
+	github.com/thediveo/errxpect v0.9.0
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
 	github.com/thediveo/go-plugger v0.9.0
