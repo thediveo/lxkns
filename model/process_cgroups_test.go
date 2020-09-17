@@ -18,25 +18,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	. "github.com/thediveo/errxpect"
 )
 
 var _ = Describe("cgrouping", func() {
-
-	It("finds hidden hierarchical user namespaces", func() {
-		Errxpect(cgroupMountpath("cgroupv666fooobarcontroller")).To(
-			MatchError(MatchRegexp(`controller .+ not mounted`)))
-
-		cpu, err := cgroupMountpath("cpu")
-		Expect(err).To(Succeed())
-		Expect(cpu).To(HavePrefix("/sys/fs/cgroup/"))
-
-		cpuacct, err := cgroupMountpath("cpuacct")
-		Expect(err).To(Succeed())
-		Expect(cpuacct).To(HavePrefix("/sys/fs/cgroup/"))
-
-		Expect(cpu).To(Equal(cpuacct))
-	})
 
 	It("finds control groups of processes", func() {
 		procs := NewProcessTable()

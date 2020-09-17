@@ -1,6 +1,6 @@
 # Linux kernel Namespaces <img align="right" width="200" src="docs/lxkns-gophers.jpeg">
 
-[![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/thediveo/lxkns)](https://pkg.go.dev/github.com/thediveo/lxkns)
 [![Architecture](https://img.shields.io/badge/doc-architecture-blue)](docs/architecture.md)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)

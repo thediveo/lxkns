@@ -34,15 +34,15 @@ type DiscoverOpts struct {
 	// The types of namespaces to discover: this is an OR'ed combination of
 	// Linux kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et
 	// cetera. If zero, defaults to discovering all namespaces.
-	NamespaceTypes species.NamespaceType
+	NamespaceTypes species.NamespaceType `json:"-"`
 
 	// Where to scan (or not scan) for signs of namespaces?
-	SkipProcs      bool // Don't scan processes.
-	SkipTasks      bool // Don't scan threads, a.k.a. tasks.
-	SkipFds        bool // Don't scan process file descriptors for references to namespaces.
-	SkipBindmounts bool // Don't scan for bind-mounted namespaces.
-	SkipHierarchy  bool // Don't discover the hierarchy of PID and user namespaces.
-	SkipOwnership  bool // Don't discover the ownership of non-user namespaces.
+	SkipProcs      bool `json:"skipped-procs"`      // Don't scan processes.
+	SkipTasks      bool `json:"skipped-tasks"`      // Don't scan threads, a.k.a. tasks.
+	SkipFds        bool `json:"skipped-fds"`        // Don't scan process file descriptors for references to namespaces.
+	SkipBindmounts bool `json:"skipped-bindmounts"` // Don't scan for bind-mounted namespaces.
+	SkipHierarchy  bool `json:"skipped-hierarchy"`  // Don't discover the hierarchy of PID and user namespaces.
+	SkipOwnership  bool `json:"skipped-ownership"`  // Don't discover the ownership of non-user namespaces.
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive

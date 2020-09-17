@@ -25,7 +25,49 @@ import (
 
 var _ = Describe("discovery result JSON", func() {
 
-	It("marshals the namespaces map and process table", func() {
+	It("marshals discovery options", func() {
+		doh := (*DiscoveryOptions)(&allns.Options)
+		j, err := json.Marshal(doh)
+		Expect(err).To(Succeed())
+		Expect(j).To(MatchJSON(`{
+			"skipped-procs": false,
+			"skipped-tasks": true,
+			"skipped-fds": true,
+			"skipped-bindmounts": true,
+			"skipped-hierarchy": false,
+			"skipped-ownership": false,
+			"scanned-namespace-types": [
+			  "time",
+			  "mnt",
+			  "cgroup",
+			  "uts",
+			  "ipc",
+			  "user",
+			  "pid",
+			  "net"
+			]
+		  }`))
+	})
+
+	It("unmarshals discovery options", func() {
+		opts := &DiscoveryOptions{}
+		Expect(json.Unmarshal([]byte(`{
+			"scanned-namespace-types": [
+			  "foobar"
+			]
+		  }`),
+			opts)).To(MatchError(MatchRegexp("invalid type of namespace")))
+
+		doh := (*DiscoveryOptions)(&allns.Options)
+		j, err := json.Marshal(doh)
+		Expect(err).To(Succeed())
+
+		opts = &DiscoveryOptions{}
+		Expect(json.Unmarshal(j, opts)).To(Succeed())
+		Expect(opts).To(Equal(doh))
+	})
+
+	It("marshals the discovery options, the namespaces map and process table", func() {
 		j, err := json.Marshal(NewDiscoveryResult(allns))
 		Expect(err).To(Succeed())
 
@@ -33,8 +75,23 @@ var _ = Describe("discovery result JSON", func() {
 		Expect(json.Unmarshal(j, &toplevel)).To(Succeed())
 
 		// "namespaces" must be an object, with keys consisting only of digits.
-		Expect(toplevel).To(HaveKey("namespaces"))
+		Expect(toplevel).To(HaveKey("discovery-options"))
 		inner := map[string]json.RawMessage{}
+		Expect(json.Unmarshal(toplevel["discovery-options"], &inner)).To(Succeed())
+		Expect(inner["scanned-namespace-types"]).To(MatchJSON(`[
+			"time",
+			"mnt",
+			"cgroup",
+			"uts",
+			"ipc",
+			"user",
+			"pid",
+			"net"
+		  ]`))
+
+		// "namespaces" must be an object, with keys consisting only of digits.
+		Expect(toplevel).To(HaveKey("namespaces"))
+		inner = map[string]json.RawMessage{}
 		Expect(json.Unmarshal(toplevel["namespaces"], &inner)).To(Succeed())
 		Expect(inner).To(HaveKey(MatchRegexp(`[0-9]+`)))
 
@@ -45,7 +102,7 @@ var _ = Describe("discovery result JSON", func() {
 		Expect(inner).To(HaveKey(MatchRegexp(`[0-9]+`)))
 	})
 
-	It("marshals and unmarshals a discovery result without hiccup", func() {
+	It("marshals and unmarshals a discovery results without hiccup", func() {
 		j, err := json.Marshal(NewDiscoveryResult(allns))
 		Expect(err).To(Succeed())
 
@@ -55,6 +112,8 @@ var _ = Describe("discovery result JSON", func() {
 			Expect(dr.Namespaces[idx]).To(HaveLen(len(allns.Namespaces[idx])))
 		}
 		Expect(dr.Processes).To(BeSameProcessTable(allns.Processes))
+
+		Expect(dr.Options).To(Equal(allns.Options))
 	})
 
 })

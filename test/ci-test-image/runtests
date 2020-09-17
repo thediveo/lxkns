@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "starting tests... 🦗 🦗 🦗"
+echo "running as non-root user 😶"
+su luser -c "go test -v ./..."
+echo "running as root 🤪"
+go test -v ./...

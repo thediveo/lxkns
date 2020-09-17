@@ -16,10 +16,54 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
 )
+
+// DiscoveryOptions is the (digital) twin of an lxkns DiscoveryOptions, which
+// can be marshalled and unmarshalled to and from JSON.
+type DiscoveryOptions lxkns.DiscoverOpts
+
+// MarshalJSON emits discovery options as JSON.
+func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
+	aux := struct {
+		*lxkns.DiscoverOpts
+		NamespaceTypes []string `json:"scanned-namespace-types"`
+	}{
+		DiscoverOpts: (*lxkns.DiscoverOpts)(&doh),
+	}
+	// Convert the bitmask of CLONE_NEWxxx into the usual textual type names for
+	// namespaces, such as "net", et cetera.
+	for bit := 1; bit != 0; bit <<= 1 {
+		if doh.NamespaceTypes&species.NamespaceType(bit) != 0 {
+			aux.NamespaceTypes = append(aux.NamespaceTypes, species.NamespaceType(bit).Name())
+		}
+	}
+	return json.Marshal(aux)
+}
+
+func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
+	aux := struct {
+		*lxkns.DiscoverOpts
+		NamespaceTypes []string `json:"scanned-namespace-types"`
+	}{
+		DiscoverOpts: (*lxkns.DiscoverOpts)(doh),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	for _, nstypename := range aux.NamespaceTypes {
+		nstype := species.NameToType(nstypename)
+		if nstype == 0 {
+			return fmt.Errorf("invalid type of namespace %q", nstypename)
+		}
+		doh.NamespaceTypes |= nstype
+	}
+	return nil
+}
 
 // DiscoveryResult is the (digital) twin of an lxkns DiscoveryResult, which can
 // be marshalled and unmarshalled to and from JSON.
@@ -48,9 +92,11 @@ func (d *DiscoveryResult) MarshalJSON() ([]byte, error) {
 	}
 	nsdict.ProcessTable.Namespaces = nsdict
 	aux := struct {
-		Namespaces *NamespacesDict `json:"namespaces"`
-		Processes  *ProcessTable   `json:"processes"`
+		Options    *DiscoveryOptions `json:"discovery-options"`
+		Namespaces *NamespacesDict   `json:"namespaces"`
+		Processes  *ProcessTable     `json:"processes"`
 	}{
+		Options:    (*DiscoveryOptions)(&d.Options),
 		Namespaces: nsdict,
 		Processes:  &nsdict.ProcessTable,
 	}
@@ -69,9 +115,11 @@ func (d *DiscoveryResult) UnmarshalJSON(data []byte) error {
 	}
 	nsdict.ProcessTable.Namespaces = nsdict
 	aux := struct {
-		Namespaces *NamespacesDict `json:"namespaces"`
-		Processes  *ProcessTable   `json:"processes"`
+		Options    *DiscoveryOptions `json:"discovery-options"`
+		Namespaces *NamespacesDict   `json:"namespaces"`
+		Processes  *ProcessTable     `json:"processes"`
 	}{
+		Options:    (*DiscoveryOptions)(&d.Options),
 		Namespaces: nsdict,
 		Processes:  &nsdict.ProcessTable,
 	}

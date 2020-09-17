@@ -1,0 +1,8 @@
+version: '2.4'
+services:
+    lxknstest:
+        build:
+            context: ../..
+            dockerfile: test/ci-test-image/Dockerfile
+        privileged: true
+        pid: host
