@@ -4,14 +4,8 @@ services:
         build:
             context: ../..
             dockerfile: test/ci-test-image/Dockerfile
+        # Tests must be run as privileged, as otherwise we cannot remount /proc
+        # within new user namespaces in some tests.
+        privileged: true
+        # We need to be in the host PID namespace, so we see everything ;)
         pid: host
-        cap_drop:
-            - ALL
-        cap_add: 
-            - CAP_SYS_ADMIN  # for switching namespaces in general
-            - CAP_SYS_CHROOT # for switching mnt namespaces
-            - CAP_SYS_PTRACE # for reading /proc/$PID/ns/*
-            - CAP_SETGID     # only for runtests to su down into ordinary user
-            - CAP_SETUID     # only for runtests to su down into ordinary user
-        security_opt: 
-            - apparmor:unconfined
