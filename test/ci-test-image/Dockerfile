@@ -1,4 +1,6 @@
-FROM golang:1.15
+ARG GOVERSION=1.15
+
+FROM golang:${GOVERSION}
 RUN adduser --disabled-password --gecos "" luser
 WORKDIR /home/luser
 # The script to kick off the tests should be fairly stable, more so than

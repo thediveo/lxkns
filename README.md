@@ -64,8 +64,12 @@ processes will show up with `<namespace>/<id>` control group names.
 ## gons CLI tools
 
 But `lxkns` is more than "just" a Golang package. It also features CLI tools
-build on top of `lxkns` (we _do_ eat our own dog food). To install these tools
-into your `$GOPATH/bin` directory, simply run `go install ./...`.
+build on top of `lxkns` (we _do_ eat our own dog food). To install these tools:
+
+- **system install:** simply run `make install` to install the tools into your
+  system, defaults to `/usr/local/bin`.
+- **local install:** `go install ./cmd/... ./examples/lsallns` installs only
+  into `$GOPATH/bin`.
 
 These are the CLI tools:
 
@@ -407,6 +411,18 @@ func main() {
 
 > **Note:** discovery results need to be "wrapped" in order to be
 > un/marshal-able.
+
+## Tinkering
+
+`make` targets:
+- `test`: builds and runs all tests inside a container; the tests are run twice,
+  once as root and once as a non-root user.
+- `coverage`: runs a full coverage on all tests in the module, once as root,
+  once as non-root, resulting in a single `coverage.html`.
+- `clean`: removes coverage files, as well as any top-level CLI tool binaries
+  that happened to end up there instead of `${GOPATH}/bin`.
+- `install`: builds and installs the binaries into `${GOPATH}/bin`, then
+  installs these binaries into `/usr/local/bin`.
 
 ## Copyright and License
 
