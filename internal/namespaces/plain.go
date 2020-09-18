@@ -141,7 +141,7 @@ func (pns *PlainNamespace) LeaderString() string {
 // if AddLeader is called multiple times for the same leader process.
 func (pns *PlainNamespace) AddLeader(proc *model.Process) {
 	for _, leader := range pns.leaders {
-		if leader == proc {
+		if leader == proc && leader.PID == proc.PID {
 			return
 		}
 	}

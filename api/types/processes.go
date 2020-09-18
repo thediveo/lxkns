@@ -17,6 +17,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -162,7 +163,7 @@ func (p *Process) UnmarshalJSON(data []byte) error {
 	panic("cannot directly unmarshal TypedNamespacesSet")
 }
 
-// UnmarshalJSON reads in the textual JSON representation of a single process.
+// unmarshalJSON reads in the textual JSON representation of a single process.
 // It uses the associated namespace dictionary to resolve existing references
 // into namespace objects and also adds missing namespaces.
 func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
@@ -178,6 +179,12 @@ func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
+	}
+	if p.PID <= 0 {
+		return errors.New("Process invalid PID")
+	}
+	if p.PPID < 0 {
+		return errors.New("Process invalid PPID")
 	}
 	if err := (*NamespacesSetReferences)(&p.Namespaces).unmarshalJSON(aux.Namespaces, allns); err != nil {
 		return err

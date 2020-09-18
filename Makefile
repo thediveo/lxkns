@@ -2,8 +2,10 @@
 PREFIX ?= /usr/local
 GOPATH = $(shell go env GOPATH)
 
-# Go version to use when building containers
-goversion = 1.13 1.15
+# Go version to use when building the test containers; start with a version
+# 1.14+ first to get better testbasher diagnosis in case a test script runs
+# into trouble.
+goversion = 1.15 1.13
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 

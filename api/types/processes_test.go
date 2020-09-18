@@ -270,4 +270,20 @@ var _ = Describe("process JSON", func() {
 		Expect(jpt.ProcessTable).To(gmodel.BeSameProcessTable(pt.ProcessTable))
 	})
 
+	It("rejects bad processes", func() {
+		proc := &model.Process{PID: 12345, PPID: -1, Name: "foobar"}
+		pt := &ProcessTable{
+			ProcessTable: model.ProcessTable{proc.PID: proc},
+		}
+		j, err := json.Marshal(pt)
+		Expect(err).To(Succeed())
+
+		jpt := &ProcessTable{
+			ProcessTable: model.ProcessTable{},
+			Namespaces:   NewNamespacesDict(nil),
+		}
+		Expect(json.Unmarshal(j, jpt)).To(HaveOccurred())
+		//Expect(jpt.ProcessTable).To(gmodel.BeSameProcessTable(pt.ProcessTable))
+	})
+
 })

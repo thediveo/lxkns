@@ -123,5 +123,15 @@ func (d *DiscoveryResult) UnmarshalJSON(data []byte) error {
 		Namespaces: nsdict,
 		Processes:  &nsdict.ProcessTable,
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	// Prune the process table of "dangling" processes which were references
+	// but never specified.
+	for _, proc := range d.Processes {
+		if proc.PPID == 0 && proc.Name == "" && len(proc.Cmdline) == 0 && proc.Starttime == 0 {
+			delete(d.Processes, proc.PID)
+		}
+	}
+	return nil
 }
