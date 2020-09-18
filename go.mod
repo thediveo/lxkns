@@ -16,12 +16,12 @@ require (
 	github.com/thediveo/go-plugger v0.9.0
 	github.com/thediveo/gons v0.0.0-20200328222805-52313499c476
 	github.com/thediveo/klo v1.0.0
-	github.com/thediveo/testbasher v0.0.0-20200317221106-f19dfb2e535c
+	github.com/thediveo/testbasher v1.0.2
 	github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1 // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200917161530-60aba8ac75fb // indirect
+	golang.org/x/tools v0.0.0-20200917221617-d56e4e40bc9d // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

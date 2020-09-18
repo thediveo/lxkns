@@ -5,7 +5,7 @@ RUN adduser --disabled-password --gecos "" luser
 WORKDIR /home/luser
 # The script to kick off the tests should be fairly stable, more so than
 # dependencies, so we cache it as early as we can.
-COPY --chown=luser test/ci-test-image/runtests /
+COPY --chown=luser test/image/runtests /
 # Cache dependencies to some extend, to speed up things...
 COPY --chown=luser go.mod go.sum ./
 RUN su luser -c "go mod graph | awk '{if (\$1 !~ \"@\") print \$2}' | xargs go get"

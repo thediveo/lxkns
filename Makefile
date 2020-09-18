@@ -3,13 +3,11 @@ PREFIX ?= /usr/local
 GOPATH = $(shell go env GOPATH)
 
 # Go version to use when building containers
-goversion = 1.15
+goversion = 1.13 1.15
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
-# Location of the test image Docker compose project, and its project name.
-ci_test_dir := test/ci-test-image
-ci_test_projectname := lxknstest
+testcontaineropts := --privileged --pid host
 
 .PHONY: clean coverage help install test
 
@@ -29,5 +27,9 @@ install:
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
 test: # runs all tests in a container
-	docker-compose -p $(ci_test_projectname) -f $(ci_test_dir)/docker-compose.yaml build --build-arg GOVERSION=$(goversion)
-	docker-compose -p $(ci_test_projectname) -f $(ci_test_dir)/docker-compose.yaml up
+	@set -e; for GOVERSION in $(goversion); do \
+		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
+		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f test/image/Dockerfile .;  \
+		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
+	done; \
+	echo "🎉 🎉 🎉 All tests passed"

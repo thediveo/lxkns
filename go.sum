@@ -219,6 +219,8 @@ github.com/thediveo/testbasher v0.0.0-20200213062358-4c41bdc89149 h1:BI1NjTOO/ok
 github.com/thediveo/testbasher v0.0.0-20200213062358-4c41bdc89149/go.mod h1:URkiKWMB59o0Pxf3tgiW4ddmNO+mT314m4yug68TVeg=
 github.com/thediveo/testbasher v0.0.0-20200317221106-f19dfb2e535c h1:b3aDq5IjFc+RoA0MhQq7/nxJnRX/ArqWmbQg6MFUIbA=
 github.com/thediveo/testbasher v0.0.0-20200317221106-f19dfb2e535c/go.mod h1:Vp0jh4c3ps2oQIWpfzVxjbm2muIVhqne/XgWjn88MFc=
+github.com/thediveo/testbasher v1.0.2 h1:ASv/118HQOW5BGg9aEfH9V5QCujBCi48Fj63Zk58o8E=
+github.com/thediveo/testbasher v1.0.2/go.mod h1:Kcbv9KN3oCJ089ow01nvrHuv2a0C8CPQa+T8b+IoZtU=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
@@ -310,6 +312,8 @@ golang.org/x/tools v0.0.0-20200915031644-64986481280e h1:tfSNPIxC48Azhz4nLSPskz/
 golang.org/x/tools v0.0.0-20200915031644-64986481280e/go.mod h1:z6u4i615ZeAfBE4XtMziQW1fSVJXACjjbWkB/mvPzlU=
 golang.org/x/tools v0.0.0-20200917161530-60aba8ac75fb h1:MFXedTy7VQbGgq8X8eb+cVL9+jvyzwPk3Ub7ug4cnEQ=
 golang.org/x/tools v0.0.0-20200917161530-60aba8ac75fb/go.mod h1:z6u4i615ZeAfBE4XtMziQW1fSVJXACjjbWkB/mvPzlU=
+golang.org/x/tools v0.0.0-20200917221617-d56e4e40bc9d h1:y39d97JVttj+rkTXITl1nf9Vsk+VoRuNzIDLFldUSB4=
+golang.org/x/tools v0.0.0-20200917221617-d56e4e40bc9d/go.mod h1:z6u4i615ZeAfBE4XtMziQW1fSVJXACjjbWkB/mvPzlU=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=

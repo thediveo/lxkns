@@ -32,7 +32,8 @@ var _ = Describe("Discover from processes", func() {
 		for _, ns := range lsns() {
 			nsidx := model.TypeIndex(species.NameToType(ns.Type))
 			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]
-			Expect(discons).NotTo(BeNil())
+			Expect(discons).NotTo(BeNil(),
+				"missing %s namespace %d", ns.Type, ns.NS)
 			// rats ... lsns seems to take the numerically lowest PID number
 			// instead of the topmost PID in a namespace. This makes
 			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID))) to
