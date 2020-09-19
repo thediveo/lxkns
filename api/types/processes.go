@@ -127,8 +127,9 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Process is the JSON representation of the information about a single
-// process.
+// Process is the JSON representation of the information about a single process.
+// The Process type is designed to be used under the hood of ProcessTable and
+// not directly by 3rd (external) party users.
 type Process model.Process
 
 // MarshalJSON emits the textual JSON representation of a single process.
@@ -160,7 +161,7 @@ func (p *Process) MarshalJSON() ([]byte, error) {
 // namespaces in or add new ones just learnt to. Unfortunately, Golang's
 // generic json (un)marshalling mechanism doesn't allow "contexts".
 func (p *Process) UnmarshalJSON(data []byte) error {
-	panic("cannot directly unmarshal TypedNamespacesSet")
+	panic("cannot directly unmarshal lxkns.api.types.Process")
 }
 
 // unmarshalJSON reads in the textual JSON representation of a single process.

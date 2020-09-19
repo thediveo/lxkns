@@ -26,7 +26,9 @@ import (
 )
 
 // PIDMap is the (Digital) Twin of an lxkns.PIDMap and can be marshalled and
-// unmarshalled to and from JSON.
+// unmarshalled to and from JSON. Nota bene: PIDMap is a small object, so it
+// should simply be passed around by value.
+//
 //
 // To marshal from an existing lxkns.PIDMap:
 //
@@ -34,14 +36,23 @@ import (
 //   out, err := json.Marshal(pm)
 //
 // To unmarshal into a fresh lxkns.PIDMap, not caring about PID namespace
-// details beyond PID namespace IDs:
+// details beyond PID namespace IDs, simply call NewPIDMap() without any
+// options:
 //
 //  pm := NewPIDMap()
+//
+// On purpose, the external JSON representation of a PIDMap is reduced compared
+// to an lxkns.PIDMap: this optimizes the transfer size by marshalling only the
+// absolutely necessary information necessary to recreate an lxkns.PIDMap on
+// unmarshalling. In contrast, the process-internal lxkns.PIDMap trades memory
+// consumption for performance, in oder to speed up translating PIDs between
+// different PID namespaces.
 type PIDMap struct {
 	// The real PID map we wrap for the purpose of un/marshalling.
 	lxkns.PIDMap
 	// An optional PID namespace map to reuse for resolving PID namespace
-	// references
+	// references; this avoids PIDMaps having to create their own "minimalist"
+	// PID namespace objects during unmarshalling.
 	PIDns model.NamespaceMap
 }
 
@@ -82,6 +93,9 @@ func WithPIDNamespaces(pidnsmap model.NamespaceMap) NewPIDMapOption {
 	}
 }
 
+// namespacedPID is the JSON representation of a namespaced PID: instead of
+// referencing an in-process Namespace object, the external representation can
+// only reference the namespace ID (in particular, the inode number).
 type namespacedPID struct {
 	PID         model.PIDType `json:"pid"`  // process ID as seen in PID namespace.
 	NamespaceID uint64        `json:"nsid"` // PID namespace ID.
@@ -125,6 +139,8 @@ func (pidmap PIDMap) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// UnmarshalJSON converts the textual JSON representation of a PID map back into
+// the binary object state.
 func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 	// We begin with reading in the PID (translation) map as an array
 	// containing arrays of namespaced PIDs; the namespaces are PID namespaces
