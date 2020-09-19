@@ -49,8 +49,7 @@ process_namespaceid user # prints the user namespace ID of "the" process.
 read # wait for test to proceed()
 `)
 	scriptscmd = scripts.Start("main")
-	var usernsid species.NamespaceID
-	scriptscmd.Decode(&usernsid)
+	usernsid := nstest.CmdDecodeNSId(scriptscmd)
 
 	disco := lxkns.FullDiscovery
 	disco.SkipBindmounts = true

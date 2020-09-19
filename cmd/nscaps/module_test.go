@@ -55,9 +55,9 @@ process_namespaceid user
 read
 `)
 	proccmd = procscripts.Start("main")
-	proccmd.Decode(&initusernsid)
+	initusernsid = nstest.CmdDecodeNSId(proccmd)
 	proccmd.Decode(&procpid)
-	proccmd.Decode(&procusernsid)
+	procusernsid = nstest.CmdDecodeNSId(proccmd)
 
 	targetscripts.Common(nstest.NamespaceUtilsScript)
 	targetscripts.Script("main", `
@@ -71,8 +71,8 @@ read
 `)
 	targetcmd = targetscripts.Start("main")
 	targetcmd.Decode(&tpid)
-	targetcmd.Decode(&tuserid)
-	targetcmd.Decode(&tnsid)
+	tuserid = nstest.CmdDecodeNSId(targetcmd)
+	tnsid = nstest.CmdDecodeNSId(targetcmd)
 
 	allns = lxkns.Discover(lxkns.FullDiscovery)
 })

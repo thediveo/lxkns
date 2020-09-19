@@ -248,11 +248,10 @@ read # wait for test to proceed()
 		defer cmd.Close()
 
 		var parentuserpath, leafuserpath NamespacePath
-		var parentusernsid, leafusernsid species.NamespaceID
 		cmd.Decode(&parentuserpath)
-		cmd.Decode(&parentusernsid)
+		parentusernsid := nstest.CmdDecodeNSId(cmd)
 		cmd.Decode(&leafuserpath)
-		cmd.Decode(&leafusernsid)
+		_ = nstest.CmdDecodeNSId(cmd)
 
 		parentuserns, err := leafuserpath.Parent()
 		Expect(err).ToNot(HaveOccurred())

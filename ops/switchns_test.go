@@ -108,9 +108,8 @@ read # wait for test to proceed()
 		defer cmd.Close()
 
 		var netnsref NamespacePath
-		var netnsid species.NamespaceID
 		cmd.Decode(&netnsref)
-		cmd.Decode(&netnsid)
+		netnsid := nstest.CmdDecodeNSId(cmd)
 
 		result := make(chan species.NamespaceID)
 		Expect(Go(func() {

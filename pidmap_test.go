@@ -19,7 +19,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -56,8 +55,7 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var pidnsid species.NamespaceID
-		cmd.Decode(&pidnsid)
+		pidnsid := nstest.CmdDecodeNSId(cmd)
 		var leafpid model.PIDType
 		cmd.Decode(&leafpid)
 

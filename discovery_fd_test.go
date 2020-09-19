@@ -43,9 +43,8 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var fdnetnsid, netnsid species.NamespaceID
-		cmd.Decode(&fdnetnsid)
-		cmd.Decode(&netnsid)
+		fdnetnsid := nstest.CmdDecodeNSId(cmd)
+		netnsid := nstest.CmdDecodeNSId(cmd)
 		Expect(fdnetnsid).ToNot(Equal(netnsid))
 		// correctly misses fd-referenced namespaces without proper discovery
 		// method enabled.

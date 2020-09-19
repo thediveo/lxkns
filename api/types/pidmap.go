@@ -101,10 +101,10 @@ func (pidmap PIDMap) MarshalJSON() ([]byte, error) {
 	for _, pids := range pidmap.PIDMap {
 		// Did we already handle this process? If yes, we can skip its
 		// potentially multiple keys (namespaced PIDs of the process).
-		if _, ok := pidsdone[pids[0].PID]; ok {
+		if _, ok := pidsdone[pids[len(pids)-1].PID]; ok {
 			continue
 		}
-		pidsdone[pids[0].PID] = true
+		pidsdone[pids[len(pids)-1].PID] = true
 		// Separate array items with commas.
 		if first {
 			first = false

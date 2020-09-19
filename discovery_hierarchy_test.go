@@ -20,7 +20,6 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -39,8 +38,7 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var usernsid species.NamespaceID
-		cmd.Decode(&usernsid)
+		usernsid := nstest.CmdDecodeNSId(cmd)
 		allns := Discover(FullDiscovery)
 		userns := allns.Namespaces[model.UserNS][usernsid].(model.Hierarchy)
 		Expect(userns).NotTo(BeNil())

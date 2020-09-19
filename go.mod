@@ -19,9 +19,9 @@ require (
 	github.com/thediveo/testbasher v1.0.2
 	github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1 // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
-	golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20
+	golang.org/x/sys v0.0.0-20200918174421-af09f7315aff
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200917221617-d56e4e40bc9d // indirect
+	golang.org/x/tools v0.0.0-20200918232735-d647fc253266 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

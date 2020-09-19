@@ -49,7 +49,7 @@ echo "$$"
 (echo $BASHPID && read)
 `)
 		cmd = scripts.Start("main")
-		cmd.Decode(&pidnsid)
+		pidnsid = nstest.CmdDecodeNSId(cmd)
 		cmd.Decode(&initpid)
 		Expect(initpid).To(Equal(model.PIDType(1)))
 		cmd.Decode(&leafpid)
