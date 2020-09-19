@@ -33,7 +33,7 @@ import (
 // information such as not only the PID and process name, but also translating
 // the PID into the process' "own" PID namespace, if it differs from the
 // initial/root PID namespace.
-func ProcessLabel(proc *model.Process, pidmap *lxkns.PIDMap, rootpidns model.Namespace) string {
+func ProcessLabel(proc *model.Process, pidmap lxkns.PIDMap, rootpidns model.Namespace) string {
 	// Do we have namespace information for it? If yes, then we can translate
 	// between the process-local PID namespace and the "initial" PID
 	// namespace. For convenience, we show all PIDs in all PID namespaces,

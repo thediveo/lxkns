@@ -51,16 +51,14 @@ func (ns NamespacedPIDs) PIDs() []model.PIDType {
 // PIDMap maps a single namespaced PID to the list of PIDs for this process in
 // different PID namespaces. Further PIDMap methods then allow simple
 // translation of PIDs between different PID namespaces.
-type PIDMap struct {
-	m map[NamespacedPID]NamespacedPIDs
-}
+type PIDMap map[NamespacedPID]NamespacedPIDs
 
 // Translate translates a PID "pid" in PID namespace "from" to the
 // corresponding PID in PID namespace "to". Returns 0, if PID "pid" either
 // does not exist in namespace "from", or PID namespace "to" isn't either a
 // parent or child of PID namespace "from".
-func (pm *PIDMap) Translate(pid model.PIDType, from model.Namespace, to model.Namespace) model.PIDType {
-	if namespacedpids, ok := pm.m[NamespacedPID{PID: pid, PIDNS: from}]; ok {
+func (pidmap PIDMap) Translate(pid model.PIDType, from model.Namespace, to model.Namespace) model.PIDType {
+	if namespacedpids, ok := pidmap[NamespacedPID{PID: pid, PIDNS: from}]; ok {
 		for _, namespacedpid := range namespacedpids {
 			if namespacedpid.PIDNS == to {
 				return namespacedpid.PID
@@ -75,8 +73,8 @@ func (pm *PIDMap) Translate(pid model.PIDType, from model.Namespace, to model.Na
 // Returns nil if the PID doesn't exist in the specified PID namespace. The
 // list is ordered from the topmost PID namespace down to the leaf PID
 // namespace to which a process actually is joined to.
-func (pm *PIDMap) NamespacedPIDs(pid model.PIDType, from model.Namespace) NamespacedPIDs {
-	if namespacedpids, ok := pm.m[NamespacedPID{PID: pid, PIDNS: from}]; ok {
+func (pidmap PIDMap) NamespacedPIDs(pid model.PIDType, from model.Namespace) NamespacedPIDs {
+	if namespacedpids, ok := pidmap[NamespacedPID{PID: pid, PIDNS: from}]; ok {
 		size := len(namespacedpids)
 		nspids := make([]NamespacedPID, size)
 		for idx, el := range namespacedpids {
@@ -89,11 +87,9 @@ func (pm *PIDMap) NamespacedPIDs(pid model.PIDType, from model.Namespace) Namesp
 
 // NewPIDMap returns a new PID map based on the specified discovery results
 // and further information gathered from the /proc filesystem.
-func NewPIDMap(res *DiscoveryResult) *PIDMap {
-	pm := &PIDMap{
-		m: map[NamespacedPID]NamespacedPIDs{},
-	}
-	for _, proc := range res.Processes {
+func NewPIDMap(result *DiscoveryResult) PIDMap {
+	pidmap := PIDMap{}
+	for _, proc := range result.Processes {
 		// For each process, first get its list of namespaced PIDs, which
 		// lists the PIDs starting from the PID namespace we're currently in
 		// and continues into nested child PID namespaces.
@@ -124,10 +120,10 @@ func NewPIDMap(res *DiscoveryResult) *PIDMap {
 		// so we can later quickly look up the list of namespaced PIDs for
 		// this process using (PID, PID-namespace).
 		for _, namespacedpid := range namespacedpids {
-			pm.m[namespacedpid] = namespacedpids
+			pidmap[namespacedpid] = namespacedpids
 		}
 	}
-	return pm
+	return pidmap
 }
 
 // NSpid returns the list of namespaced PIDs for the process proc, based on
@@ -135,7 +131,7 @@ func NewPIDMap(res *DiscoveryResult) *PIDMap {
 // NSpid only returns the list of PIDs, but not the corresponding PID
 // namespaces; this is because the Linux kernel doesn't give us the namespace
 // information as part of the process status. Instead, a caller (such as
-// NewPIDMap) needs to combine a namespaced PIDs list with the hierarchy own
+// NewPIDMap) needs to combine a namespaced PIDs list with the hierarchy of
 // PID namespaces to calculate the correct namespacing.
 func NSpid(proc *model.Process) (pids []model.PIDType) {
 	f, err := os.Open(fmt.Sprintf("/proc/%d/status", proc.PID))

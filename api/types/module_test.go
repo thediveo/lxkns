@@ -23,5 +23,5 @@ import (
 
 func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/api/v1 package")
+	RunSpecs(t, "lxkns/api/types package")
 }

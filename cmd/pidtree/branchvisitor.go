@@ -30,7 +30,7 @@ import (
 // until the branch ends.
 type BranchVisitor struct {
 	Details   bool
-	PIDMap    *lxkns.PIDMap
+	PIDMap    lxkns.PIDMap
 	RootPIDNS model.Namespace
 }
 
