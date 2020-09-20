@@ -84,6 +84,13 @@ func childlist(hns model.Hierarchy) string {
 	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
 }
 
+func refifnotempty(ref string) string {
+	if ref == "" {
+		return ""
+	}
+	return `"reference": "` + ref + `",`
+}
+
 var _ = Describe("namespaces JSON", func() {
 
 	It("always gets a Namespace from the dictionary", func() {
@@ -131,13 +138,13 @@ var _ = Describe("namespaces JSON", func() {
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
-				"reference": %q,
+				%s
 				"leaders": %s,
 				"parent": %d,
-				"user-uid": %d
+				"user-id": %d
 			}`,
 			userns.ID().Ino,
-			userns.Ref(),
+			refifnotempty(userns.Ref()),
 			pidlist(userns.LeaderPIDs()),
 			parentuserns.ID().Ino,
 			userns.(model.Ownership).UID(),
@@ -149,13 +156,13 @@ var _ = Describe("namespaces JSON", func() {
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
-				"reference": %q,
+				%s
 				"parent": %d,
 				"children": %s,
-				"user-uid": %d
+				"user-id": %d
 			}`,
 			parentuserns.ID().Ino,
-			parentuserns.Ref(),
+			refifnotempty(parentuserns.Ref()),
 			parentuserns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			childlist(parentuserns.(model.Hierarchy)),
 			parentuserns.(model.Ownership).UID(),
@@ -168,13 +175,13 @@ var _ = Describe("namespaces JSON", func() {
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
-				"reference": %q,
+				%s
 				"leaders": %s,
 				"children": %s,
-				"user-uid": %d
+				"user-id": %d
 			}`,
 			grandpa.ID().Ino,
-			grandpa.Ref(),
+			refifnotempty(grandpa.Ref()),
 			pidlist(grandpa.LeaderPIDs()),
 			childlist(grandpa.(model.Hierarchy)),
 			grandpa.(model.Ownership).UID(),
@@ -221,14 +228,14 @@ var _ = Describe("namespaces JSON", func() {
 			"%d": {
 				"nsid": %[1]d,
 				"type": "user",
-				"reference": %q,
+				%s
 				"leaders": %s,
 				"parent": %d,
-				"user-uid": %d
+				"user-id": %d
 			}
 		}`,
 			userns.ID().Ino,
-			userns.Ref(),
+			refifnotempty(userns.Ref()),
 			pidlist(userns.LeaderPIDs()),
 			userns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			userns.(model.Ownership).UID(),

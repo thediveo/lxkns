@@ -120,13 +120,13 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
 type NamespaceUnmarshal struct {
-	ID      uint64          `json:"nsid"`               // namespace ID.
-	Type    string          `json:"type"`               // "net", "user", et cetera...
-	Owner   uint64          `json:"owner,omitempty"`    // namespace ID of owning user namespace.
-	Ref     string          `json:"reference"`          // file system path reference.
-	Leaders []model.PIDType `json:"leaders,omitempty"`  // list of PIDs.
-	Parent  uint64          `json:"parent,omitempty"`   // PID/user: namespace ID of parent namespace.
-	UserUID int             `json:"user-uid,omitempty"` // user: owner's user ID (UID).
+	ID      uint64          `json:"nsid"`                // namespace ID.
+	Type    string          `json:"type"`                // "net", "user", et cetera...
+	Owner   uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
+	Ref     string          `json:"reference,omitempty"` // file system path reference.
+	Leaders []model.PIDType `json:"leaders,omitempty"`   // list of PIDs.
+	Parent  uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
+	UserUID int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
 }
 
 // NamespaceMarshal adds those fields to NamespaceUnmarshal we marshal as a
@@ -174,7 +174,7 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 	// the case).
 	return json.Marshal(&struct {
 		NamespaceMarshal
-		UserUID int `json:"user-uid"` // enforce owner's user ID (UID)
+		UserUID int `json:"user-id"` // enforce owner's user ID (UID)
 	}{
 		NamespaceMarshal: aux,
 		UserUID:          uns.UID(),

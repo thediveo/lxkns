@@ -1,0 +1,350 @@
+openapi: 3.0.2
+info:
+  title: lxkns
+  version: 0.14.0
+  description: https://github.com/thediveo/lxkns
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+paths:
+  /processes:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessTable'
+          description: |-
+            Returns information about all processes and their position within the process
+            tree.
+      summary: Process data
+      description: |-
+        Map of all processes in the process tree, with the keys being the PIDs in
+        decimal string format.
+  /pidmap:
+    summary: Translating PIDs between PID namespaces
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PIDMap'
+          description: |-
+            The namespaced PIDs of processes. For each process, the PIDs in their PID
+            namespaces along the PID namespace hierarchy are returned.
+      summary: PID translation data
+      description: |
+        Discovers the PIDs that processes have in different PID namespaces,
+        according to the hierarchy of PID namespaces.
+
+        > **IMPORTANT:** The order of processes is undefined. However, the order of
+        > the namespaced PIDs of a particular process is well-defined.
+  /namespaces:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResult'
+      summary: Namespaces and process data
+components:
+  schemas:
+    PIDMap:
+      title: Root Type for PIDMap
+      description: |-
+        A "map" of the PIDs of processes in PID namespaces for translating a specific
+        PID from one PID namespace into another PID namespace.
+
+        > **IMPORTANT:** The order of processes is undefined. However, the order of
+        > the namespaced PIDs of a particular process is well-defined.
+
+        The PID map is represented in a "condensed" format, which is designed to
+        minimize transfer volume. Consuming applications thus might want to transfer
+        this external representation into a performance-optimized internal
+        representation, optimized for translating PIDs.
+      type: array
+      items:
+        $ref: '#/components/schemas/NamespacedPIDs'
+      example:
+      - - pid: 12345
+          pidns: 4026531905
+        - pid: 1
+          pidns: 4026538371
+      - - pid: 666
+          pidns: 4026538371
+    NamespacedPID:
+      title: Root Type for NamespacedPID
+      description: A process identifier (PID) valid only in the given PID namespace.
+      required:
+      - pid
+      - pidns
+      type: object
+      properties:
+        pid:
+          description: a process identifier
+          type: integer
+        pidns:
+          format: int64
+          description: |-
+            a PID namespace identified and referenced by its inode number (without any
+            device number).
+          type: integer
+      example:
+        pid: 1
+        pidns: 4026531905
+    NamespacedPIDs:
+      description: |-
+        The list of namespaced PIDs of a process, ordered according to the PID
+        namespace hierarchy the process is in. Order is from the bottom-most PID
+        namespace to the initial PID namespace, so the PID in the initial PID namespace
+        always comes last.
+      type: array
+      items:
+        $ref: '#/components/schemas/NamespacedPID'
+      example:
+      - pid: 12345
+        pidns: 4026531905
+      - pid: 1
+        pidns: 4026532382
+    Process:
+      description: Information about a specific process.
+      required:
+      - pid
+      - ppid
+      - name
+      - cmdline
+      - starttime
+      - cgroup
+      type: object
+      properties:
+        pid:
+          format: int32
+          description: The process identifier (PID) of this process.
+          type: integer
+        ppid:
+          format: int32
+          description: |-
+            The PID of the parent process, or 0 if there is no parent process. On Linux, the
+            only processes without a parent are the initial process PID 1 and the PID 2
+            kthreadd kernel threads "process".
+          type: integer
+        name:
+          description: |-
+            A synthesized name of the process:
+            - a name set by the process itself,
+            - a name derived from the command line of the process.
+          type: string
+        cmdline:
+          description: |-
+            The command line arguments of the process, including the process binary file
+            name. Taken from /proc/$PID/cmdline, see also
+            [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
+          type: array
+          items:
+            type: string
+        starttime:
+          format: int64
+          description: |-
+            The time this process started after system boot and expressed in clock ticks.
+            It is taken from /proc/$PID/stat, see also
+            [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
+          type: integer
+        cgroup:
+          description: |-
+            The cgroup (control group) path name in the hierarchy this process is in. The
+            path name does not specify the root mount path of the complete hierarchy, but
+            only the (pseudo) absolute path starting from this root.
+          type: string
+    NamespacesSet:
+      description: |-
+        The set of 7 (8) namespaces a process is always joined to:
+        - cgroup namespace
+        - IPC namespace
+        - network namespace
+        - mount namespace
+        - PID namespace
+        - user namespace
+        - UTS namespace
+        - time namespace (Linux kernel 5.5+)
+      required:
+      - cgroup
+      - ipc
+      - net
+      - mount
+      - pid
+      - user
+      - uts
+      type: object
+      properties:
+        cgroup:
+          format: int64
+          description: ""
+          type: integer
+        ipc:
+          format: int64
+          description: ""
+          type: integer
+        net:
+          format: int64
+          description: ""
+          type: integer
+        mnt:
+          format: int64
+          description: ""
+          type: integer
+        pid:
+          format: int64
+          description: ""
+          type: integer
+        user:
+          format: int64
+          description: ""
+          type: integer
+        uts:
+          format: int64
+          description: ""
+          type: integer
+        time:
+          format: int64
+          description: ""
+          type: integer
+    ProcessTable:
+      description: |-
+        Map of all processes in the process tree, with the keys being the PIDs in
+        decimal string format.
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Process'
+      example:
+        "1":
+          pid: 1
+          ppid: 0
+          name: süsthemdeh
+          cmdline:
+          - /sbin/innit
+          starttime: 0
+          cgroup: ""
+        "666":
+          pid: 666
+          ppid: 1
+          name: worlddomination
+          cmdline:
+          - /bin/fool
+          - --world-domination
+          starttime: 123456
+          cgroup: /fools
+    DiscoveryResult:
+      description: The discovered namespaces and processes, and optionally PID translation
+        data.
+      required:
+      - namespaces
+      - processes
+      type: object
+      properties:
+        processes:
+          $ref: '#/components/schemas/ProcessTable'
+          description: Information about all processes, including the process hierarchy.
+        namespaces:
+          $ref: '#/components/schemas/NamespacesDict'
+          description: ""
+        pidmap:
+          $ref: '#/components/schemas/PIDMap'
+          description: ""
+        options:
+          description: ""
+    Namespace:
+      description: Information about a single Linux-kernel namespace.
+      required:
+      - type
+      - nsid
+      - reference
+      type: object
+      properties:
+        nsid:
+          format: int64
+          description: |-
+            Identifier of this namespace: an inode number.
+
+            - lxkns only uses the inode number in the API, following current Linux kernel
+              and CLI tool practise, which generally identify individual namespaces only by
+              inode numbers (and leaving out the device number).
+            - Namespace identifiers are not UUIDs, but instead reused by the kernel after a
+              namespace has been destroyed.
+          type: integer
+        type:
+          $ref: '#/components/schemas/NamespaceType'
+          description: Type of this namespace.
+        owner:
+          format: int64
+          description: The ID of the owning user namespace.
+          type: integer
+        reference:
+          description: |-
+            File system reference to the namespace, if available. The hierarchical PID and
+            user namespaces can also exist without any file system references, as long as
+            there are still child namespaces present for such a PID or user namespace.
+          type: string
+        leaders:
+          description: |-
+            List of PIDs of "leader" processes joined to this namespace.
+
+            Instead of listing all processes joined to this namespace, lxkns only lists the
+            "most senior" processes: these processes are the highest processes in the
+            process tree still joined to a namespace. Child processes also joined to this
+            namespace can then be found using the child process relations from the process
+            table information.
+          type: array
+          items:
+            format: int32
+            type: integer
+        parent:
+          format: int64
+          description: 'Only for PID and user namespaces: the ID of the parent namespace.'
+          type: integer
+        user-id:
+          description: |-
+            Only for user namespaces: the UID of the Linux user who created this user
+            namespace.
+          type: integer
+        children:
+          description: 'For user and PID namespaces: the list of child namespace IDs.'
+          type: array
+          items:
+            format: int64
+            type: integer
+        possessions:
+          description: 'Only user namespaces: list of namespace IDs of owned (non-user)
+            namespaces.'
+          type: array
+          items:
+            format: int64
+            type: integer
+      example:
+        nsid: 4026532274
+        type: net
+        owner: 4026531837
+        reference: /proc/7/ns/net
+        leaders:
+        - 7
+        - 51
+        parent: 4026531280
+    NamespaceType:
+      description: Type of Linux-kernel namespace.
+      enum:
+      - cgroup
+      - ipc
+      - net
+      - mnt
+      - pid
+      - user
+      - uts
+      - time
+      type: string
+    NamespacesDict:
+      description: ""
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Namespace'
