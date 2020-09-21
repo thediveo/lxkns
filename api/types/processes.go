@@ -43,6 +43,37 @@ type ProcessTable struct {
 	Namespaces *NamespacesDict // for resolving (and priming) namespace references
 }
 
+// NewProcessTable FIXME:
+func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
+	proctable := ProcessTable{}
+	for _, opt := range opts {
+		opt(&proctable)
+	}
+	if proctable.ProcessTable == nil {
+		proctable.ProcessTable = model.ProcessTable{}
+	}
+	if proctable.Namespaces == nil {
+		proctable.Namespaces = NewNamespacesDict(nil) // FIXME:
+	}
+	return proctable
+}
+
+// NewProcessTableOption defines so-called functional options to be used with
+// NewProcessTable().
+type NewProcessTableOption func(newproctable *ProcessTable)
+
+func WithProcessTable(proctable model.ProcessTable) NewProcessTableOption {
+	return func(npt *ProcessTable) {
+		npt.ProcessTable = proctable
+	}
+}
+
+func WithNamespacesDict(nsdict *NamespacesDict) NewProcessTableOption {
+	return func(npt *ProcessTable) {
+		npt.Namespaces = nsdict
+	}
+}
+
 // Get always(!) returns a Process object with the given PID. When the process
 // is already known, then it is returned, else a new preliminary process
 // object gets created, registered, and returned instead. Preliminary process
@@ -62,7 +93,7 @@ func (p *ProcessTable) Get(pid model.PIDType) *model.Process {
 
 // MarshalJSON emits the JSON textual representation of a complete process
 // table.
-func (p *ProcessTable) MarshalJSON() ([]byte, error) {
+func (p ProcessTable) MarshalJSON() ([]byte, error) {
 	// Similar to Golang's mapEncoder.encode, we iterate over the key-value
 	// pairs ourselves, because we need to serialize alias types for the
 	// individual process values, not the process values verbatim. By
@@ -105,9 +136,6 @@ func (p *ProcessTable) UnmarshalJSON(data []byte) error {
 	aux := map[model.PIDType]json.RawMessage{}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
-	}
-	if p.ProcessTable == nil {
-		p.ProcessTable = model.ProcessTable{}
 	}
 	for _, rawproc := range aux {
 		proc := model.Process{}

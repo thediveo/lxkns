@@ -75,9 +75,8 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 
 	It("validates simple ProcessTable", func() {
 		proc := &model.Process{PID: 12345, PPID: 0, Name: "foobar"}
-		pt := &types.ProcessTable{
-			ProcessTable: model.ProcessTable{proc.PID: proc},
-		}
+		pt := types.NewProcessTable(types.WithProcessTable(
+			model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
@@ -113,11 +112,8 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 	})
 
 	It("validates actual ProcTable", func() {
-		// Use the pointer, Luke! ...as otherweise Go's json marshaller throws
-		// in an outer layer of "ProcessTable: {...}" -- something we definitely
-		// don't need and which would never validate agains the lxkns OpenAPI
-		// schema. Oh, rats...
-		j, err := json.Marshal(&types.ProcessTable{ProcessTable: allns.Processes})
+		pt := types.NewProcessTable(types.WithProcessTable(allns.Processes))
+		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})

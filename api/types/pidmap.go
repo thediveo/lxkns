@@ -74,22 +74,24 @@ func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 	return pidmap
 }
 
+// NewPIDMapOption defines so-called functional options to be used with
+// NewPIDMap().
 type NewPIDMapOption func(newpidmap *PIDMap)
 
 // WithPIDMap configures a new PIDMap to wrap an existing lxkns.PIDMap; either
 // for marshalling an existing PIDMap or to unmarshal into a pre-allocated
 // PIDMap.
-func WithPIDMap(withpidmap lxkns.PIDMap) NewPIDMapOption {
-	return func(pidmap *PIDMap) {
-		pidmap.PIDMap = withpidmap
+func WithPIDMap(pidmap lxkns.PIDMap) NewPIDMapOption {
+	return func(npm *PIDMap) {
+		npm.PIDMap = pidmap
 	}
 }
 
 // WithPIDNamespaces configures a new PIDMap to use an already known map of
 // PID namespaces.
 func WithPIDNamespaces(pidnsmap model.NamespaceMap) NewPIDMapOption {
-	return func(pidmap *PIDMap) {
-		pidmap.PIDns = pidnsmap
+	return func(npm *PIDMap) {
+		npm.PIDns = pidnsmap
 	}
 }
 

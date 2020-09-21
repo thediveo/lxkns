@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/getkin/kin-openapi v0.22.0
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/muesli/termenv v0.7.2
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
@@ -23,7 +22,7 @@ require (
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/sys v0.0.0-20200918174421-af09f7315aff
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200918232735-d647fc253266 // indirect
+	golang.org/x/tools v0.0.0-20200921202010-4aa5c68dc7ae // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

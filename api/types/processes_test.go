@@ -36,15 +36,7 @@ var proc1 = &model.Process{
 }
 
 const proc1JSON = `{
-	"namespaces": {
-	  "mnt": 66610,
-	  "cgroup": 66611,
-	  "uts": 66612,
-	  "ipc": 66613,
-	  "user": 66614,
-	  "pid": 66615,
-	  "net": 66616
-	},
+	"namespaces": ` + namespacesJSON + `,
 	"pid": 1,
 	"ppid": 0,
 	"name": "(init)",
@@ -67,15 +59,7 @@ var proc2 = &model.Process{
 }
 
 const proc2JSON = `{
-	"namespaces": {
-	  "mnt": 66610,
-	  "cgroup": 66611,
-	  "uts": 66612,
-	  "ipc": 66613,
-	  "user": 66614,
-	  "pid": 66615,
-	  "net": 66616
-	},
+	"namespaces": ` + namespacesJSON + `,
 	"pid": 666,
 	"ppid": 1,
 	"name": "fool",
@@ -110,9 +94,7 @@ const namespacesJSON = `{
 var _ = Describe("process JSON", func() {
 
 	It("always gets a Process from the ProcessTable", func() {
-		pt := &ProcessTable{
-			ProcessTable: model.ProcessTable{proc1.PID: proc1},
-		}
+		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc1}))
 		p1 := pt.Get(proc1.PID)
 		Expect(p1).To(BeIdenticalTo(p1))
 
@@ -195,9 +177,7 @@ var _ = Describe("process JSON", func() {
 	})
 
 	It("marshals ProcessTable", func() {
-		pt := &ProcessTable{
-			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
-		}
+		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(`{"1":` + proc1JSON + `,"666":` + proc2JSON + `}`))
@@ -205,21 +185,19 @@ var _ = Describe("process JSON", func() {
 
 	It("unmarshals ProcessTable", func() {
 		// Check correct failure...
-		dummy := &ProcessTable{}
-		Expect(json.Unmarshal([]byte(`"foobar"`), dummy)).To(HaveOccurred())
-		Expect(json.Unmarshal([]byte(`{"1":{"namespaces":{"foobar":666}}}`), dummy)).To(HaveOccurred())
+		dummy := NewProcessTable()
+		Expect(json.Unmarshal([]byte(`"foobar"`), &dummy)).To(HaveOccurred())
+		Expect(json.Unmarshal([]byte(`{"1":{"namespaces":{"foobar":666}}}`), &dummy)).To(HaveOccurred())
 
 		// To unmarshal ... we need to ... marshal first!
-		pt := &ProcessTable{
-			ProcessTable: model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2},
-		}
+		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
-		pt2 := &ProcessTable{Namespaces: NewNamespacesDict(nil)}
-		Expect(json.Unmarshal(j, pt2)).To(Succeed())
+		pt2 := NewProcessTable()
+		Expect(json.Unmarshal(j, &pt2)).To(Succeed())
 		Expect(pt2.ProcessTable).To(HaveLen(len(pt.ProcessTable)))
 		// Ensure that the namespace dictionary has been correctly updated and
 		// that processes with the same namespaces share the same namespace
@@ -234,14 +212,9 @@ var _ = Describe("process JSON", func() {
 		// expected: the pre-existing process object must be reused, and
 		// properly updated in its state.
 		proc := &model.Process{}
-		pt3 := &ProcessTable{
-			ProcessTable: model.ProcessTable{
-				proc1.PID: proc,
-			},
-			Namespaces: NewNamespacesDict(nil),
-		}
+		pt3 := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc}))
 		Expect(pt3.ProcessTable[proc1.PID].PID).To(Equal(model.PIDType(0)))
-		Expect(json.Unmarshal(j, pt3)).To(Succeed())
+		Expect(json.Unmarshal(j, &pt3)).To(Succeed())
 		Expect(pt3.ProcessTable).To(HaveKey(proc1.PID))
 		preproc1 := pt3.ProcessTable[proc1.PID]
 		Expect(preproc1).To(BeIdenticalTo(proc))
@@ -255,34 +228,23 @@ var _ = Describe("process JSON", func() {
 	})
 
 	It("does a full round trip without any hiccup", func() {
-		pt := &ProcessTable{
-			ProcessTable: model.NewProcessTable(),
-			Namespaces:   NewNamespacesDict(nil),
-		}
+		pt := NewProcessTable()
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 
-		jpt := &ProcessTable{
-			ProcessTable: model.ProcessTable{},
-			Namespaces:   NewNamespacesDict(nil),
-		}
-		Expect(json.Unmarshal(j, jpt)).To(Succeed())
+		jpt := NewProcessTable()
+		Expect(json.Unmarshal(j, &jpt)).To(Succeed())
 		Expect(jpt.ProcessTable).To(gmodel.BeSameProcessTable(pt.ProcessTable))
 	})
 
 	It("rejects bad processes", func() {
 		proc := &model.Process{PID: 12345, PPID: -1, Name: "foobar"}
-		pt := &ProcessTable{
-			ProcessTable: model.ProcessTable{proc.PID: proc},
-		}
+		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 
-		jpt := &ProcessTable{
-			ProcessTable: model.ProcessTable{},
-			Namespaces:   NewNamespacesDict(nil),
-		}
-		Expect(json.Unmarshal(j, jpt)).To(HaveOccurred())
+		jpt := NewProcessTable()
+		Expect(json.Unmarshal(j, &jpt)).To(HaveOccurred())
 		//TODO:Expect(jpt.ProcessTable).To(gmodel.BeSameProcessTable(pt.ProcessTable))
 	})
 
