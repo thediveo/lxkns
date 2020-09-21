@@ -143,15 +143,24 @@ type Process model.Process
 // And now some sour tangarine somewhere surely is claiming this total Golang
 // design fubar to be absolutely great, innit?
 func (p *Process) MarshalJSON() ([]byte, error) {
+	// Ensure that a nil command line won't ever get marshalled as "null" but
+	// instead as an empty command line; this avoids downstream things, such as
+	// OpenAPI validators eating their heart out...
+	cmdline := p.Cmdline
+	if cmdline == nil {
+		cmdline = []string{}
+	}
 	// Using an anonymous alias structure allows us to override serialization
 	// of the namespaces the process is attached to: we just want them as
 	// typed references (namespace type and ID), not as deeply serialized
 	// first-class data elements.
 	return json.Marshal(&struct {
 		Namespaces *NamespacesSetReferences `json:"namespaces"`
+		Cmdline    []string                 `json:"cmdline"`
 		*model.Process
 	}{
 		Namespaces: (*NamespacesSetReferences)(&p.Namespaces),
+		Cmdline:    cmdline,
 		Process:    (*model.Process)(p),
 	})
 }
@@ -187,8 +196,14 @@ func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	if p.PPID < 0 {
 		return errors.New("Process invalid PPID")
 	}
+	// Unmarshal the remaining Process fields which don't need any special
+	// treatment.
 	if err := (*NamespacesSetReferences)(&p.Namespaces).unmarshalJSON(aux.Namespaces, allns); err != nil {
 		return err
+	}
+	// Convert a potential null command line into an empty command line.
+	if p.Cmdline == nil {
+		p.Cmdline = []string{}
 	}
 	return nil
 }

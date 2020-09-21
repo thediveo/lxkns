@@ -16,20 +16,110 @@ package openapispec
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/model"
 )
+
+var lxknsapispec *openapi3.Swagger
+var allns *lxkns.DiscoveryResult
+var pidmap lxkns.PIDMap
+
+var _ = BeforeSuite(func() {
+	var err error
+	lxknsapispec, err = openapi3.NewSwaggerLoader().LoadSwaggerFromFile("lxkns.yaml")
+	Expect(err).To(Succeed())
+	Expect(func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		return lxknsapispec.Validate(ctx)
+	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
+
+	allns = lxkns.Discover(lxkns.FullDiscovery)
+	pidmap = lxkns.NewPIDMap(allns)
+})
+
+func validate(openapispec *openapi3.Swagger, schemaname string, jsondata []byte) error {
+	schemaref, ok := openapispec.Components.Schemas[schemaname]
+	if !ok {
+		return fmt.Errorf("invalid schema reference %q", schemaname)
+	}
+	var jsonobj interface{}
+	if err := json.Unmarshal(jsondata, &jsonobj); err != nil {
+		return err
+	}
+	return schemaref.Value.VisitJSON(jsonobj)
+}
 
 var _ = Describe("lxkns OpenAPI specification", func() {
 
-	It("validates", func() {
-		oas, err := openapi3.NewSwaggerLoader().LoadSwaggerFromFile("lxkns.yaml")
+	It("validates PIDMap", func() {
+		j, err := json.Marshal(types.NewPIDMap(types.WithPIDMap(pidmap)))
 		Expect(err).To(Succeed())
-		Expect(oas.Validate(context.WithTimeout(context.Background(), 10*time.Second))).To(Succeed())
+		Expect(validate(lxknsapispec, "PIDMap", j)).To(Succeed())
+	})
 
+	It("validates Process", func() {
+		proc := &types.Process{PID: 12345, PPID: 0, Name: "foobar"}
+		j, err := json.Marshal(proc)
+		Expect(err).To(Succeed())
+		Expect(validate(lxknsapispec, "Process", j)).To(Succeed(), string(j))
+	})
+
+	It("validates simple ProcessTable", func() {
+		proc := &model.Process{PID: 12345, PPID: 0, Name: "foobar"}
+		pt := &types.ProcessTable{
+			ProcessTable: model.ProcessTable{proc.PID: proc},
+		}
+		j, err := json.Marshal(pt)
+		Expect(err).To(Succeed())
+		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
+	})
+
+	It("validates (simple) ProcTable", func() {
+		j := []byte(`{
+			"24566": {
+				"pid": 24566,
+				"ppid": 3173,
+				"name": "bash",
+				"cmdline": ["/bin/bash"],
+				"namespaces": {},
+				"starttime": 745077,
+				"cgroup": "/user.slice"
+			},
+			"2574": {
+				"namespaces": {
+					"net": 12345678
+				},
+				"starttime": 51628,
+				"cgroup": "/user.slice",
+				"pid": 2574,
+				"ppid": 1,
+				"name": "systemd",
+				"cmdline": [
+					"/lib/systemd/systemd",
+					"--user"
+				]
+			}
+		}`)
+		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed())
+	})
+
+	It("validates actual ProcTable", func() {
+		// Use the pointer, Luke! ...as otherweise Go's json marshaller throws
+		// in an outer layer of "ProcessTable: {...}" -- something we definitely
+		// don't need and which would never validate agains the lxkns OpenAPI
+		// schema. Oh, rats...
+		j, err := json.Marshal(&types.ProcessTable{ProcessTable: allns.Processes})
+		Expect(err).To(Succeed())
+		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})
 
 })
