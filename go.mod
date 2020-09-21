@@ -3,6 +3,8 @@ module github.com/thediveo/lxkns
 go 1.13
 
 require (
+	github.com/getkin/kin-openapi v0.22.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/muesli/termenv v0.7.2
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
