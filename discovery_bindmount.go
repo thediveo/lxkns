@@ -89,11 +89,6 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 				log.Debugf("found namespace %s:[%d] bind-mounted at %q",
 					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path)
 				total++
-			} else {
-				/*
-					log.Debugf("already seen namespace %s:[%d], bind-mounted at %q",
-					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path)
-				*/
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
