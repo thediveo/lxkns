@@ -28,6 +28,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/thediveo/lxkns/log"
 )
 
 // PIDType expresses things more clearly. And no, that's not a "PidType" since
@@ -197,7 +199,9 @@ func (p *Process) String() string {
 // without tasks=threads). The process table is in fact a map, indexed by
 // PIDs.
 func NewProcessTable() (pt ProcessTable) {
-	return newProcessTable("/proc")
+	pt = newProcessTable("/proc")
+	log.Infof("discovered %d processes", len(pt))
+	return
 }
 
 // newProcessTable implements NewProcessTable and allows for testing on fake

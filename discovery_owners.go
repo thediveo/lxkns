@@ -21,6 +21,7 @@ package lxkns
 
 import (
 	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -31,8 +32,12 @@ import (
 // userspace ids to their corresponding user namespace objects.
 func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipOwnership || nstype == species.CLONE_NEWUSER {
+		if result.Options.SkipOwnership {
+			log.Infof("skipping discovery of namespaces ownership")
+		}
 		return
 	}
+	log.Debugf("running discovery of %s namespaces ownership", nstype.Name())
 	// The namespace type discovery sequence guarantees us that by the
 	// time we got here, the user namespaces already have been fully
 	// discovered, so we have a complete map of them.
@@ -41,5 +46,9 @@ func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryR
 	nsmap := result.Namespaces[nstypeidx]
 	for _, ns := range nsmap {
 		ns.(namespaces.NamespaceConfigurer).ResolveOwner(usernsmap)
+		if owner := ns.Owner(); owner != nil {
+			log.Debugf("%s:[%d] owned by user:[%d]",
+				ns.Type().Name(), ns.ID().Ino, owner.(model.Namespace).ID().Ino)
+		}
 	}
 }

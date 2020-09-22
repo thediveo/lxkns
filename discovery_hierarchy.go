@@ -36,6 +36,7 @@ import (
 
 	"github.com/thediveo/lxkns/internal/namespaces"
 	nsp "github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/relations"
@@ -56,8 +57,12 @@ import (
 // then force us to keep potentially a larger number of fd's open.
 func discoverHierarchy(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipHierarchy {
+		log.Infof("skipping discovery of %s namespace hierarchy", nstype.Name())
 		return
 	}
+	log.Debugf("starting discovery of %s namespace hierarchy...", nstype.Name())
+	hidden := 0
+
 	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	for _, startns := range nsmap {
@@ -129,6 +134,8 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 				// found.
 				parentns = namespaces.New(nstype, parentnsid, "")
 				nsmap[parentnsid] = parentns
+				log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
+				hidden++
 			}
 			// Now insert the current namespace as a child of its parent in
 			// the hierarchy, and then prepare for the next rung...
@@ -140,4 +147,5 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 		// Don't leak...
 		nsf.(io.Closer).Close()
 	}
+	log.Infof("found %d hidden %s namespaces", hidden, nstype.Name())
 }

@@ -35,6 +35,7 @@ import (
 	"os"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
@@ -46,8 +47,11 @@ import (
 // discovery functions.
 func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipProcs {
+		log.Infof("skipping discovery of %s namespaces used by processes", nstype.Name())
 		return
 	}
+	log.Debugf("discovering %s namespaces used by processes...", nstype.Name())
+	total := 0
 	nstypename := nstype.Name()
 	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
@@ -87,6 +91,8 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			// might be).
 			ns = namespaces.New(nstype, nsid, "")
 			nsmap[nsid] = ns
+			log.Debugf("found namespace %s", ns.(model.NamespaceStringer).TypeIDString())
+			total++
 		}
 		// To speed up finding the process leaders in a specific namespace, we
 		// remember this namespace as joined by the process we're just looking
@@ -133,12 +139,14 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		}
 		p.Namespaces[nstypeidx].(namespaces.NamespaceConfigurer).AddLeader(p)
 	}
-	// Try to set namespace references which we hope to be as longlived as
-	// possible; so we use one of the leader processes.
+	// Try to set namespace references which we hope to be as long-lived as
+	// possible; so we prefer the most senior leader process: the ealdorman.
 	for _, ns := range nsmap {
-		if leaders := ns.Leaders(); len(leaders) > 0 {
+		if senior := ns.Ealdorman(); senior != nil {
 			ns.(namespaces.NamespaceConfigurer).SetRef(
-				fmt.Sprintf("/proc/%d/ns/%s", leaders[0].PID, nstypename))
+				fmt.Sprintf("/proc/%d/ns/%s", senior.PID, nstypename))
 		}
 	}
+
+	log.Infof("found %d %s namespaces joined by processes", total, nstype.Name())
 }

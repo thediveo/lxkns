@@ -17,5 +17,7 @@ services:
             - SYS_ADMIN     # change namespaces
             - SYS_CHROOT    # change mount namespaces
             - SYS_PTRACE    # access nsfs namespace information
+            - DAC_READ_SEARCH
+            - DAC_OVERRIDE
         # Essential, as we need the full PID view for correct scanning...
         pid: host

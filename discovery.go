@@ -22,7 +22,9 @@ package lxkns
 import (
 	"fmt"
 	"sort"
+	"strings"
 
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -208,6 +210,12 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[model.PIDNS])
 	}
 	// TODO: Find the initial namespaces...
+
+	l := []string{}
+	for nstypeidx, nsmap := range result.Namespaces {
+		l = append(l, fmt.Sprintf("%d %s", len(nsmap), model.TypesByIndex[nstypeidx].Name()))
+	}
+	log.Infof("discovered %s namespaces", strings.Join(l, ", "))
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)

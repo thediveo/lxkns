@@ -11,10 +11,10 @@ tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
 testcontaineropts := --privileged --pid host
 
-.PHONY: clean coverage deploy help install test report
+.PHONY: clean coverage deploy undeploy help install test report
 
 help:
-	@echo "available targets: clean, coverage, install, test"
+	@echo "available targets: clean, coverage, deploy, undeploy, install, test"
 
 clean:
 	rm -f $(tools)
@@ -27,6 +27,9 @@ coverage:
 deploy:
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
+
+undeploy:
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
 
 install:
 	go install -v ./cmd/... ./examples/lsallns

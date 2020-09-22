@@ -6,9 +6,11 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	logrus "github.com/sirupsen/logrus"
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
+	log "github.com/thediveo/lxkns/log"
+	_ "github.com/thediveo/lxkns/log/logrus"
 )
 
 func main() {
@@ -16,6 +18,10 @@ func main() {
 	// call to reexec.CheckAction() will automatically handle this situation
 	// and then never return when in re-execution.
 	reexec.CheckAction()
+
+	// FIXME: use unified interface?
+	logrus.SetLevel(logrus.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	// And now for the real meat.
 	log.Infof("this is the lxkns Linux-kernel namespaces discovery service version %s", lxkns.SemVersion)

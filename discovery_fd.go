@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
@@ -39,8 +40,10 @@ import (
 // in the task fd entries.
 func discoverFromFd(t species.NamespaceType, procfs string, result *DiscoveryResult) {
 	if result.Options.SkipFds {
+		log.Infof("skipping discovery of fd-referenced namespaces")
 		return
 	}
+	log.Debugf("discovering fd-referenced namespaces...")
 	scanFd(t, procfs, false, result)
 }
 
@@ -50,6 +53,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Dis
 	// Iterate over all known processes, and then over all of their open file
 	// descriptors. The /proc filesystem will give us the required
 	// information.
+	total := 0
 	for pid := range result.Processes {
 		basepath := fmt.Sprintf(filepath.Join(procfs, "%d/fd"), pid)
 		fdentries, err := ioutil.ReadDir(basepath)
@@ -102,8 +106,11 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Dis
 			if _, ok := result.Namespaces[nstypeidx][nsid]; ok {
 				continue
 			}
+			log.Debugf("found namespace %s:[%d]", nstype.Name(), nsid.Ino)
 			result.Namespaces[nstypeidx][nsid] = namespaces.New(
 				nstype, nsid, basepath+"/"+fdentry.Name())
+			total++
 		}
 	}
+	log.Infof("discovered %d fd-referenced namespaces", total)
 }
