@@ -24,10 +24,14 @@ import (
 )
 
 // DiscoveryOptions is the (digital) twin of an lxkns DiscoveryOptions, which
-// can be marshalled and unmarshalled to and from JSON.
+// can be marshalled and unmarshalled to and from JSON. This type usually isn't
+// used on its own but instead as part of un/marshalling the DiscoveryResult
+// type.
 type DiscoveryOptions lxkns.DiscoverOpts
 
-// MarshalJSON emits discovery options as JSON.
+// MarshalJSON emits discovery options as JSON, handling the slightly involved
+// part of marshalling the list of namespace types included in the discovery
+// scan.
 func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
 	aux := struct {
 		*lxkns.DiscoverOpts
@@ -45,6 +49,9 @@ func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aux)
 }
 
+// UnmarshalJSON unmarshals JSON into a DiscoveryOptions type. It especially
+// handles the slightly involved task of unmarshalling a list of namespace types
+// into a bitmap mask of CLONE_NEWxxx namespace type flags.
 func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 	aux := struct {
 		*lxkns.DiscoverOpts
@@ -66,15 +73,16 @@ func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 }
 
 // DiscoveryResult is basically the (digital) twin of an lxkns DiscoveryResult,
-// which can be marshalled and unmarshalled to and from JSON. Additionally, it
-// acts as an extensible discovery result wrapper, which allows API users to
-// freely add their own fields (with objects) to un/marshal additional result
-// fields, as they see fit.
+// which adds marshalling and unmarshalling to and from JSON. Additionally,
+// DiscoveryResult acts as an extensible discovery result wrapper, which allows
+// API users to freely add their own fields (with objects) to un/marshal
+// additional result fields, as they see fit.
 type DiscoveryResult struct {
 	Fields          map[string]interface{}
 	DiscoveryResult *lxkns.DiscoveryResult `json:"-"`
 }
 
+// JSON object field names for the standardized discovery result parts.
 const (
 	FieldDiscoveryOptions = "discovery-options"
 	FieldNamespaces       = "namespaces"
@@ -84,19 +92,31 @@ const (
 // NewDiscoveryResult returns a discovery result object ready for marshalling
 // JSON into it or marshalling an existing lxkns discovery result.
 func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
+	// A very limited initialization only before immediately applying any
+	// options specified to us.
 	dr := &DiscoveryResult{Fields: map[string]interface{}{}}
 	for _, opt := range opts {
 		opt(dr)
 	}
+	// No existing discovery result specified? Then create a fresh one so that
+	// we're ready for unmarshalling, hiding the slightly gory details of the
+	// internal mechanics of the multiple parts of a discovery result
+	// interacting with each other.
 	if dr.DiscoveryResult == nil {
 		dr.DiscoveryResult = &lxkns.DiscoveryResult{
 			Namespaces: *model.NewAllNamespaces(),
 			Processes:  model.ProcessTable{},
 		}
 	}
+	// Wrap the discovery result options, so that they can be properly
+	// un/marshalled. A plain lxkns.DiscoveryOption cannot be fully
+	// un/marshalled.
 	dr.Fields[FieldDiscoveryOptions] = (*DiscoveryOptions)(&dr.DiscoveryResult.Options)
+	// Wrap the namespaces "map" (dictionary) so that the original result
+	// namespace map can be properly un/marshalled.
 	nsdict := NewNamespacesDict(dr.DiscoveryResult)
 	dr.Fields[FieldNamespaces] = nsdict
+	// And finally wrap the process table, again for proper un/marshalling.
 	pt := NewProcessTable(
 		WithProcessTable(dr.DiscoveryResult.Processes),
 		WithNamespacesDict(nsdict))
@@ -104,34 +124,56 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	return dr
 }
 
-// FIXME:
+// NewDiscoveryResultOption defines so-called functional options for use with
+// NewDiscoveryResult().
 type NewDiscoveryResultOption func(newdiscoveryresult *DiscoveryResult)
 
-// FIXME:
+// WithResult instructs NewDiscoveryResult() to use an existing lxkns discovery
+// result; this is typically used for marshalling only, but not needed for
+// unmarshalling. In the latter case you probably want to prefer starting with a
+// clean slate.
 func WithResult(result *lxkns.DiscoveryResult) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.DiscoveryResult = result
 	}
 }
 
-// FIXME:
+// WithElement allows API users to add their own top-level elements for
+// un/marshalling to discovery results; for unmarshalling you need to use
+// WithElement() in order to add a non-nil zero value of the correct type in
+// order to be able to unmarshal into the correct type instead of a generic
+// map[string]interface{}:
+//
+//     // foobar is a JSON un/marshallable type of your own. For unmarshalling,
+//     // allocate a non-nil zero value, which can be unmarshalled correctly.
+//     discoresult := NewDiscoveryResult(
+//         WithDiscoveryResult(all),
+//         WithElement("foobar", foobar))
+//     json.Marshal(discoresult)
+//
+// For unmarshalling:
+//
+//     discoresult := NewDiscoveryResult(WithElement("foobar", foobar))
+//     json.Unmarshal(jsondata, discoresult)
 func WithElement(name string, obj interface{}) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.Fields[name] = obj
 	}
 }
 
-// FIXME:
+// Result returns the wrapped lxkns.DiscoveryResult.
 func (dr DiscoveryResult) Result() *lxkns.DiscoveryResult {
 	return dr.DiscoveryResult
 }
 
-// FIXME:
+// Processes returns the process table from the wrapped lxkns.DiscoveryResult.
 func (dr DiscoveryResult) Processes() model.ProcessTable {
 	return dr.DiscoveryResult.Processes
 }
 
-// FIXME:
+// Get returns the use-specified result extension object for the specified
+// extension field. The field must have been added first with the WithElement
+// option when creating the un/marshalling wrapper object for discovery results.
 func (dr DiscoveryResult) Get(name string) interface{} {
 	return dr.Fields[name]
 }

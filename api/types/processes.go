@@ -57,7 +57,7 @@ func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
 		proctable.ProcessTable = model.ProcessTable{}
 	}
 	if proctable.Namespaces == nil {
-		proctable.Namespaces = NewNamespacesDict(nil) // FIXME:
+		proctable.Namespaces = NewNamespacesDict(nil)
 	}
 	return proctable
 }

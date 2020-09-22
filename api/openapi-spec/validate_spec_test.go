@@ -118,4 +118,15 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})
 
+	It("validates a full DiscoveryResult round-trip", func() {
+		disco := types.NewDiscoveryResult(types.WithResult(allns))
+		j, err := json.Marshal(disco)
+		Expect(err).To(Succeed())
+
+		Expect(validate(lxknsapispec, "DiscoveryResult", j)).To(Succeed(), string(j))
+
+		disco2 := types.NewDiscoveryResult()
+		Expect(json.Unmarshal(j, disco2)).To(Succeed())
+	})
+
 })

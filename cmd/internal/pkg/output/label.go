@@ -74,6 +74,10 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 	return ""
 }
 
+// ControlgroupDisplayName takes a control group name (path) and, depending on
+// the display flags set, returns a name better suited for display. In
+// particular, it optionally shortens 64 hex digit IDs as used by Docker for
+// identifying containers to the Docker-typical 12 hex digit "digest".
 func ControlgroupDisplayName(s string) string {
 	if controlGroupNames == CgroupComplete {
 		return s
@@ -87,6 +91,8 @@ func ControlgroupDisplayName(s string) string {
 	return strings.Join(labels, "/")
 }
 
+// ishex checks if the given string solely consists of ASCII hex digits, and
+// nothing else, then return true.
 func ishex(hex string) bool {
 	for _, char := range hex {
 		if !unicode.In(char, unicode.ASCII_Hex_Digit) {
@@ -96,18 +102,27 @@ func ishex(hex string) bool {
 	return true
 }
 
+// allLeaders switches on/off displaying all leader processes in a given
+// namespace, or only the most senior "ealdorman" process (to reduce noise).
 var allLeaders bool
 
 // controlGroupNames switches between control group name shorting and full glory.
 var controlGroupNames ControlGroupNames
 
+// ControlGroupNames defines the enumeration flag type for controlling
+// optimizing control group names for display (or not).
 type ControlGroupNames enumflag.Flag
 
 const (
+	// CgroupShortened enables optimizing the display of Docker container IDs.
 	CgroupShortened ControlGroupNames = iota
+	// CgroupComplete switches off any display optimization of control group
+	// names.
 	CgroupComplete
 )
 
+// ControlGroupNameModes specifies the mapping between the user-facing CLI flag
+// values and the program-internal flag values.
 var ControlGroupNameModes = map[ControlGroupNames][]string{
 	CgroupShortened: {"short"},
 	CgroupComplete:  {"full", "complete"},

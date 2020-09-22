@@ -11,7 +11,7 @@ tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
 testcontaineropts := --privileged --pid host
 
-.PHONY: clean coverage help install test
+.PHONY: clean coverage help install test report
 
 help:
 	@echo "available targets: clean, coverage, install, test"
@@ -35,3 +35,7 @@ test: # runs all tests in a container
 		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
 	done; \
 	echo "🎉 🎉 🎉 All tests passed"
+
+report:
+	@./scripts/goreportcard.sh
+	

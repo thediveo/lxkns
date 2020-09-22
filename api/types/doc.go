@@ -7,6 +7,23 @@ information model from/to JSON.
     * ProcessTable wraps model.ProcessTable
     * (Process wraps model.Process, but is not intended for direct consumption)
 
+Discovery Results
+
+Most lxkns API users probably want to simply marshal and unmarshal discovery
+results without any hassle. So, here we go:
+
+To marshall a given lxkns.DiscoveryResult in a service:
+
+    allns := lxkns.Discover(lxkns.FullDiscovery)
+    err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
+
+And then to unmarshall a discovery result into "allns" when consuming a
+discovery service:
+
+    disco := NewDiscoveryResult()
+    err := json.Unmarshal(jsondata, disco)
+    allns := disco.Result()
+
 Process Table
 
 Process Tables of type lxkns.ProcessTable are un/marshalled from/to JSON with
