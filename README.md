@@ -61,17 +61,33 @@ in Docker containers will show control group names in the form of `docker/<id>`,
 where the id is the usual 64 hex char string. Plain containerd container
 processes will show up with `<namespace>/<id>` control group names.
 
-## gons CLI tools
+## lxkns Tools
 
-But `lxkns` is more than "just" a Golang package. It also features CLI tools
-build on top of `lxkns` (we _do_ eat our own dog food). To install these tools:
+But `lxkns` is more than "just" a Golang package. It also features...
 
-- **system install:** simply run `make install` to install the tools into your
-  system, defaults to `/usr/local/bin`.
-- **local install:** `go install ./cmd/... ./examples/lsallns` installs only
-  into `$GOPATH/bin`.
+- **lxkns discovery service** exposing namespace discovery information via a
+  simple REST API. Of course, our service is build with, guess, `lxkns`.
+- **CLI tools** also build on top of `lxkns` (we _do_ eat our own dog food).
 
-These are the CLI tools:
+### lxkns REST Service
+
+To give the lxkns discovery servicea test drive:
+
+1. `make deploy`,
+2. and then navigate to http://localhost:5010/api/namespaces. You'll be greeted
+   with JSON soup with the discovered namespaces data. The REST API is
+   documented in form of an OpenAPI specification in
+   [api/openapi-spec/lxkns.yaml](api/openapi-spec/lxkns.yaml).
+
+### CLI Tools
+
+To build and install all CLI tools:
+- *system install:* simply run `make install` to install the tools into your
+   system, defaults to `/usr/local/bin`.
+- *local install:* `go install ./cmd/... ./examples/lsallns` installs only
+   into `$GOPATH/bin`.
+
+The tools:
 
 - `lsuns`
   [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/lsuns):
