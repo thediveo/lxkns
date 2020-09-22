@@ -100,11 +100,11 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 			defer f.Close()
 			r = f
 		}
-		dr := apitypes.NewDiscoveryResult(nil)
+		dr := apitypes.NewDiscoveryResult()
 		if err := json.NewDecoder(r).Decode(dr); err != nil {
 			return fmt.Errorf("cannot decode discovery results, %w", err)
 		}
-		result = (*lxkns.DiscoveryResult)(dr)
+		result = dr.Result()
 	} else {
 		// Run a full namespace discovery.
 		result = lxkns.Discover(lxkns.FullDiscovery)

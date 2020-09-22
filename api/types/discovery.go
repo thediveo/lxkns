@@ -65,72 +65,100 @@ func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// DiscoveryResult is the (digital) twin of an lxkns DiscoveryResult, which can
-// be marshalled and unmarshalled to and from JSON.
-type DiscoveryResult lxkns.DiscoveryResult
+// DiscoveryResult is basically the (digital) twin of an lxkns DiscoveryResult,
+// which can be marshalled and unmarshalled to and from JSON. Additionally, it
+// acts as an extensible discovery result wrapper, which allows API users to
+// freely add their own fields (with objects) to un/marshal additional result
+// fields, as they see fit.
+type DiscoveryResult struct {
+	Fields          map[string]interface{}
+	DiscoveryResult *lxkns.DiscoveryResult `json:"-"`
+}
+
+const (
+	FieldDiscoveryOptions = "discovery-options"
+	FieldNamespaces       = "namespaces"
+	FieldProcesses        = "processes"
+)
 
 // NewDiscoveryResult returns a discovery result object ready for marshalling
 // JSON into it or marshalling an existing lxkns discovery result.
-func NewDiscoveryResult(discoveryresult *lxkns.DiscoveryResult) *DiscoveryResult {
-	if discoveryresult == nil {
-		return (*DiscoveryResult)(&lxkns.DiscoveryResult{
+func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
+	dr := &DiscoveryResult{Fields: map[string]interface{}{}}
+	for _, opt := range opts {
+		opt(dr)
+	}
+	if dr.DiscoveryResult == nil {
+		dr.DiscoveryResult = &lxkns.DiscoveryResult{
 			Namespaces: *model.NewAllNamespaces(),
 			Processes:  model.ProcessTable{},
-		})
+		}
 	}
-	return (*DiscoveryResult)(discoveryresult)
+	dr.Fields[FieldDiscoveryOptions] = (*DiscoveryOptions)(&dr.DiscoveryResult.Options)
+	nsdict := NewNamespacesDict(dr.DiscoveryResult)
+	dr.Fields[FieldNamespaces] = nsdict
+	pt := NewProcessTable(
+		WithProcessTable(dr.DiscoveryResult.Processes),
+		WithNamespacesDict(nsdict))
+	dr.Fields[FieldProcesses] = &pt
+	return dr
 }
 
-// MarshalJSON emits the results of a discovery as JSON.
-func (d *DiscoveryResult) MarshalJSON() ([]byte, error) {
-	nsdict := &NamespacesDict{
-		AllNamespaces: &d.Namespaces,
-		ProcessTable: ProcessTable{
-			ProcessTable: d.Processes,
-			Namespaces:   nil,
-		},
+// FIXME:
+type NewDiscoveryResultOption func(newdiscoveryresult *DiscoveryResult)
+
+// FIXME:
+func WithResult(result *lxkns.DiscoveryResult) NewDiscoveryResultOption {
+	return func(ndr *DiscoveryResult) {
+		ndr.DiscoveryResult = result
 	}
-	nsdict.ProcessTable.Namespaces = nsdict
-	aux := struct {
-		Options    *DiscoveryOptions `json:"discovery-options"`
-		Namespaces *NamespacesDict   `json:"namespaces"`
-		Processes  *ProcessTable     `json:"processes"`
-	}{
-		Options:    (*DiscoveryOptions)(&d.Options),
-		Namespaces: nsdict,
-		Processes:  &nsdict.ProcessTable,
+}
+
+// FIXME:
+func WithElement(name string, obj interface{}) NewDiscoveryResultOption {
+	return func(ndr *DiscoveryResult) {
+		ndr.Fields[name] = obj
 	}
-	return json.Marshal(aux)
+}
+
+// FIXME:
+func (dr DiscoveryResult) Result() *lxkns.DiscoveryResult {
+	return dr.DiscoveryResult
+}
+
+// FIXME:
+func (dr DiscoveryResult) Processes() model.ProcessTable {
+	return dr.DiscoveryResult.Processes
+}
+
+// FIXME:
+func (dr DiscoveryResult) Get(name string) interface{} {
+	return dr.Fields[name]
+}
+
+// MarshalJSON marshals discovery results into their JSON textual
+// representation.
+func (dr DiscoveryResult) MarshalJSON() ([]byte, error) {
+	return json.Marshal(dr.Fields)
 }
 
 // UnmarshalJSON unmarshals discovery results from JSON into a DiscoveryResult
 // object, usually obtained with NewDiscoveryResult() first.
-func (d *DiscoveryResult) UnmarshalJSON(data []byte) error {
-	nsdict := &NamespacesDict{
-		AllNamespaces: &d.Namespaces,
-		ProcessTable: ProcessTable{
-			ProcessTable: d.Processes,
-			Namespaces:   nil,
-		},
-	}
-	nsdict.ProcessTable.Namespaces = nsdict
-	aux := struct {
-		Options    *DiscoveryOptions `json:"discovery-options"`
-		Namespaces *NamespacesDict   `json:"namespaces"`
-		Processes  *ProcessTable     `json:"processes"`
-	}{
-		Options:    (*DiscoveryOptions)(&d.Options),
-		Namespaces: nsdict,
-		Processes:  &nsdict.ProcessTable,
-	}
+func (dr *DiscoveryResult) UnmarshalJSON(data []byte) error {
+	var aux map[string]json.RawMessage
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
+	for name, field := range aux {
+		if err := json.Unmarshal(field, dr.Fields[name]); err != nil {
+			return err
+		}
+	}
 	// Prune the process table of "dangling" processes which were references
 	// but never specified.
-	for _, proc := range d.Processes {
+	for _, proc := range dr.DiscoveryResult.Processes {
 		if proc.PPID == 0 && proc.Name == "" && len(proc.Cmdline) == 0 && proc.Starttime == 0 {
-			delete(d.Processes, proc.PID)
+			delete(dr.DiscoveryResult.Processes, proc.PID)
 		}
 	}
 	return nil

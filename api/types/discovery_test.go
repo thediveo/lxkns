@@ -68,7 +68,7 @@ var _ = Describe("discovery result JSON", func() {
 	})
 
 	It("marshals the discovery options, the namespaces map and process table", func() {
-		j, err := json.Marshal(NewDiscoveryResult(allns))
+		j, err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 		Expect(err).To(Succeed())
 
 		toplevel := map[string]json.RawMessage{}
@@ -103,17 +103,18 @@ var _ = Describe("discovery result JSON", func() {
 	})
 
 	It("marshals and unmarshals a discovery results without hiccup", func() {
-		j, err := json.Marshal(NewDiscoveryResult(allns))
+		j, err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 		Expect(err).To(Succeed())
 
-		dr := NewDiscoveryResult(nil)
+		dr := NewDiscoveryResult()
 		Expect(json.Unmarshal(j, dr)).To(Succeed())
+		namespaces := dr.Result().Namespaces
 		for idx := model.NamespaceTypeIndex(0); idx < model.NamespaceTypesCount; idx++ {
-			Expect(dr.Namespaces[idx]).To(HaveLen(len(allns.Namespaces[idx])))
+			Expect(namespaces[idx]).To(HaveLen(len(allns.Namespaces[idx])))
 		}
-		Expect(dr.Processes).To(BeSameProcessTable(allns.Processes))
+		Expect(dr.Processes()).To(BeSameProcessTable(allns.Processes))
 
-		Expect(dr.Options).To(Equal(allns.Options))
+		Expect(dr.Result().Options).To(Equal(allns.Options))
 	})
 
 })

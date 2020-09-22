@@ -43,7 +43,11 @@ type ProcessTable struct {
 	Namespaces *NamespacesDict // for resolving (and priming) namespace references
 }
 
-// NewProcessTable FIXME:
+// NewProcessTable creates a new process table that can be un/marshalled from or
+// to JSON. Without any options, the process table returned can be used for
+// unmarshalling right from the start. For marshalling an existing (hopefully
+// filled) process table, use the WithProcessTable() option to specify the
+// process table to use.
 func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
 	proctable := ProcessTable{}
 	for _, opt := range opts {
@@ -62,12 +66,16 @@ func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
 // NewProcessTable().
 type NewProcessTableOption func(newproctable *ProcessTable)
 
+// WithProcessTable specifies an existing (model) process table to use for
+// marshalling.
 func WithProcessTable(proctable model.ProcessTable) NewProcessTableOption {
 	return func(npt *ProcessTable) {
 		npt.ProcessTable = proctable
 	}
 }
 
+// WithNamespacesDict specifies an existing namespaces dictionary to make use of
+// while unmarshalling the namespace references of processes in a process table.
 func WithNamespacesDict(nsdict *NamespacesDict) NewProcessTableOption {
 	return func(npt *ProcessTable) {
 		npt.Namespaces = nsdict
