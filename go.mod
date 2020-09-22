@@ -4,11 +4,13 @@ go 1.13
 
 require (
 	github.com/getkin/kin-openapi v0.22.0
+	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.7.2
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/ory/go-acc v0.2.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v1.0.0
 	github.com/thediveo/enumflag v0.10.1
 	github.com/thediveo/errxpect v0.10.1

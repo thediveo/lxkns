@@ -1,0 +1,21 @@
+version: '2.4'
+services: 
+    lxkns:
+        image: lxkns:latest
+        read_only: true
+        build: 
+            context: ../..
+            dockerfile: deployments/lxkns/Dockerfile
+        ports:
+            - "5010:5010"
+        user: "65534"
+        security_opt:
+            - apparmor:unconfined
+        cap_drop:
+            - ALL
+        cap_add:
+            - SYS_ADMIN     # change namespaces
+            - SYS_CHROOT    # change mount namespaces
+            - SYS_PTRACE    # access nsfs namespace information
+        # Essential, as we need the full PID view for correct scanning...
+        pid: host

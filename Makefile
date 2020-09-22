@@ -11,7 +11,7 @@ tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
 testcontaineropts := --privileged --pid host
 
-.PHONY: clean coverage help install test report
+.PHONY: clean coverage deploy help install test report
 
 help:
 	@echo "available targets: clean, coverage, install, test"
@@ -23,6 +23,10 @@ clean:
 
 coverage:
 	scripts/cov.sh
+
+deploy:
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 install:
 	go install -v ./cmd/... ./examples/lsallns
