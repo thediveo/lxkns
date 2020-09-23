@@ -1,15 +1,23 @@
+// Copyright 2020 Harald Albrecht.
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy
+// of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
 package main
 
 import (
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	logrus "github.com/sirupsen/logrus"
 	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns"
-	log "github.com/thediveo/lxkns/log"
 	_ "github.com/thediveo/lxkns/log/logrus"
 )
 
@@ -18,22 +26,11 @@ func main() {
 	// call to reexec.CheckAction() will automatically handle this situation
 	// and then never return when in re-execution.
 	reexec.CheckAction()
-
-	// FIXME: use unified interface?
-	logrus.SetLevel(logrus.DebugLevel)
-	log.SetLevel(log.DebugLevel)
-
-	// And now for the real meat.
-	log.Infof("this is the lxkns Linux-kernel namespaces discovery service version %s", lxkns.SemVersion)
-	log.Infof("https://github.com/thediveo/lxkns")
-	if _, err := startServer("[::]:5010"); err != nil {
-		log.Errorf("cannot start service, error: %s", err.Error())
+	// Otherwise, this is cobra boilerplate documentation, except for the
+	// missing call to fmt.Println(err) which in the original boilerplate is
+	// just plain wrong: it renders the error message twice, see also:
+	// https://github.com/spf13/cobra/issues/304
+	if err := newRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
-	stopit := make(chan os.Signal, 1)
-	signal.Notify(stopit, syscall.SIGINT)
-	signal.Notify(stopit, syscall.SIGTERM)
-	signal.Notify(stopit, syscall.SIGQUIT)
-	<-stopit
-	stopServer(15 * time.Second)
 }

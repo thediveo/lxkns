@@ -433,6 +433,8 @@ func main() {
 `make` targets:
 - `test`: builds and runs all tests inside a container; the tests are run twice,
   once as root and once as a non-root user.
+- `deploy` and `undeploy`: builds and starts, or stops, the containerized lxkns
+  discovery service.
 - `coverage`: runs a full coverage on all tests in the module, once as root,
   once as non-root, resulting in a single `coverage.html`.
 - `clean`: removes coverage files, as well as any top-level CLI tool binaries
