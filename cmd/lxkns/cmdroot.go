@@ -17,13 +17,16 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/model"
 )
 
 func lxknsservice(cmd *cobra.Command, _ []string) error {
@@ -37,6 +40,15 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	// And now for the real meat.
 	log.Infof("this is the lxkns Linux-kernel namespaces discovery service version %s", lxkns.SemVersion)
 	log.Infof("https://github.com/thediveo/lxkns")
+
+	log.Infof("running as user ID %d", os.Geteuid())
+	mycaps := strings.Join(caps.ProcessCapabilities(model.PIDType(os.Getpid())), ", ")
+	if mycaps == "" {
+		mycaps = "<none>"
+	}
+	log.Infof("with effective capabilities: %s", mycaps)
+
+	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
 	if _, err := startServer(addr); err != nil {
 		log.Errorf("cannot start service, error: %s", err.Error())

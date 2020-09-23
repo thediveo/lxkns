@@ -1,7 +1,8 @@
 // DO NOT EDIT
 // automatically generated file using "update-caplist.sh"
+// from libcap version 2.43
 
-package main
+package caps
 
 // CapNames maps the defined CAP_xxx constants to suitable capabilities names
 // in form of "cap_xxx".
@@ -44,4 +45,7 @@ var CapNames = map[int]string{
 	35: "cap_wake_alarm",
 	36: "cap_block_suspend",
 	37: "cap_audit_read",
+	38: "cap_perfmon",
+	39: "cap_bpf",
+	40: "cap_checkpoint_restore",
 }

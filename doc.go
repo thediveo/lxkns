@@ -104,10 +104,11 @@ In-Capabilities
 It is possible to run full discoveries without being root, when given the
 discovery process the following effective capabilities:
 
-  * CAP_SYS_PTRACE -- no joking here, that's what needed for reading namespace
-    references from /proc/[PID]/ns/*
-  * CAP_SYS_CHROOT -- for mount namespace switching
-  * CAP_SYS_ADMIN  -- for mount namespace switching
+  * CAP_SYS_PTRACE      -- no joking here, that's what needed for reading
+                           namespace references from /proc/[PID]/ns/*
+  * CAP_SYS_CHROOT      -- for mount namespace switching
+  * CAP_SYS_ADMIN       -- for mount namespace switching
+  * CAP_DAC_READ_SEARCH -- for reading details of bind-mounted namespaces
 
 Considering that especially CAP_SYS_PTRACE being essential there's probably not
 much difference to "just be root" in the end, unless you want show off your

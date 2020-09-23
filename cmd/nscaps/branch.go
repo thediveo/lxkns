@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	incaps "github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -82,7 +83,7 @@ func processbranch(proc *model.Process, euid int) (n node, err error) {
 		return nil, fmt.Errorf("cannot query effective UID of process PID %d",
 			proc.PID)
 	}
-	caps := ProcessCapabilities(proc.PID)
+	caps := incaps.ProcessCapabilities(proc.PID)
 	n = &nsnode{
 		ns: userns.(model.Namespace),
 		children: []node{
