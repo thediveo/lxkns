@@ -71,7 +71,8 @@ But `lxkns` is more than "just" a Golang package. It also features...
 
 ### lxkns REST Service
 
-To give the lxkns discovery servicea test drive:
+To give the containerized lxkns discovery service a test drive (needs Docker
+with docker-compose to be installed):
 
 1. `make deploy`,
 2. and then navigate to http://localhost:5010/api/namespaces. You'll be greeted
