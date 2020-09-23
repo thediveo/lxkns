@@ -27,6 +27,9 @@ import (
 )
 
 func lxknsservice(cmd *cobra.Command, _ []string) error {
+	if silent, _ := cmd.PersistentFlags().GetBool("silent"); silent {
+		log.SetLevel(log.ErrorLevel)
+	}
 	if debug, _ := cmd.PersistentFlags().GetBool("debug"); debug {
 		log.SetLevel(log.DebugLevel)
 		log.Debugf("debug logging enabled")
@@ -62,6 +65,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	}
 	// Sets up the flags.
 	rootCmd.PersistentFlags().Bool("debug", false, "enables debugging output")
+	rootCmd.PersistentFlags().Bool("silent", false, "silences everything below the error level")
 	rootCmd.PersistentFlags().String("http", "[::]:5010", "HTTP service address")
 	rootCmd.PersistentFlags().Duration("shutdown", 15*time.Second, "graceful shutdown duration limit")
 	cli.AddFlags(rootCmd)

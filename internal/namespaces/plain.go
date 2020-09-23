@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/lxkns/model"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -156,7 +156,7 @@ func (pns *PlainNamespace) SetRef(ref string) {
 // DetectOwner gets the ownering user namespace id from Linux, and stores it
 // for later resolution, after when we have a complete map of all user
 // namespaces.
-func (pns *PlainNamespace) DetectOwner(nsr r.Relation) {
+func (pns *PlainNamespace) DetectOwner(nsr relations.Relation) {
 	if nsr == nil {
 		return
 	}

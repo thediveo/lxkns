@@ -25,8 +25,8 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/nstest"
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
@@ -34,15 +34,15 @@ import (
 
 type brokenref struct{ NamespacePath }
 
-func (b *brokenref) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (b *brokenref) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	return b, func() {}, nil
 }
 
-func (b brokenref) NsFd() (int, o.FdCloser, error) {
+func (b brokenref) NsFd() (int, opener.FdCloser, error) {
 	return 0, nil, errors.New("broken reference")
 }
 
-var _ o.Opener = (*brokenref)(nil)
+var _ opener.Opener = (*brokenref)(nil)
 
 var _ = Describe("Set Namespaces", func() {
 

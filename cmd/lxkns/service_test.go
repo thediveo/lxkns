@@ -22,12 +22,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 )
 
 var baseurl string
 
 var _ = BeforeSuite(func() {
+	log.SetLevel(log.FatalLevel)
 	serveraddr, err := startServer("127.0.0.1:0")
 	Expect(err).To(Succeed())
 	baseurl = "http://" + serveraddr.String() + "/api/"

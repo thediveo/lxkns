@@ -17,8 +17,8 @@ package ops
 import (
 	"fmt"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -64,7 +64,7 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 // Parent().
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsfd NamespaceFd) User() (r.Relation, error) {
+func (nsfd NamespaceFd) User() (relations.Relation, error) {
 	userfd, err := ioctl(int(nsfd), _NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
@@ -80,7 +80,7 @@ func (nsfd NamespaceFd) User() (r.Relation, error) {
 // PID or user. For user namespaces, Parent() and User() behave identical.
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsfd NamespaceFd) Parent() (r.Relation, error) {
+func (nsfd NamespaceFd) Parent() (relations.Relation, error) {
 	fd, err := ioctl(int(nsfd), _NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
@@ -100,7 +100,7 @@ func (nsfd NamespaceFd) OwnerUID() (int, error) {
 // numbers, and returns it as a NamespaceID. This is an internal convenience
 // function to avoid duplicate code and is used also by the NamespaceFile and
 // NamespacePath reference types.
-func fdID(ref r.Relation, fd int) (species.NamespaceID, error) {
+func fdID(ref relations.Relation, fd int) (species.NamespaceID, error) {
 	var stat unix.Stat_t
 	if err := unix.Fstat(fd, &stat); err != nil {
 		return species.NoneID, newInvalidNamespaceError(ref, err)
@@ -112,7 +112,7 @@ func fdID(ref r.Relation, fd int) (species.NamespaceID, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsfd NamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsfd NamespaceFd) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
 		return nil, nil, newNamespaceOperationError(nsfd, "NS_GET_NSTYPE", err)
@@ -128,17 +128,17 @@ func (nsfd NamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, err
 // Please note that in case of a NamespaceFd reference, this returns the
 // original open file descriptor (and doesn't make a copy of it). Aliasing a
 // file descriptor into a NamespaceFd does not take ownership, so control of the
-// lifetime of the aliased file descriptor is still up to its original creator.
+// lifetime of the aliased file descriptor is still up to its original creatorelations.
 // In consequence, the closer returned for a namespace file descriptor will
 // leave the original file descriptor untouched.
-func (nsfd NamespaceFd) NsFd() (fd int, closer o.FdCloser, err error) {
+func (nsfd NamespaceFd) NsFd() (fd int, closer opener.FdCloser, err error) {
 	return int(nsfd), func() {}, nil
 }
 
 // Ensures that NamespaceFd implements the Relation interface.
-var _ r.Relation = (*NamespaceFd)(nil)
+var _ relations.Relation = (*NamespaceFd)(nil)
 
 // Make also sure that we've fully implemented the Opener interface. Golang
 // would really be great if at the same time it could ensure that we've also had
 // it implemented *correctly* :p
-var _ o.Opener = (*NamespaceFd)(nil)
+var _ opener.Opener = (*NamespaceFd)(nil)

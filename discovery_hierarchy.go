@@ -35,7 +35,6 @@ import (
 	"os"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
-	nsp "github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -95,7 +94,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			// UID, as we just happen to have a useful fd referencing the
 			// namespace open anyway.
 			if nstype == species.CLONE_NEWUSER {
-				ns.(*nsp.UserNamespace).DetectUID(nsf)
+				ns.(*namespaces.UserNamespace).DetectUID(nsf)
 			}
 			// See if there is a parent of this namespace at all, or whether
 			// we've reached the end of the road. Normally, this should be the
@@ -139,7 +138,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			}
 			// Now insert the current namespace as a child of its parent in
 			// the hierarchy, and then prepare for the next rung...
-			parentns.(nsp.HierarchyConfigurer).AddChild(ns.(model.Hierarchy))
+			parentns.(namespaces.HierarchyConfigurer).AddChild(ns.(model.Hierarchy))
 			ns = parentns
 			nsf.(io.Closer).Close()
 			nsf = parentnsf

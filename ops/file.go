@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"os"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -48,7 +48,7 @@ func NewNamespaceFile(f *os.File, err error) (*NamespaceFile, error) {
 
 // Internal convenience helper that takes a file descriptor and an error,
 // returning a NamespaceFile reference if there is no error.
-func namespaceFileFromFd(ref r.Relation, fd uint, err error) (*NamespaceFile, error) {
+func namespaceFileFromFd(ref relations.Relation, fd uint, err error) (*NamespaceFile, error) {
 	if err != nil {
 		return nil, newInvalidNamespaceError(ref, err)
 	}
@@ -101,7 +101,7 @@ func (nsf NamespaceFile) ID() (species.NamespaceID, error) {
 // reference. For user namespaces, User() behaves identical to Parent().
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsf NamespaceFile) User() (r.Relation, error) {
+func (nsf NamespaceFile) User() (relations.Relation, error) {
 	userfd, err := ioctl(int(nsf.Fd()), _NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
@@ -117,7 +117,7 @@ func (nsf NamespaceFile) User() (r.Relation, error) {
 // identical.
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsf NamespaceFile) Parent() (r.Relation, error) {
+func (nsf NamespaceFile) Parent() (relations.Relation, error) {
 	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
@@ -137,7 +137,7 @@ func (nsf NamespaceFile) OwnerUID() (int, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsf NamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsf NamespaceFile) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	openref, err := NewTypedNamespaceFile(&nsf.File, 0)
 	if err != nil {
 		return nil, nil, err
@@ -156,12 +156,12 @@ func (nsf NamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceCloser, er
 // ⚠️ The caller must make sure that the namespace reference object doesn't get
 // prematurely garbage collected, while the file descriptor returned by NsFd()
 // is still in use.
-func (nsf NamespaceFile) NsFd() (int, o.FdCloser, error) {
+func (nsf NamespaceFile) NsFd() (int, opener.FdCloser, error) {
 	return int(nsf.Fd()), func() {}, nil
 }
 
 // Ensures that NamespaceFile implements the Relation interface.
-var _ r.Relation = (*NamespaceFile)(nil)
+var _ relations.Relation = (*NamespaceFile)(nil)
 
 // Ensures that NamespaceFile also implements the Opener interface.
-var _ o.Opener = (*NamespaceFile)(nil)
+var _ opener.Opener = (*NamespaceFile)(nil)

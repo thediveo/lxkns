@@ -28,7 +28,6 @@ import (
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns/internal/namespaces"
-	nsp "github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -85,7 +84,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 				// results.
 				ns = namespaces.New(bmntns.Type, bmntns.ID, "")
 				result.Namespaces[typeidx][bmntns.ID] = ns
-				ns.(nsp.NamespaceConfigurer).SetRef(bmntns.Path)
+				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Path)
 				log.Debugf("found namespace %s:[%d] bind-mounted at %q",
 					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path)
 				total++
@@ -93,7 +92,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
 			if bmntns.Type != species.CLONE_NEWUSER && bmntns.OwnernsID != species.NoneID {
-				ns.(nsp.NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
+				ns.(namespaces.NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
 			}
 		}
 	}

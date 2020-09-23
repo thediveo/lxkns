@@ -20,7 +20,7 @@
 // supporting Linux kernels 4.9 and 4.10 which lack the type ioctl().
 package opener
 
-import r "github.com/thediveo/lxkns/ops/relations"
+import "github.com/thediveo/lxkns/ops/relations"
 
 // Opener is a module-internal interface to namespace references, to get file
 // descriptor references to namespaces regardless of the particular type of
@@ -35,7 +35,7 @@ type Opener interface {
 	// then the caller must make sure to call the returned ReferenceCloser
 	// function in order to properly release process resources after the open
 	// namespace reference isn't needed anymore.
-	OpenTypedReference() (r.Relation, ReferenceCloser, error)
+	OpenTypedReference() (relations.Relation, ReferenceCloser, error)
 
 	// NsFd returns a file descriptor referencing the namespace indicated in a
 	// namespace reference implementing the Opener interface. After the caller

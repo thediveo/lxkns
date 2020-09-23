@@ -17,8 +17,8 @@ package ops
 import (
 	"fmt"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -75,12 +75,12 @@ func (nsfd TypedNamespaceFd) Type() (species.NamespaceType, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsfd *TypedNamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsfd *TypedNamespaceFd) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	return nsfd, func() {}, nil
 }
 
 // Ensures that TypedNamespaceFd implements the Relation interface.
-var _ r.Relation = (*TypedNamespaceFd)(nil)
+var _ relations.Relation = (*TypedNamespaceFd)(nil)
 
 // Ensures that we've fully implemented the Opener interface.
-var _ o.Opener = (*TypedNamespaceFd)(nil)
+var _ opener.Opener = (*TypedNamespaceFd)(nil)
