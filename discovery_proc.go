@@ -34,6 +34,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 )
@@ -44,10 +47,13 @@ import (
 // discovery functions.
 func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipProcs {
+		log.Infof("skipping discovery of %s namespaces used by processes", nstype.Name())
 		return
 	}
+	log.Debugf("discovering %s namespaces used by processes...", nstype.Name())
+	total := 0
 	nstypename := nstype.Name()
-	nstypeidx := TypeIndex(nstype)
+	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	// For all processes (but not tasks/threads) listed in /proc try to gather
 	// the namespaces of a given type they use.
@@ -83,8 +89,10 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			// leader process, and not of some child process deep down the
 			// hierarchy, which might not even live for long (as sad as this
 			// might be).
-			ns = NewNamespace(nstype, nsid, "")
+			ns = namespaces.New(nstype, nsid, "")
 			nsmap[nsid] = ns
+			log.Debugf("found namespace %s", ns.(model.NamespaceStringer).TypeIDString())
+			total++
 		}
 		// To speed up finding the process leaders in a specific namespace, we
 		// remember this namespace as joined by the process we're just looking
@@ -98,7 +106,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		// treat ownership differently for non-user namespaces versus user
 		// namespaces all the time. Thus, sorry, no user namespaces here.
 		if !result.Options.SkipOwnership && nstype != species.CLONE_NEWUSER {
-			ns.(NamespaceConfigurer).DetectOwner(nsf)
+			ns.(namespaces.NamespaceConfigurer).DetectOwner(nsf)
 		}
 		// Don't leak... And no, defer won't help us here.
 		nsf.Close()
@@ -114,7 +122,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			// Time namespaces are new since kernel 5.6, so many
 			// deployments won't have a kernel which supports them. Don't
 			// prune then, as we would end up with an empty process table :(
-			if nstypeidx != TimeNS {
+			if nstypeidx != model.TimeNS {
 				delete(result.Processes, pid)
 			}
 			continue
@@ -129,14 +137,16 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			p = parentp
 			parentp = p.Parent
 		}
-		p.Namespaces[nstypeidx].(NamespaceConfigurer).AddLeader(p)
+		p.Namespaces[nstypeidx].(namespaces.NamespaceConfigurer).AddLeader(p)
 	}
-	// Try to set namespace references which we hope to be as longlived as
-	// possible; so we use one of the leader processes.
+	// Try to set namespace references which we hope to be as long-lived as
+	// possible; so we prefer the most senior leader process: the ealdorman.
 	for _, ns := range nsmap {
-		if leaders := ns.Leaders(); len(leaders) > 0 {
-			ns.(NamespaceConfigurer).SetRef(
-				fmt.Sprintf("/proc/%d/ns/%s", leaders[0].PID, nstypename))
+		if senior := ns.Ealdorman(); senior != nil {
+			ns.(namespaces.NamespaceConfigurer).SetRef(
+				fmt.Sprintf("/proc/%d/ns/%s", senior.PID, nstypename))
 		}
 	}
+
+	log.Infof("found %d %s namespaces joined by processes", total, nstype.Name())
 }

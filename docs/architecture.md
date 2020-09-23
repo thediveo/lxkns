@@ -10,6 +10,8 @@ From an API user's perspective, there are the following "main" relevant
 packages:
 
 - `lxkns`: namespace discovery and PID translation.
+- `lxkns/model`: defines the core information model of namespaces and
+  processes, with their relationships.
 - `lxkns/species`: supplies kernel-related namespace type and textual
   representation definitions and convenience functions.
 - `lxkns/ops`: offers a Go-ish API to the kernel ioctl() API for discovering
@@ -23,6 +25,8 @@ Auxiliary packages:
   and `pidtree` commands. These namespace CLI tools simultaneously serve as
   more complex real-world examples.
 - `lxkns/examples`: examples illustrating the `lxkns` API usage.
+- `lxkns/internal/namespaces`: contains the implementation of the various
+  namespace-related interfaces from `lxkns/model`.
 
 ## Discovering Namespaces
 
@@ -195,7 +199,7 @@ child namespaces thereof.
 
 ## Linux Namespace Representation in lxkns
 
-`lxkns` represents the namespace concepts we've just learned in form of four
+`lxkns.model` represents the namespace concepts we've just learned in form of four
 interfaces, each interface grouping related aspects of namespaces. Please note
 that not all types of namespaces offer all interfaces. That is, only
 hierarchical “PID” and “user” namespaces offer the `Hierarchy` interface, and

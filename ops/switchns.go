@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"runtime"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"golang.org/x/sys/unix"
 )
 
@@ -34,7 +34,7 @@ import (
 // succeeded, else an error. Please note that Go() returns as soon as switching
 // namespaces has finished. The specified function is then run in its own Go
 // routine.
-func Go(f func(), nsrefs ...r.Relation) error {
+func Go(f func(), nsrefs ...relations.Relation) error {
 	started := make(chan error)
 	go func() {
 		// Lock, but never unlock the OS thread exclusively powering our Go
@@ -53,7 +53,7 @@ func Go(f func(), nsrefs ...r.Relation) error {
 			// slice elements and thus its os.Files (if any) alive. In
 			// consequence, we don't need an explicit runtime.KeepAlive(...)
 			// here.
-			fd, closer, err := nsref.(o.Opener).NsFd()
+			fd, closer, err := nsref.(opener.Opener).NsFd()
 			if err != nil {
 				started <- fmt.Errorf("lxkns.Go: cannot reference namespace, %w", err)
 				return // ex-terminate ;)
@@ -81,7 +81,7 @@ func Go(f func(), nsrefs ...r.Relation) error {
 // Execute a function synchronously while switched into the specified
 // namespaces, then returns the interface{} outcome of calling the specified
 // function. If switching fails, Execute returns an error instead.
-func Execute(f func() interface{}, nsrefs ...r.Relation) (interface{}, error) {
+func Execute(f func() interface{}, nsrefs ...relations.Relation) (interface{}, error) {
 	result := make(chan interface{})
 	if err := Go(func() {
 		result <- f()
@@ -108,7 +108,7 @@ func Execute(f func() interface{}, nsrefs ...r.Relation) (interface{}, error) {
 // Visit() should never be called from the main Go routine, as any failure in
 // switching namespaces leaves us with a tainted OS thread for the main Go
 // routine. Yuk!
-func Visit(f func(), nsrefs ...r.Relation) (err error) {
+func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 	runtime.LockOSThread()
 	tid := unix.Gettid()
 	// Keep record of the namespaces we are leaving, so we can switch back
@@ -150,18 +150,18 @@ func Visit(f func(), nsrefs ...r.Relation) (err error) {
 		// Use the optimization which opens a typed namespace for us, so we get
 		// not only an OS-level file descriptor for referencing the namespace,
 		// but also its (optionally foretold) type.
-		var openref r.Relation
-		var refcloser o.ReferenceCloser
+		var openref relations.Relation
+		var refcloser opener.ReferenceCloser
 		// no ":=", don't shadow err!
-		openref, refcloser, err = nsref.(o.Opener).OpenTypedReference()
+		openref, refcloser, err = nsref.(opener.Opener).OpenTypedReference()
 		if err != nil {
 			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
 			return // ...unwind entangled namespaces
 		}
 		var fd int
-		var fdcloser o.FdCloser
+		var fdcloser opener.FdCloser
 		// no ":=", don't shadow err!
-		fd, fdcloser, err = openref.(o.Opener).NsFd()
+		fd, fdcloser, err = openref.(opener.Opener).NsFd()
 		if err != nil {
 			refcloser()
 			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
@@ -178,7 +178,7 @@ func Visit(f func(), nsrefs ...r.Relation) (err error) {
 		}
 		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstype.Name()))
 		var oldfd int
-		var oldfdcloser o.FdCloser
+		var oldfdcloser opener.FdCloser
 		oldfd, oldfdcloser, err = oldnsref.NsFd()
 		if err != nil {
 			fdcloser()
@@ -211,7 +211,7 @@ func Visit(f func(), nsrefs ...r.Relation) (err error) {
 
 // origNS stores information for switching back to a namespace and cleaning up.
 type origNS struct {
-	nsref  r.Relation // keeps the original namespace ref from getting gc'ed.
-	fd     int        // open fd referencing the original namespace.
-	closer o.FdCloser // don't leak fds; this knows how to act correctly.
+	nsref  relations.Relation // keeps the original namespace ref from getting gc'ed.
+	fd     int                // open fd referencing the original namespace.
+	closer opener.FdCloser    // don't leak fds; this knows how to act correctly.
 }

@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -49,7 +49,7 @@ const (
 // non-user namespace node cannot have children. A namespace node can act as a
 // target namespace.
 type nsnode struct {
-	ns         lxkns.Namespace
+	ns         model.Namespace
 	istarget   bool
 	targetcaps targetcaps
 	children   []node
@@ -60,7 +60,7 @@ func (n nsnode) Children() []node { return n.children }
 // processnode represents the "reference" process whose capabilities are to be
 // evaluated in a target namespace. A processnode always terminates a branch.
 type processnode struct {
-	proc *lxkns.Process
+	proc *model.Process
 	euid int
 	caps []string
 }
@@ -70,10 +70,10 @@ func (p processnode) Children() []node { return []node{} }
 // processbranch returns the branch from the initial user namespace down to the
 // user namespace containing the specified process. So, the process branch
 // completely consists of namespace nodes with a final process node.
-func processbranch(proc *lxkns.Process, euid int) (n node, err error) {
+func processbranch(proc *model.Process, euid int) (n node, err error) {
 	// Branch always ends in a user namespace node with a process node as its
 	// sole child.
-	userns, ok := proc.Namespaces[lxkns.UserNS].(lxkns.Ownership)
+	userns, ok := proc.Namespaces[model.UserNS].(model.Ownership)
 	if !ok { // actually, this means that the user namespace is really nil
 		return nil, fmt.Errorf(
 			"cannot access namespace information of process PID %d", proc.PID)
@@ -84,7 +84,7 @@ func processbranch(proc *lxkns.Process, euid int) (n node, err error) {
 	}
 	caps := ProcessCapabilities(proc.PID)
 	n = &nsnode{
-		ns: userns.(lxkns.Namespace),
+		ns: userns.(model.Namespace),
 		children: []node{
 			&processnode{
 				proc: proc,
@@ -96,10 +96,10 @@ func processbranch(proc *lxkns.Process, euid int) (n node, err error) {
 	// Now climb up the user namespace hierarchy, completing the branch
 	// "upwards" towards the root. Each parent user namespace has a sole child,
 	// its child user namespace.
-	for userns.(lxkns.Hierarchy).Parent() != nil {
-		userns = userns.(lxkns.Hierarchy).Parent().(lxkns.Ownership)
+	for userns.(model.Hierarchy).Parent() != nil {
+		userns = userns.(model.Hierarchy).Parent().(model.Ownership)
 		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
+			ns: userns.(model.Namespace),
 			children: []node{
 				n,
 			},
@@ -114,15 +114,15 @@ func processbranch(proc *lxkns.Process, euid int) (n node, err error) {
 // ends in a non-user namespace node, again with istarget set. So, a target
 // branch always consists only of namespace nodes, with the final one having its
 // istarget flag set. All nodes, except maybe for the last, are user namespaces.
-func targetbranch(tns lxkns.Namespace, tcaps targetcaps) (n node) {
-	var userns lxkns.Ownership
+func targetbranch(tns model.Namespace, tcaps targetcaps) (n node) {
+	var userns model.Ownership
 	if tns.Type() == species.CLONE_NEWUSER {
 		// Please note that the lxkns namespace model on purpose does not set
 		// the owner relationship on user namespaces: that's the parent
 		// relationship instead.
-		userns = tns.(lxkns.Ownership)
+		userns = tns.(model.Ownership)
 		n = &nsnode{
-			ns:         userns.(lxkns.Namespace),
+			ns:         userns.(model.Namespace),
 			istarget:   true,
 			targetcaps: tcaps,
 		}
@@ -131,7 +131,7 @@ func targetbranch(tns lxkns.Namespace, tcaps targetcaps) (n node) {
 		// in the lxkns information model.
 		userns = tns.Owner()
 		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
+			ns: userns.(model.Namespace),
 			children: []node{
 				&nsnode{
 					ns:         tns,
@@ -144,10 +144,10 @@ func targetbranch(tns lxkns.Namespace, tcaps targetcaps) (n node) {
 	// Now climb up the user namespace hierarchy, completing the branch
 	// "upwards" towards the root. Each parent user namespace has a sole child,
 	// its child user namespace.
-	for userns.(lxkns.Hierarchy).Parent() != nil {
-		userns = userns.(lxkns.Hierarchy).Parent().(lxkns.Ownership)
+	for userns.(model.Hierarchy).Parent() != nil {
+		userns = userns.(model.Hierarchy).Parent().(model.Ownership)
 		n = &nsnode{
-			ns: userns.(lxkns.Namespace),
+			ns: userns.(model.Namespace),
 			children: []node{
 				n,
 			},
@@ -230,27 +230,27 @@ func combine(pbr node, tbr node) (root node) {
 // caps decides based on the specific process and target namespace if the
 // process has no capabilities, its effective capabilities, or full capabilities
 // (subject to Linux security modules).
-func caps(proc *lxkns.Process, tns lxkns.Namespace) (tcaps targetcaps, euid int, err error) {
+func caps(proc *model.Process, tns model.Namespace) (tcaps targetcaps, euid int, err error) {
 	// Get the user namespace the process is currently joined to. Since we're
 	// later to climb the ladder, we're more interested in hierarchy than
 	// ownership, just as people often behave. Another case where the things we
 	// create very much look the same as we do.
-	procuserns, ok := proc.Namespaces[lxkns.UserNS].(lxkns.Hierarchy)
+	procuserns, ok := proc.Namespaces[model.UserNS].(model.Hierarchy)
 	if !ok {
 		return incapable, -1, fmt.Errorf(
 			"cannot access namespace information of process PID %d", proc.PID)
 	}
 	// Get the user namespace owning the target namespace ... unless the target
 	// namespace is a user namespace: then we use the target user namespace itself.
-	var targetuserns lxkns.Hierarchy
+	var targetuserns model.Hierarchy
 	if tns.Type() == species.CLONE_NEWUSER {
-		targetuserns = tns.(lxkns.Hierarchy)
+		targetuserns = tns.(model.Hierarchy)
 	} else {
-		targetuserns, ok = tns.Owner().(lxkns.Hierarchy)
+		targetuserns, ok = tns.Owner().(model.Hierarchy)
 		if !ok {
 			return incapable, -1, fmt.Errorf(
 				"cannot access owning user namespace information of target namespace %s",
-				tns.(lxkns.NamespaceStringer).TypeIDString())
+				tns.(model.NamespaceStringer).TypeIDString())
 		}
 	}
 	euid = processEuid(proc)
@@ -273,7 +273,7 @@ func caps(proc *lxkns.Process, tns lxkns.Namespace) (tcaps targetcaps, euid int,
 	// now climb up the user namespace hierarchy above the target's user
 	// namespace, checking if we find the process' user namespace.
 	userns := targetuserns
-	childuserns := lxkns.Hierarchy(nil)
+	childuserns := model.Hierarchy(nil)
 	for {
 		if userns == procuserns {
 			break
@@ -297,7 +297,7 @@ func caps(proc *lxkns.Process, tns lxkns.Namespace) (tcaps targetcaps, euid int,
 	// namespace. By virtue of the previous rule, this means that the process
 	// has all capabilities in all further removed descendant user namespaces as
 	// well."
-	if euid == childuserns.(lxkns.Ownership).UID() {
+	if euid == childuserns.(model.Ownership).UID() {
 		return allcaps, euid, nil
 	}
 	// Rule #2, but not rule #3: target's user namespace below process, but
@@ -309,7 +309,7 @@ func caps(proc *lxkns.Process, tns lxkns.Namespace) (tcaps targetcaps, euid int,
 // processEuid returns the effective UID of the specified process (as opposed to
 // os.Geteuid which gets the effective UID of the current process). Returns -1
 // in case the effective UID cannot be determined.
-func processEuid(proc *lxkns.Process) int {
+func processEuid(proc *model.Process) int {
 	f, err := os.Open(fmt.Sprintf("/proc/%d/status", proc.PID))
 	if err != nil {
 		return -1

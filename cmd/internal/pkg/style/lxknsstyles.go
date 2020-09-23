@@ -36,9 +36,10 @@ var (
 	UserEffCapsStyle  Style // user: namespaces with effective capabilities
 	UserFullCapsStyle Style // user: namespaces with full capabilities
 
-	OwnerStyle   Style // styles owner username and UID
-	ProcessStyle Style // styles process names
-	UnknownStyle Style // styles undetermined elements, such as unknown PIDs.
+	OwnerStyle        Style // styles owner username and UID
+	ProcessStyle      Style // styles process names
+	ControlGroupStyle Style // control group names/references
+	UnknownStyle      Style // styles undetermined elements, such as unknown PIDs.
 )
 
 // Styles maps style configuration top-level element names to their
@@ -57,7 +58,8 @@ var Styles = map[string]*Style{
 	"user-effcaps":  &UserEffCapsStyle,
 	"user-fullcaps": &UserFullCapsStyle,
 
-	"owner":   &OwnerStyle,
-	"process": &ProcessStyle,
-	"unknown": &UnknownStyle,
+	"owner":        &OwnerStyle,
+	"process":      &ProcessStyle,
+	"controlgroup": &ControlGroupStyle,
+	"unknown":      &UnknownStyle,
 }

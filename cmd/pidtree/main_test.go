@@ -21,8 +21,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -33,7 +33,7 @@ var _ = Describe("renders PID trees and branches", func() {
 	var scripts testbasher.Basher
 	var cmd *testbasher.TestCommand
 	var pidnsid species.NamespaceID
-	var initpid, leafpid lxkns.PIDType
+	var initpid, leafpid model.PIDType
 
 	BeforeEach(func() {
 		cmd = nil
@@ -49,9 +49,9 @@ echo "$$"
 (echo $BASHPID && read)
 `)
 		cmd = scripts.Start("main")
-		cmd.Decode(&pidnsid)
+		pidnsid = nstest.CmdDecodeNSId(cmd)
 		cmd.Decode(&initpid)
-		Expect(initpid).To(Equal(lxkns.PIDType(1)))
+		Expect(initpid).To(Equal(model.PIDType(1)))
 		cmd.Decode(&leafpid)
 	})
 
@@ -69,18 +69,18 @@ echo "$$"
 		rootCmd.SetArgs([]string{})
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
-(?m)^[│ ]+└─ "unshare" \(\d+\)
+(?m)^[│ ]+└─ "unshare" \(\d+\).*
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
-[│ ]+└─ "stage2.sh" \(\d+/1\)
-[│ ]+└─ "stage2.sh" \(\d+/%d\)$`,
+[│ ]+└─ "stage2.sh" \(\d+/1\).*
+[│ ]+└─ "stage2.sh" \(\d+/%d\).*$`,
 			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
 	It("CLI renders only a branch", func() {
 		out := bytes.Buffer{}
-		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NoneID)).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, lxkns.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NoneID)).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(initpid), species.NamespaceIDfromInode(123))).To(HaveOccurred())
+		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino))).To(HaveOccurred())
 
 		for _, run := range []struct {
 			ns  string
@@ -92,7 +92,7 @@ echo "$$"
 				m:  Not(HaveOccurred()),
 				res: MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
-\ +└─ "stage2.sh" \(\d+/1\)
+\ +└─ "stage2.sh" \(\d+/1\).*
 $`,
 					pidnsid.Ino, os.Geteuid())),
 			},

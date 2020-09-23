@@ -3,7 +3,7 @@ package output
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -23,7 +23,7 @@ var NamespaceTypeIcons = map[species.NamespaceType]string{
 // for the specified namespace. If showing namespace icons is disabled, then an
 // empty string is always returned instead. If necessary, the returned string
 // contains padding.
-func NamespaceIcon(ns lxkns.Namespace) (icon string) {
+func NamespaceIcon(ns model.Namespace) (icon string) {
 	if showNamespaceIcons {
 		icon = NamespaceTypeIcons[ns.Type()] + " "
 	}

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+echo "starting tests... 🦗 🦗 🦗"
+echo "PHASE I: as non-root user 😶"
+su luser -c "echo building... && go test -i -v && echo 🔨🔨🔨 testing... && go test -v ./..."
+echo "PHASE II: as root 🤪"
+echo building... && go test -i -v && echo 🔨🔨🔨 testing... && go test -v ./...

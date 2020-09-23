@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"os"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -33,18 +33,18 @@ type TypedNamespaceFile struct {
 	nstype species.NamespaceType // foreknown type of Linux kernel namespace
 }
 
-// NewTypedNamespaceFile, given an open(!) os.File and the type of namespace
-// referenced, returns a new typed namespace reference object. If the namespace
-// type is left zero, then this convenience helper will auto-detect it, unless
-// when on a pre-4.11 kernel, where auto-detection is impossible due to the
-// missing specific ioctl().
+// NewTypedNamespaceFile takes an open(!) os.File plus the type of namespace
+// referenced and returns a new typed namespace reference object. If the
+// namespace type is left zero, then this convenience helper will auto-detect
+// it, unless when on a pre-4.11 kernel, where auto-detection is impossible
+// due to the missing specific ioctl().
 func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedNamespaceFile, error) {
 	if f != nil && nstype == 0 {
-		if t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE); err != nil {
+		t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE)
+		if err != nil {
 			return nil, newNamespaceOperationError(&NamespaceFile{*f}, "NS_GET_NSTYPE", err)
-		} else {
-			nstype = species.NamespaceType(t)
 		}
+		nstype = species.NamespaceType(t)
 	}
 	return &TypedNamespaceFile{
 		NamespaceFile: NamespaceFile{*f},
@@ -59,7 +59,7 @@ func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedName
 // particular. If there was an error instead, then this convenience functions
 // returns a suitable namespace-related error, additionally wrapping the
 // underlying OS-level error.
-func typedNamespaceFileFromFd(ref r.Relation, op string, fd uint, nstype species.NamespaceType, err error) (*TypedNamespaceFile, error) {
+func typedNamespaceFileFromFd(ref relations.Relation, op string, fd uint, nstype species.NamespaceType, err error) (*TypedNamespaceFile, error) {
 	if err != nil {
 		if op != "" {
 			return nil, newNamespaceOperationError(ref, op, err)
@@ -91,7 +91,7 @@ func (nsf TypedNamespaceFile) Type() (species.NamespaceType, error) {
 // identical.
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsf TypedNamespaceFile) Parent() (r.Relation, error) {
+func (nsf TypedNamespaceFile) Parent() (relations.Relation, error) {
 	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
 	// typed parent namespace reference object.
@@ -103,7 +103,7 @@ func (nsf TypedNamespaceFile) Parent() (r.Relation, error) {
 // is internally used to allow optimizing switching namespaces under the
 // condition that additionally the type of namespace needs to be known at the
 // same time.
-func (nsf TypedNamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsf TypedNamespaceFile) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	return nsf, func() {}, nil
 }
 
@@ -118,7 +118,7 @@ func (nsf TypedNamespaceFile) OpenTypedReference() (r.Relation, o.ReferenceClose
 // ⚠️ The caller must make sure that the namespace reference object doesn't get
 // prematurely garbage collected, while the file descriptor returned by NsFd()
 // is still in use.
-func (nsf TypedNamespaceFile) NsFd() (int, o.FdCloser, error) {
+func (nsf TypedNamespaceFile) NsFd() (int, opener.FdCloser, error) {
 	return int(nsf.Fd()), func() {}, nil
 }
 
@@ -126,7 +126,7 @@ func (nsf TypedNamespaceFile) NsFd() (int, o.FdCloser, error) {
 // "syntactic sugar" from Golang's compiler, so no need to rehash it here.
 
 // Ensures that TypedNamespaceFile implements the Relation interface.
-var _ r.Relation = (*TypedNamespaceFile)(nil)
+var _ relations.Relation = (*TypedNamespaceFile)(nil)
 
 // Ensures that we've fully implemented the Opener interface.
-var _ o.Opener = (*TypedNamespaceFile)(nil)
+var _ opener.Opener = (*TypedNamespaceFile)(nil)

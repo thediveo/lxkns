@@ -19,7 +19,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -37,21 +38,21 @@ var _ = Describe("(in)capability", func() {
 
 	It("get euid for arbitrary process", func() {
 		euid := os.Geteuid()
-		Expect(processEuid(&lxkns.Process{PID: lxkns.PIDType(os.Getpid())})).To(Equal(euid))
+		Expect(processEuid(&model.Process{PID: model.PIDType(os.Getpid())})).To(Equal(euid))
 	})
 
 	It("fails correctly", func() {
-		_, _, err := caps(&lxkns.Process{PID: 1}, nil)
+		_, _, err := caps(&model.Process{PID: 1}, nil)
 		Expect(err).To(HaveOccurred())
-		_, _, err = caps(allns.Processes[lxkns.PIDType(os.Getpid())],
-			lxkns.NewNamespace(species.CLONE_NEWNET, species.NoneID, ""))
+		_, _, err = caps(allns.Processes[model.PIDType(os.Getpid())],
+			namespaces.New(species.CLONE_NEWNET, species.NoneID, ""))
 		Expect(err).To(HaveOccurred())
 	})
 
 	It("rule #1: process inside target's user namespace", func() {
 		tcaps, euid, err := caps(
 			allns.Processes[tpid],
-			allns.Namespaces[lxkns.UserNS][tuserid])
+			allns.Namespaces[model.UserNS][tuserid])
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tcaps).To(Equal(effcaps))
 		Expect(euid).To(Equal(processEuid(allns.Processes[tpid])))
@@ -61,15 +62,15 @@ var _ = Describe("(in)capability", func() {
 	It("missed rule #2: process inside target's sibling user namespace", func() {
 		tcaps, _, err := caps(
 			allns.Processes[procpid],
-			allns.Namespaces[lxkns.NetNS][tnsid])
+			allns.Namespaces[model.NetNS][tnsid])
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tcaps).To(Equal(incapable))
 	})
 
 	It("rules #2+#3: this process outside target's user namespace hierarchy", func() {
 		tcaps, euid, err := caps(
-			allns.Processes[lxkns.PIDType(os.Getpid())],
-			allns.Namespaces[lxkns.NetNS][tnsid])
+			allns.Processes[model.PIDType(os.Getpid())],
+			allns.Namespaces[model.NetNS][tnsid])
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tcaps).To(Equal(allcaps))
 		Expect(euid).To(Equal(os.Geteuid()))
@@ -80,10 +81,10 @@ var _ = Describe("(in)capability", func() {
 			Skip("only non-root")
 		}
 		// need to fake this in case we're not ro(o)t.
-		fakeinit := &lxkns.Process{PID: 1}
-		fakeinit.Namespaces[lxkns.UserNS] =
-			allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.UserNS]
-		tcaps, _, err := caps(fakeinit, allns.Namespaces[lxkns.NetNS][tnsid])
+		fakeinit := &model.Process{PID: 1}
+		fakeinit.Namespaces[model.UserNS] =
+			allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.UserNS]
+		tcaps, _, err := caps(fakeinit, allns.Namespaces[model.NetNS][tnsid])
 		Expect(err).ToNot(HaveOccurred())
 		Expect(tcaps).To(Equal(effcaps))
 	})
@@ -93,7 +94,7 @@ var _ = Describe("(in)capability", func() {
 var _ = Describe("branches and forks", func() {
 
 	It("creates process branch", func() {
-		_, err := processbranch(&lxkns.Process{PID: -1}, 0)
+		_, err := processbranch(&model.Process{PID: -1}, 0)
 		Expect(err).To(HaveOccurred())
 
 		euid := os.Getegid()
@@ -106,7 +107,7 @@ var _ = Describe("branches and forks", func() {
 	})
 
 	It("creates target branch for user namespace", func() {
-		tbr := targetbranch(allns.Namespaces[lxkns.UserNS][tuserid], effcaps)
+		tbr := targetbranch(allns.Namespaces[model.UserNS][tuserid], effcaps)
 		Expect(tbr).ToNot(BeNil())
 		l := last(tbr)
 		Expect(l).To(BeAssignableToTypeOf(&nsnode{}))
@@ -116,7 +117,7 @@ var _ = Describe("branches and forks", func() {
 	})
 
 	It("creates target branch for non-user namespace", func() {
-		tbr := targetbranch(allns.Namespaces[lxkns.NetNS][tnsid], incapable)
+		tbr := targetbranch(allns.Namespaces[model.NetNS][tnsid], incapable)
 		Expect(tbr).ToNot(BeNil())
 		l := last(tbr)
 		Expect(l).To(BeAssignableToTypeOf(&nsnode{}))
@@ -127,9 +128,9 @@ var _ = Describe("branches and forks", func() {
 	Describe("combines branches", func() {
 
 		It("process outside target hierarchy", func() {
-			procbr, err := processbranch(allns.Processes[lxkns.PIDType(os.Getpid())], 0)
+			procbr, err := processbranch(allns.Processes[model.PIDType(os.Getpid())], 0)
 			Expect(err).ToNot(HaveOccurred())
-			tbr := targetbranch(allns.Namespaces[lxkns.NetNS][tnsid], incapable)
+			tbr := targetbranch(allns.Namespaces[model.NetNS][tnsid], incapable)
 			root := combine(procbr, tbr)
 			Expect(root).NotTo(BeNil())
 			Expect(root.Children()).To(HaveLen(2))
@@ -141,7 +142,7 @@ var _ = Describe("branches and forks", func() {
 		It("process inside target hierarchy", func() {
 			procbr, err := processbranch(allns.Processes[tpid].Parent, 0)
 			Expect(err).ToNot(HaveOccurred())
-			tbr := targetbranch(allns.Namespaces[lxkns.NetNS][tnsid], incapable)
+			tbr := targetbranch(allns.Namespaces[model.NetNS][tnsid], incapable)
 			root := combine(procbr, tbr)
 			Expect(root).NotTo(BeNil())
 			Expect(root.Children()).To(HaveLen(1))
@@ -158,7 +159,7 @@ var _ = Describe("branches and forks", func() {
 		It("process outside target hierarchy in another child user namespace", func() {
 			procbr, err := processbranch(allns.Processes[procpid], 0)
 			Expect(err).ToNot(HaveOccurred())
-			tbr := targetbranch(allns.Namespaces[lxkns.NetNS][tnsid], incapable)
+			tbr := targetbranch(allns.Namespaces[model.NetNS][tnsid], incapable)
 			root := combine(procbr, tbr)
 			Expect(root).NotTo(BeNil())
 			Expect(root.Children()).To(HaveLen(2))
@@ -176,7 +177,7 @@ var _ = Describe("branches and forks", func() {
 		It("process below target namespace", func() {
 			procbr, err := processbranch(allns.Processes[tpid], 0)
 			Expect(err).ToNot(HaveOccurred())
-			tbr := targetbranch(allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.UserNS], incapable)
+			tbr := targetbranch(allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.UserNS], incapable)
 			root := combine(procbr, tbr)
 			Expect(root).NotTo(BeNil())
 			Expect(root.(*nsnode).istarget).To(BeTrue())

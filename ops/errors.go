@@ -17,7 +17,7 @@ package ops
 import (
 	"fmt"
 
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/relations"
 )
 
 // InvalidNamespaceError wraps an underlying OS-related error when dealing with
@@ -29,6 +29,9 @@ type InvalidNamespaceError struct {
 	Err error  // wrapped OS-level error.
 }
 
+// NamespaceOperationError wraps an invalid namespace operation, giving
+// information about the failed operation both on a high level, as well as the
+// underlying invalid namespace and OS-level errors.
 type NamespaceOperationError struct {
 	InvalidNamespaceError
 	Op string // failed namespace ioctl operation
@@ -36,7 +39,7 @@ type NamespaceOperationError struct {
 
 // newInvalidNamespaceError returns a descriptive error, also wrapping an
 // underlying (OS-level) error giving more details when desired.
-func newInvalidNamespaceError(nsref r.Relation, err error) *InvalidNamespaceError {
+func newInvalidNamespaceError(nsref relations.Relation, err error) *InvalidNamespaceError {
 	if nsref == nil {
 		return &InvalidNamespaceError{"", err}
 	}
@@ -45,7 +48,7 @@ func newInvalidNamespaceError(nsref r.Relation, err error) *InvalidNamespaceErro
 
 // newNamespaceOperationError returns a descriptive error, also wrapping an
 // underlying (OS-level) error giving more details when desired.
-func newNamespaceOperationError(nsref r.Relation, op string, err error) *NamespaceOperationError {
+func newNamespaceOperationError(nsref relations.Relation, op string, err error) *NamespaceOperationError {
 	return &NamespaceOperationError{
 		InvalidNamespaceError{nsref.(fmt.Stringer).String(), err},
 		op,

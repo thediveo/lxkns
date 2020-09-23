@@ -23,6 +23,7 @@ import (
 	rxtst "github.com/thediveo/gons/reexec/testing"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -32,12 +33,12 @@ var initusernsid species.NamespaceID
 
 var procscripts = testbasher.Basher{}
 var proccmd *testbasher.TestCommand
-var procpid lxkns.PIDType
+var procpid model.PIDType
 var procusernsid species.NamespaceID
 
 var targetscripts = testbasher.Basher{}
 var targetcmd *testbasher.TestCommand
-var tpid lxkns.PIDType
+var tpid model.PIDType
 var tuserid, tnsid species.NamespaceID
 
 var allns *lxkns.DiscoveryResult
@@ -54,9 +55,9 @@ process_namespaceid user
 read
 `)
 	proccmd = procscripts.Start("main")
-	proccmd.Decode(&initusernsid)
+	initusernsid = nstest.CmdDecodeNSId(proccmd)
 	proccmd.Decode(&procpid)
-	proccmd.Decode(&procusernsid)
+	procusernsid = nstest.CmdDecodeNSId(proccmd)
 
 	targetscripts.Common(nstest.NamespaceUtilsScript)
 	targetscripts.Script("main", `
@@ -70,8 +71,8 @@ read
 `)
 	targetcmd = targetscripts.Start("main")
 	targetcmd.Decode(&tpid)
-	targetcmd.Decode(&tuserid)
-	targetcmd.Decode(&tnsid)
+	tuserid = nstest.CmdDecodeNSId(targetcmd)
+	tnsid = nstest.CmdDecodeNSId(targetcmd)
 
 	allns = lxkns.Discover(lxkns.FullDiscovery)
 })

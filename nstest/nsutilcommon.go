@@ -18,16 +18,29 @@
 
 package nstest
 
+import (
+	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/testbasher"
+)
+
 // NamespaceUtilsScript defines some convenience common script functions when
 // working with namespace test auxiliary scripts.
 const NamespaceUtilsScript = `
 # prints the namespace ID for the namespace referenced by path $1. The
 # namespace ID is printed in JSON format {"dev":..., "ino":...}.
 namespaceid () {
-	LC_ALL=C stat -L $1 | sed -n -e 's/^Device: [[:digit:]]*h\/\([[:digit:]]*\)d.*Inode: \([[:digit:]]*\).*$/{"dev":\1,"ino":\2}/p'
+	LC_ALL=C stat -L $1 | awk '/Inode: [0-9]+/ { print $4 }'
 }
 # prints the namespace ID for the namespace type $1 of the current shell process.
 process_namespaceid () {
-	LC_ALL=C stat -L /proc/$$/ns/$1 | sed -n -e 's/^Device: [[:digit:]]*h\/\([[:digit:]]*\)d.*Inode: \([[:digit:]]*\).*$/{"dev":\1,"ino":\2}/p'
+	LC_ALL=C stat -L /proc/$$/ns/$1 | awk '/Inode: [0-9]+/ { print $4 }'
 }
 `
+
+// CmdDecodeNSId decodes a namespace identifier (expecting only the plain
+// inode number) read from a test command and returns it.
+func CmdDecodeNSId(cmd *testbasher.TestCommand) species.NamespaceID {
+	var ino uint64
+	cmd.Decode(&ino)
+	return species.NamespaceIDfromInode(ino)
+}

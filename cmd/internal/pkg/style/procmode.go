@@ -18,12 +18,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 )
 
 // ProcessName returns the "name" of a process for display, based on the
 // display mode in procNameMode.
-func ProcessName(proc *lxkns.Process) string {
+func ProcessName(proc *model.Process) string {
 	switch procNameMode {
 	case ProcName:
 	case ProcBasename:

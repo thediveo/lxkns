@@ -17,6 +17,7 @@ package lxkns
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
@@ -42,22 +43,21 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var fdnetnsid, netnsid species.NamespaceID
-		cmd.Decode(&fdnetnsid)
-		cmd.Decode(&netnsid)
+		fdnetnsid := nstest.CmdDecodeNSId(cmd)
+		netnsid := nstest.CmdDecodeNSId(cmd)
 		Expect(fdnetnsid).ToNot(Equal(netnsid))
 		// correctly misses fd-referenced namespaces without proper discovery
 		// method enabled.
 		opts := NoDiscovery
 		opts.SkipProcs = false
 		allns := Discover(opts)
-		Expect(allns.Namespaces[NetNS]).To(HaveKey(netnsid))
-		Expect(allns.Namespaces[NetNS]).ToNot(HaveKey(fdnetnsid))
+		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
+		Expect(allns.Namespaces[model.NetNS]).ToNot(HaveKey(fdnetnsid))
 		// correctly finds fd-referenced namespaces now.
 		opts = NoDiscovery
 		opts.SkipFds = false
 		allns = Discover(opts)
-		Expect(allns.Namespaces[NetNS]).To(HaveKey(fdnetnsid))
+		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(fdnetnsid))
 	})
 
 	It("skips /proc/*/fd/* nonsense", func() {
@@ -66,21 +66,21 @@ read # wait for test to proceed()
 		Expect(stat.Dev).NotTo(BeZero())
 		r := DiscoveryResult{
 			Options: NoDiscovery,
-			Processes: ProcessTable{
-				1234: &Process{PID: 1234},
-				5678: &Process{PID: 5678},
+			Processes: model.ProcessTable{
+				1234: &model.Process{PID: 1234},
+				5678: &model.Process{PID: 5678},
 			},
 		}
 		r.Options.SkipFds = false
-		r.Namespaces[NetNS] = NamespaceMap{}
+		r.Namespaces[model.NetNS] = model.NamespaceMap{}
 		scanFd(0, "./test/fdscan/proc", true, &r)
-		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS]).To(HaveKey(species.NamespaceID{Dev: stat.Dev, Ino: 12345678}))
+		Expect(r.Namespaces[model.NetNS]).To(HaveLen(1))
+		Expect(r.Namespaces[model.NetNS]).To(HaveKey(species.NamespaceID{Dev: stat.Dev, Ino: 12345678}))
 
-		origns := r.Namespaces[NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]
+		origns := r.Namespaces[model.NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]
 		scanFd(0, "./test/fdscan/proc", true, &r)
-		Expect(r.Namespaces[NetNS]).To(HaveLen(1))
-		Expect(r.Namespaces[NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]).To(BeIdenticalTo(origns))
+		Expect(r.Namespaces[model.NetNS]).To(HaveLen(1))
+		Expect(r.Namespaces[model.NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]).To(BeIdenticalTo(origns))
 	})
 
 })

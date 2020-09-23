@@ -46,9 +46,9 @@ process_namespaceid net
 read
 `)
 		cmd = scripts.Start("main")
-		cmd.Decode(&initusernsid)
-		cmd.Decode(&usernsid)
-		cmd.Decode(&netnsid)
+		initusernsid = nstest.CmdDecodeNSId(cmd)
+		usernsid = nstest.CmdDecodeNSId(cmd)
+		netnsid = nstest.CmdDecodeNSId(cmd)
 	})
 
 	AfterEach(func() {

@@ -44,7 +44,7 @@ var _ = Describe("styles output", func() {
 				Expect(err).To(HaveOccurred(), "should have failed")
 				continue
 			}
-			Expect(err).NotTo(HaveOccurred(), "should not have failed")
+			Expect(err).To(Succeed(), "should not have failed")
 			Expect(value.String()).To(Equal(tst.expected))
 			Expect(cm).To(Equal(tst.colormode))
 		}

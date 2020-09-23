@@ -17,6 +17,7 @@ package lxkns
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 )
@@ -31,14 +32,14 @@ var _ = Describe("Discover owning user namespaces", func() {
 		allns := Discover(opts)
 
 		myusernsid, err := ops.NamespacePath("/proc/self/ns/user").ID()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(allns.Namespaces[UserNS]).To(HaveKey(myusernsid))
-		userns := allns.Namespaces[UserNS][myusernsid]
+		Expect(err).To(Succeed())
+		Expect(allns.Namespaces[model.UserNS]).To(HaveKey(myusernsid))
+		userns := allns.Namespaces[model.UserNS][myusernsid]
 		for _, nst := range []string{"cgroup", "ipc", "mnt", "net", "pid", "uts"} {
 			mynsid, err := ops.NamespacePath("/proc/self/ns/" + nst).ID()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(allns.Namespaces[TypeIndex(species.NameToType(nst))]).To(HaveKey(mynsid))
-			owneruserns := allns.Namespaces[TypeIndex(species.NameToType(nst))][mynsid].Owner()
+			Expect(err).To(Succeed())
+			Expect(allns.Namespaces[model.TypeIndex(species.NameToType(nst))]).To(HaveKey(mynsid))
+			owneruserns := allns.Namespaces[model.TypeIndex(species.NameToType(nst))][mynsid].Owner()
 			Expect(owneruserns).To(BeIdenticalTo(userns))
 		}
 	})

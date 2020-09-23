@@ -16,9 +16,12 @@ package lxkns
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -28,10 +31,40 @@ var _ = Describe("Discover from processes", func() {
 		opts := NoDiscovery
 		opts.SkipProcs = false
 		allns := Discover(opts)
-		for _, ns := range lsns() {
-			nsidx := TypeIndex(species.NameToType(ns.Type))
+		alllsns := lsns()
+		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash) (.+ )?/tmp/`)
+		for _, ns := range alllsns {
+			nsidx := model.TypeIndex(species.NameToType(ns.Type))
 			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]
-			Expect(discons).NotTo(BeNil())
+			// Try to squash false positives, which are resulting from our own
+			// test scripts...
+			if discons == nil {
+				if ignoreme.MatchString(ns.Command) {
+					fmt.Fprintf(os.Stderr,
+						"NOTE: skipping false positive: %s:[%d] %q\n",
+						ns.Type, ns.NS, ns.Command)
+					continue
+				}
+			}
+			// And now for the real assertion!
+			Expect(discons).NotTo(BeNil(), func() string {
+				// Dump details of what lsns has seen, versus what lxkns has
+				// discovered. This should help diagnosing problems ... such
+				// as the spurious false positives due to test basher scripts
+				// spinning up and down with some delay, so lsns and lxkns
+				// might see different system states.
+				lsns := ""
+				for _, entry := range alllsns {
+					lsns += fmt.Sprintf("\t%v\n", entry)
+				}
+				lxns := ""
+				for nstype := model.NamespaceTypeIndex(0); nstype < model.NamespaceTypesCount; nstype++ {
+					for _, ns := range allns.Namespaces[nstype] {
+						lxns += fmt.Sprintf("\t%s\n", ns.String())
+					}
+				}
+				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", ns.Type, ns.NS, lsns, lxns)
+			})
 			// rats ... lsns seems to take the numerically lowest PID number
 			// instead of the topmost PID in a namespace. This makes
 			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID))) to
@@ -42,7 +75,7 @@ var _ = Describe("Discover from processes", func() {
 			Expect(ok).To(BeTrue(), "unknown PID %d", ns.PID)
 			leaders := discons.LeaderPIDs()
 			func() {
-				pids := []PIDType{}
+				pids := []model.PIDType{}
 				for p != nil {
 					pids = append(pids, p.PID)
 					for _, lPID := range leaders {

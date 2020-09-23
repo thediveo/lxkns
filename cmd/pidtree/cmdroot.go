@@ -25,6 +25,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -86,7 +87,7 @@ func runPidtree(cmd *cobra.Command, _ []string) error {
 			}
 		}
 	}
-	return renderPIDBranch(out, lxkns.PIDType(pid), pidnsid)
+	return renderPIDBranch(out, model.PIDType(pid), pidnsid)
 }
 
 // SingleBranch encodes a single branch from the initial/root PID namespace
@@ -98,15 +99,15 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.NamespaceID) error {
+func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.NamespaceID) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
-	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
+	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
 	if pidnsid != species.NoneID {
-		pidns := allns.Namespaces[lxkns.PIDNS][pidnsid]
+		pidns := allns.Namespaces[model.PIDNS][pidnsid]
 		if pidns == nil {
 			return fmt.Errorf("unknown PID namespace pid:[%d]", pidnsid.Ino)
 		}
@@ -136,10 +137,10 @@ func renderPIDBranch(out io.Writer, pid lxkns.PIDType, pidnsid species.Namespace
 		// for them :(
 		pproc := proc.Parent
 		if (pproc == nil ||
-			pproc.Namespaces[lxkns.PIDNS] != proc.Namespaces[lxkns.PIDNS]) &&
-			proc.Namespaces[lxkns.PIDNS] != nil {
+			pproc.Namespaces[model.PIDNS] != proc.Namespaces[model.PIDNS]) &&
+			proc.Namespaces[model.PIDNS] != nil {
 			branch.Branch = append(
-				[]interface{}{proc.Namespaces[lxkns.PIDNS]},
+				[]interface{}{proc.Namespaces[model.PIDNS]},
 				branch.Branch...)
 		}
 		// Climb up towards the root/stem.
@@ -175,19 +176,19 @@ func renderPIDTreeWithNamespaces(out io.Writer) error {
 	// any other roots that might have turned up during discovery. And this
 	// slightly ranty comment now gets me another badge-achievement which is
 	// so important in today's societies: "ranty source commenter".
-	ourproc, ok := allns.Processes[lxkns.PIDType(os.Getpid())]
+	ourproc, ok := allns.Processes[model.PIDType(os.Getpid())]
 	if !ok {
 		fmt.Fprintln(os.Stderr, "error: /proc does not match the current PID namespace")
 		os.Exit(1)
 	}
-	rootpidns := ourproc.Namespaces[lxkns.PIDNS]
+	rootpidns := ourproc.Namespaces[model.PIDNS]
 	// Finally render the output based on the information gathered. The
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
 	// the desired process tree with PID namespaces.
 	fmt.Fprint(out,
 		asciitree.Render(
-			[]lxkns.Namespace{rootpidns}, // note to self: expects a slice of roots
+			[]model.Namespace{rootpidns}, // note to self: expects a slice of roots
 			&TreeVisitor{
 				Details:   true,
 				PIDMap:    pidmap,

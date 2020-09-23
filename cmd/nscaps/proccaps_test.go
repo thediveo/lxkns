@@ -6,7 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 )
 
 var _ = Describe("effective caps", func() {
@@ -38,14 +38,14 @@ var _ = Describe("effective caps", func() {
 	})
 
 	It("reads octet string from process status", func() {
-		b := processEffectiveCaps(lxkns.PIDType(-1))
+		b := processEffectiveCaps(model.PIDType(-1))
 		Expect(b).To(BeEmpty())
-		b = processEffectiveCaps(lxkns.PIDType(os.Getpid()))
+		b = processEffectiveCaps(model.PIDType(os.Getpid()))
 		Expect(b).ToNot(BeEmpty())
 	})
 
 	It("returns caps of init process", func() {
-		caps := ProcessCapabilities(lxkns.PIDType(1))
+		caps := ProcessCapabilities(model.PIDType(1))
 		Expect(len(caps)).To(BeNumerically(">=", 8))
 		Expect(caps).To(ContainElement("cap_sys_ptrace"))
 	})

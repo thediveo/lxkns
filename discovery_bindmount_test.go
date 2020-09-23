@@ -17,8 +17,8 @@ package lxkns
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
@@ -54,12 +54,11 @@ mount --bind /proc/self/ns/net $bm
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var netnsid species.NamespaceID
-		cmd.Decode(&netnsid)
+		netnsid := nstest.CmdDecodeNSId(cmd)
 		opts := NoDiscovery
 		opts.SkipBindmounts = false
 		allns := Discover(FullDiscovery)
-		Expect(allns.Namespaces[NetNS]).To(HaveKey(netnsid))
+		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 	})
 
 })
