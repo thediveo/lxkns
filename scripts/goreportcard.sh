@@ -6,9 +6,9 @@ if ! command -v goreportcard-cli; then
     if ! command -v goreportcard-cli; then
         # Don't touch our local module dependencies, so run installation from
         # somewhere else...
-        (cd /tmp && go get github.com/gojp/goreportcard)
+        (cd /tmp && go get -v github.com/gojp/goreportcard)
         (cd $(go env GOPATH)/src/github.com/gojp/goreportcard && make install)
-        (cd /tmp && go get github.com/gojp/goreportcard/cmd/goreportcard-cli)
+        (cd /tmp && go get -v github.com/gojp/goreportcard/cmd/goreportcard-cli)
     fi
 fi
 

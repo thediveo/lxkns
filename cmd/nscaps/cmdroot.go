@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -73,7 +74,7 @@ var showProcCaps bool
 var briefCaps bool
 
 // PID of process whose capabilities in some namespace are sought.
-var procPID lxkns.PIDType
+var procPID model.PIDType
 
 // Determine the capabilities of a process (either this one or another
 // explicitly specified one) in another namespace. It then renders a nice tree
@@ -86,7 +87,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("not a valid namespace: %q", args[0])
 	}
 	fpid, _ := cmd.PersistentFlags().GetUint32("pid")
-	pid := lxkns.PIDType(fpid)
+	pid := model.PIDType(fpid)
 	// Has a PID namespace different than our current one been
 	// specified, in which the PID is valid?
 	pidnsid := species.NoneID
@@ -107,20 +108,20 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		if pidnsid != species.NoneID {
 			return fmt.Errorf("--ns requires --pid=PID")
 		}
-		pid = lxkns.PIDType(os.Getpid())
+		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	pidmap := lxkns.NewPIDMap(allns)
-	rootpidns := allns.Processes[lxkns.PIDType(os.Getpid())].Namespaces[lxkns.PIDNS]
+	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
 	if pidnsid != species.NoneID {
-		pidns := allns.Namespaces[lxkns.PIDNS][pidnsid]
+		pidns := allns.Namespaces[model.PIDNS][pidnsid]
 		if pidns == nil {
 			return fmt.Errorf("unknown PID namespace pid:[%d]", pidnsid.Ino)
 		}
-		rootpid := pidmap.Translate(lxkns.PIDType(pid), pidns, rootpidns)
+		rootpid := pidmap.Translate(model.PIDType(pid), pidns, rootpidns)
 		if rootpid == 0 {
 			return fmt.Errorf("unknown process PID %d in pid:[%d]",
 				pid, pidnsid.Ino)
@@ -135,7 +136,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 	procPID = pid
 	// Look up the specified target namespace, and bail out if we could
 	// not discover it.
-	tns, ok := allns.Namespaces[lxkns.TypeIndex(nst)][nsid]
+	tns, ok := allns.Namespaces[model.TypeIndex(nst)][nsid]
 	if !ok {
 		return fmt.Errorf("unknown namespace %s", args[0])
 	}

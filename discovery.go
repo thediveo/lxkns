@@ -22,7 +22,10 @@ package lxkns
 import (
 	"fmt"
 	"sort"
+	"strings"
 
+	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -33,15 +36,15 @@ type DiscoverOpts struct {
 	// The types of namespaces to discover: this is an OR'ed combination of
 	// Linux kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et
 	// cetera. If zero, defaults to discovering all namespaces.
-	NamespaceTypes species.NamespaceType
+	NamespaceTypes species.NamespaceType `json:"-"`
 
 	// Where to scan (or not scan) for signs of namespaces?
-	SkipProcs      bool // Don't scan processes.
-	SkipTasks      bool // Don't scan threads, a.k.a. tasks.
-	SkipFds        bool // Don't scan process file descriptors for references to namespaces.
-	SkipBindmounts bool // Don't scan for bind-mounted namespaces.
-	SkipHierarchy  bool // Don't discover the hierarchy of PID and user namespaces.
-	SkipOwnership  bool // Don't discover the ownership of non-user namespaces.
+	SkipProcs      bool `json:"skipped-procs"`      // Don't scan processes.
+	SkipTasks      bool `json:"skipped-tasks"`      // Don't scan threads, a.k.a. tasks.
+	SkipFds        bool `json:"skipped-fds"`        // Don't scan process file descriptors for references to namespaces.
+	SkipBindmounts bool `json:"skipped-bindmounts"` // Don't scan for bind-mounted namespaces.
+	SkipHierarchy  bool `json:"skipped-hierarchy"`  // Don't discover the hierarchy of PID and user namespaces.
+	SkipOwnership  bool `json:"skipped-ownership"`  // Don't discover the ownership of non-user namespaces.
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive
@@ -65,18 +68,18 @@ var NoDiscovery = DiscoverOpts{
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.
 type DiscoveryResult struct {
-	Options           DiscoverOpts  // options used during discovery.
-	Namespaces        AllNamespaces // all discovered namespaces, subject to filtering according to Options.
-	InitialNamespaces NamespacesSet // the 7 initial namespaces.
-	UserNSRoots       []Namespace   // the topmost user namespace(s) in the hierarchy
-	PIDNSRoots        []Namespace   // the topmost PID namespace(s) in the hierarchy
-	Processes         ProcessTable  // processes checked for namespaces.
+	Options           DiscoverOpts        // options used during discovery.
+	Namespaces        model.AllNamespaces // all discovered namespaces, subject to filtering according to Options.
+	InitialNamespaces model.NamespacesSet // the 7 initial namespaces.
+	UserNSRoots       []model.Namespace   // the topmost user namespace(s) in the hierarchy
+	PIDNSRoots        []model.Namespace   // the topmost PID namespace(s) in the hierarchy
+	Processes         model.ProcessTable  // processes checked for namespaces.
 }
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The
 // namespaces are sorted by their namespace ids in ascending order.
-func SortNamespaces(nslist []Namespace) []Namespace {
-	newnslist := make([]Namespace, len(nslist))
+func SortNamespaces(nslist []model.Namespace) []model.Namespace {
+	newnslist := make([]model.Namespace, len(nslist))
 	copy(newnslist, nslist)
 	sort.Slice(newnslist, func(i, j int) bool {
 		return newnslist[i].ID().Ino < newnslist[j].ID().Ino
@@ -88,20 +91,20 @@ func SortNamespaces(nslist []Namespace) []Namespace {
 // namespaces. The namespaces are sorted by their namespace ids in ascending
 // order. Please note that the list itself is flat, but this function can only
 // be used on hierarchical namespaces (PID, user).
-func SortChildNamespaces(nslist []Hierarchy) []Hierarchy {
-	newnslist := make([]Hierarchy, len(nslist))
+func SortChildNamespaces(nslist []model.Hierarchy) []model.Hierarchy {
+	newnslist := make([]model.Hierarchy, len(nslist))
 	copy(newnslist, nslist)
 	sort.Slice(newnslist, func(i, j int) bool {
-		return newnslist[i].(Namespace).ID().Ino < newnslist[j].(Namespace).ID().Ino
+		return newnslist[i].(model.Namespace).ID().Ino < newnslist[j].(model.Namespace).ID().Ino
 	})
 	return newnslist
 }
 
 // SortedNamespaces returns the namespaces from a map sorted.
-func SortedNamespaces(nsmap NamespaceMap) []Namespace {
+func SortedNamespaces(nsmap model.NamespaceMap) []model.Namespace {
 	// Copy the namespaces from the map into a slice, so we can then sort it
 	// next.
-	nslist := make([]Namespace, len(nsmap))
+	nslist := make([]model.Namespace, len(nsmap))
 	idx := 0
 	for _, ns := range nsmap {
 		nslist[idx] = ns
@@ -117,21 +120,21 @@ func SortedNamespaces(nsmap NamespaceMap) []Namespace {
 // specified type. The namespaces are sorted by their identifier, which is an
 // inode number (on the special "nsfs" filesystem), ignoring a namespace's
 // device ID.
-func (dr *DiscoveryResult) SortedNamespaces(nsidx NamespaceTypeIndex) []Namespace {
+func (dr *DiscoveryResult) SortedNamespaces(nsidx model.NamespaceTypeIndex) []model.Namespace {
 	return SortedNamespaces(dr.Namespaces[nsidx])
 }
 
 // rootNamespaces returns the topmost namespace(s) in a hierarchy of
 // namespaces. This function can be used only on hierarchical namespaces and
 // will panic if misused.
-func rootNamespaces(nsmap NamespaceMap) []Namespace {
-	result := []Namespace{}
+func rootNamespaces(nsmap model.NamespaceMap) []model.Namespace {
+	result := []model.Namespace{}
 	for _, ns := range nsmap {
-		hns, ok := ns.(Hierarchy)
+		hns, ok := ns.(model.Hierarchy)
 		if !ok {
 			panic(fmt.Sprintf(
 				"rootNamespaces: found invalid non-hierarchical namespace %s",
-				ns.(NamespaceStringer).TypeIDString()))
+				ns.(model.NamespaceStringer).TypeIDString()))
 		}
 		if hns.Parent() == nil {
 			result = append(result, ns)
@@ -144,15 +147,18 @@ func rootNamespaces(nsmap NamespaceMap) []Namespace {
 // preferred discovery. While often the order of sequence doesn't matter,
 // there are few cases where it makes coding discovery functionality easier
 // when there is a guaranteed type order in place.
-var discoverySequence = []NamespaceTypeIndex{
-	UserNS,
-	PIDNS,
+var discoverySequence = []model.NamespaceTypeIndex{
+	model.UserNS,
+	model.PIDNS,
 }
 
-// Completes discoveryOrder to finally contain all namespace types indices.
+// Completes discoveryOrder to finally contain all namespace types indices;
+// the exact ordering of the remaining namespace types doesn't matter. Only
+// that user namespaces come first, then PID namespaces, then all other
+// namespace types.
 func init() {
-	for _, typeidx := range typeIndices {
-		if typeidx != UserNS && typeidx != PIDNS {
+	for typeidx := model.NamespaceTypeIndex(0); typeidx < model.NamespaceTypesCount; typeidx++ {
+		if typeidx != model.UserNS && typeidx != model.PIDNS {
 			discoverySequence = append(discoverySequence, typeidx)
 		}
 	}
@@ -163,9 +169,9 @@ func init() {
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
 func Discover(opts DiscoverOpts) *DiscoveryResult {
-	result := &DiscoveryResult{
+	result := &DiscoveryResult{ // TODO: convenience f()
 		Options:   opts,
-		Processes: NewProcessTable(),
+		Processes: model.NewProcessTable(),
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
@@ -177,7 +183,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
-		result.Namespaces[idx] = NamespaceMap{}
+		result.Namespaces[idx] = model.NamespaceMap{}
 	}
 	// Now go for discovery: we run the available discovery functions in
 	// sequence, subject to the following rules for the When field:
@@ -190,7 +196,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 			disco.Discover(result.Options.NamespaceTypes, "/proc", result)
 		} else {
 			for _, nstypeidx := range *disco.When {
-				if nstype := TypesByIndex[nstypeidx]; result.Options.NamespaceTypes&nstype != 0 {
+				if nstype := model.TypesByIndex[nstypeidx]; result.Options.NamespaceTypes&nstype != 0 {
 					disco.Discover(nstype, "/proc", result)
 				}
 			}
@@ -198,12 +204,20 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	}
 	// Fill in some additional convenience fields in the result.
 	if result.Options.NamespaceTypes&species.CLONE_NEWUSER != 0 {
-		result.UserNSRoots = rootNamespaces(result.Namespaces[UserNS])
+		result.UserNSRoots = rootNamespaces(result.Namespaces[model.UserNS])
 	}
 	if result.Options.NamespaceTypes&species.CLONE_NEWPID != 0 {
-		result.PIDNSRoots = rootNamespaces(result.Namespaces[PIDNS])
+		result.PIDNSRoots = rootNamespaces(result.Namespaces[model.PIDNS])
 	}
 	// TODO: Find the initial namespaces...
+
+	log.Infofn(func() string {
+		perns := []string{}
+		for nstypeidx, nsmap := range result.Namespaces {
+			perns = append(perns, fmt.Sprintf("%d %s", len(nsmap), model.TypesByIndex[nstypeidx].Name()))
+		}
+		return fmt.Sprintf("discovered %s namespaces", strings.Join(perns, ", "))
+	})
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)
@@ -220,14 +234,14 @@ type discoveryFunc func(species.NamespaceType, string, *DiscoveryResult)
 // only be only completed during the init() phase, but after(!)
 // discoverySequence has been set to its initial value. Sigh.
 type discoverer struct {
-	When     *[]NamespaceTypeIndex // indices of namespace types this discovery function discovers.
-	Discover discoveryFunc         // the concrete namespace discovery functionality.
+	When     *[]model.NamespaceTypeIndex // indices of namespace types this discovery function discovers.
+	Discover discoveryFunc               // the concrete namespace discovery functionality.
 }
 
 // Run a discoveryFunc only once per discovery, because it needs to work on
 // multiple namespace types in a single discovery call, and doesn't like
 // multiple per-type calls.
-var discoveronce = []NamespaceTypeIndex{}
+var discoveronce = []model.NamespaceTypeIndex{}
 
 // The sequence of discovery functions implemented in lxkns, and how to call
 // them. Because discoverySequence will only be completed after this list has
@@ -237,6 +251,6 @@ var discoverers = []discoverer{
 	{&discoverySequence, discoverFromProc},
 	{&discoveronce, discoverFromFd},
 	{&discoveronce, discoverBindmounts},
-	{&[]NamespaceTypeIndex{UserNS, PIDNS}, discoverHierarchy},
+	{&[]model.NamespaceTypeIndex{model.UserNS, model.PIDNS}, discoverHierarchy},
 	{&discoverySequence, resolveOwnership},
 }

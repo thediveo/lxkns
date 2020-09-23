@@ -21,11 +21,15 @@ package lxkns
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/gons/reexec"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 )
@@ -38,6 +42,7 @@ type BindmountedNamespaceInfo struct {
 	Type      species.NamespaceType `json:"type"`
 	Path      string                `json:"path"`
 	OwnernsID species.NamespaceID   `json:"ownernsid"`
+	Log       []string              `json:"log"` // not strictly necessary, yet very helpful.
 }
 
 // discoverBindmounts checks bind-mounts to discover namespaces we haven't found
@@ -47,41 +52,49 @@ type BindmountedNamespaceInfo struct {
 // capabilities in them).
 func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipBindmounts {
+		log.Infof("skipping discovery of bind-mounted namespaces")
 		return
 	}
+	log.Debugf("starting discovery of bind-mounted namespaces...")
+	total := 0
 	// Helper function which adds namespaces not yet known to the discovery
 	// result. We keep this inline in order to allow the helper to access the
 	// outer result.Namespaces map and easily update it.
 	updateNamespaces := func(ownedbindmounts []BindmountedNamespaceInfo) {
 		for _, bmntns := range ownedbindmounts {
+			// If there were errors noticed while trying to gather the
+			// information about this specific bind-mounted namespace, then log
+			// them now as errors from the main process.
+			for _, l := range bmntns.Log {
+				log.Errorf("namespace discovery error for %s:[%d] (%q): %s",
+					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path, l)
+			}
+			if bmntns.ID == species.NoneID {
+				log.Errorf("skipping bind-mounted namespace at %q: could not discover namespace ID", bmntns.Path)
+				continue
+			}
+			// log.Debugf("checking bind-mounted namespace [%d]", bmntns.ID.Ino)
+
 			// Now we can finally look up whether we have seen this bind-mounted
 			// namespace elsewhere...
-			typeidx := TypeIndex(bmntns.Type)
+			typeidx := model.TypeIndex(bmntns.Type)
 			ns, ok := result.Namespaces[typeidx][bmntns.ID]
 			if !ok {
 				// As we haven't seen this namespace yet, record it with our
 				// results.
-				ns = NewNamespace(bmntns.Type, bmntns.ID, "")
+				ns = namespaces.New(bmntns.Type, bmntns.ID, "")
 				result.Namespaces[typeidx][bmntns.ID] = ns
-				ns.(NamespaceConfigurer).SetRef(bmntns.Path)
+				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Path)
+				log.Debugf("found namespace %s:[%d] bind-mounted at %q",
+					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path)
+				total++
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
 			if bmntns.Type != species.CLONE_NEWUSER && bmntns.OwnernsID != species.NoneID {
-				ns.(NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
+				ns.(namespaces.NamespaceConfigurer).SetOwner(bmntns.OwnernsID)
 			}
 		}
-	}
-	// Find any bind-mounted namespaces in the current namespace we're running
-	// in, and add them to the results.
-	updateNamespaces(ownedBindMounts())
-	// Now initialize a backlog with the mount namespaces we know so far,
-	// because we need to visit them in order to potentially discover more
-	// bind-mounted namespaces. These will then be added to the backlog if not
-	// already known by then. And yes, this is ugly.
-	mountnsBacklog := make([]Namespace, 0, len(result.Namespaces[MountNS]))
-	for _, mntns := range result.Namespaces[MountNS] {
-		mountnsBacklog = append(mountnsBacklog, mntns)
 	}
 	// In order to avoid multiple visits to the same namespace, keep track of
 	// which mount namespaces not to visit again. This also includes the mount
@@ -91,6 +104,19 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	ownmntnsid, _ := ops.NamespacePath("/proc/self/ns/mnt").ID()
 	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 	visitedmntns[ownmntnsid] = true
+	// Find any bind-mounted namespaces in the current namespace we're running
+	// in, and add them to the results.
+	log.Debugf("scanning (own) mnt:[%d] (%q) for bind-mounted namespaces...",
+		ownmntnsid.Ino, "/proc/self/ns/mnt")
+	updateNamespaces(ownedBindMounts())
+	// Now initialize a backlog with the mount namespaces we know so far,
+	// because we need to visit them in order to potentially discover more
+	// bind-mounted namespaces. These will then be added to the backlog if not
+	// already known by then. And yes, this is ugly.
+	mountnsBacklog := make([]model.Namespace, 0, len(result.Namespaces[model.MountNS]))
+	for _, mntns := range result.Namespaces[model.MountNS] {
+		mountnsBacklog = append(mountnsBacklog, mntns)
+	}
 	// Now try to clear the back log of mount namespaces to visit and to
 	// search for further bind-mounted namespaces. Because we marked the
 	// current mount namespace as already visited, we know after checking that
@@ -99,11 +125,13 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	// Go runtime which makes switching mount namespaces impossible after it
 	// has spun up).
 	for len(mountnsBacklog) > 0 {
-		var mntns Namespace // NEVER merge this into the following pop operation!
+		var mntns model.Namespace // NEVER merge this into the following pop operation!
 		mntns, mountnsBacklog = mountnsBacklog[0], mountnsBacklog[1:]
 		if _, ok := visitedmntns[mntns.ID()]; ok {
 			continue // We already visited you ... next one!
 		}
+		log.Debugf("scanning mnt:[%d] (%q) for bind-mounted namespaces...",
+			mntns.ID().Ino, mntns.Ref())
 		// If we're running without the necessary privileges to change into
 		// mount namespaces, but we are running under the user which is the
 		// owner of the mount namespace, then we first gain the necessary
@@ -113,18 +141,19 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		// and especially the user namespaces and setns() are supposed to
 		// work. Simplicity if for the World's most stable genius, we're going
 		// for the real stuff instead.
-		enterns := []Namespace{mntns}
+		enterns := []model.Namespace{mntns}
 		if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {
 			usernsid, _ := usermntnsref.ID()
 			// Do not leak, release user namespace immediately, as we're done with it.
 			usermntnsref.(io.Closer).Close()
-			if userns, ok := result.Namespaces[UserNS][usernsid]; ok && userns.ID() != ownusernsid {
+			if userns, ok := result.Namespaces[model.UserNS][usernsid]; ok &&
+				userns.ID() != ownusernsid {
 				// Prepend the user namespace to the list of namespaces we
 				// need to enter, due to the magic capabilities of entering
 				// user namespaces. And, by the way, worst programming
 				// language syntax ever, even more so than Perl. TECO isn't in
 				// the competition, though.
-				enterns = append([]Namespace{userns}, enterns...)
+				enterns = append([]model.Namespace{userns}, enterns...)
 			}
 		}
 		// Finally, we can try to enter the mount namespace in order to find
@@ -137,11 +166,11 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			// still have a chance later to enter them by using the
 			// bind-mounted reference in a different mount namespace.
 			updateNamespaces(ownedbindmounts)
-		} else { //nolint:staticcheck
-			// TODO: for diagnosis:
-			// fmt.Fprintf(os.Stderr, "failed: %s\n", err.Error())
+		} else {
+			log.Errorf("could not discover in mnt:[%d]: %s", mntns.ID().Ino, err.Error())
 		}
 	}
+	log.Infof("found %d bind-mounted namespaces", total)
 }
 
 // Register discoverNsfsBindmounts() as an action for re-execution.
@@ -183,6 +212,17 @@ func ownedBindMounts() []BindmountedNamespaceInfo {
 		ns := ops.NamespacePath(path)
 		nsid, err := ns.ID()
 		if err != nil {
+			// Ouch, we could not correctly get the namespace ID, so we log an
+			// error.
+			ownedbindmounts[idx].Log = append(ownedbindmounts[idx].Log,
+				fmt.Sprintf("while reading namespace ID: %s", err.Error()))
+			// And then we do some animal magic to come up at least with what
+			// might be the namespace ID and type...
+			nsid, nstype := species.IDwithType(bindmounts[idx].Root)
+			if nsid != species.NoneID && nstype != 0 {
+				ownedbindmounts[idx].ID = nsid
+				ownedbindmounts[idx].Type = nstype
+			}
 			continue
 		}
 		ownedbindmounts[idx].ID = nsid
@@ -192,6 +232,8 @@ func ownedBindMounts() []BindmountedNamespaceInfo {
 		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
 			usernsref.(io.Closer).Close() // do not leak.
+		} else {
+			ownedbindmounts[idx].Log = append(ownedbindmounts[idx].Log, err.Error())
 		}
 		ownedbindmounts[idx].OwnernsID = ownernsid
 	}

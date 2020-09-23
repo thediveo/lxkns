@@ -34,6 +34,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
@@ -53,13 +56,17 @@ import (
 // then force us to keep potentially a larger number of fd's open.
 func discoverHierarchy(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
 	if result.Options.SkipHierarchy {
+		log.Infof("skipping discovery of %s namespace hierarchy", nstype.Name())
 		return
 	}
-	nstypeidx := TypeIndex(nstype)
+	log.Debugf("starting discovery of %s namespace hierarchy...", nstype.Name())
+	hidden := 0
+
+	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	for _, startns := range nsmap {
 		ns := startns // ...so we can later climb rung by rung.
-		if ns.(Hierarchy).Parent() != nil {
+		if ns.(model.Hierarchy).Parent() != nil {
 			// Early exit: skip this user/PID namespace, if it has already
 			// been brought into the hierarchy as part of the
 			// line-of-hierarchy for another user/PID namespace.
@@ -80,14 +87,14 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			// to climb up further. This won't catch the initial user/pid
 			// namespaces, but then these will break out of the loop anyway,
 			// as they don't have any parents.
-			if ns.(Hierarchy).Parent() != nil {
+			if ns.(model.Hierarchy).Parent() != nil {
 				break
 			}
 			// By the way ... if it's a user namespace, then get its owner's
 			// UID, as we just happen to have a useful fd referencing the
 			// namespace open anyway.
 			if nstype == species.CLONE_NEWUSER {
-				ns.(*userNamespace).detectUID(nsf)
+				ns.(*namespaces.UserNamespace).DetectUID(nsf)
 			}
 			// See if there is a parent of this namespace at all, or whether
 			// we've reached the end of the road. Normally, this should be the
@@ -124,12 +131,14 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 				//
 				// Anyway, we need to create a new namespace node for what we
 				// found.
-				parentns = NewNamespace(nstype, parentnsid, "")
+				parentns = namespaces.New(nstype, parentnsid, "")
 				nsmap[parentnsid] = parentns
+				log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
+				hidden++
 			}
 			// Now insert the current namespace as a child of its parent in
 			// the hierarchy, and then prepare for the next rung...
-			parentns.(HierarchyConfigurer).AddChild(ns.(Hierarchy))
+			parentns.(namespaces.HierarchyConfigurer).AddChild(ns.(model.Hierarchy))
 			ns = parentns
 			nsf.(io.Closer).Close()
 			nsf = parentnsf
@@ -137,4 +146,5 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 		// Don't leak...
 		nsf.(io.Closer).Close()
 	}
+	log.Infof("found %d hidden %s namespaces", hidden, nstype.Name())
 }

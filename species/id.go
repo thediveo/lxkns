@@ -43,8 +43,8 @@ import (
 // text does not cater for the device ID, but only a namespace's inode. The
 // textual conversions in this package work around these limitations.
 type NamespaceID struct {
-	Dev uint64 // device ID maintaining the namespace (Golang insists on uint64)
-	Ino uint64 // inode number of this namespace.
+	Dev uint64 `json:"dev"` // device ID maintaining the namespace (Golang insists on uint64)
+	Ino uint64 `json:"ino"` // inode number of this namespace.
 }
 
 // NoneID is a convenience for signalling an invalid or non-existing namespace
@@ -110,7 +110,7 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 // and then adds that in the hope that things still work correctly for the
 // moment.
 func NamespaceIDfromInode(ino uint64) NamespaceID {
-	if dev := nsfsDev(); dev != 0 {
+	if dev := nsfsDev(); dev != 0 && ino != 0 {
 		return NamespaceID{Dev: dev, Ino: ino}
 	}
 	return NoneID

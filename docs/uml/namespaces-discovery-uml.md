@@ -23,10 +23,10 @@ namespace lxkns {
   
   class "DiscoveryResult" <<(S,YellowGreen)>> {
     Options DiscoverOpts
-    Namespaces AllNamespaces
-    InitialNamespaces NamespacesSet
+    Namespaces model.AllNamespaces
+    InitialNamespaces model.NamespacesSet
     ' TODO: Root(s)
-    Processes ProcessTable
+    Processes model.ProcessTable
   }
   
 }

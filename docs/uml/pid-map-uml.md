@@ -3,13 +3,15 @@ hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
 
+package "lxkns" {
+
 class "PIDMap" <<(S,YellowGreen)>> {
   m map[NamespacedPID]NamespacedPIDs
   Translate(pid PIDType, from Namespace, to Namespace) PIDType
 }
 
 PIDMap -[hidden]- NamespacedPID
-PIDMap -[hidden]- NamespacedPIDs
+PIDMap -[hidden]-- NamespacedPIDs
 
 class NamespacedPIDs <<(T,Khaki)>> {
     []NamespacedPID
@@ -26,6 +28,8 @@ class NamespacedPID {
   PID PIDType
 }
 note right: a PID and the namespace ID\nthe PID is valid in.
+
+}
 
 object ": PIDMap" as pidmap {
   m

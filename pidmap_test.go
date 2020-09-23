@@ -17,15 +17,15 @@ package lxkns
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 )
 
 var _ = Describe("maps PIDs", func() {
 
 	It("returns empty PID slice for non-existing PID", func() {
-		Expect(NSpid(&Process{})).To(BeEmpty())
+		Expect(NSpid(&model.Process{})).To(BeEmpty())
 	})
 
 	It("doesn't translates non-existing PID/namespace", func() {
@@ -34,7 +34,7 @@ var _ = Describe("maps PIDs", func() {
 		opts.SkipHierarchy = false
 		allns := Discover(opts)
 		pidmap := NewPIDMap(allns)
-		Expect(pidmap.Translate(0, allns.InitialNamespaces[PIDNS], allns.InitialNamespaces[PIDNS])).To(BeZero())
+		Expect(pidmap.Translate(0, allns.InitialNamespaces[model.PIDNS], allns.InitialNamespaces[model.PIDNS])).To(BeZero())
 	})
 
 	It("translates PIDs", func() {
@@ -55,16 +55,15 @@ read # wait for test to proceed()
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
-		var pidnsid species.NamespaceID
-		cmd.Decode(&pidnsid)
-		var leafpid PIDType
+		pidnsid := nstest.CmdDecodeNSId(cmd)
+		var leafpid model.PIDType
 		cmd.Decode(&leafpid)
 
 		opts := NoDiscovery
 		opts.SkipProcs = false
 		opts.SkipHierarchy = false
 		allns := Discover(opts)
-		pidns := allns.Namespaces[PIDNS][pidnsid]
+		pidns := allns.Namespaces[model.PIDNS][pidnsid]
 		initialpidns := allns.PIDNSRoots[0]
 
 		pidmap := NewPIDMap(allns)

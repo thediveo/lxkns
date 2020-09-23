@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"os"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -66,7 +66,7 @@ func (nsp TypedNamespacePath) Type() (species.NamespaceType, error) {
 // identical.
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
-func (nsp TypedNamespacePath) Parent() (r.Relation, error) {
+func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
 	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY, 0)
 	if err != nil {
 		return nil, newInvalidNamespaceError(nsp, err)
@@ -85,7 +85,7 @@ func (nsp TypedNamespacePath) Parent() (r.Relation, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsp TypedNamespacePath) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	f, err := os.Open(string(nsp.NamespacePath))
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsp, err)
@@ -98,7 +98,7 @@ func (nsp TypedNamespacePath) OpenTypedReference() (r.Relation, o.ReferenceClose
 }
 
 // Ensures that TypedNamespacePath implements the Relation interface.
-var _ r.Relation = (*TypedNamespacePath)(nil)
+var _ relations.Relation = (*TypedNamespacePath)(nil)
 
 // Ensures that we've fully implemented the Opener interface.
-var _ o.Opener = (*TypedNamespacePath)(nil)
+var _ opener.Opener = (*TypedNamespacePath)(nil)

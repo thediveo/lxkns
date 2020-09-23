@@ -17,8 +17,8 @@ package ops
 import (
 	"fmt"
 
-	o "github.com/thediveo/lxkns/ops/internal/opener"
-	r "github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/ops/internal/opener"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -29,7 +29,12 @@ type TypedNamespaceFd struct {
 	nstype      species.NamespaceType // type of namespace.
 }
 
-// NewTypedNamespaceFd FIXME: write doc
+// NewTypedNamespaceFd wraps a OS-level file descriptor referencing a
+// Linux-kernel namespace, as well as the type of namespace. NewTypedNamespaceFd
+// can be used in those situations where the type of namespace is already known,
+// where later access to the type is of reference required and the namespace
+// type query ioctl() is to be avoided (such as to support 4.9 to pre-4.11 Linux
+// kernels).
 func NewTypedNamespaceFd(fd int, nstype species.NamespaceType) (*TypedNamespaceFd, error) {
 	switch nstype {
 	case species.CLONE_NEWCGROUP,
@@ -70,12 +75,12 @@ func (nsfd TypedNamespaceFd) Type() (species.NamespaceType, error) {
 // OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
-func (nsfd *TypedNamespaceFd) OpenTypedReference() (r.Relation, o.ReferenceCloser, error) {
+func (nsfd *TypedNamespaceFd) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	return nsfd, func() {}, nil
 }
 
 // Ensures that TypedNamespaceFd implements the Relation interface.
-var _ r.Relation = (*TypedNamespaceFd)(nil)
+var _ relations.Relation = (*TypedNamespaceFd)(nil)
 
 // Ensures that we've fully implemented the Opener interface.
-var _ o.Opener = (*TypedNamespaceFd)(nil)
+var _ opener.Opener = (*TypedNamespaceFd)(nil)

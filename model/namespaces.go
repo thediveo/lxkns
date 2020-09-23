@@ -19,7 +19,7 @@
 
 // +build linux
 
-package lxkns
+package model
 
 import (
 	"fmt"
@@ -195,41 +195,12 @@ type Ownership interface {
 	Ownings() AllNamespaces
 }
 
-// NewNamespace returns a new zero'ed namespace object suitable for the
-// specified type of namespace. Now this is a real-world case where the
-// "nongonformist" rule of "accept interfaces, return structs" doesn't make
-// sense, because struct types don't support polymorphism. On the other hand,
-// thousands of blog posts and SO answers cannot be wrong, more so, the more
-// upvotes they accumulated ;)
-func NewNamespace(nstype species.NamespaceType, nsid species.NamespaceID, ref string) Namespace {
-	switch nstype {
-	case species.CLONE_NEWUSER:
-		// Someone please tell me that golang actually makes sense... at least
-		// some quantum of sense. Hmm, could be the title of next summer's
-		// blockbuster: "A Quantum of Sense". Erm, no. Won't ever fly in some
-		// states.
-		user := &userNamespace{
-			hierarchicalNamespace: hierarchicalNamespace{
-				plainNamespace: plainNamespace{
-					nsid:   nsid,
-					nstype: nstype,
-					ref:    ref,
-				},
-			},
-		}
-		for idx := range user.ownedns {
-			user.ownedns[idx] = NamespaceMap{}
-		}
-		return user
-	case species.CLONE_NEWPID:
-		return &hierarchicalNamespace{
-			plainNamespace: plainNamespace{
-				nsid:   nsid,
-				nstype: nstype,
-				ref:    ref,
-			},
-		}
-	default:
-		return &plainNamespace{nsid: nsid, nstype: nstype, ref: ref}
+// NewAllNamespaces returns a fully initialized AllNamespaces object, ready to
+// be filled with funny namespaces, such as "Kevin" and "Chantal".
+func NewAllNamespaces() *AllNamespaces {
+	allns := &AllNamespaces{}
+	for idx := NamespaceTypeIndex(0); idx < NamespaceTypesCount; idx++ {
+		allns[idx] = NamespaceMap{}
 	}
+	return allns
 }

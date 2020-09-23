@@ -18,13 +18,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
 // Filter returns true if the given Linux-kernel namespace passes the namespace
 // type filter.
-func Filter(ns lxkns.Namespace) bool {
+func Filter(ns model.Namespace) bool {
 	if filterMask == 0 {
 		for _, f := range namespaceFilters {
 			filterMask |= f

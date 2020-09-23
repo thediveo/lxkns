@@ -41,6 +41,8 @@ process:
 - foreground: '#00c000'
 owner:
 - foreground: '#e0e000'
+controlgroup:
+- foreground: '#00c000'
 unknown:
 - foreground: '#ff0000'
 `
@@ -74,6 +76,8 @@ process:
 - foreground: '#004000'
 owner:
 - foreground: '#808000'
+controlgroup:
+- foreground: '#004000'
 unknown:
 - foreground: '#800000'
 

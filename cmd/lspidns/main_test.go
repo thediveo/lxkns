@@ -47,10 +47,10 @@ process_namespaceid pid
 read
 `)
 		cmd = scripts.Start("main")
-		cmd.Decode(&initusernsid)
-		cmd.Decode(&initpidnsid)
-		cmd.Decode(&usernsid)
-		cmd.Decode(&pidnsid)
+		initusernsid = nstest.CmdDecodeNSId(cmd)
+		initpidnsid = nstest.CmdDecodeNSId(cmd)
+		usernsid = nstest.CmdDecodeNSId(cmd)
+		pidnsid = nstest.CmdDecodeNSId(cmd)
 	})
 
 	AfterEach(func() {

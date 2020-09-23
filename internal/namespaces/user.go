@@ -1,46 +1,45 @@
-// userNamespace implements the Ownership interface of user namespaces.
-
-// Copyright 2020 Harald Albrecht.
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not
-// use this file except in compliance with the License. You may obtain a copy
-// of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
-package lxkns
+package namespaces
 
 import (
 	"fmt"
 	"os/user"
 	"strings"
 
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops/relations"
 )
 
-// userNamespace stores ownership information in addition to the information
+// UserNamespace stores ownership information in addition to the information
 // for hierarchical namespaces. On top of the interfaces supported by a
-// hierarchicalNamespace, userNamespace implements the Ownership interface.
-type userNamespace struct {
-	hierarchicalNamespace
+// hierarchicalNamespace, UserNamespace implements the Ownership interface.
+type UserNamespace struct {
+	HierarchicalNamespace
 	owneruid int
-	ownedns  AllNamespaces
+	ownedns  model.AllNamespaces
 }
 
-var _ Ownership = (*userNamespace)(nil)
+// Ensure that our "class" *does* implement the required interfaces.
+var (
+	_ model.Namespace         = (*UserNamespace)(nil)
+	_ model.NamespaceStringer = (*UserNamespace)(nil)
+	_ model.Hierarchy         = (*UserNamespace)(nil)
+	_ model.Ownership         = (*UserNamespace)(nil)
+	_ NamespaceConfigurer     = (*UserNamespace)(nil)
+	_ HierarchyConfigurer     = (*UserNamespace)(nil)
+	_ UserConfigurer          = (*UserNamespace)(nil)
+)
 
-func (uns *userNamespace) UID() int               { return uns.owneruid }
-func (uns *userNamespace) Ownings() AllNamespaces { return uns.ownedns }
+// UID returns the user ID of the process that created this user namespace.
+func (uns *UserNamespace) UID() int { return uns.owneruid }
+
+// Ownings returns all namespaces owned by this user namespace, with the
+// exception of user namespaces. "Owned" user namespaces are actually child
+// user namespaces, so they are returned through Hierarchy.Children() instead.
+func (uns *UserNamespace) Ownings() model.AllNamespaces { return uns.ownedns }
 
 // String describes this instance of a user namespace, with its parent,
 // children, and owned namespaces. This description is non-recursive.
-func (uns *userNamespace) String() string {
+func (uns *UserNamespace) String() string {
 	u, err := user.LookupId(fmt.Sprintf("%d", uns.owneruid))
 	var userstr string
 	if err == nil {
@@ -50,7 +49,7 @@ func (uns *userNamespace) String() string {
 	var o []string
 	for _, ownedbytype := range uns.ownedns {
 		for _, owned := range ownedbytype {
-			o = append(o, owned.(NamespaceStringer).TypeIDString())
+			o = append(o, owned.(model.NamespaceStringer).TypeIDString())
 		}
 	}
 	if len(o) != 0 {
@@ -69,10 +68,16 @@ func (uns *userNamespace) String() string {
 		owneds)
 }
 
-// detectUIDs takes an open file referencing a user namespace to query its
+// DetectUID takes an open file referencing a user namespace to query its
 // owner's UID and then stores it for this user namespace proxy.
-func (uns *userNamespace) detectUID(nsref relations.Relation) {
+func (uns *UserNamespace) DetectUID(nsref relations.Relation) {
 	uns.owneruid, _ = nsref.OwnerUID()
+}
+
+// SetOwnerUID sets the user ID which originally created this user namespace
+// and thus is its owner.
+func (uns *UserNamespace) SetOwnerUID(uid int) {
+	uns.owneruid = uid
 }
 
 // ResolveOwner sets the owning user namespace reference based on the owning
@@ -81,7 +86,7 @@ func (uns *userNamespace) detectUID(nsref relations.Relation) {
 // inheritance using embedding ... note: it doesn't work correctly. The reason
 // is that we need the use the correct instance pointer and not a pointer to an
 // embedded instance when setting the "owned" relationship.
-func (uns *userNamespace) ResolveOwner(usernsmap NamespaceMap) {
+func (uns *UserNamespace) ResolveOwner(usernsmap model.NamespaceMap) {
 	uns.resolveOwner(uns, usernsmap)
 }
 
@@ -94,7 +99,7 @@ func (uns *userNamespace) ResolveOwner(usernsmap NamespaceMap) {
 // then set us not as a userNamespace parent, but instead as a
 // hierarchicalNamespace parent. If this Golang design isn't a fubar, then I
 // really don't know what a fubar is.
-func (uns *userNamespace) AddChild(child Hierarchy) {
+func (uns *UserNamespace) AddChild(child model.Hierarchy) {
 	child.(HierarchyConfigurer).SetParent(uns)
 	uns.children = append(uns.children, child)
 }

@@ -3,6 +3,8 @@ hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
 
+package "lxkns.model" {
+
 interface Hierarchy {
   L Parent() Hierarchy
   L Children() []Hierarchy
@@ -37,4 +39,6 @@ interface NamespaceStringer {
   TypeIDString() string
 }
 Namespace <|- NamespaceStringer
+
+}
 ```

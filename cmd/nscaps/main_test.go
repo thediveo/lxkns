@@ -111,7 +111,7 @@ var _ = Describe("renders branches", func() {
 			Skip("only non-root")
 		}
 		mynetnsid, err := ops.NamespacePath("/proc/self/ns/net").ID()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		os.Args = append(os.Args[:1], fmt.Sprintf("net:[%d]", mynetnsid.Ino))
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package namespaces
 
 import (
 	"fmt"
@@ -21,27 +21,23 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
 var _ = Describe("namespaces", func() {
 
-	It("TypeIndex fails for invalid kernel namespace type", func() {
-		Expect(TypeIndex(species.CLONE_NEWCGROUP | species.CLONE_NEWNET)).To(
-			Equal(NamespaceTypeIndex(-1)))
-	})
-
 	Describe("plain namespaces", func() {
 
 		It("render details", func() {
-			pns := &plainNamespace{
+			pns := &PlainNamespace{
 				nsid:   species.NamespaceID{Dev: 1, Ino: 123},
 				nstype: species.CLONE_NEWNET,
 			}
 			Expect(pns.TypeIDString()).To(Equal("net:[123]"))
 			Expect(pns.LeaderString()).To(Equal(""))
 
-			pns.leaders = []*Process{
+			pns.leaders = []*model.Process{
 				{PID: 666, Starttime: 666, Name: "foo"},
 				{PID: 42, Starttime: 42, Name: "bar"},
 			}
@@ -50,9 +46,9 @@ var _ = Describe("namespaces", func() {
 			Expect(s).To(ContainSubstring(`"foo" (666)`))
 			Expect(s).To(ContainSubstring(`"bar" (42)`))
 
-			pns.owner = &userNamespace{
-				hierarchicalNamespace: hierarchicalNamespace{
-					plainNamespace: plainNamespace{
+			pns.owner = &UserNamespace{
+				HierarchicalNamespace: HierarchicalNamespace{
+					PlainNamespace: PlainNamespace{
 						nsid:   species.NamespaceID{Dev: 1, Ino: 777},
 						nstype: species.CLONE_NEWUSER,
 					},
@@ -66,24 +62,24 @@ var _ = Describe("namespaces", func() {
 		})
 
 		It("find an ealdorman", func() {
-			pns := &plainNamespace{
-				leaders: []*Process{
+			pns := &PlainNamespace{
+				leaders: []*model.Process{
 					{PID: 666, Starttime: 666},
 					{PID: 42, Starttime: 42},
 				},
 			}
-			Expect(pns.Ealdorman()).To(Equal(&Process{PID: 42, Starttime: 42}))
+			Expect(pns.Ealdorman()).To(Equal(&model.Process{PID: 42, Starttime: 42}))
 		})
 
 		It("find no ealdorman when there isn't one", func() {
-			pns := &plainNamespace{
-				leaders: []*Process{},
+			pns := &PlainNamespace{
+				leaders: []*model.Process{},
 			}
 			Expect(pns.Ealdorman()).To(BeNil())
 		})
 
 		It("lives with errors when detecting the owner", func() {
-			pns := &plainNamespace{}
+			pns := &PlainNamespace{}
 			Expect(func() { pns.DetectOwner(nil) }).NotTo(Panic())
 		})
 
@@ -92,8 +88,8 @@ var _ = Describe("namespaces", func() {
 	Describe("hierarchical namespaces", func() {
 
 		It("render details", func() {
-			hns := &hierarchicalNamespace{
-				plainNamespace: plainNamespace{
+			hns := &HierarchicalNamespace{
+				PlainNamespace: PlainNamespace{
 					nsid:   species.NamespaceID{Dev: 1, Ino: 123},
 					nstype: species.CLONE_NEWPID,
 				},
@@ -103,8 +99,8 @@ var _ = Describe("namespaces", func() {
 			Expect(s).To(ContainSubstring("parent none"))
 			Expect(s).To(ContainSubstring("children none"))
 
-			chns := &hierarchicalNamespace{
-				plainNamespace: plainNamespace{
+			chns := &HierarchicalNamespace{
+				PlainNamespace: PlainNamespace{
 					nsid:   species.NamespaceID{Dev: 1, Ino: 678},
 					nstype: species.CLONE_NEWPID,
 				},
@@ -115,8 +111,8 @@ var _ = Describe("namespaces", func() {
 		})
 
 		It("cant add a child namespace twice", func() {
-			hns := &hierarchicalNamespace{}
-			chns := &hierarchicalNamespace{}
+			hns := &HierarchicalNamespace{}
+			chns := &HierarchicalNamespace{}
 			Expect(func() { hns.AddChild(chns) }).NotTo(Panic())
 			Expect(func() { hns.AddChild(chns) }).To(Panic())
 		})
@@ -126,19 +122,19 @@ var _ = Describe("namespaces", func() {
 	Describe("user namespaces", func() {
 
 		It("render details", func() {
-			uns := NewNamespace(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1111}, "").(*userNamespace)
+			uns := New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1111}, "").(*UserNamespace)
 			uns.owneruid = os.Getuid()
-			uns.AddLeader(&Process{
+			uns.AddLeader(&model.Process{
 				PID:  88888,
 				Name: "foobar",
 			})
-			uns.ownedns[NetNS][species.NamespaceID{Dev: 1, Ino: 1234}] = &plainNamespace{
+			uns.ownedns[model.NetNS][species.NamespaceID{Dev: 1, Ino: 1234}] = &PlainNamespace{
 				nsid:   species.NamespaceID{Dev: 1, Ino: 1234},
 				nstype: species.CLONE_NEWNET,
 			}
 
 			Expect(uns.UID()).To(Equal(uns.owneruid))
-			Expect(uns.Ownings()[NetNS]).To(HaveLen(1))
+			Expect(uns.Ownings()[model.NetNS]).To(HaveLen(1))
 
 			s := uns.String()
 			Expect(s).To(ContainSubstring(`joined by "foobar" (88888)`))

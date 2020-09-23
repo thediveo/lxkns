@@ -24,19 +24,19 @@ var _ = Describe("Namespace IDs", func() {
 	It("compares namespace IDs", func() {
 		ns1 := NamespaceID{Dev: 42, Ino: 123}
 		ns11 := NamespaceID{Dev: 42, Ino: 123}
-		Expect(ns1 == ns11).To(BeTrue())
+		Expect(ns1).To(Equal(ns11))
 
 		ns2 := NamespaceID{Dev: 666, Ino: 123}
-		Expect(ns1 == ns2).To(BeFalse())
+		Expect(ns1).NotTo(Equal(ns2))
 	})
 
-	It("parse namespace textual representations", func() {
+	It("parses namespace textual representations", func() {
 		id, t := IDwithType("net:[1]")
 		Expect(t).To(Equal(CLONE_NEWNET))
 		Expect(id).To(Equal(NamespaceIDfromInode(1)))
 	})
 
-	It("reject invalid textual representations", func() {
+	It("rejects invalid textual representations", func() {
 		for _, text := range []string{
 			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1",
 		} {
@@ -46,8 +46,13 @@ var _ = Describe("Namespace IDs", func() {
 		}
 	})
 
-	It("stringify", func() {
+	It("stringifies", func() {
 		Expect(NamespaceID{Dev: 42, Ino: 123}.String()).To(Equal("NamespaceID(42,123)"))
+	})
+
+	It("converts inode numbers into namespace IDs", func() {
+		Expect(NamespaceIDfromInode(0)).To(Equal(NoneID))
+		Expect(NamespaceIDfromInode(123).Ino).To(Equal(uint64(123)))
 	})
 
 })

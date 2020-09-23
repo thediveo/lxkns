@@ -3,6 +3,8 @@ hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
 
+package "lxkns.model" {
+
 interface Namespace {
   L Leaders() []*Process
   L Ealdorman() *Process
@@ -21,4 +23,6 @@ class Process {
 
 Process --> "7" Namespace : Namespaces
 Process "*" --> Process : Parent
+
+}
 ```
