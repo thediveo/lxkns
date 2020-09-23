@@ -9,5 +9,4 @@ into an application:
     import _ "github.com/thediveo/lxkns/log/logrus"
 
 */
-
 package logrus

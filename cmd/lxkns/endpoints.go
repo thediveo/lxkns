@@ -38,6 +38,8 @@ func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// GetProcessesHandler returns the process table with namespace references, as
+// JSON.
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 	opts := lxkns.NoDiscovery
 	opts.SkipProcs = false
