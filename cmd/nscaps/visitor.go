@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"strings"
 
+	incaps "github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
@@ -110,7 +111,7 @@ func (v *NodeVisitor) Get(n reflect.Value) (
 				if briefCaps {
 					properties = []string{"(process effective capabilities)"}
 				} else {
-					properties = propcaps(ProcessCapabilities(procPID))
+					properties = propcaps(incaps.ProcessCapabilities(procPID))
 					if len(properties) == 0 {
 						properties = []string{"(no effective capabilities)"}
 					}
@@ -119,7 +120,7 @@ func (v *NodeVisitor) Get(n reflect.Value) (
 				if briefCaps {
 					properties = []string{"(ALL capabilities)"}
 				} else {
-					properties = propcaps(ProcessCapabilities(1))
+					properties = propcaps(incaps.ProcessCapabilities(1))
 				}
 			}
 		}

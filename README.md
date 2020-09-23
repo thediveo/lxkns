@@ -9,7 +9,8 @@
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts. This package also features marshalling and
 unmarshalling namespace discovery results to and from JSON – which is especially
-useful to separate the super-privileged scanner from non-root frontends.
+useful to separate the super-privileged scanner from non-root frontends: run
+namespace discoveries as a containerized service.
 
 In addition, `lxkns` comes with a set of unique CLI namespace discovery tools
 and also helps Go programs with switching namespaces.
@@ -17,7 +18,7 @@ and also helps Go programs with switching namespaces.
 And all that tested with Go 1.13-1.15. And even with support for the new time
 namespaces.
 
-## Comprehensive Namespace Discovery
+## 🔎 Comprehensive Namespace Discovery
 
 When compared to most well-known and openly available CLI tools, such as
 `lsns`, the `lxkns` package detects namespaces even in places of a running
@@ -61,7 +62,7 @@ in Docker containers will show control group names in the form of `docker/<id>`,
 where the id is the usual 64 hex char string. Plain containerd container
 processes will show up with `<namespace>/<id>` control group names.
 
-## lxkns Tools
+## 🧰 lxkns Tools
 
 But `lxkns` is more than "just" a Golang package. It also features...
 
@@ -69,7 +70,7 @@ But `lxkns` is more than "just" a Golang package. It also features...
   simple REST API. Of course, our service is build with, guess, `lxkns`.
 - **CLI tools** also build on top of `lxkns` (we _do_ eat our own dog food).
 
-### lxkns REST Service
+### 🐋 lxkns REST Service
 
 To give the containerized lxkns discovery service a test drive (needs Docker
 with docker-compose to be installed):
@@ -80,7 +81,16 @@ with docker-compose to be installed):
    documented in form of an OpenAPI specification in
    [api/openapi-spec/lxkns.yaml](api/openapi-spec/lxkns.yaml).
 
-### CLI Tools
+Some deployment notes about the lxkns service container:
+
+- **read-only:** the lxkns service can be used on a read-only container filesystem.
+- **non-root:** the holy grail of container hardening ... wait till you get to
+  see our capabilities 😏
+- **unprivileged:** because that doesn't mean in-capable 😈
+- **capabilities:** not much to see here, just `CAP_SYS_ADMIN`,
+  `CAP_SYS_CHROOT`, `CAP_SYS_PTRACE`, and `CAP_DAC_READ_SEARCH`.
+
+### 🖥️ CLI Tools
 
 To build and install all CLI tools:
 - *system install:* simply run `make install` to install the tools into your
@@ -374,7 +384,7 @@ $ dumpns
 For the really gory stuff, take a look at the `examples/` and `cmd/`
 directories. 😁
 
-### Discovery
+### 🔎 Discovery
 
 The following example code runs a full namespace discovery using
 `Discover(FullDiscovery)` and then prints all namespaces found, sorted by
@@ -401,7 +411,7 @@ func main() {
 }
 ```
 
-### Marshalling and Unmarshalling
+### 📡 Marshalling and Unmarshalling
 
 `lxkns` supports un/marshalling discovery results from/to JSON, this handles
 both the namespaces and process information.
@@ -429,7 +439,7 @@ func main() {
 > **Note:** discovery results need to be "wrapped" in order to be
 > un/marshal-able.
 
-## Tinkering
+## 🔧 Tinkering
 
 `make` targets:
 - `test`: builds and runs all tests inside a container; the tests are run twice,
@@ -443,7 +453,7 @@ func main() {
 - `install`: builds and installs the binaries into `${GOPATH}/bin`, then
   installs these binaries into `/usr/local/bin`.
 
-## Copyright and License
+## ⚖️ Copyright and License
 
 `lxkns` is Copyright 2020 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.
