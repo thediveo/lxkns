@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
+// GetNamespacesHandler returns the results of a namespace discovery, as JSON.
 func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
 	allns := lxkns.Discover(lxkns.FullDiscovery)
 	// Note bene: set header before writing the header with the status code;
@@ -38,9 +39,21 @@ func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(http.StatusServiceUnavailable)
+	opts := lxkns.NoDiscovery
+	opts.SkipProcs = false
+	disco := lxkns.Discover(opts)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(
+		types.NewProcessTable(types.WithProcessTable(disco.Processes)))
+	if err != nil {
+		log.Errorf("processes discovery error: %s", err.Error())
+	}
 }
 
+// GetPIDMapHandler returns data for translating PIDs between hierarchical PID
+// namespaces, as JSON.
 func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
 	opts := lxkns.FullDiscovery
 	opts.NamespaceTypes = species.CLONE_NEWPID
@@ -51,6 +64,6 @@ func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
 	err := json.NewEncoder(w).Encode(
 		types.NewPIDMap(types.WithPIDMap(pidmap)))
 	if err != nil {
-		log.Errorf("namespaces discovery error: %s", err.Error())
+		log.Errorf("pid translation map discovery error: %s", err.Error())
 	}
 }

@@ -38,7 +38,7 @@ install:
 test: # runs all tests in a container
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
-		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f test/image/Dockerfile .;  \
+		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
 		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
 	done; \
 	echo "🎉 🎉 🎉 All tests passed"

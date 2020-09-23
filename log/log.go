@@ -21,7 +21,7 @@ import "fmt"
 type Level uint32
 
 // The available logging levels; please note that lxkns only uses a subset of
-// them. By coincidence, these levels match the logging levels of logus ;)
+// them. By coincidence, these levels match the logging levels of logrus ;)
 const (
 	PanicLevel Level = iota
 	FatalLevel

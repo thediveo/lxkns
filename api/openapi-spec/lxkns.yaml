@@ -458,7 +458,6 @@ components:
             required:
                 - type
                 - nsid
-                - reference
             type: object
             properties:
                 nsid:
