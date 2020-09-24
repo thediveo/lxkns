@@ -20,7 +20,7 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-var _ = Describe("recovering namespaces", func() {
+var _ = Describe("locating namespaces", func() {
 
 	It("locates a namespace by ID only", func() {
 		netns := LocateNamespace(mynetnsid, 0)
