@@ -22,6 +22,8 @@ function App() {
 
   useEffect(() => {
     namespaceDiscovery();
+    const interval = setInterval(() => namespaceDiscovery(), 2000);
+    return () => clearInterval(interval);
   }, []);
   
   const namespaceDiscovery = async () => {
@@ -32,7 +34,7 @@ function App() {
   };
 
   const nslist = Object.values(allns.namespaces)
-    .filter(ns => ns.type === "user")
+    .filter(ns => ns.type === "user" && ns.parent === null)
     .sort(namespaceIdOrder)
     .map(ns => 
       <li key={ns.nsid.toString()}><Namespace ns={ns}/></li>

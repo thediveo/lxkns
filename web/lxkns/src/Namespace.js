@@ -14,7 +14,7 @@
 
 import React from 'react';
 import classNames from 'classnames';
-import { namespaceNameTypeIdOrder } from './model';
+import { namespaceIdOrder, namespaceNameTypeIdOrder } from './model';
 
 // Namespace renders an individual namespace component. If the namespace is a
 // user namespace, then it additionally renders all owned namespaces as child
@@ -40,7 +40,12 @@ const Namespace = (props) => {
             .map(ns =>
                 <li key={ns.nsid.toString()}><Namespace ns={ns} /></li>
             )) || "";
-    const tenants = (tens && <ul>{tens}</ul>) || ""
+    const children = (props.ns.children !== undefined &&
+        props.ns.children.sort(namespaceIdOrder)
+            .map(ns =>
+                <li key={ns.nsid.toString()}><Namespace ns={ns} /></li>
+            )) || "";
+    const tenants = (tens && <ul>{tens}{children}</ul>) || ""
 
     return <span className="namespace">
         <span className={pillcls}>{props.ns.type}:[{props.ns.nsid}]</span>
