@@ -497,6 +497,11 @@ components:
                     items:
                         format: int32
                         type: integer
+                ealdorman:
+                    description: |-
+                        PID of the most senior leader process joined to this namespace.
+                    type: integer
+                    format: int32
                 parent:
                     format: int64
                     description: 'Only for PID and user namespaces: the ID of the parent namespace.'

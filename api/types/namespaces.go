@@ -124,7 +124,7 @@ type NamespaceUnmarshal struct {
 	Type    string          `json:"type"`                // "net", "user", et cetera...
 	Owner   uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
 	Ref     string          `json:"reference,omitempty"` // file system path reference.
-	Leaders []model.PIDType `json:"leaders,omitempty"`   // list of PIDs.
+	Leaders []model.PIDType `json:"leaders,omitempty"`   // list of leader PIDs.
 	Parent  uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
 	UserUID int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
 }
@@ -134,8 +134,9 @@ type NamespaceUnmarshal struct {
 // unmarshalling.
 type NamespaceMarshal struct {
 	NamespaceUnmarshal
-	Children []uint64 `json:"children,omitempty"`    // PID/user: IDs of child namespaces
-	Tenants  []uint64 `json:"possessions,omitempty"` // user: list of owned namespace IDs
+	Ealdorman model.PIDType `json:"ealdorman,omitempty"`   // PID of most senior leader process
+	Children  []uint64      `json:"children,omitempty"`    // PID/user: IDs of child namespaces
+	Tenants   []uint64      `json:"possessions,omitempty"` // user: list of owned namespace IDs
 }
 
 // MarshalNamespace emits a Namespace in JSON textual format.
@@ -149,6 +150,10 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 			Ref:     ns.Ref(),
 			Leaders: ns.LeaderPIDs(),
 		},
+	}
+	// For convenience, throw in the ealdoman's PID, if available...
+	if ealdorman := ns.Ealdorman(); ealdorman != nil {
+		aux.Ealdorman = ealdorman.PID
 	}
 	// If we have ownership information, then marshal a reference (ID) to the
 	// owning user namespace.

@@ -121,12 +121,14 @@ var _ = Describe("namespaces JSON", func() {
 				"type": "net",
 				"owner": %d,
 				"reference": %q,
-				"leaders": %s
+				"leaders": %s,
+				"ealdorman": %d
 			}`,
 			ns.ID().Ino,
 			ns.Owner().(model.Namespace).ID().Ino,
 			ns.Ref(),
 			pidlist(ns.LeaderPIDs()),
+			ns.Ealdorman().PID,
 		)))
 
 		// In contrast, a user namespace must contain parent and UID
@@ -140,12 +142,14 @@ var _ = Describe("namespaces JSON", func() {
 				"type": "user",
 				%s
 				"leaders": %s,
+				"ealdorman": %d,
 				"parent": %d,
 				"user-id": %d
 			}`,
 			userns.ID().Ino,
 			refifnotempty(userns.Ref()),
 			pidlist(userns.LeaderPIDs()),
+			userns.Ealdorman().PID,
 			parentuserns.ID().Ino,
 			userns.(model.Ownership).UID(),
 		)))
@@ -177,12 +181,14 @@ var _ = Describe("namespaces JSON", func() {
 				"type": "user",
 				%s
 				"leaders": %s,
+				"ealdorman": %d,
 				"children": %s,
 				"user-id": %d
 			}`,
 			grandpa.ID().Ino,
 			refifnotempty(grandpa.Ref()),
 			pidlist(grandpa.LeaderPIDs()),
+			grandpa.Ealdorman().PID,
 			childlist(grandpa.(model.Hierarchy)),
 			grandpa.(model.Ownership).UID(),
 		)))
@@ -230,6 +236,7 @@ var _ = Describe("namespaces JSON", func() {
 				"type": "user",
 				%s
 				"leaders": %s,
+				"ealdorman": %d,
 				"parent": %d,
 				"user-id": %d
 			}
@@ -237,6 +244,7 @@ var _ = Describe("namespaces JSON", func() {
 			userns.ID().Ino,
 			refifnotempty(userns.Ref()),
 			pidlist(userns.LeaderPIDs()),
+			userns.Ealdorman().PID,
 			userns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			userns.(model.Ownership).UID(),
 		)))
