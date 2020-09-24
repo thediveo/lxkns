@@ -176,10 +176,7 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
 	if result.Options.NamespaceTypes == 0 {
-		result.Options.NamespaceTypes = species.CLONE_NEWNS |
-			species.CLONE_NEWCGROUP | species.CLONE_NEWUTS |
-			species.CLONE_NEWIPC | species.CLONE_NEWUSER |
-			species.CLONE_NEWPID | species.CLONE_NEWNET | species.CLONE_NEWTIME
+		result.Options.NamespaceTypes = species.AllNS
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {

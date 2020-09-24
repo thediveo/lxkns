@@ -55,6 +55,11 @@ const (
 // NaNS identifies an invalid namespace type.
 const NaNS NamespaceType = 0
 
+// AllNS is the OR-ed bitmask of all currently defined (8) Linux-kernel
+// namespace type constants.
+const AllNS = CLONE_NEWNS | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC |
+	CLONE_NEWUSER | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWTIME
+
 // Name returns the type name string (such as "mnt", "net", ...) of a
 // namespace type value.
 func (nstype NamespaceType) Name() string {
