@@ -14,59 +14,61 @@
    under the License.
 */
 
-.App {
-    padding: 0ex 0.5em;
+button.hide {
+    display: none;
+}
+
+.tenant .namespace::before {
+    content: "···· ";
 }
 
 .namespace .pill {
     display: inline-block;
-    width: 9.5em;
+    text-align: end;
+    margin-top: 0.2ex;
+    margin-bottom: 0.2ex;
+    width: 10.5em;
     padding-left: 0.2em;
     padding-right: 0.2em;
     padding-bottom: 0.2em;
     border-radius: 0.2em;
 }
 
-.namespace .pill.cgroup {
+.namespace.cgroup .pill {
     background-color: lightpink;
 }
 
-.namespace .pill.ipc {
+.namespace.ipc .pill {
     background-color: lightyellow;
 }
 
-.namespace .pill.mnt {
+.namespace.mnt .pill {
     background-color: lightsteelblue;
 }
 
-.namespace .pill.net {
+.namespace.net .pill {
     background-color: #e0ffe0;
 }
 
-.namespace .pill.pid {
+.namespace.pid .pill {
     background-color: lightblue;
-    font-weight: bold;
 }
 
-.namespace .pill.time {
+.namespace.time .pill {
     background-color: mediumaquamarine;
 }
 
-.namespace .pill.user {
+.namespace.user .pill {
     background-color: lightgrey;
     font-weight: bold;
 }
 
-.namespace .pill.uts {
+.namespace.uts .pill {
     background-color: #ffd0d0;
 }
 
 .namespace .processinfo {
     padding-left: 0.7em;
-}
-
-.namespace .processinfo::before {
-    content: "⚙ "
 }
 
 .namespace .cgroupinfo {
@@ -77,6 +79,16 @@
     padding-left: 0.7em;
 }
 
-.namespace .bindmount::before {
-    content: "🔗 ";
+.namespace .MuiSvgIcon-root {
+    vertical-align: middle;
+}
+
+.processinfo .processname {
+    font-style: italic;
+    color: darkgreen;
+}
+
+.processinfo .bindmount {
+    font-style: italic;
+    color: orange;
 }
