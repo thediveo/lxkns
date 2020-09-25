@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os/user"
 	"strconv"
 
 	"github.com/thediveo/lxkns"
@@ -120,13 +121,14 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
 type NamespaceUnmarshal struct {
-	ID      uint64          `json:"nsid"`                // namespace ID.
-	Type    string          `json:"type"`                // "net", "user", et cetera...
-	Owner   uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
-	Ref     string          `json:"reference,omitempty"` // file system path reference.
-	Leaders []model.PIDType `json:"leaders,omitempty"`   // list of leader PIDs.
-	Parent  uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
-	UserUID int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
+	ID       uint64          `json:"nsid"`                // namespace ID.
+	Type     string          `json:"type"`                // "net", "user", et cetera...
+	Owner    uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
+	Ref      string          `json:"reference,omitempty"` // file system path reference.
+	Leaders  []model.PIDType `json:"leaders,omitempty"`   // list of leader PIDs.
+	Parent   uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
+	UserUID  int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
+	UserName string          `json:"user-name,omitempty"` // user: name.
 }
 
 // NamespaceMarshal adds those fields to NamespaceUnmarshal we marshal as a
@@ -177,12 +179,18 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 	// And now take care of what is special for user namespaces; such as
 	// enforcing sending a user ID, even if it is 0/root (which often will be
 	// the case).
+	username := ""
+	if user, err := user.LookupId(strconv.Itoa(uns.UID())); err == nil {
+		username = user.Name
+	}
 	return json.Marshal(&struct {
 		NamespaceMarshal
-		UserUID int `json:"user-id"` // enforce owner's user ID (UID)
+		UserUID  int    `json:"user-id"`   // enforce owner's user ID (UID)
+		UserName string `json:"user-name"` // enforce owner's user name
 	}{
 		NamespaceMarshal: aux,
 		UserUID:          uns.UID(),
+		UserName:         username,
 	})
 }
 

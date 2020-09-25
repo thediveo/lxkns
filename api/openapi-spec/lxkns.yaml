@@ -511,6 +511,11 @@ components:
                         Only for user namespaces: the UID of the Linux user who created this user
                         namespace.
                     type: integer
+                user-name:
+                    description: |-
+                        Only for user namespaces: the name of the Linux user who created this user
+                        namespace.
+                    type: string
                 children:
                     description: 'For user and PID namespaces: the list of child namespace IDs.'
                     type: array

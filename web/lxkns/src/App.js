@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -22,20 +22,21 @@ import TreeView from '@material-ui/lab/TreeView';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import InfoIcon from '@material-ui/icons/Info';
+import FilterNoneIcon from '@material-ui/icons/FilterNone';
 import { ConfirmProvider, useConfirm } from 'material-ui-confirm';
 
 import './App.css';
-import ElevationScroll from './ElevationScroll';
+import ElevationScroll from './tools/ElevationScroll';
 import UsernamespaceItem from './Usernamespace';
 import { postDiscovery as finalizeDiscoveryData, namespaceIdOrder } from './model';
-import { makeStyles } from '@material-ui/core';
+import { makeStyles, Tooltip } from '@material-ui/core';
 
 
 const LxknsApp = () => {
     const confirm = useConfirm();
 
-    const [allns, setAllns] = useState({ namespaces: {}, processes: {} });
-    const [expanded, setExpanded] = React.useState([]);
+    const [discovery, setDiscovery] = useState({ namespaces: {}, processes: {} });
+    const [expanded, setExpanded] = useState([]);
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
@@ -48,7 +49,7 @@ const LxknsApp = () => {
     // Shows the "About" dialog with a short description of this application.
     const handleInfo = () => {
         confirm({
-            title: 'About Linux Namespaces',
+            title: <><FilterNoneIcon/> About Linux Namespaces</>,
             description:
                 <div>
                     <p>Displays all discovered namespaces inside a Linux host.
@@ -63,18 +64,8 @@ const LxknsApp = () => {
                     project</a> on Github</p>
                 </div>,
             cancellationButtonProps: { className: "hide" }
-        }).then(() => { }).catch(() => { });
+        });
     };
-
-    // We definitely need "useRef: the unsung Hooks hero"
-    // (https://blog.logrocket.com/how-to-get-previous-props-state-with-react-hooks/)
-    // here, as we need to calculate the expansion state of the user namespace
-    // nodes, based on which nodes were expanded previously and which nodes
-    // are to be added anew, and should always be expanded.
-    const oldStateRef = useRef();
-    useEffect(() => {
-        oldStateRef.current = { allns: allns, expanded: expanded };
-    });
 
     // The effect hook runs after the component was rendered for the first
     // time(!) only and we then take the chance to initiate a namespace
@@ -83,41 +74,42 @@ const LxknsApp = () => {
     useEffect(() => {
         // Fetch the namespace+process discovery data from the server,
         // postprocess the JSON result, and finally update the allns state
-        // with the new information about all namespaces.
+        // with the new information about all namespaces. And then update also
+        // the expansion state of the user namespace tree nodes. And all this
+        // in a react-allowed stateless manner...
         const fetchDiscoveryData = () => {
             fetch('http://' + window.location.hostname + ':5010/api/namespaces')
                 .then(httpresult => httpresult.json())
                 .then(jsondata => finalizeDiscoveryData(jsondata))
-                .then(discovery => {
+                .then(discovery => setDiscovery(prevAllns => {
                     // We need to determine which user namespace tree nodes
                     // should be expanded, taking into account which user
                     // namespace nodes currently are expanded and which user
-                    // namespace nodes are now being added anew.
-
-                    // The difficulty here is that we only know which nodes
-                    // are expanded, but we don't know which nodes are
-                    // collapsed. So we first need to calculate which user
-                    // namespace nodes are really new; we just need the user
-                    // namespace IDs, as this is what we're identifying the
-                    // tree nodes by.
-                    const oldusernsids = Object.values(oldStateRef.current.allns.namespaces)
+                    // namespace nodes are now being added anew. The
+                    // difficulty here is that we only know which nodes are
+                    // expanded, but we don't know which nodes are collapsed.
+                    // So we first need to calculate which user namespace
+                    // nodes are really new; we just need the user namespace
+                    // IDs, as this is what we're identifying the tree nodes
+                    // by.
+                    const oldusernsids = Object.values(prevAllns.namespaces)
                         .filter(ns => ns.type === "user")
                         .map(ns => ns.nsid.toString());
+                    const fltr = Object.keys(prevAllns.namespaces).length ?
+                        (ns => ns.type === "user") : (ns => ns.type === "user" && ns.parent === null);
                     const addedusernsids = Object.values(discovery.namespaces)
-                        .filter(ns => ns.type === "user")
+                        .filter(fltr)
                         .map(ns => ns.nsid.toString())
                         .filter(nsid => !oldusernsids.includes(nsid));
                     // Now we need to combine the "set" of existing expanded
                     // user namespace nodes with the "set" of the newly added
                     // user namespace nodes, as we want all new user namespace
                     // to be automatically expanded on arrival.
-                    const expanded = oldStateRef.current.expanded;
-                    const expand = expanded.concat(
-                        addedusernsids.filter(nsid => !expanded.includes(nsid)));
-                    // Phew, finally we can update the state.
-                    setAllns(discovery);
-                    setExpanded(expand);
-                });
+                    setExpanded(prevExpanded => prevExpanded.concat(
+                        addedusernsids.filter(nsid => !prevExpanded.includes(nsid))));
+                    // Finally return new discovery state to be set.
+                    return discovery;
+                }));
         };
         // Initiate getting discovery data NOW...
         fetchDiscoveryData();
@@ -127,10 +119,26 @@ const LxknsApp = () => {
         return () => clearInterval(interval);
     }, []);
 
+    const handleCollapseAll = () => {
+        const topuserns = Object.values(discovery.namespaces)
+            .filter(ns => ns.type === "user" && ns.parent === null)
+            .map(ns => ns.nsid.toString())
+        setExpanded(topuserns);
+    };
+
+    const handleExpandAll = () => {
+        console.log("allns", Object.values(discovery.namespaces).map(ns => ns.nsid));
+        const alluserns = Object.values(discovery.namespaces)
+            .filter(ns => ns.type === "user")
+            .map(ns => ns.nsid.toString())
+        setExpanded(alluserns);
+    };
+
+
     // In the discovery heap find only the topmost user namespaces; that is,
     // user namespaces without any parent. This should return only one user
     // namespace.
-    const rootuserns = Object.values(allns.namespaces)
+    const rootuserns = Object.values(discovery.namespaces)
         .filter(ns => ns.type === "user" && ns.parent === null)
         .sort(namespaceIdOrder)
         .map(ns =>
@@ -140,13 +148,21 @@ const LxknsApp = () => {
     const classes = useStyles();
 
     return (
-        <React.Fragment>
+        <>
             <CssBaseline />
             <ElevationScroll>
                 <AppBar>
                     <Toolbar>
                         <Typography variant="h6" className={classes.title}>Linux Namespaces</Typography>
-                        <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
+                        <Tooltip title="expand initial user namespace(s) only">
+                            <IconButton color="inherit" onClick={handleCollapseAll}><ChevronRightIcon /></IconButton>
+                        </Tooltip>
+                        <Tooltip title="expand all">
+                            <IconButton color="inherit" onClick={handleExpandAll}><ExpandMoreIcon /></IconButton>
+                        </Tooltip>
+                        <Tooltip title="about lxkns">
+                            <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
+                        </Tooltip>
                     </Toolbar>
                 </AppBar>
             </ElevationScroll>
@@ -158,7 +174,7 @@ const LxknsApp = () => {
                 defaultExpandIcon={<ChevronRightIcon />}
                 expanded={expanded}
             >{rootuserns}</TreeView>
-        </React.Fragment>
+        </>
     );
 }
 

@@ -38,6 +38,7 @@ button.hide {
     text-align: end;
     margin-top: 0.2ex;
     margin-bottom: 0.2ex;
+    margin-right: 0.5em;
     padding-left: 0.2em;
     padding-right: 0.2em;
     padding-bottom: 0.2em;
@@ -80,18 +81,6 @@ button.hide {
 
 .namespace.uts .pill {
     background-color: #ffd0d0;
-}
-
-.namespace .processinfo {
-    padding-left: 0.7em;
-}
-
-.namespace .cgroupinfo {
-    padding-left: 0.7em;
-}
-
-.namespace .bindmount {
-    padding-left: 0.7em;
 }
 
 .namespace .MuiSvgIcon-root {

@@ -23,16 +23,18 @@ import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk';
 import SpeedIcon from '@material-ui/icons/Speed';
 import TimerIcon from '@material-ui/icons/Timer';
 import DnsIcon from '@material-ui/icons/Dns';
+import TextureIcon from '@material-ui/icons/Texture';
+import { Tooltip } from '@material-ui/core';
 
 const icons = {
-    "cgroup": <SpeedIcon fontSize="inherit"/>,
-    "ipc": <PhoneInTalkIcon fontSize="inherit"/>,
-    "mnt": <StorageIcon fontSize="inherit"/>,
-    "net": <SettingsEthernetIcon fontSize="inherit"/>,
-    "pid": <DirectionsRunIcon fontSize="inherit"/>,
-    "user": <PersonIcon fontSize="inherit"/>,
-    "uts": <DnsIcon fontSize="inherit"/>,
-    "time": <TimerIcon fontSize="inherit"/>
+    "cgroup": <Tooltip title="control group namespace"><SpeedIcon fontSize="inherit" /></Tooltip>,
+    "ipc": <Tooltip title="inter-process communication namespace"><PhoneInTalkIcon fontSize="inherit" /></Tooltip>,
+    "mnt": <Tooltip title="mount namespace"><StorageIcon fontSize="inherit" /></Tooltip>,
+    "net": <Tooltip title="network namespace"><SettingsEthernetIcon fontSize="inherit" /></Tooltip>,
+    "pid": <Tooltip title="process identifier namespace"><DirectionsRunIcon fontSize="inherit" /></Tooltip>,
+    "user": <Tooltip title="user namespace"><PersonIcon fontSize="inherit" /></Tooltip>,
+    "uts": <Tooltip title="*nix time sharing namespace"><DnsIcon fontSize="inherit" /></Tooltip>,
+    "time": <Tooltip title="monotonous timers namespace"><TimerIcon fontSize="inherit" /></Tooltip>
 };
 
 // Component Namespace renders information about a particular namespace: type
@@ -41,24 +43,32 @@ const icons = {
 // user namespaces).
 const Namespace = (props) => {
     const process = (props.ns.ealdorman &&
-        <span className="processinfo"><DirectionsRunIcon fontSize="inherit"/>
-            process <span className="processname">"{props.ns.ealdorman.name}"</span>
-        ({props.ns.ealdorman.pid})
-      </span>) || (props.ns.reference &&
-            <span className="bindmount"><LinkIcon fontSize="inherit"/>
-                bind-mounted at <span className="bindmount">"{props.ns.reference}"</span>
-      </span>) || "";
+        <Tooltip title="process"><span className="processinfo">
+            <DirectionsRunIcon fontSize="inherit" />
+                <span className="processname">"{props.ns.ealdorman.name}"</span> ({props.ns.ealdorman.pid})
+        </span></Tooltip>) || (props.ns.reference &&
+            <Tooltip title="bind mount"><span className="bindmount">
+                <LinkIcon fontSize="inherit" />
+                <span className="bindmount">"{props.ns.reference}"</span>
+            </span></Tooltip>) || 
+            <Tooltip title={"intermediate hidden "+props.ns.type+" namespace"}>
+                <TextureIcon fontSize="inherit"/>
+            </Tooltip>;
 
     const cgroup = (props.ns.cgroup &&
         <span className="cgroupinfo">
             controlled by "{props.ns.cgroup}"
-      </span>) || "";
+        </span>) || "";
+
+    const owner = (props.ns.type === "user" &&
+        <span className="owner">
+            owned by UID {props.ns['user-id']} {props.ns['user-name'] && '"'+props.ns['user-name']+'"'}
+        </span>) || "";
 
     return <span className={classNames("namespace", props.ns.type)}>
         {icons[props.ns.type]}&nbsp;
         <span className="pill">{props.ns.type}:[{props.ns.nsid}]</span>
-        {process}
-        {cgroup}
+        {process}{cgroup} {owner}
     </span>;
 };
 
