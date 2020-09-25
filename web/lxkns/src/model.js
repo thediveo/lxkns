@@ -20,8 +20,12 @@ export const postDiscovery = (data) => {
     // Process all namespaces and add direct object references instead of
     // indirect references in form of keys/ids.
     Object.values(data.namespaces).forEach(ns => {
-        ns.children = [];
-        if (ns.type === 'user') { ns.tenants = []; }
+        if (ns.type === 'user') { 
+            ns.tenants = [];
+            ns.children = [];
+        } else if (ns.type === 'pid') {
+            ns.children = [];
+        }
     });
     Object.values(data.namespaces).forEach(ns => {
         // replace leader PIDs with leader process object references ... if

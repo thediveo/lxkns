@@ -51,7 +51,7 @@ button.hide {
 }
 
 .namespace.cgroup .pill {
-    background-color: lightpink;
+    background-color: #ffe6bb;
 }
 
 .namespace.ipc .pill {
@@ -59,7 +59,7 @@ button.hide {
 }
 
 .namespace.mnt .pill {
-    background-color: lightsteelblue;
+    background-color: #d0e1e4;
 }
 
 .namespace.net .pill {
@@ -67,7 +67,7 @@ button.hide {
 }
 
 .namespace.pid .pill {
-    background-color: lightblue;
+    background-color: #d0d4f6;
 }
 
 .namespace.time .pill {
@@ -75,7 +75,7 @@ button.hide {
 }
 
 .namespace.user .pill {
-    background-color: lightgrey;
+    background-color: #e9e8e8;
     font-weight: bold;
 }
 
