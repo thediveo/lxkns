@@ -16,20 +16,22 @@ import React, { useEffect, useState } from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import TreeView from '@material-ui/lab/TreeView';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import InfoIcon from '@material-ui/icons/Info';
-import FilterNoneIcon from '@material-ui/icons/FilterNone';
+import LaunchIcon from '@material-ui/icons/Launch';
 import { ConfirmProvider, useConfirm } from 'material-ui-confirm';
+import { makeStyles, Tooltip } from '@material-ui/core';
 
 import './App.css';
+import LxknsIcon from './lxkns.svg';
 import ElevationScroll from './tools/ElevationScroll';
 import UsernamespaceItem from './Usernamespace';
 import { postDiscovery as finalizeDiscoveryData, namespaceIdOrder } from './model';
-import { makeStyles, Tooltip } from '@material-ui/core';
 
 
 const LxknsApp = () => {
@@ -49,17 +51,19 @@ const LxknsApp = () => {
     // Shows the "About" dialog with a short description of this application.
     const handleInfo = () => {
         confirm({
-            title: <><FilterNoneIcon/> About Linux Namespaces</>,
+            title: <><img src={LxknsIcon} alt="lxkns app logo" style={{ verticalAlign: 'text-bottom' }} />
+            &nbsp;About Linux Namespaces</>,
             description:
                 <div>
-                    <p>Displays all discovered namespaces inside a Linux host.
-                    The display is organized following the hierarchy of user
+                    <p>This app displays all discovered namespaces inside a
+                    Linux host.</p>
+                    <p>The display is organized following the hierarchy of user
                     namespaces. Namespaces of other types are shown beneath the
                     particular user namespace which is owning them. Owning a
                     namespace here means that a namespace was created by a
                     process while the process was attached to that specific user
                     namespace.</p>
-                    <p><a href="https://github.com/thediveo/lxkns"
+                    <p>Find the <LaunchIcon fontSize="inherit" className="inlineicon" /><a href="https://github.com/thediveo/lxkns"
                         target="_blank" rel="noopener noreferrer">thediveo/lxkns
                     project</a> on Github</p>
                 </div>,
@@ -78,7 +82,7 @@ const LxknsApp = () => {
         // the expansion state of the user namespace tree nodes. And all this
         // in a react-allowed stateless manner...
         const fetchDiscoveryData = () => {
-            fetch('http://' + window.location.hostname + ':5010/api/namespaces')
+            fetch('/api/namespaces')
                 .then(httpresult => httpresult.json())
                 .then(jsondata => finalizeDiscoveryData(jsondata))
                 .then(discovery => setDiscovery(prevAllns => {
@@ -134,7 +138,6 @@ const LxknsApp = () => {
         setExpanded(alluserns);
     };
 
-
     // In the discovery heap find only the topmost user namespaces; that is,
     // user namespaces without any parent. This should return only one user
     // namespace.
@@ -153,7 +156,11 @@ const LxknsApp = () => {
             <ElevationScroll>
                 <AppBar>
                     <Toolbar>
-                        <Typography variant="h6" className={classes.title}>Linux Namespaces</Typography>
+                        <Typography variant="h6" className={classes.title}>
+                            <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
+                                Linux Namespaces
+                            </Badge>
+                        </Typography>
                         <Tooltip title="expand initial user namespace(s) only">
                             <IconButton color="inherit" onClick={handleCollapseAll}><ChevronRightIcon /></IconButton>
                         </Tooltip>

@@ -30,7 +30,6 @@ func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
 	// Note bene: set header before writing the header with the status code;
 	// actually makes sense, innit?
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(
 		types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
@@ -47,7 +46,6 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 	disco := lxkns.Discover(opts)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(
@@ -65,7 +63,6 @@ func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
 	pidmap := lxkns.NewPIDMap(lxkns.Discover(opts))
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(

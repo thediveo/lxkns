@@ -83,7 +83,7 @@ button.hide {
     background-color: #ffd0d0;
 }
 
-.namespace .MuiSvgIcon-root {
+.namespace .MuiSvgIcon-root, .inlineicon {
     vertical-align: middle;
 }
 
@@ -95,4 +95,21 @@ button.hide {
 .processinfo .bindmount {
     font-style: italic;
     color: orange;
+}
+
+.processinfo .cgroupinfo {
+    margin-left: 0.3em;
+}
+
+.cgroupinfo .cgroupname {
+    display: inline-block;
+    max-width: 15em;
+    vertical-align: middle;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.namespace .userchildren {
+    margin-right: 0.2em;
 }

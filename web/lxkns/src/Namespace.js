@@ -25,7 +25,7 @@ import TimerIcon from '@material-ui/icons/Timer';
 import DnsIcon from '@material-ui/icons/Dns';
 import TextureIcon from '@material-ui/icons/Texture';
 import MemoryIcon from '@material-ui/icons/Memory';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRight';
 import { Tooltip } from '@material-ui/core';
 
 const icons = {
@@ -44,10 +44,21 @@ const icons = {
 // reference. This component never renders any child namespaces (of PID and
 // user namespaces).
 const Namespace = (props) => {
+    // Prepare information about the control group of the leader process (if
+    // there is any joined to this namespace), which is useful in identifying
+    // processes with generic names. 
+    const cgroup = props.ns.ealdorman && props.ns.ealdorman.cgroup &&
+        <span className="cgroupinfo">
+            <SpeedIcon fontSize="inherit"/> <span>"<span className="cgroupname">{props.ns.ealdorman.cgroup}</span>"</span>
+        </span>;
+    // If there is a leader process joined to this namespace, then prepare some
+    // process information to be rendered alongside with the namespace type and
+    // ID.
     const process = (props.ns.ealdorman &&
         <Tooltip title="process"><span className="processinfo">
             <DirectionsRunIcon fontSize="inherit" />
             <span className="processname">"{props.ns.ealdorman.name}"</span> ({props.ns.ealdorman.pid})
+            {cgroup}
         </span></Tooltip>) || (props.ns.reference &&
             <Tooltip title="bind mount"><span className="bindmount">
                 <LinkIcon fontSize="inherit" />
@@ -57,27 +68,22 @@ const Namespace = (props) => {
             <TextureIcon fontSize="inherit" />
         </Tooltip>;
 
-    const cgroup = (props.ns.cgroup &&
-        <span className="cgroupinfo">
-            controlled by "{props.ns.cgroup}"
-        </span>) || "";
-
-    const owner = (props.ns.type === 'user' &&
+    const owner = props.ns.type === 'user' &&
         <span className="owner">
             owned by UID {props.ns['user-id']} {props.ns['user-name'] && '"' + props.ns['user-name'] + '"'}
-        </span>) || "";
+        </span>;
 
-    const children = (props.ns.type === 'user' &&
-        <span>
-            (<ExpandMoreIcon fontSize="inherit" />
-            {countNamespaceWithChildren(0, props.ns)})
-        </span>) || "";
+    const children = props.ns.type === 'user' &&
+        <span className="userchildren">
+            (<SubdirectoryArrowRightIcon fontSize="inherit" />
+            {countNamespaceWithChildren(-1, props.ns)})
+        </span>;
 
     return <span className={classNames('namespace', props.ns.type)}>
         {icons[props.ns.type]}&nbsp;
         <span className="pill">{props.ns.type}:[{props.ns.nsid}]</span>
         {children}
-        {process}{cgroup} {owner}
+        {process} {owner}
     </span>;
 };
 
