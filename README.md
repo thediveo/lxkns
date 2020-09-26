@@ -76,10 +76,10 @@ To give the containerized lxkns discovery service a test drive (needs Docker
 with docker-compose to be installed):
 
 1. `make deploy`,
-2. and then navigate to http://localhost:5010/api/namespaces. You'll be greeted
-   with JSON soup with the discovered namespaces data. The REST API is
-   documented in form of an OpenAPI specification in
-   [api/openapi-spec/lxkns.yaml](api/openapi-spec/lxkns.yaml).
+2. and then navigate to http://localhost:5010. The lxkns web app should load
+   automatically and then display the discovery results.
+
+   ![linux namespace discovery app](docs/lxkns-app.jpeg)
 
 Some deployment notes about the lxkns service container:
 
