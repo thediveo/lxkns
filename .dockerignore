@@ -20,4 +20,5 @@ README.md
 LICENSE
 Makefile
 __debug_bin
-web/
+web/lxkns/node_modules
+web/lxkns/build

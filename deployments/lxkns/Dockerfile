@@ -18,13 +18,27 @@ RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get
 COPY . .
 RUN go build -v -o /lxkns ./cmd/lxkns
 
-# 2nd and final stage: create the final image containing only the lxkns binary
-# as well as required libraries.
+# 2nd stage: builds the lxkns web client react application.
+FROM node:14-alpine AS reactor
+WORKDIR /webapp
+ENV PATH /webapp/node_modules/.bin:$PATH
+# Cache the dependency hell, so we don't need to recreate it most of the time
+# when dependencies don't change.
+COPY web/lxkns/package.json web/lxkns/yarn.lock ./
+RUN yarn install
+# Now build the production-optimized web app.
+COPY web/lxkns/public/ ./public/
+COPY web/lxkns/src/ ./src/
+RUN yarn build
+
+# 3rd and final stage: create the final image containing only the lxkns binary
+# and its required shared libraries, as well as the lxkns web app.
 FROM alpine:${ALPINE_VERSION}
 COPY --from=builder /lxkns /
 RUN apk add --no-cache \
         libcap && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search+ep" /lxkns && \
     apk del --no-cache libcap
+COPY --from=reactor /webapp/build/ /web/lxkns/build/
 USER 65534
 CMD ["/lxkns"]
