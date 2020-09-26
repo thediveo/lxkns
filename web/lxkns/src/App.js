@@ -12,20 +12,31 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { makeStyles } from '@material-ui/core';
+
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+
 import TreeView from '@material-ui/lab/TreeView';
+
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import InfoIcon from '@material-ui/icons/Info';
 import LaunchIcon from '@material-ui/icons/Launch';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import SyncIcon from '@material-ui/icons/Sync';
+import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
+
 import { ConfirmProvider, useConfirm } from 'material-ui-confirm';
-import { makeStyles, Tooltip } from '@material-ui/core';
 
 import './App.css';
 import LxknsIcon from './lxkns.svg';
@@ -40,7 +51,8 @@ const LxknsApp = () => {
 
     const [discovery, setDiscovery] = useState({ namespaces: {}, processes: {} });
     const [expanded, setExpanded] = useState([]);
-    const [cycle, setCyle] = useState(5000);
+    const [cycle, setCycle] = useState(5 * 1000);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
@@ -49,6 +61,20 @@ const LxknsApp = () => {
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
     };
+
+    // User clicks on the auto-refresh button to pop up the associated menu.
+    const handleCycleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    // User selects an auto-refresh interval menu item.
+    const handleCycleMenuItemClick = (event, interval) => {
+        setAnchorEl(null);
+        console.log("setting auto-refresh to ", interval ? (interval / 1000) + "s" : "off");
+        setCycle(interval);
+    };
+
+    const handleCycleMenuClose = () => setAnchorEl(null);
 
     // Shows the "About" dialog with a short description of this application.
     const handleInfo = () => {
@@ -79,6 +105,7 @@ const LxknsApp = () => {
     // the expansion state of the user namespace tree nodes. And all this
     // in a react-allowed stateless manner...
     const fetchDiscoveryData = () => {
+        // console.log("discovering...");
         fetch('/api/namespaces')
             .then(httpresult => httpresult.json())
             .then(jsondata => finalizeDiscoveryData(jsondata))
@@ -118,7 +145,9 @@ const LxknsApp = () => {
     useInterval(() => fetchDiscoveryData(), cycle);
 
     // Initially fetch discovery data, unless the cycle is null.
-    useEffect(() => fetchDiscoveryData(), [cycle]);
+    useEffect(() => {
+        cycle !== null && fetchDiscoveryData()
+    }, [cycle]);
 
     // Collapse (almost) all user namespace nodes, except for the top-level user
     // namespace.
@@ -131,7 +160,6 @@ const LxknsApp = () => {
 
     // Expand all user namespaces nodes.
     const handleExpandAll = () => {
-        console.log("allns", Object.values(discovery.namespaces).map(ns => ns.nsid));
         const alluserns = Object.values(discovery.namespaces)
             .filter(ns => ns.type === "user")
             .map(ns => ns.nsid.toString())
@@ -167,6 +195,37 @@ const LxknsApp = () => {
                         <Tooltip title="expand all">
                             <IconButton color="inherit" onClick={handleExpandAll}><ExpandMoreIcon /></IconButton>
                         </Tooltip>
+                        <Tooltip title="refresh">
+                            <IconButton color="inherit" onClick={fetchDiscoveryData}><RefreshIcon /></IconButton>
+                        </Tooltip>
+                        <Tooltip title={cycle !== null ? "auto-refresh interval " + cycletext(cycle) : "auto-refresh off"}>
+                            <IconButton
+                                aria-haspopup="true"
+                                aria-controls="cyclesmenu"
+                                onClick={handleCycleClick}
+                                color="inherit"
+                            >
+                                {cycle !== null ? <SyncIcon /> : <SyncDisabledIcon />}
+                                <ExpandMoreIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Menu
+                            id="cyclesmenu"
+                            anchorEl={anchorEl}
+                            keepMounted
+                            open={Boolean(anchorEl)}
+                            onClose={handleCycleMenuClose}
+                        >
+                            {cycles.map((item, index) => (
+                                <MenuItem
+                                    key={item.interval}
+                                    selected={item.interval === cycle}
+                                    onClick={(event) => handleCycleMenuItemClick(event, item.interval)}
+                                >
+                                    {item.text}
+                                </MenuItem>
+                            ))}
+                        </Menu>
                         <Tooltip title="about lxkns">
                             <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
                         </Tooltip>
@@ -184,6 +243,18 @@ const LxknsApp = () => {
         </>
     );
 }
+
+const cycles = [
+    { text: 'off', interval: null },
+    { text: '1s', interval: 1000 },
+    { text: '5s', interval: 5 * 1000 },
+    { text: '10s', interval: 10 * 1000 },
+    { text: '30s', interval: 30 * 1000 },
+    { text: '1m', interval: 60 * 1000 },
+    { text: '5m', interval: 5 * 60 * 1000 },
+];
+
+const cycletext = cycle => cycles.find(item => cycle === item.interval).text;
 
 // We need to wrap the application as otherwise we won't get a confirmer...
 // ouch.
