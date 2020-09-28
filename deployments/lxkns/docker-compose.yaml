@@ -6,7 +6,8 @@ services:
         build: 
             context: ../..
             dockerfile: deployments/lxkns/Dockerfile
-        command: ["/lxkns", "--debug"]
+        # command: ["/lxkns", "--debug"]
+        command: ["/lxkns"]
         ports:
             - "5010:5010"
         user: "65534"

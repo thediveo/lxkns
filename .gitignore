@@ -9,3 +9,4 @@
 /coverage-root.out
 /coverage.html
 __debug_bin
+/web/node_modules

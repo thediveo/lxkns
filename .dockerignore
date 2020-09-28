@@ -20,3 +20,6 @@ README.md
 LICENSE
 Makefile
 __debug_bin
+web/lxkns/node_modules
+web/lxkns/build
+web/lxkns/build/service-worker.js

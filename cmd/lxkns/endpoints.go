@@ -46,6 +46,7 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 	disco := lxkns.Discover(opts)
 
 	w.Header().Set("Content-Type", "application/json")
+
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(
 		types.NewProcessTable(types.WithProcessTable(disco.Processes)))
@@ -62,6 +63,7 @@ func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
 	pidmap := lxkns.NewPIDMap(lxkns.Discover(opts))
 
 	w.Header().Set("Content-Type", "application/json")
+
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(
 		types.NewPIDMap(types.WithPIDMap(pidmap)))

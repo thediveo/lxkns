@@ -73,13 +73,23 @@ But `lxkns` is more than "just" a Golang package. It also features...
 ### 🐋 lxkns REST Service
 
 To give the containerized lxkns discovery service a test drive (needs Docker
-with docker-compose to be installed):
+with docker-compose to be installed) you can play around with our "Linux
+namespaces" react app:
 
 1. `make deploy`,
-2. and then navigate to http://localhost:5010/api/namespaces. You'll be greeted
-   with JSON soup with the discovered namespaces data. The REST API is
-   documented in form of an OpenAPI specification in
-   [api/openapi-spec/lxkns.yaml](api/openapi-spec/lxkns.yaml).
+2. and then navigate to http://localhost:5010. The lxkns web app should load
+   automatically and then display the discovery results. The app bar controls
+   show tooltips when hovering over them.
+   - `>` collapses all user namespace nodes, except for the initial user namespace.
+   - `v` expands all user namespace nodes.
+   - `⟳` manuals refresh -- whenevery you want; displays a progress indicator in
+     case of slow refreshes.
+   - `🔄` opens a pop-up menu to change the refresh interval or switch off
+     automatic refresh. Your refresh setting will be stored in your browser's
+     local storage.
+   - `🛈` shows some app blurb.
+
+   ![linux namespace discovery app](docs/lxkns-app.jpeg)
 
 Some deployment notes about the lxkns service container:
 

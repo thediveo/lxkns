@@ -1,7 +1,7 @@
 /*
 
 Package portable provides so-called "portable" namespace references with
-validation of "locking" (keeping the referenced namespace open and thus alive).
+validation and "locking" (keeping the referenced namespace open and thus alive).
 
 There's an unavoidable non-zero timing window between the discovery of
 namespaces (and their references) and attempting to use them for switching

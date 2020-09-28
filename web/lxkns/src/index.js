@@ -1,5 +1,3 @@
-// General package definitions.
-
 // Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -14,7 +12,19 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
 
-// SemVersion is the semantic version string of the lxkns module.
-const SemVersion = "0.15.0"
+// Import only the necessary Roboto fonts, so they are available "offline"
+// without CDN.
+import "fontsource-roboto/400.css";
+import "fontsource-roboto/500.css";
+
+ReactDOM.render(
+	<React.StrictMode>
+		<App />
+	</React.StrictMode>,
+	document.getElementById('root')
+);
