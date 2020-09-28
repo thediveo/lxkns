@@ -36,7 +36,7 @@ import LxknsIcon from './lxkns.svg';
 import Discovery, { DiscoveryContext } from 'components/discovery';
 import UserNamespaceTree from 'components/usernamespacetree';
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree';
-import ElevationScroll from './tools/ElevationScroll';
+import ElevationScroll from 'components/elevationscroll';
 import Refresher from 'components/refresher';
 
 const LxknsApp = () => {
