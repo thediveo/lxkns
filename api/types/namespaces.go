@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os/user"
 	"strconv"
 
 	"github.com/thediveo/lxkns"
@@ -120,13 +121,14 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
 type NamespaceUnmarshal struct {
-	ID      uint64          `json:"nsid"`                // namespace ID.
-	Type    string          `json:"type"`                // "net", "user", et cetera...
-	Owner   uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
-	Ref     string          `json:"reference,omitempty"` // file system path reference.
-	Leaders []model.PIDType `json:"leaders,omitempty"`   // list of PIDs.
-	Parent  uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
-	UserUID int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
+	ID       uint64          `json:"nsid"`                // namespace ID.
+	Type     string          `json:"type"`                // "net", "user", et cetera...
+	Owner    uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
+	Ref      string          `json:"reference,omitempty"` // file system path reference.
+	Leaders  []model.PIDType `json:"leaders,omitempty"`   // list of leader PIDs.
+	Parent   uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
+	UserUID  int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
+	UserName string          `json:"user-name,omitempty"` // user: name.
 }
 
 // NamespaceMarshal adds those fields to NamespaceUnmarshal we marshal as a
@@ -134,8 +136,9 @@ type NamespaceUnmarshal struct {
 // unmarshalling.
 type NamespaceMarshal struct {
 	NamespaceUnmarshal
-	Children []uint64 `json:"children,omitempty"`    // PID/user: IDs of child namespaces
-	Tenants  []uint64 `json:"possessions,omitempty"` // user: list of owned namespace IDs
+	Ealdorman model.PIDType `json:"ealdorman,omitempty"`   // PID of most senior leader process
+	Children  []uint64      `json:"children,omitempty"`    // PID/user: IDs of child namespaces
+	Tenants   []uint64      `json:"possessions,omitempty"` // user: list of owned namespace IDs
 }
 
 // MarshalNamespace emits a Namespace in JSON textual format.
@@ -149,6 +152,10 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 			Ref:     ns.Ref(),
 			Leaders: ns.LeaderPIDs(),
 		},
+	}
+	// For convenience, throw in the ealdoman's PID, if available...
+	if ealdorman := ns.Ealdorman(); ealdorman != nil {
+		aux.Ealdorman = ealdorman.PID
 	}
 	// If we have ownership information, then marshal a reference (ID) to the
 	// owning user namespace.
@@ -172,12 +179,18 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 	// And now take care of what is special for user namespaces; such as
 	// enforcing sending a user ID, even if it is 0/root (which often will be
 	// the case).
+	username := ""
+	if user, err := user.LookupId(strconv.Itoa(uns.UID())); err == nil {
+		username = user.Name
+	}
 	return json.Marshal(&struct {
 		NamespaceMarshal
-		UserUID int `json:"user-id"` // enforce owner's user ID (UID)
+		UserUID  int    `json:"user-id"`   // enforce owner's user ID (UID)
+		UserName string `json:"user-name"` // enforce owner's user name
 	}{
 		NamespaceMarshal: aux,
 		UserUID:          uns.UID(),
+		UserName:         username,
 	})
 }
 

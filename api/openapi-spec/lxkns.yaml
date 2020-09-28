@@ -497,6 +497,11 @@ components:
                     items:
                         format: int32
                         type: integer
+                ealdorman:
+                    description: |-
+                        PID of the most senior leader process joined to this namespace.
+                    type: integer
+                    format: int32
                 parent:
                     format: int64
                     description: 'Only for PID and user namespaces: the ID of the parent namespace.'
@@ -506,6 +511,11 @@ components:
                         Only for user namespaces: the UID of the Linux user who created this user
                         namespace.
                     type: integer
+                user-name:
+                    description: |-
+                        Only for user namespaces: the name of the Linux user who created this user
+                        namespace.
+                    type: string
                 children:
                     description: 'For user and PID namespaces: the list of child namespace IDs.'
                     type: array
