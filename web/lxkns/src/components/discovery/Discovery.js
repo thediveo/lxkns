@@ -17,7 +17,6 @@ import React, { createContext, useEffect, useState } from 'react';
 import { postprocessDiscovery } from 'components/discovery/model';
 import useInterval from 'hooks/interval';
 
-
 const initialDiscoveryState = {
     namespaces: {},
     processes: {},
@@ -37,15 +36,25 @@ export const RefreshContext = createContext({
     refresh: () => { },
 });
 
+const localStorageKey = "lxkns.refresh.interval";
+
+const initialInterval = (() => {
+    try {
+        const interval = JSON.parse(localStorage.getItem(localStorageKey));
+        if (interval === null || (Number.isInteger(interval) && interval > 500)) {
+            return interval
+        }
+    } catch (e) { }
+    return 5000;
+})();
+
 // The Discovery component renders all its children, passing them two contexts:
 // a DiscoveryContext, as well as a RefreshContext.
 const Discovery = ({ children }) => {
 
     const [refresh, setRefresh] = useState({
-        interval: 5000,
+        interval: initialInterval,
         refreshing: false,
-        setInterval: null,
-        triggerRefresh: null,
     });
     // Allow other components consuming the RefreshContext to change the
     // refreshing interval and to trigger refreshes on demand.
@@ -91,6 +100,7 @@ const Discovery = ({ children }) => {
         if (refresh.interval !== null) {
             fetchDiscoveryData();
         }
+        localStorage.setItem(localStorageKey, JSON.stringify(refresh.interval));
         // Trust me, I know what I'm doing...
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
