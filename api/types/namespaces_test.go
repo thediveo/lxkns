@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/user"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -37,9 +38,17 @@ var (
 	scripts    = testbasher.Basher{}
 	scriptscmd *testbasher.TestCommand
 	userns     model.Namespace
+	username   string
 )
 
 var _ = BeforeSuite(func() {
+	user, err := user.Current()
+	Expect(err).To(Succeed())
+	username = user.Name
+	if username == "" && os.Geteuid() == 0 {
+		username = "root"
+	}
+
 	scripts.Common(nstest.NamespaceUtilsScript)
 	scripts.Script("main", `
 unshare -Ur unshare -U $stage2 # create a new user ns inside another user ns (so we get a proper owner relationship).
@@ -144,7 +153,8 @@ var _ = Describe("namespaces JSON", func() {
 				"leaders": %s,
 				"ealdorman": %d,
 				"parent": %d,
-				"user-id": %d
+				"user-id": %d,
+				"user-name": %q
 			}`,
 			userns.ID().Ino,
 			refifnotempty(userns.Ref()),
@@ -152,6 +162,7 @@ var _ = Describe("namespaces JSON", func() {
 			userns.Ealdorman().PID,
 			parentuserns.ID().Ino,
 			userns.(model.Ownership).UID(),
+			username,
 		)))
 
 		// Check for the correct child list of the parent user namespace.
@@ -163,13 +174,15 @@ var _ = Describe("namespaces JSON", func() {
 				%s
 				"parent": %d,
 				"children": %s,
-				"user-id": %d
+				"user-id": %d,
+				"user-name": %q
 			}`,
 			parentuserns.ID().Ino,
 			refifnotempty(parentuserns.Ref()),
 			parentuserns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			childlist(parentuserns.(model.Hierarchy)),
 			parentuserns.(model.Ownership).UID(),
+			username,
 		)))
 
 		// Also check the grandparent user namespace.
@@ -183,7 +196,8 @@ var _ = Describe("namespaces JSON", func() {
 				"leaders": %s,
 				"ealdorman": %d,
 				"children": %s,
-				"user-id": %d
+				"user-id": %d,
+				"user-name": "root"
 			}`,
 			grandpa.ID().Ino,
 			refifnotempty(grandpa.Ref()),
@@ -238,7 +252,8 @@ var _ = Describe("namespaces JSON", func() {
 				"leaders": %s,
 				"ealdorman": %d,
 				"parent": %d,
-				"user-id": %d
+				"user-id": %d,
+				"user-name": %q
 			}
 		}`,
 			userns.ID().Ino,
@@ -247,6 +262,7 @@ var _ = Describe("namespaces JSON", func() {
 			userns.Ealdorman().PID,
 			userns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			userns.(model.Ownership).UID(),
+			username,
 		)))
 	})
 
