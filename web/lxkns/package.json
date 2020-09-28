@@ -14,6 +14,7 @@
     "fontsource-roboto": "^3.0.3",
     "http-proxy": "^1.18.1",
     "material-ui-confirm": "^2.1.1",
+    "node-forge": "^0.10.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "^3.4.3",
