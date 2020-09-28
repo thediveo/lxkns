@@ -15,20 +15,46 @@
 import React from 'react';
 import TreeItem from '@material-ui/lab/TreeItem';
 
-import Namespace from 'components/namespace';
-import { namespaceIdOrder, namespaceNameTypeIdOrder } from 'components/discovery/model';
+import Namespace, { ProcessInfo } from 'components/namespace';
+import { namespaceIdOrder } from 'components/discovery/model';
 
 // Component UserNamespaceTreeItem renders a user namespace tree item, as well
 // as the owned non-user namespaces and child user namespaces.
-export const UserNamespaceTreeItem = ({namespace}) => {
-    const tenants = Object.values(namespace.tenants)
-        .sort(namespaceNameTypeIdOrder)
-        .map(tenantns => <TreeItem
+export const UserNamespaceTreeItem = ({ namespace }) => {
+    const bindmounts = Object.values(namespace.tenants)
+        .filter(tenant => tenant.ealdorman === null)
+        .sort(namespaceIdOrder)
+        .map(tenant => <TreeItem
             className="tenant"
-            key={tenantns.nsid}
-            nodeId={tenantns.nsid.toString()}
-            label={<Namespace namespace={tenantns} />}
+            key={tenant.nsid}
+            nodeId={tenant.nsid.toString()}
+            label={<Namespace namespace={tenant} />}
         />);
+
+    const uniqueprocs = {}
+    Object.values(namespace.tenants)
+        .filter(tenant => tenant.ealdorman !== null)
+        .forEach(tenant => uniqueprocs[tenant.ealdorman.pid] = tenant.ealdorman);
+
+    const procs = Object.values(uniqueprocs)
+        .sort((proc1, proc2) => proc1.name.localeCompare(proc2.name))
+        .map(proc =>
+            <TreeItem
+                className="tenantprocess"
+                key={proc.pid}
+                nodeId={proc.pid.toString()}
+                label={<ProcessInfo process={proc} />}>{
+                    Object.values(proc.namespaces)
+                        .filter(tenant => tenant.owner === namespace && tenant.ealdorman === proc)
+                        .sort((tenant1, tenant2) => tenant1.type.localeCompare(tenant2.type))
+                        .map(tenant => <TreeItem
+                            className="tenant"
+                            key={tenant.nsid}
+                            nodeId={tenant.nsid.toString()}
+                            label={<Namespace namespace={tenant} />}
+                        />)
+                }</TreeItem>
+        );
 
     const children = Object.values(namespace.children)
         .sort(namespaceIdOrder)
@@ -44,7 +70,7 @@ export const UserNamespaceTreeItem = ({namespace}) => {
             nodeId={namespace.nsid.toString()}
             label={<Namespace namespace={namespace} />}
         >
-            {[...tenants, ...children]}
+            {[...procs, ...bindmounts, ...children]}
         </TreeItem>);
 }
 

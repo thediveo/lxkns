@@ -14,29 +14,30 @@
 
 import React from 'react';
 import classNames from 'classnames';
-import DirectionsRunIcon from '@material-ui/icons/DirectionsRun';
-import LinkIcon from '@material-ui/icons/Link';
 import PersonIcon from '@material-ui/icons/Person';
-import StorageIcon from '@material-ui/icons/Storage';
-import SettingsEthernetIcon from '@material-ui/icons/SettingsEthernet';
 import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk';
-import SpeedIcon from '@material-ui/icons/Speed';
 import TimerIcon from '@material-ui/icons/Timer';
-import DnsIcon from '@material-ui/icons/Dns';
 import TextureIcon from '@material-ui/icons/Texture';
 import MemoryIcon from '@material-ui/icons/Memory';
 import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRight';
 import Tooltip from '@material-ui/core/Tooltip';
 
+import Database from 'mdi-material-ui/Database';
+import CarCruiseControl from 'mdi-material-ui/CarCruiseControl';
+import Lan from 'mdi-material-ui/Lan';
+import Laptop from 'mdi-material-ui/Laptop';
+import FileLinkOutline from 'mdi-material-ui/FileLinkOutline';
+import RunFast from 'mdi-material-ui/RunFast';
+
 // Maps Linux-kernel namespace types to icons, including tooltips. 
 const namespaceTypeIcons = {
-    "cgroup": <Tooltip title="control group namespace"><SpeedIcon fontSize="inherit" /></Tooltip>,
+    "cgroup": <Tooltip title="control group namespace"><CarCruiseControl fontSize="inherit" /></Tooltip>,
     "ipc": <Tooltip title="inter-process communication namespace"><PhoneInTalkIcon fontSize="inherit" /></Tooltip>,
-    "mnt": <Tooltip title="mount namespace"><StorageIcon fontSize="inherit" /></Tooltip>,
-    "net": <Tooltip title="network namespace"><SettingsEthernetIcon fontSize="inherit" /></Tooltip>,
+    "mnt": <Tooltip title="mount namespace"><Database fontSize="inherit" /></Tooltip>,
+    "net": <Tooltip title="network namespace"><Lan fontSize="inherit" /></Tooltip>,
     "pid": <Tooltip title="process identifier namespace"><MemoryIcon fontSize="inherit" /></Tooltip>,
     "user": <Tooltip title="user namespace"><PersonIcon fontSize="inherit" /></Tooltip>,
-    "uts": <Tooltip title="*nix time sharing namespace"><DnsIcon fontSize="inherit" /></Tooltip>,
+    "uts": <Tooltip title="*nix time sharing namespace"><Laptop fontSize="inherit" /></Tooltip>,
     "time": <Tooltip title="monotonous timers namespace"><TimerIcon fontSize="inherit" /></Tooltip>
 };
 
@@ -44,26 +45,22 @@ const namespaceTypeIcons = {
 // in as a namespace object; type and ID get rendered, as well as the most
 // senior process with its name, or a bind-mounted reference. This component
 // never renders any child namespaces (of PID and user namespaces).
-const Namespace = ({namespace}) => {
+const Namespace = ({ namespace }) => {
     // Prepare information about the control group of the leader process (if
     // there is any joined to this namespace), which is useful in identifying
     // processes with generic names. 
     const cgroup = namespace.ealdorman && namespace.ealdorman.cgroup &&
         <span className="cgroupinfo">
-            <SpeedIcon fontSize="inherit"/>&nbsp;
+            <CarCruiseControl fontSize="inherit" />&nbsp;
             <span>"<span className="cgroupname">{namespace.ealdorman.cgroup}</span>"</span>
         </span>;
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID.
-    const process = (namespace.ealdorman &&
-        <Tooltip title="process"><span className="processinfo">
-            <DirectionsRunIcon fontSize="inherit" />
-            <span className="processname">"{namespace.ealdorman.name}"</span> ({namespace.ealdorman.pid})
-            {cgroup}
-        </span></Tooltip>) || (namespace.reference &&
+    const process = (namespace.ealdorman && <ProcessInfo process={namespace.ealdorman} cgroup={cgroup} />)
+        || (namespace.reference &&
             <Tooltip title="bind mount"><span className="bindmount">
-                <LinkIcon fontSize="inherit" />
+                <FileLinkOutline fontSize="inherit" />
                 <span className="bindmount">"{namespace.reference}"</span>
             </span></Tooltip>) ||
         <Tooltip title={"intermediate hidden " + namespace.type + " namespace"}>
@@ -95,3 +92,13 @@ export default Namespace;
 // namespace itself.
 const countNamespaceWithChildren = (acc, ns, idx, arr) =>
     acc + ns.children.reduce(countNamespaceWithChildren, 1);
+
+// Render process information.
+export const ProcessInfo = ({ process, cgroup }) =>
+    <Tooltip title="process">
+        <span className="processinfo">
+            <RunFast fontSize="inherit" />
+            <span className="processname">"{process.name}"</span> ({process.pid})
+            {cgroup}
+        </span>
+    </Tooltip>;
