@@ -15,24 +15,24 @@
 import React from 'react';
 import TreeItem from '@material-ui/lab/TreeItem';
 
-import Namespace from './Namespace';
-import { namespaceIdOrder, namespaceNameTypeIdOrder } from './model';
+import Namespace from 'components/namespace';
+import { namespaceIdOrder, namespaceNameTypeIdOrder } from 'components/discovery/model';
 
-// Component UsernamespaceItem renders a user namespace tree item, as well as
-// the owned non-user namespaces and child user namespaces.
-export const UsernamespaceItem = (props) => {
-    const tenants = Object.values(props.ns.tenants)
+// Component UserNamespaceTreeItem renders a user namespace tree item, as well
+// as the owned non-user namespaces and child user namespaces.
+export const UserNamespaceTreeItem = ({namespace}) => {
+    const tenants = Object.values(namespace.tenants)
         .sort(namespaceNameTypeIdOrder)
-        .map(ns => <TreeItem
+        .map(tenantns => <TreeItem
             className="tenant"
-            key={ns.nsid}
-            nodeId={ns.nsid.toString()}
-            label={<Namespace ns={ns} />}
+            key={tenantns.nsid}
+            nodeId={tenantns.nsid.toString()}
+            label={<Namespace namespace={tenantns} />}
         />);
 
-    const children = Object.values(props.ns.children)
+    const children = Object.values(namespace.children)
         .sort(namespaceIdOrder)
-        .map(ns => <UsernamespaceItem key={ns.nsid} ns={ns} />);
+        .map(childns => <UserNamespaceTreeItem key={childns.nsid} namespace={childns} />);
 
     // Please note that we need destructure or concatenate the resulting two
     // sets of tenant nodes and children nodes, as otherwise the enclosing
@@ -40,12 +40,12 @@ export const UsernamespaceItem = (props) => {
     // (grrr).
     return (
         <TreeItem
-            key={props.ns.nsid}
-            nodeId={props.ns.nsid.toString()}
-            label={<Namespace ns={props.ns} />}
+            key={namespace.nsid}
+            nodeId={namespace.nsid.toString()}
+            label={<Namespace namespace={namespace} />}
         >
             {[...tenants, ...children]}
         </TreeItem>);
 }
 
-export default UsernamespaceItem;
+export default UserNamespaceTreeItem;

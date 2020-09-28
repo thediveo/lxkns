@@ -12,11 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// postDiscovery takes the JSON data returned by the lxkns service API
+// postprocessDiscovery takes the JSON data returned by the lxkns service API
 // "/api/namespaces" endpoint and post-processes it, resolving the namespace and
 // process references into JS object reference. This allows for easy navigation
 // on the post-processed data model.
-export const postDiscovery = (data) => {
+export const postprocessDiscovery = (data) => {
     // Process all namespaces and add direct object references instead of
     // indirect references in form of keys/ids.
     Object.values(data.namespaces).forEach(ns => {
