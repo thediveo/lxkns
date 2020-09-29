@@ -39,6 +39,8 @@ import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/use
 import ElevationScroll from 'components/elevationscroll';
 import Refresher from 'components/refresher';
 
+import version from './version';
+
 const LxknsApp = () => {
     const confirm = useConfirm();
 
@@ -51,7 +53,7 @@ const LxknsApp = () => {
             &nbsp;About Linux Namespaces</>,
             description:
                 <div>
-                    <Typography variant="body2" paragraph={true}>app version 0.15.2</Typography>
+                    <Typography variant="body2" paragraph={true}>app version {version}</Typography>
                     <Typography variant="body1" paragraph={true}>
                         This app displays all discovered namespaces inside a
                         Linux host.
