@@ -58,7 +58,7 @@ const Discovery = ({ children }) => {
     });
     // Allow other components consuming the RefreshContext to change the
     // refreshing interval and to trigger refreshes on demand.
-    refresh.setInterval = (interval) => {
+    refresh.setInterval = interval => {
         setRefresh({ ...refresh, interval: interval });
     };
     refresh.triggerRefresh = () => {
