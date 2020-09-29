@@ -11,10 +11,10 @@ tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
 testcontaineropts := --privileged --pid host
 
-.PHONY: clean coverage deploy undeploy help install test report
+.PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 
 help:
-	@echo "available targets: clean, coverage, deploy, undeploy, install, test"
+	@echo "available targets: clean, coverage, deploy, undeploy, install, test, report, buildapp, startapp"
 
 clean:
 	rm -f $(tools)
@@ -45,4 +45,16 @@ test: # runs all tests in a container
 
 report:
 	@./scripts/goreportcard.sh
+
+buildapp:
+	VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
+		echo "building version" $${VERSION} && \
+		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
+	@cd web/lxkns && yarn build
+
+startapp:
+	VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
+		echo "building version" $${VERSION} && \
+		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
+	@cd web/lxkns && yarn start
 	

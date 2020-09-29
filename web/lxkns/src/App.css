@@ -20,7 +20,7 @@ button.hide {
 
 /* Indentation of tree item children relative to their parent item */
 .namespacetree .MuiTreeItem-group {
-    margin-left: 3em;
+    margin-left: 2em;
 }
 
 /* Indentation of non-user namespace tree nodes */
@@ -30,6 +30,14 @@ button.hide {
 
 .tenant .namespace::before {
     content: "···· ";
+}
+
+.MuiTreeItem-root.tenantprocess {
+    margin-left: 3em;
+}
+
+.tenantprocess .namespace {
+    margin-left: -1.5em;
 }
 
 .namespace .pill {

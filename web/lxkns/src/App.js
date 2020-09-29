@@ -39,6 +39,8 @@ import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/use
 import ElevationScroll from 'components/elevationscroll';
 import Refresher from 'components/refresher';
 
+import version from './version';
+
 const LxknsApp = () => {
     const confirm = useConfirm();
 
@@ -51,19 +53,28 @@ const LxknsApp = () => {
             &nbsp;About Linux Namespaces</>,
             description:
                 <div>
-                    <p>This app displays all discovered namespaces inside a
-                    Linux host.</p>
-                    <p>The display is organized following the hierarchy of user
-                    namespaces. Namespaces of other types are shown beneath the
-                    particular user namespace which is owning them. Owning a
-                    namespace here means that a namespace was created by a
-                    process while the process was attached to that specific user
-                    namespace.</p>
-                    <p>Find the <LaunchIcon fontSize="inherit" className="inlineicon" /><a href="https://github.com/thediveo/lxkns"
-                        target="_blank" rel="noopener noreferrer">thediveo/lxkns
-                    project</a> on Github</p>
+                    <Typography variant="body2" paragraph={true}>app version {version}</Typography>
+                    <Typography variant="body1" paragraph={true}>
+                        This app displays all discovered namespaces inside a
+                        Linux host.
+                    </Typography>
+                    <Typography variant="body1" paragraph={true}>
+                        The display is organized following
+                        the hierarchy of user
+                        namespaces. Namespaces of other types are shown beneath the
+                        particular user namespace which is owning them. Owning a
+                        namespace here means that a namespace was created by a
+                        process while the process was attached to that specific user
+                        namespace.
+                    </Typography>
+                    <Typography variant="body1" paragraph={true}>
+                        Find the
+                            <LaunchIcon fontSize="inherit" className="inlineicon" /><a href="https://github.com/thediveo/lxkns"
+                            target="_blank" rel="noopener noreferrer">thediveo/lxkns project</a> on Github.
+                    </Typography>
                 </div>,
-            cancellationButtonProps: { className: "hide" }
+            confirmationButtonProps: { autoFocus: true },
+            cancellationButtonProps: { className: "hide" },
         });
     };
 

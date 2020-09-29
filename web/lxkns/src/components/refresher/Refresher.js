@@ -87,7 +87,9 @@ const Refresher = () => {
     // User clicks outside the popped up interval menu.
     const handleIntervalMenuClose = () => setAnchorEl(null);
 
-    const intervalTitle = refresh.interval !== null ? "auto-refresh interval " + intervaltext(refresh.interval) : "auto-refresh off";
+    const intervalTitle = refresh.interval !== null 
+        ? "auto-refresh interval " + intervaltext(refresh.interval) 
+        : "auto-refresh off";
 
     return (
         <>
