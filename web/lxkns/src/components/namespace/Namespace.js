@@ -45,7 +45,7 @@ const namespaceTypeIcons = {
 // in as a namespace object; type and ID get rendered, as well as the most
 // senior process with its name, or a bind-mounted reference. This component
 // never renders any child namespaces (of PID and user namespaces).
-const Namespace = ({ namespace }) => {
+const Namespace = ({ namespace, noprocess }) => {
     // Prepare information about the control group of the leader process (if
     // there is any joined to this namespace), which is useful in identifying
     // processes with generic names. 
@@ -57,7 +57,8 @@ const Namespace = ({ namespace }) => {
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID.
-    const process = (namespace.ealdorman && <ProcessInfo process={namespace.ealdorman} cgroup={cgroup} />)
+    const process =
+        (namespace.ealdorman && <ProcessInfo process={noprocess ? null : namespace.ealdorman} cgroup={cgroup} />)
         || (namespace.reference &&
             <Tooltip title="bind mount"><span className="bindmount">
                 <FileLinkOutline fontSize="inherit" />
@@ -97,8 +98,10 @@ const countNamespaceWithChildren = (acc, ns, idx, arr) =>
 export const ProcessInfo = ({ process, cgroup }) =>
     <Tooltip title="process">
         <span className="processinfo">
-            <RunFast fontSize="inherit" />
-            <span className="processname">"{process.name}"</span> ({process.pid})
+            {!!process && (<>
+                <RunFast fontSize="inherit" />
+                <span className="processname">"{process.name}"</span> ({process.pid})
+            </>)}
             {cgroup}
         </span>
     </Tooltip>;

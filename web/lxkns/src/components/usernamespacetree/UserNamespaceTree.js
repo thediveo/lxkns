@@ -21,7 +21,7 @@ import TreeView from '@material-ui/lab/TreeView';
 
 import { DiscoveryContext } from 'components/discovery';
 import { namespaceIdOrder } from 'components/discovery/model';
-import { UserNamespaceTreeItem } from './UserNamespaceTreeItem';
+import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem';
 
 export const EXPANDALL_ACTION = "expandall";
 export const COLLAPSEALL_ACTION = "collapseall";
@@ -63,10 +63,14 @@ export const UserNamespaceTree = ({ action }) => {
         }
         oldaction.current = action;
         if (action.startsWith(EXPANDALL_ACTION)) {
+            // expand all user namespaces and all included process nodes.
             const alluserns = Object.values(discovery.namespaces)
                 .filter(ns => ns.type === "user")
                 .map(ns => ns.nsid.toString())
-            setExpanded(alluserns);
+            const allealdormen = Object.values(discovery.namespaces)
+                .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
+                .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString());
+            setExpanded(alluserns.concat(allealdormen));
         } else if (action.startsWith(COLLAPSEALL_ACTION)) {
             const topuserns = Object.values(discovery.namespaces)
                 .filter(ns => ns.type === "user" && ns.parent === null)
@@ -75,8 +79,9 @@ export const UserNamespaceTree = ({ action }) => {
         }
     }, [action, discovery]);
 
-    // After updaing the discovery information, check if there are new user
-    // namespaces which we want to automatically expand in the tree view. We
+    // After updaing the discovery information, check if there are any new user
+    // namespaces (including their sub items grouping non-user namespaces by
+    // processes) which we want to automatically expand in the tree view. We
     // won't touch the expansion state of existing user namespace tree nodes.
     useEffect(() => {
         // We want to determine which user namespace tree nodes should be expanded,
@@ -86,22 +91,31 @@ export const UserNamespaceTree = ({ action }) => {
         // nodes are collapsed. So we first need to calculate which user namespace
         // nodes are really new; we just need the user namespace IDs, as this is
         // what we're identifying the tree nodes by.
-        const oldusernsids = Object.values(discovery.previousNamespaces)
-            .filter(ns => ns.type === "user")
-            .map(ns => ns.nsid.toString());
-        // Initially open all root namespaces, but lateron never touch that state
-        // again.
-        const fltr = Object.keys(discovery.previousNamespaces).length ?
-            (ns => ns.type === "user") : (ns => ns.type === "user" && ns.parent === null);
-        const addedusernsids = Object.values(discovery.namespaces)
-            .filter(fltr)
-            .map(ns => ns.nsid.toString())
-            .filter(nsid => !oldusernsids.includes(nsid));
-        // Now we need to combine the "set" of existing expanded user namespace
-        // nodes with the "set" of the newly added user namespace nodes, as we want
-        // all new user namespace to be automatically expanded on arrival.
-        setExpanded(prevExpanded =>
-            prevExpanded.concat(addedusernsids.filter(nsid => !prevExpanded.includes(nsid))));
+        const oldUsernsIds = Object.values(discovery.previousNamespaces)
+            .filter(ns => ns.type === 'user')
+            .map(ns => ns.nsid);
+        // Initially open all root namespaces, but lateron never touch that
+        // state again. For this, we set up a filter function either initially
+        // letting pass only the root user namespaces, lateron we let pass all
+        // user namespaces; we'll next sort out which user namespaces are
+        // actually new, as to not touch existing user namespaces.
+        const usernsCandidatesFilter = Object.keys(discovery.previousNamespaces).length ?
+            (ns => ns.type === 'user') : (ns => ns.type === 'user' && ns.parent === null);
+        const expandingUserns = Object.values(discovery.namespaces)
+            .filter(usernsCandidatesFilter)
+            .filter(ns => !oldUsernsIds.includes(ns.nsid));
+        // Additionally also open any process child nodes below the new user
+        // namespace tree nodes.
+        const expandingProcIds = expandingUserns
+            .map(userns => uniqueProcsOfTenants(userns)
+                .map(proc => userns.nsid.toString() + "-" + proc.pid.toString()))
+            .flat();
+        // Finally update the expansion state of the tree; this must include the
+        // already expanded nodes (state), and we add our to-be-expanded-soon
+        // nodes.
+        const expandNodeIds = expandingUserns.map(userns => userns.nsid.toString())
+            .concat(expandingProcIds);
+        setExpanded(previouslyExpanded => previouslyExpanded.concat(expandNodeIds));
     }, [discovery]);
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
