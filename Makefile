@@ -47,7 +47,7 @@ report:
 	@./scripts/goreportcard.sh
 
 buildapp:
-	VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
+	@VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
 		echo "building version" $${VERSION} && \
 		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
 	@cd web/lxkns && yarn build

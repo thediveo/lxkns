@@ -14,6 +14,8 @@
 
 import React, { createContext, useEffect, useState } from 'react';
 
+import { useSnackbar } from 'notistack';
+
 import { postprocessDiscovery } from 'components/discovery/model';
 import useInterval from 'hooks/interval';
 
@@ -51,6 +53,7 @@ const initialInterval = (() => {
 // The Discovery component renders all its children, passing them two contexts:
 // a DiscoveryContext, as well as a RefreshContext.
 const Discovery = ({ children }) => {
+    const { enqueueSnackbar } = useSnackbar();
 
     const [refresh, setRefresh] = useState({
         interval: initialInterval,
@@ -79,16 +82,32 @@ const Discovery = ({ children }) => {
         setRefresh({ ...refresh, refreshing: true });
         fetch('/api/namespaces')
             .then(httpresult => {
+                // Whatever the server replied, it did reply and we can reset
+                // the refreshing indication. 
                 setRefresh({ ...refresh, refreshing: false });
-                return httpresult;
+                // fetch() doesn't throw an error for non-2xx reponse status
+                // codes...
+                if (!httpresult.ok) {
+                    console.log(httpresult);
+                    throw Error(httpresult.status + " " + httpresult.statusText);
+                }
+                try {
+                    return httpresult.json()
+                } catch (e) {
+                    throw Error('malformed discovery API response');
+                }
             })
-            .then(httpresult => httpresult.json())
             .then(jsondata => postprocessDiscovery(jsondata))
             .then(discovery => setDiscovery(prevDiscovery => {
                 discovery.previousNamespaces = prevDiscovery.namespaces;
                 return discovery;
             }))
-            .catch(() => setRefresh({ ...refresh, refreshing: false }));
+            .catch((error) => {
+                // Don't forget to reset the refreshing indication.
+                setRefresh({ ...refresh, refreshing: false })
+                enqueueSnackbar('refreshing failed: ' +
+                    error.toString().replace(/^[E|e]rror: /, ''), { variant: 'error' });
+            });
     };
 
     // Get new discovery data after some time; please note that useInterval

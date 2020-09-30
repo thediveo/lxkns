@@ -29,6 +29,7 @@ import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import { RefreshContext } from 'components/discovery';
+import useId from 'hooks/id';
 
 const intervals = [
     { text: 'off', interval: null },
@@ -64,6 +65,7 @@ const useStyles = makeStyles((theme) => ({
 // a rotating progress indicator appears around the refresh button.
 const Refresher = () => {
     const classes = useStyles();
+    const menuId = useId('refreshermenu');
 
     // Get the refresh context, so that we can both show the current refresh
     // interval and refreshing state, but also change the refresh parameters.
@@ -108,7 +110,7 @@ const Refresher = () => {
             <Tooltip title={intervalTitle}>
                 <IconButton
                     aria-haspopup="true"
-                    aria-controls="intervalmenu"
+                    aria-controls={menuId}
                     onClick={handleIntervalButtonClick}
                     color="inherit"
                 >
@@ -117,7 +119,7 @@ const Refresher = () => {
                 </IconButton>
             </Tooltip>
             <Menu
-                id="intervalmenu"
+                id={menuId}
                 anchorEl={anchorEl}
                 keepMounted
                 open={Boolean(anchorEl)}

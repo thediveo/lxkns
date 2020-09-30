@@ -16,6 +16,7 @@
     "material-ui-confirm": "^2.1.1",
     "mdi-material-ui": "^6.19.0",
     "node-forge": "^0.10.0",
+    "notistack": "^1.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "^3.4.3",
