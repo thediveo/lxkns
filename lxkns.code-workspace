@@ -8,6 +8,7 @@
 		}
 	],
 	"settings": {
-		"go.lintTool": "golangci-lint"
+		"go.lintTool": "golangci-lint",
+		"liveServer.settings.multiRootWorkspaceName": "lxkns"
 	}
 }
