@@ -46,12 +46,13 @@ const findProcesses = (proc) => {
 };
 
 const confinedProcess = (process) =>
-    <TreeItem nodeId={process.pid.toString()} label={process.name + " (" + process.pid + ")"} />;
+    <TreeItem nodeId={process.pid.toString()} label={process.name + " (" + process.pid + ") " + process.cgroup} />;
 
 export const confinedProcessTreeItem = namespace => {
 
     const processes = namespace.leaders
-        .map(leader => findProcesses(leader)).flat(1)
+        .concat(namespace.leaders.map(leader => findProcesses(leader)))
+        .flat(1)
         .sort(processNameIdOrder)
         .map(proc => confinedProcess(proc));
 

@@ -31,7 +31,7 @@ export const postprocessDiscovery = (data) => {
         // replace leader PIDs with leader process object references ... if
         // there is a list of leader PIDs; otherwise, set an empty array.
         let leaders = [];
-        ns['leaders'] && ns.leaders.forEach(leader => {
+        ns.leaders && ns.leaders.forEach(leader => {
             if (leader.toString() in data.processes) {
                 leaders.push(data.processes[leader.toString()]);
             }
