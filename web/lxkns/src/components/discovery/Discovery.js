@@ -62,7 +62,7 @@ const Discovery = ({ children }) => {
     // Allow other components consuming the RefreshContext to change the
     // refreshing interval and to trigger refreshes on demand.
     refresh.setInterval = interval => {
-        setRefresh({ ...refresh, interval: interval });
+        setRefresh(prevRefresh => {return { ...prevRefresh, interval: interval }});
     };
     refresh.triggerRefresh = () => {
         fetchDiscoveryData();
@@ -79,12 +79,12 @@ const Discovery = ({ children }) => {
         if (refresh.refreshing) {
             return;
         }
-        setRefresh({ ...refresh, refreshing: true });
+        setRefresh(prevRefresh => {return { ...refresh, refreshing: true }});
         fetch('/api/namespaces')
             .then(httpresult => {
                 // Whatever the server replied, it did reply and we can reset
                 // the refreshing indication. 
-                setRefresh({ ...refresh, refreshing: false });
+                setRefresh(prevRefresh => {return { ...refresh, refreshing: false }});
                 // fetch() doesn't throw an error for non-2xx reponse status
                 // codes...
                 if (!httpresult.ok) {
@@ -104,7 +104,7 @@ const Discovery = ({ children }) => {
             }))
             .catch((error) => {
                 // Don't forget to reset the refreshing indication.
-                setRefresh({ ...refresh, refreshing: false })
+                setRefresh(prevRefresh => {return { ...refresh, refreshing: false }})
                 enqueueSnackbar('refreshing failed: ' +
                     error.toString().replace(/^[E|e]rror: /, ''), { variant: 'error' });
             });

@@ -14,15 +14,14 @@
 
 import React, { useState } from 'react';
 
-import { makeStyles } from '@material-ui/core';
-
 import CssBaseline from '@material-ui/core/CssBaseline';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import Divider from '@material-ui/core/Divider';
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
@@ -36,8 +35,8 @@ import LxknsIcon from './lxkns.svg';
 import Discovery, { DiscoveryContext } from 'components/discovery';
 import UserNamespaceTree from 'components/usernamespacetree';
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree';
-import ElevationScroll from 'components/elevationscroll';
 import Refresher from 'components/refresher';
+import AppBarDrawer from 'components/appbardrawer';
 
 import version from './version';
 
@@ -78,54 +77,74 @@ const LxknsApp = () => {
         });
     };
 
-    const classes = useStyles();
-
-    return (
-        <Discovery>
-            <CssBaseline />
-            <ElevationScroll>
-                <AppBar>
-                    <Toolbar>
-                        <DiscoveryContext.Consumer>
-                            {value =>
-                                <Typography variant="h6" className={classes.title}>
-                                    <Badge badgeContent={Object.keys(value.namespaces).length} color="secondary">
-                                        Linux Namespaces
-                                    </Badge>
-                                </Typography>
-                            }
-                        </DiscoveryContext.Consumer>
-                        <Tooltip title="expand initial user namespace(s) only">
-                            <IconButton color="inherit"
-                                onClick={() => setTreeAction(treeAction(COLLAPSEALL_ACTION))}>
-                                <ChevronRightIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="expand all">
-                            <IconButton color="inherit"
-                                onClick={() => setTreeAction(treeAction(EXPANDALL_ACTION))}>
-                                <ExpandMoreIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Refresher />
-                        <Tooltip title="about lxkns">
-                            <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
-                        </Tooltip>
-                    </Toolbar>
-                </AppBar>
-            </ElevationScroll>
-            <Toolbar />
-            <UserNamespaceTree action={treeaction} />
-        </Discovery >
-    );
+    return (<>
+        <AppBarDrawer
+            title={
+                <DiscoveryContext.Consumer>
+                    {value =>
+                        <Badge badgeContent={Object.keys(value.namespaces).length} color="secondary">
+                            Linux Namespaces
+                    </Badge>
+                    }
+                </DiscoveryContext.Consumer>
+            }
+            tools={<>
+                <Tooltip title="expand initial user namespace(s) only">
+                    <IconButton color="inherit"
+                        onClick={() => setTreeAction(treeAction(COLLAPSEALL_ACTION))}>
+                        <ChevronRightIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="expand all">
+                    <IconButton color="inherit"
+                        onClick={() => setTreeAction(treeAction(EXPANDALL_ACTION))}>
+                        <ExpandMoreIcon />
+                    </IconButton>
+                </Tooltip>
+                <Refresher />
+                <Tooltip title="about lxkns">
+                    <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
+                </Tooltip>
+            </>}
+            drawer={<>
+                <List>
+                    <ListItem>
+                        <Typography variant="h6" color="textSecondary">
+                            lxkns
+                        </Typography>
+                    </ListItem>
+                    <ListItem>
+                        <Typography variant="body2" color="textSecondary">
+                        version {version}
+                        </Typography>
+                    </ListItem>
+                    <Divider />
+                    <ListItem>
+                        <Typography>user namespaces</Typography>
+                    </ListItem>
+                    <ListItem>
+                        <Typography>confined processes</Typography>
+                    </ListItem>
+                    <ListItem>
+                        <InfoIcon/>&nbsp;
+                        <Typography>information</Typography>
+                    </ListItem>
+                </List>
+            </>}
+        />
+        <UserNamespaceTree action={treeaction} />
+    </>);
 };
 
-// We need to wrap the application as otherwise we won't get a confirmer...
-// ouch.
-const Wrapper = () => <ConfirmProvider><LxknsApp /></ConfirmProvider>;
+// We need to wrap the application as otherwise we won't get a confirmer ...
+// ouch. And since we're already at wrapping things, let's just wrap up all the
+// other wrapping here... *snicker*.
+const App = () => (
+    <ConfirmProvider>
+        <Discovery>
+            <CssBaseline />
+            <LxknsApp />
+        </Discovery>
+    </ConfirmProvider>);
 
-export default Wrapper;
-
-const useStyles = makeStyles((theme) => ({
-    title: { flexGrow: 1 }
-}));
+export default App;
