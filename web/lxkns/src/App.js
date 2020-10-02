@@ -13,6 +13,7 @@
 // under the License.
 
 import React, { useState } from 'react';
+import { HashRouter as Router, Switch, Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Badge from '@material-ui/core/Badge';
@@ -25,57 +26,22 @@ import Divider from '@material-ui/core/Divider';
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import PersonIcon from '@material-ui/icons/Person';
+import RunFast from 'mdi-material-ui/RunFast';
 import InfoIcon from '@material-ui/icons/Info';
-import LaunchIcon from '@material-ui/icons/Launch';
-
-import { ConfirmProvider, useConfirm } from 'material-ui-confirm';
 
 import './App.css';
-import LxknsIcon from './lxkns.svg';
 import Discovery, { DiscoveryContext } from 'components/discovery';
 import UserNamespaceTree from 'components/usernamespacetree';
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree';
 import Refresher from 'components/refresher';
-import AppBarDrawer from 'components/appbardrawer';
+import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer';
 
 import version from './version';
+import About from './About';
 
 const LxknsApp = () => {
-    const confirm = useConfirm();
-
     const [treeaction, setTreeAction] = useState("");
-
-    // Shows the "About" dialog with a short description of this application.
-    const handleInfo = () => {
-        confirm({
-            title: <><img src={LxknsIcon} alt="lxkns app logo" style={{ verticalAlign: 'text-bottom' }} />
-            &nbsp;About Linux Namespaces</>,
-            description:
-                <div>
-                    <Typography variant="body2" paragraph={true}>app version {version}</Typography>
-                    <Typography variant="body1" paragraph={true}>
-                        This app displays all discovered namespaces inside a
-                        Linux host.
-                    </Typography>
-                    <Typography variant="body1" paragraph={true}>
-                        The display is organized following
-                        the hierarchy of user
-                        namespaces. Namespaces of other types are shown beneath the
-                        particular user namespace which is owning them. Owning a
-                        namespace here means that a namespace was created by a
-                        process while the process was attached to that specific user
-                        namespace.
-                    </Typography>
-                    <Typography variant="body1" paragraph={true}>
-                        Find the
-                            <LaunchIcon fontSize="inherit" className="inlineicon" /><a href="https://github.com/thediveo/lxkns"
-                            target="_blank" rel="noopener noreferrer">thediveo/lxkns project</a> on Github.
-                    </Typography>
-                </div>,
-            confirmationButtonProps: { autoFocus: true },
-            cancellationButtonProps: { className: "hide" },
-        });
-    };
 
     return (<>
         <AppBarDrawer
@@ -102,12 +68,9 @@ const LxknsApp = () => {
                     </IconButton>
                 </Tooltip>
                 <Refresher />
-                <Tooltip title="about lxkns">
-                    <IconButton color="inherit" onClick={handleInfo}><InfoIcon /></IconButton>
-                </Tooltip>
             </>}
-            drawer={<>
-                <List>
+            drawer={(closeDrawer) => <>
+                <List onClick={closeDrawer}>
                     <ListItem>
                         <Typography variant="h6" color="textSecondary">
                             lxkns
@@ -115,24 +78,39 @@ const LxknsApp = () => {
                     </ListItem>
                     <ListItem>
                         <Typography variant="body2" color="textSecondary">
-                        version {version}
+                            version {version}
                         </Typography>
                     </ListItem>
                     <Divider />
-                    <ListItem>
-                        <Typography>user namespaces</Typography>
-                    </ListItem>
-                    <ListItem>
-                        <Typography>confined processes</Typography>
-                    </ListItem>
-                    <ListItem>
-                        <InfoIcon/>&nbsp;
-                        <Typography>information</Typography>
-                    </ListItem>
+                    <DrawerLinkItem 
+                        icon={<PersonIcon />}
+                        label="user namespaces"
+                        path="/"
+                    />
+                    <DrawerLinkItem 
+                        icon={<RunFast />}
+                        label="confined processes"
+                        path="/processes"
+                    />
+                    <DrawerLinkItem 
+                        icon={<InfoIcon />}
+                        label="information"
+                        path="/about"
+                    />
                 </List>
             </>}
         />
-        <UserNamespaceTree action={treeaction} />
+        <Switch>
+            <Route exact path="/about">
+                <About />
+            </Route>
+            <Route exact path="/processes">
+
+            </Route>
+            <Route path="/">
+                <UserNamespaceTree action={treeaction} />
+            </Route>
+        </Switch>
     </>);
 };
 
@@ -140,11 +118,12 @@ const LxknsApp = () => {
 // ouch. And since we're already at wrapping things, let's just wrap up all the
 // other wrapping here... *snicker*.
 const App = () => (
-    <ConfirmProvider>
+    <Router>
         <Discovery>
             <CssBaseline />
             <LxknsApp />
         </Discovery>
-    </ConfirmProvider>);
+    </Router>
+);
 
 export default App;

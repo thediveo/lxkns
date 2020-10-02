@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation, Link } from "react-router-dom";
 
 import { makeStyles, useTheme } from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
@@ -10,6 +11,8 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Divider from '@material-ui/core/Divider';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 
 import ElevationScroll from 'components/elevationscroll';
 
@@ -86,20 +89,26 @@ const AppBarDrawer = ({ title, tools, drawer }) => {
                 </IconButton>
             </div>
             <Divider />
-            {drawer}
+            {drawer(closeDrawer)}
         </SwipeableDrawer>
     </>);
 };
 
 export default AppBarDrawer;
 
-/*
-        <SwipeableDrawer
-            anchor="left"
-            open={drawerOpen}
-            onOpen={setDrawerOpen(true)}
-            onClose={setDrawerOpen(false)}
+export const DrawerLinkItem = ({ icon, label, path }) => {
+    const location = useLocation();
+    const selected = location.pathname === path;
+
+    return (
+        <ListItem
+            button
+            component={Link}
+            to={path}
+            selected={selected}
         >
-            {children}
-        </SwipeableDrawer>
-*/
+            {icon && <ListItemIcon>{icon}</ListItemIcon>}
+            <Typography>{label}</Typography>
+        </ListItem>
+    )
+};
