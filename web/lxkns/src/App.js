@@ -34,6 +34,7 @@ import './App.css';
 import Discovery, { DiscoveryContext } from 'components/discovery';
 import UserNamespaceTree from 'components/usernamespacetree';
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree';
+import ConfinedProcessTree from 'components/confinedprocesstree';
 import Refresher from 'components/refresher';
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer';
 
@@ -101,15 +102,9 @@ const LxknsApp = () => {
             </>}
         />
         <Switch>
-            <Route exact path="/about">
-                <About />
-            </Route>
-            <Route exact path="/processes">
-
-            </Route>
-            <Route path="/">
-                <UserNamespaceTree action={treeaction} />
-            </Route>
+            <Route exact path="/about" render={() => <About />} />
+            <Route exact path="/processes" render={() => <ConfinedProcessTree />} />
+            <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
         </Switch>
     </>);
 };

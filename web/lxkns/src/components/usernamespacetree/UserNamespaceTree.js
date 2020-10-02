@@ -46,6 +46,9 @@ export const UserNamespaceTree = ({ action }) => {
     // Discovery data comes in via a dedicated discovery context.
     const discovery = useContext(DiscoveryContext);
 
+    // Previous discovery information, if any.
+    const previousDiscovery = useRef({ namespaces: {}, processes: {} });
+
     // Tree node expansion is a component-local state.
     const [expanded, setExpanded] = useState([]);
 
@@ -91,7 +94,8 @@ export const UserNamespaceTree = ({ action }) => {
         // nodes are collapsed. So we first need to calculate which user namespace
         // nodes are really new; we just need the user namespace IDs, as this is
         // what we're identifying the tree nodes by.
-        const oldUsernsIds = Object.values(discovery.previousNamespaces)
+        const previousNamespaces = previousDiscovery.current.namespaces;
+        const oldUsernsIds = Object.values(previousNamespaces)
             .filter(ns => ns.type === 'user')
             .map(ns => ns.nsid);
         // Initially open all root namespaces, but lateron never touch that
@@ -99,7 +103,7 @@ export const UserNamespaceTree = ({ action }) => {
         // letting pass only the root user namespaces, lateron we let pass all
         // user namespaces; we'll next sort out which user namespaces are
         // actually new, as to not touch existing user namespaces.
-        const usernsCandidatesFilter = Object.keys(discovery.previousNamespaces).length ?
+        const usernsCandidatesFilter = Object.keys(previousNamespaces).length ?
             (ns => ns.type === 'user') : (ns => ns.type === 'user' && ns.parent === null);
         const expandingUserns = Object.values(discovery.namespaces)
             .filter(usernsCandidatesFilter)
@@ -116,6 +120,7 @@ export const UserNamespaceTree = ({ action }) => {
         const expandNodeIds = expandingUserns.map(userns => userns.nsid.toString())
             .concat(expandingProcIds);
         setExpanded(previouslyExpanded => previouslyExpanded.concat(expandNodeIds));
+        previousDiscovery.current = discovery;
     }, [discovery]);
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
@@ -134,8 +139,7 @@ export const UserNamespaceTree = ({ action }) => {
     const rootusernsItems = Object.values(discovery.namespaces)
         .filter(ns => ns.type === "user" && ns.parent === null)
         .sort(namespaceIdOrder)
-        .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />
-        );
+        .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />);
 
     return (
         <TreeView

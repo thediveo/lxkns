@@ -58,8 +58,8 @@ export const postprocessDiscovery = (data) => {
     });
     Object.values(data.processes).forEach(proc => {
         // Resolve the parent-child relationships.
-        if (proc.ppid.toString() in proc) {
-            proc.parent = proc[proc.ppid.toString()];
+        if (proc.ppid.toString() in data.processes) {
+            proc.parent = data.processes[proc.ppid.toString()];
             proc.parent.children.push(proc);
         }
         // Resolve the attached namespaces relationships.
@@ -82,3 +82,9 @@ export const namespaceNameTypeIdOrder = (nsa, nsb) =>
     (nsa.reference > nsb.reference) ? 1 : (nsa.reference < nsb.reference) ? -1 :
         (nsa.type > nsb.type) ? 1 : (nsa.type < nsb.type) ? -1 : 
             namespaceIdOrder(nsa, nsb);
+
+export const processNameIdOrder = (proc1, proc2) => {
+    const c = proc1.name.localeCompare(proc2.name);
+    return c !== 0 ? c : proc2.pid - proc1.pid;
+};
+    

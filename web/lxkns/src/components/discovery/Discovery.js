@@ -22,7 +22,6 @@ import useInterval from 'hooks/interval';
 const initialDiscoveryState = {
     namespaces: {},
     processes: {},
-    previousNamespaces: {},
 }
 
 // DiscoveryContext provides information about the most recent namespaces
@@ -99,7 +98,6 @@ const Discovery = ({ children }) => {
             })
             .then(jsondata => postprocessDiscovery(jsondata))
             .then(discovery => setDiscovery(prevDiscovery => {
-                discovery.previousNamespaces = prevDiscovery.namespaces;
                 return discovery;
             }))
             .catch((error) => {
