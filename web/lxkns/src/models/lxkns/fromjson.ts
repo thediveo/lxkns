@@ -25,6 +25,13 @@ interface NamespaceJson extends Omit<Namespace, 'ealdorman' | 'leaders' | 'names
     namespaces: NamespaceSetJson
 }
 
+/**
+ * Post-processes a discovery response from the lxkns discovery service,
+ * resolving namespace and process (cross) references into ordinary object
+ * references which can be directly used.
+ *
+ * @param discoverydata JSON discovery response in form of plain JS objects.
+ */
 export const fromjson = (discoverydata: any): Discovery => {
     const discovery = discoverydata as Discovery
     // Process all (hierarchical) namespaces in a first round to initialize

@@ -30,10 +30,10 @@ interface.
     chaos descends. 
   - `components/` – potentially reusable components, some more reusable, others
     less.
-    - `appbardrawer` – provides apps with the usual task bar, as well as a
-      swipeable drawer. This component takes on the daunting task of wiring up
-      these things and setting up the standard elements, such as the drawer
-      hamburger icon and the app bar title.
+    - `appbardrawer` – the `AppBarDrawer` component provides apps with the
+      usual task bar, as well as a swipeable drawer. This component takes on
+      the daunting task of wiring up these things and setting up the standard
+      elements, such as the drawer hamburger icon and the app bar title.
     - `discovery` – queries the lxkns discovery API `/api/namespaces` and then
       provides the results via context. Also does some result pre-processing in
       order to allow apps easy and quick navigation on the information model
@@ -41,6 +41,8 @@ interface.
     - `elevationscroll` – implements an elevated task bar when the user scrolls
       down.
     - `extlink`
+    - `lxkns` – provides the basic lxkns discovery data types for `Namespace`,
+      `Process`, et cetera.
     - `namespace` – renders a single namespace with additional information, such
       as the ealdorman process and control group information.
     - `refresher` – provides a one-shot refresh button as well as a refresh

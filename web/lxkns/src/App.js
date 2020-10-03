@@ -90,8 +90,13 @@ const LxknsApp = () => {
                     />
                     <DrawerLinkItem 
                         icon={<RunFast />}
-                        label="confined processes"
-                        path="/processes"
+                        label="pid namespaces"
+                        path="/pid"
+                    />
+                    <DrawerLinkItem 
+                        icon={<RunFast />}
+                        label="network namespaces"
+                        path="/net"
                     />
                     <DrawerLinkItem 
                         icon={<InfoIcon />}
@@ -103,7 +108,8 @@ const LxknsApp = () => {
         />
         <Switch>
             <Route exact path="/about" render={() => <About />} />
-            <Route exact path="/processes" render={() => <ConfinedProcessTree />} />
+            <Route exact path="/pid" render={() => <ConfinedProcessTree type="pid" />} />
+            <Route exact path="/net" render={() => <ConfinedProcessTree type="net" />} />
             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
         </Switch>
     </>);

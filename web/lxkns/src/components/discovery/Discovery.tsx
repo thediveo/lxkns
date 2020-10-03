@@ -16,17 +16,17 @@ import React, { createContext, useEffect, useState } from 'react'
 
 import { useSnackbar } from 'notistack'
 
-import { fromjson } from 'components/lxkns'
+import { Discovery as DiscoveryResult, fromjson } from 'models/lxkns'
 import useInterval from 'hooks/interval'
 
-const initialDiscoveryState = {
+export const EMPTY_DISCOVERY: DiscoveryResult = {
     namespaces: {},
     processes: {},
 }
 
 // DiscoveryContext provides information about the most recent namespaces
 // discovery from the /api/namespaces endpoint.
-export const DiscoveryContext = createContext(initialDiscoveryState)
+export const DiscoveryContext = createContext(EMPTY_DISCOVERY)
 
 // RefreshContext provides information about the refresh configuration and state
 // of discovery.
@@ -85,7 +85,7 @@ const Discovery = ({ children }: DiscoveryProps) => {
     }
 
     // The discovery state to share to consumers of the DiscoveryContext.
-    const [discovery, setDiscovery] = useState(initialDiscoveryState)
+    const [discovery, setDiscovery] = useState(EMPTY_DISCOVERY)
 
     // Fetch the namespace+process discovery data from the server, postprocess
     // the JSON result, and finally update the discovery data state with the new

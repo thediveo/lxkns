@@ -12,16 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react'
 
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 
-import TreeView from '@material-ui/lab/TreeView';
+import TreeView from '@material-ui/lab/TreeView'
 
-import { DiscoveryContext } from 'components/discovery';
-import { namespaceIdOrder } from 'components/lxkns';
-import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem';
+import { DiscoveryContext } from 'components/discovery'
+import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
+import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
 
 export const EXPANDALL_ACTION = "expandall";
 export const COLLAPSEALL_ACTION = "collapseall";
@@ -94,17 +94,18 @@ export const UserNamespaceTree = ({ action }) => {
         // nodes are collapsed. So we first need to calculate which user namespace
         // nodes are really new; we just need the user namespace IDs, as this is
         // what we're identifying the tree nodes by.
-        const previousNamespaces = previousDiscovery.current.namespaces;
+        const previousNamespaces = previousDiscovery.current.namespaces as NamespaceMap
         const oldUsernsIds = Object.values(previousNamespaces)
             .filter(ns => ns.type === 'user')
-            .map(ns => ns.nsid);
+            .map(ns => ns.nsid)
         // Initially open all root namespaces, but lateron never touch that
         // state again. For this, we set up a filter function either initially
         // letting pass only the root user namespaces, lateron we let pass all
         // user namespaces; we'll next sort out which user namespaces are
         // actually new, as to not touch existing user namespaces.
         const usernsCandidatesFilter = Object.keys(previousNamespaces).length ?
-            (ns => ns.type === 'user') : (ns => ns.type === 'user' && ns.parent === null);
+            ((ns: Namespace) => ns.type === NamespaceType.user) : 
+            ((ns: Namespace) => ns.type === NamespaceType.user && ns.parent === null);
         const expandingUserns = Object.values(discovery.namespaces)
             .filter(usernsCandidatesFilter)
             .filter(ns => !oldUsernsIds.includes(ns.nsid));
@@ -138,7 +139,7 @@ export const UserNamespaceTree = ({ action }) => {
     // are ourside the reach of the discoverer).
     const rootusernsItems = Object.values(discovery.namespaces)
         .filter(ns => ns.type === "user" && ns.parent === null)
-        .sort(namespaceIdOrder)
+        .sort(compareNamespaceById)
         .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />);
 
     return (

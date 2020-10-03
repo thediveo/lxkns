@@ -12,6 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+/**
+ * Namespace type identifier strings: these are de-facto definitions from the
+ * Linux kernel and used, for instance, when reading namespace links or (bind)
+ * mount information related to namespaces.
+ */
 export enum NamespaceType {
     cgroup = 'cgroup',
     ipc = 'ipc',
@@ -26,7 +31,8 @@ export enum NamespaceType {
 export interface Namespace {
     /** identifier of this namespace (an inode number, without a device id) */
     nsid: number
-    /** type of namespace (in form of the well-known type strings 'mnt',
+    /** 
+     * type of namespace (in form of the well-known type strings 'mnt',
      * 'cgroup', et cetera.)
      */
     type: NamespaceType
@@ -34,9 +40,20 @@ export interface Namespace {
     reference: string
     /** for non-user namespaces the owning user namespace, otherwise null. */
     owner: Namespace
+    /** 
+     * UID of the user which once created the user namespace in which
+     * this namespace then was created later. 
+     */
     'user-id': number
+    /** 
+     * name of the user which once created the user namespace in which this
+     * namespace then was created later.
+     */
     'user-name': string
+    /** the most senior process joined to this namespace, from the set of
+     * leader processes. */
     ealdorman: Process | null
+    /** list of top-most processes joined to this namespace. */
     leaders: Process[]
     /** user and pid namespaces only: the parent namespace, otherwise null */
     parent: Namespace | null

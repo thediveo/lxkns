@@ -19,7 +19,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import RunFast from 'mdi-material-ui/RunFast';
 import CarCruiseControl from 'mdi-material-ui/CarCruiseControl';
 
-import { Process } from 'components/lxkns'
+import { Process } from 'models/lxkns'
 
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */

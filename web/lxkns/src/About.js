@@ -31,7 +31,8 @@ export const About = () => (<Box p={1}>
         </Typography>
 
     <Typography variant="body2" paragraph={true}>
-        app version {version}
+        app version {version} / 
+        {extlink('https://www.apache.org/licenses/LICENSE-2.0', 'Apache License 2.0', true)}
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
