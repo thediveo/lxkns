@@ -31,9 +31,10 @@ export interface DrawerLinkItemProps {
 }
 
 /**
- * DrawerLinkItem renders an individual item inside an AppBarDrawer and links
- * this item to a specific route path. It is a convenience component that
- * simplifies describing the drawer items with their icons and route paths.
+ * `DrawerLinkItem` renders an individual item inside an
+ * [`AppBarDrawer`](#appbardrawer) and links this item to a specific route
+ * path. It is a convenience component that simplifies describing the drawer
+ * items with their icons and route paths.
  */
 export const DrawerLinkItem = ({ icon, label, path }: DrawerLinkItemProps) => {
     const location = useLocation()

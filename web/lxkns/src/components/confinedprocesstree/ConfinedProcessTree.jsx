@@ -22,7 +22,8 @@ import TreeItem from '@material-ui/lab/TreeItem';
 
 import { DiscoveryContext } from 'components/discovery';
 import { namespaceIdOrder, processNameIdOrder } from 'components/lxkns';
-import Namespace, { ProcessInfo } from 'components/namespace';
+import Namespace from 'components/namespace';
+import ProcessInfo from 'components/process'
 
 // Returns all processes and child/grandchild/... processes which have different
 // controllers, but are still within the same PID namespace of the original

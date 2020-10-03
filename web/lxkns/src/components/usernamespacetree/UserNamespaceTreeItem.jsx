@@ -15,7 +15,8 @@
 import React from 'react';
 import TreeItem from '@material-ui/lab/TreeItem';
 
-import Namespace, { ProcessInfo } from 'components/namespace';
+import Namespace from 'components/namespace';
+import ProcessInfo from 'components/process'
 import { namespaceIdOrder } from 'components/lxkns';
 
 // Uniquely identify tree nodes of processes by using the process names with the

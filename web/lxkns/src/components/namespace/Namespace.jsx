@@ -27,7 +27,8 @@ import CarCruiseControl from 'mdi-material-ui/CarCruiseControl';
 import Lan from 'mdi-material-ui/Lan';
 import Laptop from 'mdi-material-ui/Laptop';
 import FileLinkOutline from 'mdi-material-ui/FileLinkOutline';
-import RunFast from 'mdi-material-ui/RunFast';
+
+import { ProcessInfo } from 'components/process'
 
 // Maps Linux-kernel namespace types to icons, including tooltips. 
 const namespaceTypeIcons = {
@@ -58,7 +59,7 @@ const Namespace = ({ namespace, noprocess }) => {
     // process information to be rendered alongside with the namespace type and
     // ID.
     const process =
-        (namespace.ealdorman && <ProcessInfo process={noprocess ? null : namespace.ealdorman} cgroup={cgroup} />)
+        (namespace.ealdorman && <ProcessInfo process={noprocess ? null : namespace.ealdorman} />)
         || (namespace.reference &&
             <Tooltip title="bind mount"><span className="bindmount">
                 <FileLinkOutline fontSize="inherit" />
@@ -93,15 +94,3 @@ export default Namespace;
 // namespace itself.
 const countNamespaceWithChildren = (acc, ns, idx, arr) =>
     acc + ns.children.reduce(countNamespaceWithChildren, 1);
-
-// Render process information.
-export const ProcessInfo = ({ process, cgroup }) =>
-    <Tooltip title="process">
-        <span className="processinfo">
-            {!!process && (<>
-                <RunFast fontSize="inherit" />
-                <span className="processname">"{process.name}"</span> ({process.pid})
-            </>)}
-            {cgroup}
-        </span>
-    </Tooltip>;

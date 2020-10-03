@@ -12,12 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react'
 
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from 'notistack'
 
-import { fromjson } from 'components/lxkns';
-import useInterval from 'hooks/interval';
+import { fromjson } from 'components/lxkns'
+import useInterval from 'hooks/interval'
 
 const initialDiscoveryState = {
     namespaces: {},
@@ -26,18 +26,18 @@ const initialDiscoveryState = {
 
 // DiscoveryContext provides information about the most recent namespaces
 // discovery from the /api/namespaces endpoint.
-export const DiscoveryContext = createContext(initialDiscoveryState);
+export const DiscoveryContext = createContext(initialDiscoveryState)
 
 // RefreshContext provides information about the refresh configuration and state
 // of discovery.
 export const RefreshContext = createContext({
     interval: null,
     refreshing: false,
-    setInterval: (interval) => { },
+    setInterval: (interval: number | null) => { },
     triggerRefresh: () => { },
-});
+})
 
-const localStorageKey = "lxkns.refresh.interval";
+const localStorageKey = "lxkns.refresh.interval"
 
 const initialInterval = (() => {
     try {
@@ -47,30 +47,45 @@ const initialInterval = (() => {
         }
     } catch (e) { }
     return 5000;
-})();
+})()
 
-// The Discovery component renders all its children, passing them two contexts:
-// a DiscoveryContext, as well as a RefreshContext.
-const Discovery = ({ children }) => {
-    const { enqueueSnackbar } = useSnackbar();
+export interface DiscoveryProps {
+    /** children components receiving a DiscoveryContext and a RefreshContext.
+     */
+    children?: React.ReactNode
+}
+
+/**
+ * The `Discovery` component provides two contexts to its children: both a
+ * `DiscoveryContext` and a `RefreshContext`.
+ *
+ * - The DiscoveryContext provides namespace discovery information returned by
+ *   a REST API call to /api/namespaces.
+ *
+ * - The RefreshContext offers both information about the refresh interval and
+ *   the status of any ongoing refresh process, but also allows components to
+ *   set the refresh interval and even trigger ad-hoc refreshes.
+ */
+const Discovery = ({ children }: DiscoveryProps) => {
+    const { enqueueSnackbar } = useSnackbar()
 
     const [refresh, setRefresh] = useState({
         interval: initialInterval,
         refreshing: false,
-        setInterval: (interval) => {},
+        setInterval: (interval: number | null) => {},
         triggerRefresh: () => {},
-    });
+    })
     // Allow other components consuming the RefreshContext to change the
     // refreshing interval and to trigger refreshes on demand.
     refresh.setInterval = interval => {
-        setRefresh(prevRefresh => {return { ...prevRefresh, interval: interval }});
-    };
+        setRefresh(prevRefresh => {return { ...prevRefresh, interval: interval }})
+    }
     refresh.triggerRefresh = () => {
-        fetchDiscoveryData();
-    };
+        fetchDiscoveryData()
+    }
 
     // The discovery state to share to consumers of the DiscoveryContext.
-    const [discovery, setDiscovery] = useState(initialDiscoveryState);
+    const [discovery, setDiscovery] = useState(initialDiscoveryState)
 
     // Fetch the namespace+process discovery data from the server, postprocess
     // the JSON result, and finally update the discovery data state with the new
@@ -78,52 +93,52 @@ const Discovery = ({ children }) => {
     // discovery state.
     const fetchDiscoveryData = () => {
         if (refresh.refreshing) {
-            return;
+            return
         }
-        setRefresh(prevRefresh => {return { ...refresh, refreshing: true }});
+        setRefresh(prevRefresh => {return { ...refresh, refreshing: true }})
         fetch('/api/namespaces')
             .then(httpresult => {
                 // Whatever the server replied, it did reply and we can reset
                 // the refreshing indication. 
-                setRefresh(prevRefresh => {return { ...refresh, refreshing: false }});
+                setRefresh(prevRefresh => {return { ...refresh, refreshing: false }})
                 // fetch() doesn't throw an error for non-2xx reponse status
                 // codes...
                 if (!httpresult.ok) {
                     console.log(httpresult);
-                    throw Error(httpresult.status + " " + httpresult.statusText);
+                    throw Error(httpresult.status + " " + httpresult.statusText)
                 }
                 try {
                     return httpresult.json()
                 } catch (e) {
-                    throw Error('malformed discovery API response');
+                    throw Error('malformed discovery API response')
                 }
             })
             .then(jsondata => fromjson(jsondata))
             .then(discovery => setDiscovery(prevDiscovery => {
-                return discovery;
+                return discovery
             }))
             .catch((error) => {
                 // Don't forget to reset the refreshing indication.
                 setRefresh(prevRefresh => {return { ...refresh, refreshing: false }})
                 enqueueSnackbar('refreshing failed: ' +
-                    error.toString().replace(/^[E|e]rror: /, ''), { variant: 'error' });
-            });
-    };
+                    error.toString().replace(/^[E|e]rror: /, ''), { variant: 'error' })
+            })
+    }
 
     // Get new discovery data after some time; please note that useInterval
     // interprets a null cycle as switching off the timer.
-    useInterval(() => fetchDiscoveryData(), refresh.interval);
+    useInterval(() => fetchDiscoveryData(), refresh.interval)
 
     // Initially fetch discovery data, unless the cycle is null.
     useEffect(() => {
         if (refresh.interval !== null) {
-            fetchDiscoveryData();
+            fetchDiscoveryData()
         }
-        localStorage.setItem(localStorageKey, JSON.stringify(refresh.interval));
+        localStorage.setItem(localStorageKey, JSON.stringify(refresh.interval))
         // Trust me, I know what I'm doing...
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refresh.interval]);
+    }, [refresh.interval])
 
     return (
         <RefreshContext.Provider value={refresh}>
@@ -131,7 +146,7 @@ const Discovery = ({ children }) => {
                 {children}
             </DiscoveryContext.Provider>
         </RefreshContext.Provider>
-    );
-};
+    )
+}
 
-export default Discovery;
+export default Discovery
