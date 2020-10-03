@@ -21,7 +21,7 @@ import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 
 import { DiscoveryContext } from 'components/discovery';
-import { namespaceIdOrder, processNameIdOrder } from 'components/discovery/model';
+import { namespaceIdOrder, processNameIdOrder } from 'components/lxkns';
 import Namespace, { ProcessInfo } from 'components/namespace';
 
 // Returns all processes and child/grandchild/... processes which have different

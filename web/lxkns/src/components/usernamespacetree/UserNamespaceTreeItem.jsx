@@ -16,7 +16,7 @@ import React from 'react';
 import TreeItem from '@material-ui/lab/TreeItem';
 
 import Namespace, { ProcessInfo } from 'components/namespace';
-import { namespaceIdOrder } from 'components/discovery/model';
+import { namespaceIdOrder } from 'components/lxkns';
 
 // Uniquely identify tree nodes of processes by using the process names with the
 // process PIDs, as opposed to just PIDs.

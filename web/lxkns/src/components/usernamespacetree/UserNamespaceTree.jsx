@@ -20,7 +20,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TreeView from '@material-ui/lab/TreeView';
 
 import { DiscoveryContext } from 'components/discovery';
-import { namespaceIdOrder } from 'components/discovery/model';
+import { namespaceIdOrder } from 'components/lxkns';
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem';
 
 export const EXPANDALL_ACTION = "expandall";

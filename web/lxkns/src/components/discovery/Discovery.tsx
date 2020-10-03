@@ -16,7 +16,7 @@ import React, { createContext, useEffect, useState } from 'react';
 
 import { useSnackbar } from 'notistack';
 
-import { postprocessDiscovery } from 'components/discovery/model';
+import { fromjson } from 'components/lxkns';
 import useInterval from 'hooks/interval';
 
 const initialDiscoveryState = {
@@ -34,7 +34,7 @@ export const RefreshContext = createContext({
     interval: null,
     refreshing: false,
     setInterval: (interval) => { },
-    refresh: () => { },
+    triggerRefresh: () => { },
 });
 
 const localStorageKey = "lxkns.refresh.interval";
@@ -57,6 +57,8 @@ const Discovery = ({ children }) => {
     const [refresh, setRefresh] = useState({
         interval: initialInterval,
         refreshing: false,
+        setInterval: (interval) => {},
+        triggerRefresh: () => {},
     });
     // Allow other components consuming the RefreshContext to change the
     // refreshing interval and to trigger refreshes on demand.
@@ -96,7 +98,7 @@ const Discovery = ({ children }) => {
                     throw Error('malformed discovery API response');
                 }
             })
-            .then(jsondata => postprocessDiscovery(jsondata))
+            .then(jsondata => fromjson(jsondata))
             .then(discovery => setDiscovery(prevDiscovery => {
                 return discovery;
             }))
