@@ -21,6 +21,27 @@ import CarCruiseControl from 'mdi-material-ui/CarCruiseControl';
 
 import { Process } from 'models/lxkns'
 
+import { makeStyles } from '@material-ui/core'
+
+const useStyles = makeStyles({
+    processInfo: {
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+    },
+    processName: {
+        fontStyle: 'italic',
+        color: 'darkgreen',
+    },
+    cgroupInfo: {
+        marginLeft: '0.5em',
+    },
+    cgroupPath: {
+        color: 'dimgray',
+        '&::before': { content: '"\\22"' },
+        '&::after': { content: '"\\22"' },
+    }
+})
+
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
@@ -39,22 +60,26 @@ export interface ProcessInfoProps {
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
-export const ProcessInfo = ({ process }: ProcessInfoProps) => (
-    <span className="processinfo">
-        {!!process && (<>
-            <Tooltip title="process"><span>
-                <RunFast fontSize="inherit" />&nbsp;
-                <span className="processname">"{process.name}"</span> ({process.pid})
+export const ProcessInfo = ({ process }: ProcessInfoProps) => {
+    const classes = useStyles()
+
+    return (
+        <span className={classes.processInfo}>
+            {!!process && (<>
+                <Tooltip title="process"><span>
+                    <RunFast fontSize="inherit" />&nbsp;
+                <span className={classes.processName}>"{process.name}"</span> ({process.pid})
             </span></Tooltip>
-            {process.cgroup && (
-                <Tooltip title="control-group path" className="cgroupinfo">
-                    <span>
-                        <CarCruiseControl fontSize="inherit" />&nbsp;
-                            "<span className="cgroupname">{process.cgroup}</span>"
+                {process.cgroup && (
+                    <Tooltip title="control-group path" className="cgroupinfo">
+                        <span className={classes.cgroupInfo}>
+                            <CarCruiseControl fontSize="inherit" />&nbsp;
+                            <span className={classes.cgroupPath}>{process.cgroup}</span>
                         </span>
-                </Tooltip>)}
-        </>)}
-    </span>
-)
+                    </Tooltip>)}
+            </>)}
+        </span>
+    )
+}
 
 export default ProcessInfo

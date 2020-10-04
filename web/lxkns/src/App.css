@@ -14,10 +14,6 @@
    under the License.
 */
 
-button.hide {
-    display: none;
-}
-
 /* Indentation of tree item children relative to their parent item */
 .namespacetree .MuiTreeItem-group {
     margin-left: 2em;
@@ -40,73 +36,13 @@ button.hide {
     margin-left: -1.5em;
 }
 
-.namespace .pill {
-    width: 10.5em;
-    display: inline-block;
-    text-align: end;
-    margin-top: 0.2ex;
-    margin-bottom: 0.2ex;
-    margin-right: 0.5em;
-    padding-left: 0.2em;
-    padding-right: 0.2em;
-    padding-bottom: 0.2em;
-    border-radius: 0.2em;
-}
-
-.namespace.user .pill {
-    width: 9.5em;
-    text-align: center;
-}
-
-.namespace.cgroup .pill {
-    background-color: #ffe6bb;
-}
-
-.namespace.ipc .pill {
-    background-color: lightyellow;
-}
-
-.namespace.mnt .pill {
-    background-color: #d0e1e4;
-}
-
-.namespace.net .pill {
-    background-color: #e0ffe0;
-}
-
-.namespace.pid .pill {
-    background-color: #d0d4f6;
-}
-
-.namespace.time .pill {
-    background-color: mediumaquamarine;
-}
-
-.namespace.user .pill {
-    background-color: #e9e8e8;
-    font-weight: bold;
-}
-
-.namespace.uts .pill {
-    background-color: #ffd0d0;
-}
-
 .namespace .MuiSvgIcon-root, .inlineicon {
     vertical-align: middle;
-}
-
-.processinfo .processname {
-    font-style: italic;
-    color: darkgreen;
 }
 
 .processinfo .bindmount {
     font-style: italic;
     color: orange;
-}
-
-.processinfo .cgroupinfo {
-    margin-left: 0.3em;
 }
 
 .cgroupinfo .cgroupname {

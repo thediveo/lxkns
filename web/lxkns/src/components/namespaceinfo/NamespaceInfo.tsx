@@ -30,7 +30,59 @@ import Laptop from 'mdi-material-ui/Laptop'
 import FileLinkOutline from 'mdi-material-ui/FileLinkOutline'
 
 import { ProcessInfo } from 'components/processinfo'
-import { Namespace } from 'models/lxkns'
+import { Namespace, NamespaceType } from 'models/lxkns'
+
+import { makeStyles } from '@material-ui/core'
+
+const useStyles = makeStyles({
+    namespacePill: {
+        width: '10.5em',
+        display: 'inline-block',
+        textAlign: 'end',
+        marginTop: '0.2ex',
+        marginBottom: '0.2ex',
+        marginRight: '0.5em',
+        paddingLeft: '0.2em',
+        paddingRight: '0.2em',
+        paddingTop: '0.2ex',
+        borderRadius: '0.2em',
+        '&$cgroup': {
+            backgroundColor: '#ffe6bb'
+        },
+        '&$ipc': {
+            backgroundColor: 'lightyellow'
+        },
+        '&$mnt': {
+            backgroundColor: '#d0e1e4'
+        },
+        '&$net': {
+            backgroundColor: '#e0ffe0'
+        },
+        '&$pid': {
+            backgroundColor: '#d0d4f6'
+        },
+        '&$time': {
+            backgroundColor: 'mediumaquamarine'
+        },
+        '&$user': {
+            width: '9.5em',
+            textAlign: 'center',
+            backgroundColor: '#e9e8e8',
+            fontWeight: 'bold'
+        },
+        '&$uts': {
+            backgroundColor: '#ffd0d0'
+        }
+    },
+    cgroup: {}, // required so we can combine selectors above.
+    ipc: {},
+    mnt: {},
+    net: {},
+    pid: {},
+    user: {},
+    uts: {},
+    time: {}
+})
 
 // Maps Linux-kernel namespace types to icons, including tooltips. 
 const namespaceTypeIcons = {
@@ -54,6 +106,8 @@ export interface NamespaceInfoProps {
 // senior process with its name, or a bind-mounted reference. This component
 // never renders any child namespaces (of PID and user namespaces).
 const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
+    const classes = useStyles()
+
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID.
@@ -68,12 +122,12 @@ const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
             <TextureIcon fontSize="inherit" />
         </Tooltip>
 
-    const owner = namespace.type === 'user' &&
+    const owner = namespace.type === NamespaceType.user &&
         <span className="owner">
             owned by UID {namespace['user-id']} {namespace['user-name'] && ('"' + namespace['user-name'] + '"')}
         </span>
 
-    const children = namespace.type === 'user' &&
+    const children = namespace.type === NamespaceType.user &&
         <span className="userchildren">
             (<SubdirectoryArrowRightIcon fontSize="inherit" />
             {countNamespaceWithChildren(-1, namespace)})
@@ -96,18 +150,25 @@ const countNamespaceWithChildren = (acc: number, ns: Namespace) =>
     acc + ns.children.reduce(countNamespaceWithChildren, 1)
 
 
-export interface NamespacePillProps { namespace: Namespace }
+export interface NamespacePillProps {
+    /** namespace with type and identifier. */
+    namespace: Namespace
+}
 
 /**
  * Component `NamespacePill` renders a namespace "pill" consisting of the
  * namespace's type and identifier, in the typical "nstype:[nsid]" textual
  * notation, yet with some graphical adornments.
  */
-export const NamespacePill = ({ namespace }: NamespacePillProps) => (
-    <Tooltip title={`${namespace.type} namespace`}><>
-        {namespaceTypeIcons[namespace.type]}&nbsp;
-        <span className="pill">
-            {namespace.type}:[{namespace.nsid}]
-        </span>
-    </></Tooltip>
-)
+export const NamespacePill = ({ namespace }: NamespacePillProps) => {
+    const classes = useStyles()
+
+    return (
+        <Tooltip title={`${namespace.type} namespace`}><>
+            {namespaceTypeIcons[namespace.type]}&nbsp;
+            <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
+                {namespace.type}:[{namespace.nsid}]
+            </span>
+        </></Tooltip>
+    )
+}
