@@ -104,7 +104,7 @@ const AppBarDrawer = ({ title, tools, drawer }: AppBarDrawerProps) => {
                         {title}
                     </Typography>
 
-                    {tools}
+                    {tools()}
                 </Toolbar>
             </AppBar>
         </ElevationScroll>

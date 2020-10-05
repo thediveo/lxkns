@@ -169,9 +169,10 @@ export interface NamespacePillProps {
 }
 
 /**
- * Component `NamespacePill` renders a namespace "pill" consisting of the
+ * Component `NamespacePill` renders a namespace "pill" consisting of just the
  * namespace's type and identifier, in the typical "nstype:[nsid]" textual
- * notation, yet with some graphical adornments.
+ * notation. Yet it gets some simple graphical adornments; in particular, an
+ * icon matching the type of namespace.
  */
 export const NamespacePill = ({ namespace }: NamespacePillProps) => {
     const classes = useStyles()
