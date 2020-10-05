@@ -83,22 +83,27 @@ const LxknsApp = () => {
                         </Typography>
                     </ListItem>
                     <Divider />
-                    <DrawerLinkItem 
+                    <DrawerLinkItem
                         icon={<PersonIcon />}
                         label="user namespaces"
                         path="/"
                     />
-                    <DrawerLinkItem 
+                    <DrawerLinkItem
                         icon={<RunFast />}
                         label="pid namespaces"
                         path="/pid"
                     />
-                    <DrawerLinkItem 
+                    <DrawerLinkItem
+                        icon={<RunFast />}
+                        label="control-group namespaces"
+                        path="/cgroup"
+                    />
+                    <DrawerLinkItem
                         icon={<RunFast />}
                         label="network namespaces"
                         path="/net"
                     />
-                    <DrawerLinkItem 
+                    <DrawerLinkItem
                         icon={<InfoIcon />}
                         label="information"
                         path="/about"
@@ -108,8 +113,11 @@ const LxknsApp = () => {
         />
         <Switch>
             <Route exact path="/about" render={() => <About />} />
-            <Route exact path="/pid" render={() => <ConfinedProcessTree type="pid" />} />
-            <Route exact path="/net" render={() => <ConfinedProcessTree type="net" />} />
+            {['pid', 'cgroup', 'net'].map(
+                type => <Route
+                    exact path={`/${type}`}
+                    render={() => <ConfinedProcessTree type={type} />}
+                />)}
             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
         </Switch>
     </>);

@@ -34,11 +34,15 @@ import { Namespace, NamespaceType } from 'models/lxkns'
 
 import { makeStyles } from '@material-ui/core'
 
+// Component styling...
 const useStyles = makeStyles({
     namespacePill: {
-        width: '10.5em',
-        display: 'inline-block',
-        textAlign: 'end',
+        minWidth: '11.5em',
+
+        display: 'inline-flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+
         marginTop: '0.2ex',
         marginBottom: '0.2ex',
         marginRight: '0.5em',
@@ -46,20 +50,22 @@ const useStyles = makeStyles({
         paddingRight: '0.2em',
         paddingTop: '0.2ex',
         borderRadius: '0.2em',
+
+        // ...and now for the namespace-type specific styling.
         '&$cgroup': {
-            backgroundColor: '#ffe6bb'
+            backgroundColor: '#fce1e1'
         },
         '&$ipc': {
-            backgroundColor: 'lightyellow'
+            backgroundColor: '#f5ffcc'
         },
         '&$mnt': {
-            backgroundColor: '#d0e1e4'
+            backgroundColor: '#e4f2f5'
         },
         '&$net': {
             backgroundColor: '#e0ffe0'
         },
         '&$pid': {
-            backgroundColor: '#d0d4f6'
+            backgroundColor: '#daddf2'
         },
         '&$time': {
             backgroundColor: 'mediumaquamarine'
@@ -71,10 +77,12 @@ const useStyles = makeStyles({
             fontWeight: 'bold'
         },
         '&$uts': {
-            backgroundColor: '#ffd0d0'
+            backgroundColor: '#fff2d9'
         }
     },
-    cgroup: {}, // required so we can combine selectors above.
+    // The following is required so we can reference and thus combine
+    // selectors for namespace type-specific styling of the "pill".
+    cgroup: {},
     ipc: {},
     mnt: {},
     net: {},
@@ -84,16 +92,21 @@ const useStyles = makeStyles({
     time: {}
 })
 
-// Maps Linux-kernel namespace types to icons, including tooltips. 
-const namespaceTypeIcons = {
-    "cgroup": <Tooltip title="control group namespace"><CarCruiseControl fontSize="inherit" /></Tooltip>,
-    "ipc": <Tooltip title="inter-process communication namespace"><PhoneInTalkIcon fontSize="inherit" /></Tooltip>,
-    "mnt": <Tooltip title="mount namespace"><Database fontSize="inherit" /></Tooltip>,
-    "net": <Tooltip title="network namespace"><Lan fontSize="inherit" /></Tooltip>,
-    "pid": <Tooltip title="process identifier namespace"><MemoryIcon fontSize="inherit" /></Tooltip>,
-    "user": <Tooltip title="user namespace"><PersonIcon fontSize="inherit" /></Tooltip>,
-    "uts": <Tooltip title="*nix time sharing namespace"><Laptop fontSize="inherit" /></Tooltip>,
-    "time": <Tooltip title="monotonous timers namespace"><TimerIcon fontSize="inherit" /></Tooltip>
+// Maps Linux-kernel namespace types to icons, including tooltips.
+interface NamespaceIcon {
+    tooltip: string
+    icon: JSX.Element
+}
+
+const namespaceTypeIcons: { [key: string]: NamespaceIcon } = {
+    "cgroup": { tooltip: "control group", icon: <CarCruiseControl fontSize="inherit" /> },
+    "ipc": { tooltip: "inter-process", icon: <PhoneInTalkIcon fontSize="inherit" /> },
+    "mnt": { tooltip: "mount", icon: <Database fontSize="inherit" /> },
+    "net": { tooltip: "network", icon: <Lan fontSize="inherit" /> },
+    "pid": { tooltip: "process identifier", icon: <MemoryIcon fontSize="inherit" /> },
+    "user": { tooltip: "user", icon: <PersonIcon fontSize="inherit" /> },
+    "uts": { tooltip: "*nix time sharing system", icon: <Laptop fontSize="inherit" /> },
+    "time": { tooltip: "monotonous timers", icon: <TimerIcon fontSize="inherit" /> },
 }
 
 export interface NamespaceInfoProps {
@@ -164,11 +177,13 @@ export const NamespacePill = ({ namespace }: NamespacePillProps) => {
     const classes = useStyles()
 
     return (
-        <Tooltip title={`${namespace.type} namespace`}><>
-            {namespaceTypeIcons[namespace.type]}&nbsp;
+        // Ouch ... Tooltip won't display its tooltip on a <> child, but
+        // instead we have to use a <span> to make it work as expected...
+        <Tooltip title={`${namespaceTypeIcons[namespace.type].tooltip} namespace`}>
             <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
+                {namespaceTypeIcons[namespace.type].icon}
                 {namespace.type}:[{namespace.nsid}]
             </span>
-        </></Tooltip>
+        </Tooltip>
     )
 }
