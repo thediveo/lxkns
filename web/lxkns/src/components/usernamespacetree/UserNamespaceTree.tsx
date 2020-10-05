@@ -23,14 +23,14 @@ import { DiscoveryContext } from 'components/discovery'
 import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
 
-export const EXPANDALL_ACTION = "expandall";
-export const COLLAPSEALL_ACTION = "collapseall";
+export const EXPANDALL_ACTION = "expandall"
+export const COLLAPSEALL_ACTION = "collapseall"
 
 // treeAction returns the specified tree action with some noise tacked on,
 // ensuring that the tree component state will change and the component then can
 // pick up the "new" command. This IS ugly, no chance to paint enough lipstick
 // on this pig.
-export const treeAction = (action) => action + Math.floor(100000 + Math.random() * 900000).toString();
+export const treeAction = (action) => action + Math.floor(100000 + Math.random() * 900000).toString()
 
 // The UserNamespaceTree component renders a tree of user namespaces, including
 // owned non-user namespaces. Furthermore, it renders additional information,
@@ -44,27 +44,27 @@ export const treeAction = (action) => action + Math.floor(100000 + Math.random()
 export const UserNamespaceTree = ({ action }) => {
 
     // Discovery data comes in via a dedicated discovery context.
-    const discovery = useContext(DiscoveryContext);
+    const discovery = useContext(DiscoveryContext)
 
     // Previous discovery information, if any.
-    const previousDiscovery = useRef({ namespaces: {}, processes: {} });
+    const previousDiscovery = useRef({ namespaces: {}, processes: {} })
 
     // Tree node expansion is a component-local state.
-    const [expanded, setExpanded] = useState([]);
+    const [expanded, setExpanded] = useState([])
 
     // To emulate actions via react's properties architecture and then getting
     // the dependencies correct, we need to store the previous action. Sigh,
     // bloat react-ion.
-    const oldaction = useRef("");
+    const oldaction = useRef("")
 
     // Trigger an action when the action "state" changes; we are ignoing any
     // stuff appended to the commands, as we need to add noise to the commands
     // in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         if (action === oldaction.current) {
-            return;
+            return
         }
-        oldaction.current = action;
+        oldaction.current = action
         if (action.startsWith(EXPANDALL_ACTION)) {
             // expand all user namespaces and all included process nodes.
             const alluserns = Object.values(discovery.namespaces)
@@ -72,15 +72,15 @@ export const UserNamespaceTree = ({ action }) => {
                 .map(ns => ns.nsid.toString())
             const allealdormen = Object.values(discovery.namespaces)
                 .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
-                .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString());
-            setExpanded(alluserns.concat(allealdormen));
+                .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString())
+            setExpanded(alluserns.concat(allealdormen))
         } else if (action.startsWith(COLLAPSEALL_ACTION)) {
             const topuserns = Object.values(discovery.namespaces)
                 .filter(ns => ns.type === "user" && ns.parent === null)
                 .map(ns => ns.nsid.toString())
-            setExpanded(topuserns);
+            setExpanded(topuserns)
         }
-    }, [action, discovery]);
+    }, [action, discovery])
 
     // After updaing the discovery information, check if there are any new user
     // namespaces (including their sub items grouping non-user namespaces by
@@ -108,21 +108,21 @@ export const UserNamespaceTree = ({ action }) => {
             ((ns: Namespace) => ns.type === NamespaceType.user && ns.parent === null);
         const expandingUserns = Object.values(discovery.namespaces)
             .filter(usernsCandidatesFilter)
-            .filter(ns => !oldUsernsIds.includes(ns.nsid));
+            .filter(ns => !oldUsernsIds.includes(ns.nsid))
         // Additionally also open any process child nodes below the new user
         // namespace tree nodes.
         const expandingProcIds = expandingUserns
             .map(userns => uniqueProcsOfTenants(userns)
                 .map(proc => userns.nsid.toString() + "-" + proc.pid.toString()))
-            .flat();
+            .flat()
         // Finally update the expansion state of the tree; this must include the
         // already expanded nodes (state), and we add our to-be-expanded-soon
         // nodes.
         const expandNodeIds = expandingUserns.map(userns => userns.nsid.toString())
-            .concat(expandingProcIds);
+            .concat(expandingProcIds)
         setExpanded(previouslyExpanded => previouslyExpanded.concat(expandNodeIds));
         previousDiscovery.current = discovery;
-    }, [discovery]);
+    }, [discovery])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
@@ -130,7 +130,7 @@ export const UserNamespaceTree = ({ action }) => {
     // state of the tree.
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
-    };
+    }
 
     // In the discovery heap find only the topmost user namespaces; that is,
     // user namespaces without any parent. This should return only one user
@@ -140,7 +140,7 @@ export const UserNamespaceTree = ({ action }) => {
     const rootusernsItems = Object.values(discovery.namespaces)
         .filter(ns => ns.type === "user" && ns.parent === null)
         .sort(compareNamespaceById)
-        .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />);
+        .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />)
 
     return (
         <TreeView
@@ -150,7 +150,7 @@ export const UserNamespaceTree = ({ action }) => {
             defaultExpandIcon={<ChevronRightIcon />}
             expanded={expanded}
         >{rootusernsItems}</TreeView>
-    );
-};
+    )
+}
 
-export default UserNamespaceTree;
+export default UserNamespaceTree

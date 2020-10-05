@@ -143,10 +143,7 @@ const LxknsApp = () => {
                             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
                         </Switch>
                     }
-                    renderError={(error) => <>
-                        <Typography variant="h6">:(</Typography>
-                        <pre>{error}</pre>
-                    </>}
+                    renderError={({error}) => <pre>{error.toString()}</pre>}
                 />
             </Box>
         </>);

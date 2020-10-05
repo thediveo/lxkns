@@ -24,7 +24,7 @@ WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
-COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/jsconfig.json ./
+COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/tsconfig.json ./
 RUN yarn install
 # Now build the production-optimized web app.
 COPY web/lxkns/public/ ./public/

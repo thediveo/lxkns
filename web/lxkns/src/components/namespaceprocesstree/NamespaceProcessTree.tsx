@@ -96,7 +96,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType) => {
                 nodeId={proc.pid.toString()}
                 label={<ProcessInfo process={proc} />}
             >{children}</TreeItem>
-        ) || children
+        ) || children || null
     )
 }
 
@@ -210,23 +210,25 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
         setExpanded(nodeIds);
     }
 
-    return (rootnsItems.length &&
-        <TreeView
-            className="namespacetree"
-            onNodeToggle={handleToggle}
-            defaultCollapseIcon={<ExpandMoreIcon />}
-            defaultExpandIcon={<ChevronRightIcon />}
-            expanded={expanded}
-        >{rootnsItems}</TreeView>
-    ) || (Object.keys(discovery.namespaces).length &&
-        <Typography variant="body1" color="textSecondary">
-            this Linux system doesn't have any "{nstype}" namespaces
+    return (
+        (rootnsItems.length &&
+            <TreeView
+                className="namespacetree"
+                onNodeToggle={handleToggle}
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+                expanded={expanded}
+            >{rootnsItems}</TreeView>
+        ) || (Object.keys(discovery.namespaces).length &&
+            <Typography variant="body1" color="textSecondary">
+                this Linux system doesn't have any "{nstype}" namespaces
             </Typography>
         ) || (
             <Typography variant="body1" color="textSecondary">
                 nothing discovered yet, please refresh
             </Typography>
         )
+    )
 }
 
 export default NamespaceProcessTree;

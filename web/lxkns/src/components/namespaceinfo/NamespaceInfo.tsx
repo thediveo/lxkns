@@ -210,9 +210,14 @@ export interface NamespaceProps {
 export const NamespacePill = ({ namespace }: NamespaceProps) => {
     const classes = useStyles()
 
+    // Ouch ... Tooltip won't display its tooltip on a <> child, but
+    // instead we have to use a <span> to make it work as expected...
+
+    // Ouch #2: don't put comments into return statements, as this will break
+    // the optimized build. Ouch ouch ouch ... see also issue #8687,
+    // https://github.com/facebook/create-react-app/issues/8687 ... and still
+    // open.
     return (
-        // Ouch ... Tooltip won't display its tooltip on a <> child, but
-        // instead we have to use a <span> to make it work as expected...
         <Tooltip title={`${namespaceTypeIcons[namespace.type].tooltip} namespace`}>
             <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
                 {CreateNamespaceTypeIcon(namespace.type, {fontSize: 'inherit'})}
@@ -228,7 +233,7 @@ export const NamespacePill = ({ namespace }: NamespaceProps) => {
 const NamespacePath = ({ namespace }: NamespaceProps) => {
     const classes = useStyles()
 
-    const procfdPath = namespace.reference &&
+    const isProcfdPath = namespace.reference &&
         namespace.reference.startsWith('/proc/') &&
         namespace.reference.includes('/fd/')
 
@@ -239,7 +244,7 @@ const NamespacePath = ({ namespace }: NamespaceProps) => {
                     <Ghost fontSize="inherit" />
                 </span>
             </Tooltip>
-        ) || (procfdPath &&
+        ) || (isProcfdPath &&
             <Tooltip title="kept alive by file descriptor">
                 <span className={classes.namespacePath}>
                     <FileLinkOutline fontSize="inherit" />

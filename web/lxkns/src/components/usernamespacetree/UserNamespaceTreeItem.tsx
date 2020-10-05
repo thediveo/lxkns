@@ -92,7 +92,8 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
             label={<NamespaceInfo namespace={namespace} />}
         >
             {[...procs, ...bindmounts, ...children]}
-        </TreeItem>);
+        </TreeItem>
+    )
 }
 
 export default UserNamespaceTreeItem;
