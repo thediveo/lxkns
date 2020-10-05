@@ -36,6 +36,9 @@ import { makeStyles } from '@material-ui/core'
 // Component styling...
 const useStyles = makeStyles({
     namespace: {
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+        verticalAlign: 'middle',
     },
     namespacePath: {
         display: 'inline-block',
@@ -112,19 +115,29 @@ const useStyles = makeStyles({
 // Maps Linux-kernel namespace types to icons, including tooltips.
 interface NamespaceIcon {
     tooltip: string
-    icon: JSX.Element
+    icon: any
 }
 
-const namespaceTypeIcons: { [key: string]: NamespaceIcon } = {
-    "cgroup": { tooltip: "control group", icon: <CarCruiseControl fontSize="inherit" /> },
-    "ipc": { tooltip: "inter-process", icon: <PhoneInTalkIcon fontSize="inherit" /> },
-    "mnt": { tooltip: "mount", icon: <Database fontSize="inherit" /> },
-    "net": { tooltip: "network", icon: <Lan fontSize="inherit" /> },
-    "pid": { tooltip: "process identifier", icon: <MemoryIcon fontSize="inherit" /> },
-    "user": { tooltip: "user", icon: <PersonIcon fontSize="inherit" /> },
-    "uts": { tooltip: "*nix time sharing system", icon: <Laptop fontSize="inherit" /> },
-    "time": { tooltip: "monotonous timers", icon: <TimerIcon fontSize="inherit" /> },
+// Maps namespace types to icons and suitable tooltip texts.
+const namespaceTypeIcons: { [key in NamespaceType]: NamespaceIcon } = {
+    [NamespaceType.cgroup]: { tooltip: "control group", icon: CarCruiseControl },
+    [NamespaceType.ipc]: { tooltip: "inter-process", icon: PhoneInTalkIcon},
+    [NamespaceType.mnt]: { tooltip: "mount", icon: Database },
+    [NamespaceType.net]: { tooltip: "network", icon: Lan },
+    [NamespaceType.pid]: { tooltip: "process identifier", icon: MemoryIcon },
+    [NamespaceType.user]: { tooltip: "user", icon: PersonIcon },
+    [NamespaceType.uts]: { tooltip: "*nix time sharing system", icon: Laptop },
+    [NamespaceType.time]: { tooltip: "monotonous timers", icon: TimerIcon },
 }
+
+/**
+ * Creates an icon based on the type of namespace and optional icon properties.
+ *
+ * @param type type of namespace, one of NamespaceType.cgroup, et cetera.
+ * @param props icon properties.
+ */
+export const CreateNamespaceTypeIcon = (type: NamespaceType, props?: any) =>
+    React.createElement(namespaceTypeIcons[type].icon, props)
 
 export interface NamespaceInfoProps {
     namespace: Namespace,
@@ -202,7 +215,7 @@ export const NamespacePill = ({ namespace }: NamespaceProps) => {
         // instead we have to use a <span> to make it work as expected...
         <Tooltip title={`${namespaceTypeIcons[namespace.type].tooltip} namespace`}>
             <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
-                {namespaceTypeIcons[namespace.type].icon}
+                {CreateNamespaceTypeIcon(namespace.type, {fontSize: 'inherit'})}
                 {namespace.type}:[{namespace.nsid}]
             </span>
         </Tooltip>
@@ -226,7 +239,7 @@ const NamespacePath = ({ namespace }: NamespaceProps) => {
                     <Ghost fontSize="inherit" />
                 </span>
             </Tooltip>
-        ) || (procfdPath && 
+        ) || (procfdPath &&
             <Tooltip title="kept alive by file descriptor">
                 <span className={classes.namespacePath}>
                     <FileLinkOutline fontSize="inherit" />

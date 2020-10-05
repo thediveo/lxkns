@@ -31,15 +31,7 @@ import Divider from '@material-ui/core/Divider'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
-import PersonIcon from '@material-ui/icons/Person'
-import RunFast from 'mdi-material-ui/RunFast'
 import InfoIcon from '@material-ui/icons/Info'
-import Lan from 'mdi-material-ui/Lan'
-import TimerIcon from '@material-ui/icons/Timer'
-import Laptop from 'mdi-material-ui/Laptop'
-import Database from 'mdi-material-ui/Database'
-import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
-import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk'
 
 import './App.css'
 import lxknsTheme from './appstyles'
@@ -47,15 +39,15 @@ import lxknsTheme from './appstyles'
 import Discovery, { DiscoveryContext } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree'
-import ConfinedProcessTree from 'components/confinedprocesstree'
+import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
+import { Box, ThemeProvider } from '@material-ui/core'
 
 import version from '../version'
 import About from '../About'
-import { Box, ThemeProvider } from '@material-ui/core'
-
-
+import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
+import { NamespaceType } from 'models/lxkns';
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -66,14 +58,14 @@ interface viewItem {
 
 const views: viewItem[] = [
     { icon: <HomeIcon />, label: "all namespaces", path: "/" },
-    { icon: <PersonIcon />, label: "user", path: "/user", type: "user" },
-    { icon: <RunFast />, label: "PID", path: "/pid", type: "pid" },
-    { icon: <CarCruiseControl />, label: "cgroup", path: "/cgroup", type: "cgroup" },
-    { icon: <PhoneInTalkIcon />, label: "IPC", path: "/ipc", type: "ipc" },
-    { icon: <Database />, label: "mount", path: "/mnt", type: "mnt" },
-    { icon: <Lan />, label: "network", path: "/net", type: "net" },
-    { icon: <Laptop />, label: "UTS", path: "/uts", type: "uts" },
-    { icon: <TimerIcon />, label: "time", path: "/time", type: "time" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.user), label: "user", path: "/user", type: "user" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.pid), label: "PID", path: "/pid", type: "pid" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.cgroup), label: "cgroup", path: "/cgroup", type: "cgroup" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.ipc), label: "IPC", path: "/ipc", type: "ipc" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.mnt), label: "mount", path: "/mnt", type: "mnt" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.net), label: "network", path: "/net", type: "net" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.uts), label: "UTS", path: "/uts", type: "uts" },
+    { icon: CreateNamespaceTypeIcon(NamespaceType.time), label: "time", path: "/time", type: "time" },
     { icon: <InfoIcon />, label: "information", path: "/about" },
 ]
 
@@ -125,8 +117,9 @@ const LxknsApp = () => {
                             </Typography>
                         </ListItem>
                         <Divider />
-                        {views.map(viewitem =>
+                        {views.map((viewitem, idx) =>
                             <DrawerLinkItem
+                                key={idx}
                                 icon={viewitem.icon}
                                 label={viewitem.label}
                                 path={viewitem.path}
@@ -140,10 +133,11 @@ const LxknsApp = () => {
                     render={() =>
                         <Switch>
                             <Route exact path="/about" render={() => <About />} />
-                            {views.filter(viewitem => !!viewitem.type).map(viewitem =>
+                            {views.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
                                 <Route
                                     exact path={viewitem.path}
-                                    render={() => <ConfinedProcessTree type={viewitem.type} />}
+                                    render={() => <NamespaceProcessTree type={viewitem.type} action={treeaction} />}
+                                    key={idx}
                                 />
                             )}
                             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
