@@ -13,16 +13,15 @@
 // under the License.
 
 import React from 'react'
-import classNames from 'classnames'
 
 import PersonIcon from '@material-ui/icons/Person'
 import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk'
 import TimerIcon from '@material-ui/icons/Timer'
-import TextureIcon from '@material-ui/icons/Texture'
 import MemoryIcon from '@material-ui/icons/Memory'
 import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRight'
 import Tooltip from '@material-ui/core/Tooltip'
 
+import Ghost from 'mdi-material-ui/Ghost'
 import Database from 'mdi-material-ui/Database'
 import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
 import Lan from 'mdi-material-ui/Lan'
@@ -36,8 +35,21 @@ import { makeStyles } from '@material-ui/core'
 
 // Component styling...
 const useStyles = makeStyles({
+    namespace: {
+    },
+    namespacePath: {
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+        fontStyle: 'italic',
+        color: '#bf8d19',
+        '& .MuiSvgIcon-root': {
+            marginRight: '0.15em',
+            verticalAlign: 'middle',
+        },
+    },
     namespacePill: {
         minWidth: '11.5em',
+        verticalAlign: 'middle',
 
         display: 'inline-flex',
         justifyContent: 'space-between',
@@ -53,32 +65,37 @@ const useStyles = makeStyles({
 
         // ...and now for the namespace-type specific styling.
         '&$cgroup': {
-            backgroundColor: '#fce1e1'
+            backgroundColor: '#fce1e1',
         },
         '&$ipc': {
-            backgroundColor: '#f5ffcc'
+            backgroundColor: '#f5ffcc',
         },
         '&$mnt': {
-            backgroundColor: '#e4f2f5'
+            backgroundColor: '#e4f2f5',
         },
         '&$net': {
-            backgroundColor: '#e0ffe0'
+            backgroundColor: '#e0ffe0',
         },
         '&$pid': {
-            backgroundColor: '#daddf2'
+            backgroundColor: '#daddf2',
         },
         '&$time': {
-            backgroundColor: 'mediumaquamarine'
+            backgroundColor: 'mediumaquamarine',
         },
         '&$user': {
             width: '9.5em',
             textAlign: 'center',
             backgroundColor: '#e9e8e8',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
         },
         '&$uts': {
-            backgroundColor: '#fff2d9'
+            backgroundColor: '#fff2d9',
         }
+    },
+    userchildrenInfo: {
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+        marginRight: '0.5em',
     },
     // The following is required so we can reference and thus combine
     // selectors for namespace type-specific styling of the "pill".
@@ -114,43 +131,46 @@ export interface NamespaceInfoProps {
     noprocess?: boolean,
 }
 
-// Component Namespace renders information about a particular namespace, passed
-// in as a namespace object; type and ID get rendered, as well as the most
-// senior process with its name, or a bind-mounted reference. This component
-// never renders any child namespaces (of PID and user namespaces).
+// Component `Namespace` renders information about a particular namespace. The
+// type and ID get rendered, as well as the most senior process with its name,
+// or alternatively a bind-mounted or fd reference.
+//
+// Please note: this component never renders any child namespaces (even if it
+// is a PID and user namespace).
 const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
     const classes = useStyles()
 
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
-    // ID.
-    const process =
-        (namespace.ealdorman && <ProcessInfo process={noprocess ? null : namespace.ealdorman} />)
-        || (namespace.reference &&
-            <Tooltip title="bind mount"><span className="bindmount">
-                <FileLinkOutline fontSize="inherit" />
-                <span className="bindmount">"{namespace.reference}"</span>
-            </span></Tooltip>) ||
-        <Tooltip title={"intermediate hidden " + namespace.type + " namespace"}>
-            <TextureIcon fontSize="inherit" />
-        </Tooltip>
+    // ID. Unless the process information is to be suppressed.
+    const procinfo = !noprocess && namespace.ealdorman &&
+        <ProcessInfo process={namespace.ealdorman} />
 
-    const owner = namespace.type === NamespaceType.user &&
+    // If there isn't any process attached to this namespace, prepare
+    // information about bind mounts and fd references, if possible. This also
+    // covers "hidden" (PID, user) namespaces which are somewhere in the
+    // hierarchy without any other references to them anymore beyond the
+    // parent-child references.
+    const pathinfo = !namespace.ealdorman &&
+        <NamespacePath namespace={namespace} />
+
+    // For user namespaces also prepare ownership information.
+    const ownerinfo = namespace.type === NamespaceType.user &&
         <span className="owner">
             owned by UID {namespace['user-id']} {namespace['user-name'] && ('"' + namespace['user-name'] + '"')}
         </span>
 
     const children = namespace.type === NamespaceType.user &&
-        <span className="userchildren">
-            (<SubdirectoryArrowRightIcon fontSize="inherit" />
-            {countNamespaceWithChildren(-1, namespace)})
+        <span className={classes.userchildrenInfo}>
+            [<SubdirectoryArrowRightIcon fontSize="inherit" />
+            {countNamespaceWithChildren(-1, namespace)}]
         </span>
 
     return (
-        <span className={classNames('namespace', namespace.type)}>
+        <span className={`${classes.namespace} ${namespace.type}`}>
             <NamespacePill namespace={namespace} />
             {children}
-            {process} {owner}
+            {procinfo || pathinfo} {ownerinfo}
         </span>
     )
 }
@@ -163,7 +183,7 @@ const countNamespaceWithChildren = (acc: number, ns: Namespace) =>
     acc + ns.children.reduce(countNamespaceWithChildren, 1)
 
 
-export interface NamespacePillProps {
+export interface NamespaceProps {
     /** namespace with type and identifier. */
     namespace: Namespace
 }
@@ -174,7 +194,7 @@ export interface NamespacePillProps {
  * notation. Yet it gets some simple graphical adornments; in particular, an
  * icon matching the type of namespace.
  */
-export const NamespacePill = ({ namespace }: NamespacePillProps) => {
+export const NamespacePill = ({ namespace }: NamespaceProps) => {
     const classes = useStyles()
 
     return (
@@ -186,5 +206,40 @@ export const NamespacePill = ({ namespace }: NamespacePillProps) => {
                 {namespace.type}:[{namespace.nsid}]
             </span>
         </Tooltip>
+    )
+}
+
+/**
+ * 
+ */
+const NamespacePath = ({ namespace }: NamespaceProps) => {
+    const classes = useStyles()
+
+    const procfdPath = namespace.reference &&
+        namespace.reference.startsWith('/proc/') &&
+        namespace.reference.includes('/fd/')
+
+    return (
+        (!namespace.reference &&
+            <Tooltip title={"intermediate hidden " + namespace.type + " namespace"}>
+                <span className={classes.namespacePath}>
+                    <Ghost fontSize="inherit" />
+                </span>
+            </Tooltip>
+        ) || (procfdPath && 
+            <Tooltip title="kept alive by file descriptor">
+                <span className={classes.namespacePath}>
+                    <FileLinkOutline fontSize="inherit" />
+                    <span className="bindmount">"{namespace.reference}"</span>
+                </span>
+            </Tooltip>
+        ) || (
+            <Tooltip title="bind mount">
+                <span className={classes.namespacePath}>
+                    <FileLinkOutline fontSize="inherit" />
+                    <span className="bindmount">"{namespace.reference}"</span>
+                </span>
+            </Tooltip>
+        )
     )
 }

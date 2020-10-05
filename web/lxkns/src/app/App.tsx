@@ -17,6 +17,8 @@ import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-route
 
 import useErrorBoundary from "use-error-boundary"
 
+import { SnackbarProvider } from 'notistack';
+
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Badge from '@material-ui/core/Badge'
 import Typography from '@material-ui/core/Typography'
@@ -40,6 +42,8 @@ import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
 import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk'
 
 import './App.css'
+import lxknsTheme from './appstyles'
+
 import Discovery, { DiscoveryContext } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree'
@@ -47,8 +51,11 @@ import ConfinedProcessTree from 'components/confinedprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 
-import version from './version'
-import About from './About'
+import version from '../version'
+import About from '../About'
+import { Box, ThemeProvider } from '@material-ui/core'
+
+
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -78,88 +85,93 @@ const LxknsApp = () => {
     const path = useLocation().pathname
     const typeview = views.find(view => view.path === path && view.type)
 
-    return (<>
-        <AppBarDrawer
-            title={
-                <DiscoveryContext.Consumer>
-                    {value => (<>
-                        <Badge badgeContent={Object.keys(value.namespaces).length} color="secondary">
-                            Linux {typeview && `${typeview.type} `}Namespaces
+    return (
+        <>
+            <AppBarDrawer
+                title={
+                    <DiscoveryContext.Consumer>
+                        {value => (<>
+                            <Badge badgeContent={Object.keys(value.namespaces).length} color="secondary">
+                                Linux {typeview && `${typeview.type} `}Namespaces
                         </Badge>
-                    </>)}
-                </DiscoveryContext.Consumer>
-            }
-            tools={() => <>
-                <Tooltip title="expand initial user namespace(s) only">
-                    <IconButton color="inherit"
-                        onClick={() => setTreeAction(treeAction(COLLAPSEALL_ACTION))}>
-                        <ChevronRightIcon />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip title="expand all">
-                    <IconButton color="inherit"
-                        onClick={() => setTreeAction(treeAction(EXPANDALL_ACTION))}>
-                        <ExpandMoreIcon />
-                    </IconButton>
-                </Tooltip>
-                <Refresher />
-            </>}
-            drawer={closeDrawer => <>
-                <List onClick={closeDrawer}>
-                    <ListItem>
-                        <Typography variant="h6" color="textSecondary">
-                            lxkns
+                        </>)}
+                    </DiscoveryContext.Consumer>
+                }
+                tools={() => <>
+                    <Tooltip title="expand initial user namespace(s) only">
+                        <IconButton color="inherit"
+                            onClick={() => setTreeAction(treeAction(COLLAPSEALL_ACTION))}>
+                            <ChevronRightIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="expand all">
+                        <IconButton color="inherit"
+                            onClick={() => setTreeAction(treeAction(EXPANDALL_ACTION))}>
+                            <ExpandMoreIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Refresher />
+                </>}
+                drawer={closeDrawer => <>
+                    <List onClick={closeDrawer}>
+                        <ListItem>
+                            <Typography variant="h6" color="textSecondary">
+                                lxkns
                         </Typography>
-                    </ListItem>
-                    <ListItem>
-                        <Typography variant="body2" color="textSecondary">
-                            version {version}
-                        </Typography>
-                    </ListItem>
-                    <Divider />
-                    {views.map(viewitem => 
-                        <DrawerLinkItem
-                            icon={viewitem.icon}
-                            label={viewitem.label}
-                            path={viewitem.path}
-                        />
-                    )}
-                </List>
-            </>}
-        />
-        <ErrorBoundary
-            render={() =>
-                <Switch>
-                    <Route exact path="/about" render={() => <About />} />
-                    {views.filter(viewitem => !!viewitem.type).map(viewitem => 
-                        <Route
-                            exact path={viewitem.path}
-                            render={() => <ConfinedProcessTree type={viewitem.type} />}
-                        />
-                    )}
-                    <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
-                </Switch>
-            }
-            renderError={(error) => <>
-                <Typography variant="h6">:(</Typography>
-                <pre>{error}</pre>
-            </>}
-        />
-    </>);
+                        </ListItem>
+                        <ListItem>
+                            <Typography variant="body2" color="textSecondary">
+                                version {version}
+                            </Typography>
+                        </ListItem>
+                        <Divider />
+                        {views.map(viewitem =>
+                            <DrawerLinkItem
+                                icon={viewitem.icon}
+                                label={viewitem.label}
+                                path={viewitem.path}
+                            />
+                        )}
+                    </List>
+                </>}
+            />
+            <Box m={1}>
+                <ErrorBoundary
+                    render={() =>
+                        <Switch>
+                            <Route exact path="/about" render={() => <About />} />
+                            {views.filter(viewitem => !!viewitem.type).map(viewitem =>
+                                <Route
+                                    exact path={viewitem.path}
+                                    render={() => <ConfinedProcessTree type={viewitem.type} />}
+                                />
+                            )}
+                            <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
+                        </Switch>
+                    }
+                    renderError={(error) => <>
+                        <Typography variant="h6">:(</Typography>
+                        <pre>{error}</pre>
+                    </>}
+                />
+            </Box>
+        </>);
 };
 
 // We need to wrap the application as otherwise we won't get a confirmer ...
 // ouch. And since we're already at wrapping things, let's just wrap up all the
 // other wrapping here... *snicker*.
 const App = () => (
-    <>
-    <Router>
-        <Discovery>
-            <CssBaseline />
-            <LxknsApp />
-        </Discovery>
-    </Router>
-    </>
+    <ThemeProvider theme={lxknsTheme}>
+        <SnackbarProvider maxSnack={3}>
+            <Router>
+                <Discovery>
+                    <CssBaseline />
+                    <LxknsApp />
+                </Discovery>
+            </Router>
+        </SnackbarProvider>
+    </ThemeProvider>
 );
 
 export default App;

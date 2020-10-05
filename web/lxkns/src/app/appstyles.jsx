@@ -12,19 +12,22 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './app';
+import { createMuiTheme } from '@material-ui/core'
 
-// Import only the necessary Roboto fonts, so they are available "offline"
-// without CDN.
-import "fontsource-roboto/400.css";
-import "fontsource-roboto/500.css";
+const lxknsTheme = createMuiTheme({
+    overrides: {
+        MuiCssBaseline: {
+            '@global': {
+                // Please note: now automatic translation into class names is
+                // off, so don't forget the prefix dots on CSS class names.
+                '.namespacetree': {
+                    '& .MuiTreeItem-group': {
+                        marginLeft: '2em'
+                    }
+                }
+            }
+        }
+    }
+})
 
-ReactDOM.render(
-	<React.StrictMode>
-		<App />
-	</React.StrictMode>,
-	document.getElementById('root')
-);
+export default lxknsTheme

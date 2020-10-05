@@ -14,11 +14,6 @@
    under the License.
 */
 
-/* Indentation of tree item children relative to their parent item */
-.namespacetree .MuiTreeItem-group {
-    margin-left: 2em;
-}
-
 /* Indentation of non-user namespace tree nodes */
 .tenant .namespace {
     margin-left: 1.5em;

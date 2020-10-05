@@ -24,7 +24,17 @@ import { DiscoveryContext } from 'components/discovery';
 import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceType, Process } from 'models/lxkns';
 import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo';
 import ProcessInfo from 'components/processinfo'
+import { Typography } from '@material-ui/core';
 
+// TODO:
+const hideSystemProcs = true
+
+const showProcess = (process: Process) =>
+    !hideSystemProcs ||
+    (process.pid > 2 &&
+        !process.cgroup.startsWith('/system.slice/') &&
+        !process.cgroup.startsWith('/init.scope/') &&
+        process.cgroup !== '/user.slice')
 
 /**
  * Searches for sub-processes of a given process which are still in the same
@@ -34,17 +44,17 @@ import ProcessInfo from 'components/processinfo'
  *
  * @param proc process to start the search from.
  */
-const findSubProcesses = (proc: Process): Process[] => {
+const findSubProcesses = (proc: Process, nstype: NamespaceType): Process[] => {
     // We'll work only on children which are still in the same namespace, all
     // other children can immediately be filtered out.
     const children = proc.children
-        .filter(child => child.namespaces.pid === proc.namespaces.pid)
+        .filter(child => child.namespaces[nstype] === proc.namespaces[nstype])
     // We need to recursively check children which are controlled by the same
     // controller as our process, because a change in the controller might be
     // further down the process tree.
     const subprocs = children
         .filter(child => child.cgroup === proc.cgroup)
-        .map(child => findSubProcesses(child))
+        .map(child => findSubProcesses(child, nstype))
         .flat(1)
     // Finally return the concatenation of all immediate child processes as
     // well as processes further down the hierarchy with controllers differing
@@ -56,23 +66,28 @@ const findSubProcesses = (proc: Process): Process[] => {
 
 /**
  * Renders a process and then recursively decends down to find and render
- * deeper processes which still belong to the same PID namespace, yet have a
- * different controller (cgroup path).
+ * deeper processes which still belong to the same type of namespace, yet have
+ * a different controller (cgroup path).
  *
  * @param proc process
+ * @param nstype type of namespace confining the search for further
+ * sub-processes still considered to be confined in the same namespace.
  */
-const confinedProcessTreeItem = (proc: Process) => {
+const confinedProcessTreeItem = (proc: Process, nstype: NamespaceType) => {
 
-    const children = findSubProcesses(proc)
+    const children = findSubProcesses(proc, nstype)
         .sort(compareProcessByNameId)
-        .map(child => confinedProcessTreeItem(child))
+        .map(child => confinedProcessTreeItem(child, nstype))
+        .flat(1)
 
     return (
-        <TreeItem
-            key={proc.pid}
-            nodeId={proc.pid.toString()}
-            label={<ProcessInfo process={proc} />}
-        >{children}</TreeItem>
+        (showProcess(proc) &&
+            <TreeItem
+                key={proc.pid}
+                nodeId={proc.pid.toString()}
+                label={<ProcessInfo process={proc} />}
+            >{children}</TreeItem>
+        ) || children
     )
 }
 
@@ -81,19 +96,22 @@ const namespaceProcesses = (namespace: Namespace) => {
 
     const procs = namespace.leaders
         .sort(compareProcessByNameId)
-        .map(proc => confinedProcessTreeItem(proc))
+        .map(proc => confinedProcessTreeItem(proc, namespace.type))
+        .flat(1)
 
-    return (<>
-        <TreeItem
-            key={namespace.nsid}
-            nodeId={namespace.nsid.toString()}
-            label={<NamespaceInfo namespace={namespace} />}
-        >
-            {procs}
-            {namespace.children &&
-                namespace.children.map(childns => namespaceProcesses(childns))}
-        </TreeItem>
-    </>)
+    return (
+        <>
+            <TreeItem
+                key={namespace.nsid}
+                nodeId={namespace.nsid.toString()}
+                label={<NamespaceInfo namespace={namespace} />}
+            >
+                {procs}
+                {namespace.children &&
+                    namespace.children.map(childns => namespaceProcesses(childns))}
+            </TreeItem>
+        </>
+    )
 }
 
 export interface ConfinedProcessTreeProps {
@@ -124,13 +142,23 @@ export const ConfinedProcessTree = (props: ConfinedProcessTreeProps) => {
     }
 
     return (
-        <TreeView
-            className="namespacetree"
-            onNodeToggle={handleToggle}
-            defaultCollapseIcon={<ExpandMoreIcon />}
-            defaultExpandIcon={<ChevronRightIcon />}
-            expanded={expanded}
-        >{rootnsItems}</TreeView>
+        (rootnsItems.length &&
+            <TreeView
+                className="namespacetree"
+                onNodeToggle={handleToggle}
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+                expanded={expanded}
+            >{rootnsItems}</TreeView>
+        ) || (Object.keys(discovery.namespaces).length &&
+            <Typography variant="body1" color="textSecondary">
+                this Linux system doesn't have any "{type}" namespaces
+            </Typography>
+        ) || (
+            <Typography variant="body1" color="textSecondary">
+                nothing discovered yet, please refresh
+            </Typography>
+        )
     );
 
 };
