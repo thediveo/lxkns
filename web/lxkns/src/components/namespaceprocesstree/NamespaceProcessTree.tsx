@@ -17,6 +17,7 @@ import React, { useEffect, useContext, useState, useRef } from 'react';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
+import Typography from '@material-ui/core/Typography';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 
@@ -24,7 +25,6 @@ import { DiscoveryContext } from 'components/discovery';
 import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns';
 import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo';
 import ProcessInfo from 'components/processinfo'
-import { Typography } from '@material-ui/core';
 
 // TODO:
 const hideSystemProcs = true

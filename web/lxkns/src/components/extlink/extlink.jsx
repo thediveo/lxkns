@@ -18,7 +18,7 @@ import LaunchIcon from '@material-ui/icons/Launch';
 
 const extlink = (href, linktext, spaced) => (<>
     {spaced && ' '}
-    <LaunchIcon fontSize="inherit" className="inlineicon" /><a
+    <LaunchIcon fontSize="inherit" className="inlineicon" style={{ verticalAlign: 'middle' }} /><a
         href={href}
         target="_blank"
         rel="noopener noreferrer"

@@ -17,6 +17,7 @@ import React, { useEffect, useState, useContext, useRef } from 'react'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 
+import Typography from '@material-ui/core/Typography';
 import TreeView from '@material-ui/lab/TreeView'
 
 import { DiscoveryContext } from 'components/discovery'
@@ -143,13 +144,19 @@ export const UserNamespaceTree = ({ action }) => {
         .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />)
 
     return (
-        <TreeView
-            className="namespacetree"
-            onNodeToggle={handleToggle}
-            defaultCollapseIcon={<ExpandMoreIcon />}
-            defaultExpandIcon={<ChevronRightIcon />}
-            expanded={expanded}
-        >{rootusernsItems}</TreeView>
+        (rootusernsItems.length &&
+            <TreeView
+                className="namespacetree"
+                onNodeToggle={handleToggle}
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+                expanded={expanded}
+            >{rootusernsItems}</TreeView>
+        ) || (
+            <Typography variant="body1" color="textSecondary">
+                nothing discovered yet, please refresh
+            </Typography>
+        )
     )
 }
 

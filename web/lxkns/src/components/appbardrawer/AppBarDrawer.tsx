@@ -35,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
     drawer: { width: drawerWidth, flexShrink: 0 },
     drawerHeader: {
         display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
         padding: theme.spacing(0, 1),
         ...theme.mixins.toolbar, // necessary for content to be below app bar
@@ -54,6 +55,8 @@ export interface AppBarDrawerProps {
     title: React.ReactNode
     /** optional tools (icon buttons, et cetera) to show in the tool bar. */
     tools?: () => React.ReactNode
+    /** app title in drawer. */
+    drawertitle?: () => React.ReactNode
     /**
      * a function rendering the contents inside the drawer. This function gets
      * passed a callback function so that components inside the drawer are
@@ -69,7 +72,7 @@ export interface AppBarDrawerProps {
  * covers the gory details of giving an application an app bar with tools, as
  * well as a drawer for navigation, et cetera.
  */
-const AppBarDrawer = ({ title, tools, drawer }: AppBarDrawerProps) => {
+const AppBarDrawer = ({ title, tools, drawertitle, drawer }: AppBarDrawerProps) => {
 
     // Not much state here in ... Denmark?!
     const [drawerOpen, setDrawerOpen] = useState(false)
@@ -111,6 +114,7 @@ const AppBarDrawer = ({ title, tools, drawer }: AppBarDrawerProps) => {
             onClose={closeDrawer}
         >
             <div className={classes.drawerHeader}>
+                {drawertitle && <span className={classes.title}>{drawertitle()}</span>}
                 <IconButton onClick={closeDrawer}>
                     {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                 </IconButton>

@@ -25,8 +25,6 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import Divider from '@material-ui/core/Divider'
 
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -45,7 +43,7 @@ import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { Box, ThemeProvider } from '@material-ui/core'
 
 import version from '../version'
-import About from '../About'
+import About from './About'
 import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
 import { NamespaceType } from 'models/lxkns'
 
@@ -97,6 +95,10 @@ const LxknsApp = () => {
                         </>)}
                     </DiscoveryContext.Consumer>
                 }
+                drawertitle={() => <>
+                    <Typography variant="h6" style={{flexGrow: 1}} color="textSecondary" component="span">lxkns</Typography>
+                    <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
+                </>}
                 tools={() => <>
                     <Tooltip title="expand initial user namespace(s) only">
                         <IconButton color="inherit"
@@ -114,17 +116,6 @@ const LxknsApp = () => {
                 </>}
                 drawer={closeDrawer => <>
                     <List onClick={closeDrawer}>
-                        <ListItem>
-                            <Typography variant="h6" color="textSecondary">
-                                lxkns
-                        </Typography>
-                        </ListItem>
-                        <ListItem>
-                            <Typography variant="body2" color="textSecondary">
-                                version {version}
-                            </Typography>
-                        </ListItem>
-                        <Divider />
                         {views.map((viewitem, idx) =>
                             <DrawerLinkItem
                                 key={idx}

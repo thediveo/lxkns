@@ -12,33 +12,43 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
+import React from 'react'
 
-import { Typography } from "@material-ui/core";
-import Box from '@material-ui/core/Box';
-import Icon from '@material-ui/core/Icon';
+import Typography from '@material-ui/core/Typography'
+import Icon from '@material-ui/core/Icon'
 
-import extlink from 'components/extlink';
+import extlink from 'components/extlink'
 
-import LxknsIcon from "./lxkns.svg";
-import version from './version';
+import LxknsIcon from "./lxkns.svg"
+import version from '../version'
 
 // Render information about this web application.
-export const About = () => (<Box p={1}>
+export const About = () => (<>
     <Typography variant="h4">
         <Icon><img src={LxknsIcon} alt="" /></Icon>
             Linux Kernel Namespaces Discovery App
         </Typography>
 
     <Typography variant="body2" paragraph={true}>
-        app version {version} / 
-        {extlink('https://www.apache.org/licenses/LICENSE-2.0', 'Apache License 2.0', true)}
+        app version {version}
+    </Typography>
+
+    <Typography variant="body2" paragraph={true}>
+        GitHub: {extlink('https://github.com/thediveo/lxkns', 'thediveo/lxkns', true)}
+        <br />
+        license: {extlink('https://www.apache.org/licenses/LICENSE-2.0', 'Apache License 2.0', true)}
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
         This app displays all Linux-kernel
         {extlink('https://man7.org/linux/man-pages/man7/namespaces.7.html', 'namespaces', true)}
-        discovered inside a Linux host. Namespaces partition certain kinds of
+        discovered inside a Linux host. Namespaces can be either displayed in
+        an all-inclusive view (the "home" view), or for each type of namespace
+        individually.
+        </Typography>
+
+    <Typography variant="body1" paragraph={true}>
+        Namespaces (which, ironically, are <i>unnamed</i>) partition certain kinds of
         OS resources, so that processes that are members of a namespace see
         their own isolated resources. The following types of namespaces are
         currently defined:
@@ -67,18 +77,33 @@ export const About = () => (<Box p={1}>
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
-        The display is organized along the hierarchy of user namespaces.
-        Namespaces of other types are shown beneath the particular user namespace
-        which is owning them. Owning a namespace here means that a namespace was
+        The "home" display is organized along the hierarchy of user namespaces.
+        Namespaces of the other types are then shown beneath the particular user namespace
+        which is owning them. "Owning a namespace" here means that a namespace was
         created by a process while the process was attached to that specific user
         namespace.
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
-        Find the
-        {extlink('https://github.com/thediveo/lxkns', 'thediveo/lxkns', true)}
-        project on Github.
+        The type-specific namespace views are slightly different: first, they
+        show only namespaces of a single type. Then, they are mostly flat views,
+        except for PID and user namespace views. In case there are multiple
+        bunches of processes, each bunch with its own cgroup controller, these
+        are then shown below the namespaces they are joined to. In case all
+        processes joined to a specific namespace are in the same cgroup, the
+        "most senior" process of them will be shown right next to the namespace
+        information instead.  
     </Typography>
-</Box>);
 
-export default About;
+    <Typography variant="body1" paragraph={true}>
+        Please note that not all namespaces need to have processes joined to
+        them. Namespaces can also exist because they have been bind-mounted
+        to some path in the file system or are still referenced by an open
+        file descriptor of a process (despite which isn't joined to the
+        namespace). Finally, PID and user namespaces can be "hidden" somewhere
+        between other PID or user namespaces in the hierarchy, but without any
+        process joined to them – this is especially noted in the display.
+    </Typography>
+</>)
+
+export default About
