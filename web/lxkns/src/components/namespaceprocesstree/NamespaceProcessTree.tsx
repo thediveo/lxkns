@@ -12,25 +12,36 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useContext, useState, useRef } from 'react';
+import React, { useEffect, useContext, useState, useRef } from 'react'
 
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import { atom, useAtom } from 'jotai'
 
-import Typography from '@material-ui/core/Typography';
-import TreeView from '@material-ui/lab/TreeView';
-import TreeItem from '@material-ui/lab/TreeItem';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 
-import { DiscoveryContext } from 'components/discovery';
-import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns';
-import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo';
+import Typography from '@material-ui/core/Typography'
+import TreeView from '@material-ui/lab/TreeView'
+import TreeItem from '@material-ui/lab/TreeItem'
+
+import { DiscoveryContext } from 'components/discovery'
+import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
+import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo'
 import ProcessInfo from 'components/processinfo'
 
-// TODO:
-const hideSystemProcs = true
+const showSystemProcessesKey = 'lxkns.showSystemProcesses'
 
-const showProcess = (process: Process) =>
-    !hideSystemProcs ||
+/** Filter state for showing/hiding "system" processes. */
+export const showSystemProcessesAtom = atom(
+    localStorage.getItem(showSystemProcessesKey) === 'on',
+    (get, set, newState) => {
+        localStorage.setItem(showSystemProcessesKey, (newState ? 'on' : 'off'))
+        set(showSystemProcessesAtom, newState === true)
+    }
+)
+
+/** Internal helper to filter "system(d)" processes. */
+const showProcess = (process: Process, showSystemProcs: boolean) =>
+    showSystemProcs ||
     (process.pid > 2 &&
         !process.cgroup.startsWith('/system.slice/') &&
         !process.cgroup.startsWith('/init.scope/') &&
@@ -77,11 +88,11 @@ const findNamespaceProcesses = (namespace: Namespace) =>
  * @param nstype type of namespace confining the search for further
  * sub-processes still considered to be confined in the same namespace.
  */
-const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType) => {
+const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSystemProcesses: boolean) => {
 
     const children = findSubProcesses(proc, nstype)
         .sort(compareProcessByNameId)
-        .map(child => controlledProcessTreeItem(child, nstype))
+        .map(child => controlledProcessTreeItem(child, nstype, showSystemProcesses))
         .flat(1)
 
     // Special case: this is the only leader process in the namespace and there
@@ -90,7 +101,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType) => {
         proc === proc.namespaces[nstype].ealdorman
 
     return (
-        (!hideMe && showProcess(proc) &&
+        (!hideMe && showProcess(proc, showSystemProcesses) &&
             <TreeItem
                 key={proc.pid}
                 nodeId={proc.pid.toString()}
@@ -108,7 +119,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType) => {
  *
  * @param namespace namespace information.
  */
-const NamespaceTreeItem = (namespace: Namespace) => {
+const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) => {
 
     // Get the leader processes and maybe some sub-processes (in different
     // cgroups), all inside this namespace. Please note that if there is only a
@@ -117,12 +128,12 @@ const NamespaceTreeItem = (namespace: Namespace) => {
     // controlledProcessTreeItem will drop it.
     const procs = namespace.leaders
         .sort(compareProcessByNameId)
-        .map(proc => controlledProcessTreeItem(proc, namespace.type))
+        .map(proc => controlledProcessTreeItem(proc, namespace.type, showSystemProcesses))
         .flat(1)
 
     // In case of hierarchical namespaces also render the child namespaces.
     const childnamespaces = namespace.children ?
-        namespace.children.map(childns => NamespaceTreeItem(childns)) : []
+        namespace.children.map(childns => NamespaceTreeItem(childns, showSystemProcesses)) : []
 
     return <TreeItem
         key={namespace.nsid}
@@ -163,6 +174,8 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
+    const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
+
     // Discovery data comes in via a dedicated discovery context.
     const discovery = useContext(DiscoveryContext)
 
@@ -200,7 +213,7 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
     const rootnsItems = Object.values(discovery.namespaces)
         .filter(ns => ns.type === nstype && ns.parent == null)
         .sort(compareNamespaceById)
-        .map(ns => NamespaceTreeItem(ns));
+        .map(ns => NamespaceTreeItem(ns, showSystemProcesses));
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to

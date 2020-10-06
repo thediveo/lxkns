@@ -17,7 +17,9 @@ import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-route
 
 import useErrorBoundary from "use-error-boundary"
 
-import { SnackbarProvider } from 'notistack';
+import { SnackbarProvider } from 'notistack'
+
+import { Provider as StateProvider, useAtom } from 'jotai'
 
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Badge from '@material-ui/core/Badge'
@@ -25,6 +27,9 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import { Box, Divider, ThemeProvider } from '@material-ui/core'
+import Toggle from '@material-ui/core/Switch'
 
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -40,12 +45,12 @@ import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/use
 import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
-import { Box, ThemeProvider } from '@material-ui/core'
+import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
+import { NamespaceType } from 'models/lxkns'
 
 import version from '../version'
 import About from './About'
-import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
-import { NamespaceType } from 'models/lxkns'
+import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -80,6 +85,8 @@ const LxknsApp = () => {
 
     const [treeaction, setTreeAction] = useState("")
 
+    const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
+
     const path = useLocation().pathname
     const typeview = views.find(view => view.path === path && view.type)
 
@@ -95,10 +102,6 @@ const LxknsApp = () => {
                         </>)}
                     </DiscoveryContext.Consumer>
                 }
-                drawertitle={() => <>
-                    <Typography variant="h6" style={{flexGrow: 1}} color="textSecondary" component="span">lxkns</Typography>
-                    <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
-                </>}
                 tools={() => <>
                     <Tooltip title="expand initial user namespace(s) only">
                         <IconButton color="inherit"
@@ -114,6 +117,10 @@ const LxknsApp = () => {
                     </Tooltip>
                     <Refresher />
                 </>}
+                drawertitle={() => <>
+                    <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">lxkns</Typography>
+                    <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
+                </>}
                 drawer={closeDrawer => <>
                     <List onClick={closeDrawer}>
                         {views.map((viewitem, idx) =>
@@ -124,6 +131,16 @@ const LxknsApp = () => {
                                 path={viewitem.path}
                             />
                         )}
+                    </List>
+                    <Divider />
+                    <List>
+                        <ListItem>
+                            <Toggle
+                                checked={showSystemProcesses}
+                                onChange={() => setShowSystemProcesses(!showSystemProcesses)}
+                                color="primary"
+                            />system processes
+                        </ListItem>
                     </List>
                 </>}
             />
@@ -142,7 +159,7 @@ const LxknsApp = () => {
                             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
                         </Switch>
                     }
-                    renderError={({error}) => <pre>{error.toString()}</pre>}
+                    renderError={({ error }) => <pre>{error.toString()}</pre>}
                 />
             </Box>
         </Box>)
@@ -155,10 +172,12 @@ const App = () => (
     <ThemeProvider theme={lxknsTheme}>
         <SnackbarProvider maxSnack={3}>
             <Router>
-                <Discovery>
-                    <CssBaseline />
-                    <LxknsApp />
-                </Discovery>
+                <StateProvider>
+                    <Discovery>
+                        <CssBaseline />
+                        <LxknsApp />
+                    </Discovery>
+                </StateProvider>
             </Router>
         </SnackbarProvider>
     </ThemeProvider>

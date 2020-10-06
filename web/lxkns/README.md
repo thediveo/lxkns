@@ -25,35 +25,56 @@ interface.
 ## Overview
 
 - `src/` – contains the application top-level elements. Reusable elements are
-  factored out into the `components/` and `hooks/` sub-directories.
-  - `App.js` – the application's `App` functional component, from which all
-    chaos descends. 
+  factored out into the `components/` and `hooks/` sub-directories. In the
+  following, we won't cover everthings down to the last details, but hopefully
+  give you a good view on the **lxkns** react application.
+
+  - `app/` – the main application itself, including the `App` component.
+    - `App.tsx` – the application's `App` functional component, from which all
+      chaos descends.
+    - `appstyles.jsx` – defines global styling (instead of a `.css` file).
+    - `About.tsx` – an "about" component explaining this web application to
+      unsuspecting users.
+
   - `components/` – potentially reusable components, some more reusable, others
     less.
+
     - `appbardrawer` – the `AppBarDrawer` component provides apps with the
       usual task bar, as well as a swipeable drawer. This component takes on
       the daunting task of wiring up these things and setting up the standard
       elements, such as the drawer hamburger icon and the app bar title.
+    
     - `discovery` – queries the lxkns discovery API `/api/namespaces` and then
       provides the results via context. Also does some result pre-processing in
       order to allow apps easy and quick navigation on the information model
       using object references, instead of having to look-up IDs all the time.
-    - `elevationscroll` – implements an elevated task bar when the user scrolls
-      down.
+    
+    - (`elevationscroll` – implements an elevated task bar when the user scrolls
+      down. Please note that this component isn't used anymore in this app but
+      is kept here for potential reuse in other projects.)
+    
     - `extlink`
+    
     - `lxkns` – provides the basic lxkns discovery data types for `Namespace`,
       `Process`, et cetera.
+    
     - `namespace` – renders a single namespace with additional information, such
       as the ealdorman process and control group information.
+    
     - `refresher` – provides a one-shot refresh button as well as a refresh
       interval pop-down menu. Automatically interacts with a discovery context.
+    
     - `usernamespacetree` – implements a view into user namespaces with their
       tenant namespaces.
+    
   - `hooks/` – reusable hooks for functional components.
     - `id` – returns a unique and stable identifier to be used with (rendered)
       HTML elements.
     - `interval` – an interval timer for functional components.
+
 - `static/` –
+
 - `public/` –
+
 - `build/` – after running `yarn build` in the `web/lxkns` directory, this
   `build/` subdirectory will contain the optimized web app.

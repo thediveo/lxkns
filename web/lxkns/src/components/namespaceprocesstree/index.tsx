@@ -1,1 +1,1 @@
-export { default } from './NamespaceProcessTree'
+export { default, showSystemProcessesAtom } from './NamespaceProcessTree'
