@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useContext, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import { atom, useAtom } from 'jotai'
 
@@ -23,19 +23,27 @@ import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 import TreeItem from '@material-ui/lab/TreeItem'
 
-import { DiscoveryContext } from 'components/discovery'
+import { useDiscovery } from 'components/discovery'
 import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo'
 import ProcessInfo from 'components/processinfo'
 
+
+/** local storage key for the show system processes filter setting. */
 const showSystemProcessesKey = 'lxkns.showSystemProcesses'
 
 /** Filter state for showing/hiding "system" processes. */
 export const showSystemProcessesAtom = atom(
+    // initialize with what the local store has to offer: if it's saying "on",
+    // then the filter will be on, that is, show the system processes. As this
+    // is not a function, but an initial value, it will be evaluated only once
+    // upon creating the atom.
     localStorage.getItem(showSystemProcessesKey) === 'on',
+    // we supply our own setter function, as it allows us to save the filter
+    // state to local storage besides updating the atom's value.
     (get, set, newState) => {
-        localStorage.setItem(showSystemProcessesKey, (newState ? 'on' : 'off'))
         set(showSystemProcessesAtom, newState === true)
+        localStorage.setItem(showSystemProcessesKey, (newState ? 'on' : 'off'))
     }
 )
 
@@ -177,7 +185,7 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
     const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
 
     // Discovery data comes in via a dedicated discovery context.
-    const discovery = useContext(DiscoveryContext)
+    const discovery = useDiscovery()
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} });

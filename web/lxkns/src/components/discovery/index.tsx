@@ -1,1 +1,6 @@
-export { default, DiscoveryContext, RefreshContext } from './Discovery'
+export { 
+    default, 
+    useDiscovery, 
+    discoveryRefreshIntervalAtom, 
+    discoveryRefreshingAtom
+} from './Discovery'

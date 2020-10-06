@@ -39,7 +39,7 @@ import InfoIcon from '@material-ui/icons/Info'
 import './App.css'
 import lxknsTheme from './appstyles'
 
-import Discovery, { DiscoveryContext } from 'components/discovery'
+import Discovery, { useDiscovery } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
 import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree'
 import NamespaceProcessTree from 'components/namespaceprocesstree'
@@ -90,17 +90,15 @@ const LxknsApp = () => {
     const path = useLocation().pathname
     const typeview = views.find(view => view.path === path && view.type)
 
+    const discovery = useDiscovery()
+
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 title={
-                    <DiscoveryContext.Consumer>
-                        {value => (<>
-                            <Badge badgeContent={Object.keys(value.namespaces).length} color="secondary">
-                                Linux {typeview && `${typeview.type} `}Namespaces
-                        </Badge>
-                        </>)}
-                    </DiscoveryContext.Consumer>
+                    <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
+                        Linux {typeview && `${typeview.type} `}Namespaces
+                    </Badge>
                 }
                 tools={() => <>
                     <Tooltip title="expand initial user namespace(s) only">
@@ -171,14 +169,13 @@ const LxknsApp = () => {
 const App = () => (
     <ThemeProvider theme={lxknsTheme}>
         <SnackbarProvider maxSnack={3}>
-            <Router>
-                <StateProvider>
-                    <Discovery>
-                        <CssBaseline />
-                        <LxknsApp />
-                    </Discovery>
-                </StateProvider>
-            </Router>
+            <StateProvider>
+                <Discovery />
+                <Router>
+                    <CssBaseline />
+                    <LxknsApp />
+                </Router>
+            </StateProvider>
         </SnackbarProvider>
     </ThemeProvider>
 )

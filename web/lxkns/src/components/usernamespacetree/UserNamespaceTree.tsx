@@ -12,15 +12,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState, useContext, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 
-import Typography from '@material-ui/core/Typography';
+import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 
-import { DiscoveryContext } from 'components/discovery'
+import { useDiscovery } from 'components/discovery'
 import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
 
@@ -45,7 +45,7 @@ export const treeAction = (action) => action + Math.floor(100000 + Math.random()
 export const UserNamespaceTree = ({ action }) => {
 
     // Discovery data comes in via a dedicated discovery context.
-    const discovery = useContext(DiscoveryContext)
+    const discovery = useDiscovery()
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} })
