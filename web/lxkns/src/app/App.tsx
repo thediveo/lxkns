@@ -47,7 +47,7 @@ import { Box, ThemeProvider } from '@material-ui/core'
 import version from '../version'
 import About from '../About'
 import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
-import { NamespaceType } from 'models/lxkns';
+import { NamespaceType } from 'models/lxkns'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -69,6 +69,14 @@ const views: viewItem[] = [
     { icon: <InfoIcon />, label: "information", path: "/about" },
 ]
 
+/**
+ * The `LxknsApp` component renders the general app layout without thinking
+ * about providers for routing, themes, discovery, et cetera. So this component
+ * deals with:
+ * - app bar with title, number of namespaces badge, quick actions.
+ * - drawer for navigating the different views and types of namespaces.
+ * - scrollable content area.
+ */
 const LxknsApp = () => {
     const { ErrorBoundary } = useErrorBoundary()
 
@@ -78,7 +86,7 @@ const LxknsApp = () => {
     const typeview = views.find(view => view.path === path && view.type)
 
     return (
-        <>
+        <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 title={
                     <DiscoveryContext.Consumer>
@@ -128,7 +136,7 @@ const LxknsApp = () => {
                     </List>
                 </>}
             />
-            <Box m={1}>
+            <Box m={1} flex={1} overflow="auto">
                 <ErrorBoundary
                     render={() =>
                         <Switch>
@@ -146,8 +154,8 @@ const LxknsApp = () => {
                     renderError={({error}) => <pre>{error.toString()}</pre>}
                 />
             </Box>
-        </>);
-};
+        </Box>)
+}
 
 // We need to wrap the application as otherwise we won't get a confirmer ...
 // ouch. And since we're already at wrapping things, let's just wrap up all the
@@ -163,6 +171,6 @@ const App = () => (
             </Router>
         </SnackbarProvider>
     </ThemeProvider>
-);
+)
 
-export default App;
+export default App

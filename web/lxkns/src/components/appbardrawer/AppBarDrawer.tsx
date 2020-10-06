@@ -25,8 +25,6 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import Divider from '@material-ui/core/Divider'
 
-import ElevationScroll from 'components/elevationscroll'
-
 // Width of drawer.
 const drawerWidth = 240
 
@@ -69,8 +67,7 @@ export interface AppBarDrawerProps {
 /**
  * AppBarDrawer is a high-order component ("hoc" in react parlance) that
  * covers the gory details of giving an application an app bar with tools, as
- * well as a drawer for navigation, et cetera. The app bar stays at the top
- * and gets elevated as soon as the user scrolls down even a iota.
+ * well as a drawer for navigation, et cetera.
  */
 const AppBarDrawer = ({ title, tools, drawer }: AppBarDrawerProps) => {
 
@@ -87,28 +84,25 @@ const AppBarDrawer = ({ title, tools, drawer }: AppBarDrawerProps) => {
     const classes = useStyles()
 
     return (<>
-        <ElevationScroll>
-            <AppBar>
-                <Toolbar>
-                    <IconButton
-                        edge="start"
-                        className={classes.menuButton}
-                        color="inherit"
-                        aria-label="menu"
-                        onClick={toggleDrawer}
-                    >
-                        <MenuIcon />
-                    </IconButton>
+        <AppBar position="static">
+            <Toolbar>
+                <IconButton
+                    edge="start"
+                    className={classes.menuButton}
+                    color="inherit"
+                    aria-label="menu"
+                    onClick={toggleDrawer}
+                >
+                    <MenuIcon />
+                </IconButton>
 
-                    <Typography variant="h6" className={classes.title}>
-                        {title}
-                    </Typography>
+                <Typography variant="h6" className={classes.title}>
+                    {title}
+                </Typography>
 
-                    {tools()}
-                </Toolbar>
-            </AppBar>
-        </ElevationScroll>
-        <Toolbar />
+                {tools()}
+            </Toolbar>
+        </AppBar>
         <SwipeableDrawer
             className={classes.drawer}
             classes={{ paper: classes.drawerPaper }}
