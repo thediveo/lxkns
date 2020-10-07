@@ -14,6 +14,10 @@
 
 import { createMuiTheme } from '@material-ui/core'
 
+// First create the "default" theme, so we can reuse some of its definitions in
+// our additional styles. See also: https://stackoverflow.com/a/62453393
+const globalTheme = createMuiTheme()
+
 const lxknsTheme = createMuiTheme({
     overrides: {
         MuiCssBaseline: {
@@ -22,12 +26,23 @@ const lxknsTheme = createMuiTheme({
                 // off, so don't forget the prefix dots on CSS class names.
                 '.namespacetree': {
                     '& .MuiTreeItem-group': {
-                        marginLeft: '2em'
-                    }
+                        marginLeft: '2em',
+                    },
+                    '& .namespace .controlledprocess': {
+                        marginLeft: '2em',
+                    },
+                    '& .namespace .controlledprocess .MuiTreeItem-content::before': {
+                        content: '"····"',
+                        marginRight: '0.35em',
+                        color: globalTheme.palette.text.disabled,
+                    },
+                    '& .controlledprocess .controlledprocess': {
+                        marginLeft: '1.1em',
+                    },
                 }
             }
         }
-    }
-})
+    },
+}, globalTheme)
 
 export default lxknsTheme

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useState } from 'react'
+import React from 'react'
 import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-router-dom'
 
 import useErrorBoundary from "use-error-boundary"
@@ -41,7 +41,6 @@ import lxknsTheme from './appstyles'
 
 import Discovery, { useDiscovery } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
-import { EXPANDALL_ACTION, COLLAPSEALL_ACTION, treeAction } from 'components/usernamespacetree/UserNamespaceTree'
 import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
@@ -50,6 +49,7 @@ import { NamespaceType } from 'models/lxkns'
 
 import version from '../version'
 import About from './About'
+import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
 import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
 
 interface viewItem {
@@ -83,7 +83,7 @@ const views: viewItem[] = [
 const LxknsApp = () => {
     const { ErrorBoundary } = useErrorBoundary()
 
-    const [treeaction, setTreeAction] = useState("")
+    const [treeaction, setTreeAction] = useTreeAction()
 
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
 
@@ -103,13 +103,13 @@ const LxknsApp = () => {
                 tools={() => <>
                     <Tooltip title="expand initial user namespace(s) only">
                         <IconButton color="inherit"
-                            onClick={() => setTreeAction(treeAction(COLLAPSEALL_ACTION))}>
+                            onClick={() => setTreeAction(COLLAPSEALL)}>
                             <ChevronRightIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="expand all">
                         <IconButton color="inherit"
-                            onClick={() => setTreeAction(treeAction(EXPANDALL_ACTION))}>
+                            onClick={() => setTreeAction(EXPANDALL)}>
                             <ExpandMoreIcon />
                         </IconButton>
                     </Tooltip>

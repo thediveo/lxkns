@@ -23,14 +23,11 @@ import { Discovery as DiscoveryResult, fromjson } from 'models/lxkns'
 import useInterval from 'hooks/interval'
 
 
-export const EMPTY_DISCOVERY: DiscoveryResult = {
+/** Internal discovery result state; can be used only via useDiscovery(). */
+const discoveryResultAtom = atom({
     namespaces: {},
     processes: {},
-}
-
-
-/** Internal discovery result state; can be used only via useDiscovery(). */
-const discoveryResultAtom = atom(EMPTY_DISCOVERY)
+} as DiscoveryResult)
 
 /** 
  * Use the namespace discovery result in a react component; on purpose, there no
@@ -92,7 +89,6 @@ export const discoveryRefreshingAtom = atom(
 // information about all namespaces, adding information about the previous
 // discovery state.
 const fetchDiscoveryData = (set: Setter) => {
-    console.log('requesting new discovey...')
     fetch('/api/namespaces')
         .then(httpresult => {
             // Whatever the server replied, it did reply and we can reset

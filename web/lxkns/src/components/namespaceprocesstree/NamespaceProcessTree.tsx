@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 
 import { atom, useAtom } from 'jotai'
 
@@ -24,9 +24,10 @@ import TreeView from '@material-ui/lab/TreeView'
 import TreeItem from '@material-ui/lab/TreeItem'
 
 import { useDiscovery } from 'components/discovery'
-import { compareNamespaceById, compareProcessByNameId, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
+import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo'
 import ProcessInfo from 'components/processinfo'
+import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 
 
 /** local storage key for the show system processes filter setting. */
@@ -74,7 +75,7 @@ const findSubProcesses = (proc: Process, nstype: NamespaceType): Process[] => {
     const subprocs = children
         .filter(child => child.cgroup === proc.cgroup)
         .map(child => findSubProcesses(child, nstype))
-        .flat(1)
+        .flat()
     // Finally return the concatenation of all immediate child processes as
     // well as processes further down the hierarchy with controllers differing
     // to our controller.
@@ -83,9 +84,10 @@ const findSubProcesses = (proc: Process, nstype: NamespaceType): Process[] => {
         .concat(subprocs)
 }
 
+/** Returns all leader and sub-leader processes in a namespace. */
 const findNamespaceProcesses = (namespace: Namespace) =>
     namespace.leaders.concat(
-        namespace.leaders.map(leader => findSubProcesses(leader, namespace.type)).flat(1))
+        namespace.leaders.map(leader => findSubProcesses(leader, namespace.type)).flat())
 
 /**
  * Renders a process and then recursively decends down to find and render
@@ -101,7 +103,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
     const children = findSubProcesses(proc, nstype)
         .sort(compareProcessByNameId)
         .map(child => controlledProcessTreeItem(child, nstype, showSystemProcesses))
-        .flat(1)
+        .flat()
 
     // Special case: this is the only leader process in the namespace and there
     // are no (further) sub-processes with different controllers.
@@ -111,6 +113,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
     return (
         (!hideMe && showProcess(proc, showSystemProcesses) &&
             <TreeItem
+                className="controlledprocess"
                 key={proc.pid}
                 nodeId={proc.pid.toString()}
                 label={<ProcessInfo process={proc} />}
@@ -137,36 +140,23 @@ const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) =
     const procs = namespace.leaders
         .sort(compareProcessByNameId)
         .map(proc => controlledProcessTreeItem(proc, namespace.type, showSystemProcesses))
-        .flat(1)
+        .flat()
 
     // In case of hierarchical namespaces also render the child namespaces.
     const childnamespaces = namespace.children ?
         namespace.children.map(childns => NamespaceTreeItem(childns, showSystemProcesses)) : []
 
     return <TreeItem
+        className="namespace"
         key={namespace.nsid}
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} />}
     >{procs.concat(childnamespaces)}</TreeItem>
 }
 
-// FIXME:
-export const EXPANDALL_ACTION = "expandall";
-export const COLLAPSEALL_ACTION = "collapseall";
-
-
-const collapsedids = (namespaces: NamespaceMap, type: NamespaceType) => {
-    const allrootns = Object.values(namespaces)
-        .filter(ns => ns.type === type && ns.parent == null)
-    const allleaderids = allrootns.map(ns => ns.leaders).flat(1)
-        .map(proc => proc.pid.toString())
-    return allrootns.map(ns => ns.nsid.toString())
-        .concat(allleaderids)
-}
-
 export interface NamespaceProcessTreeProps {
     type?: string
-    action: string
+    action: Action
 }
 
 /**
@@ -182,64 +172,98 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
+    // System process filter setting.
     const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
 
-    // Discovery data comes in via a dedicated discovery context.
+    // Discovery data.
     const discovery = useDiscovery()
 
     // Previous discovery information, if any.
-    const previousDiscovery = useRef({ namespaces: {}, processes: {} });
+    const previousDiscovery = useRef({ namespaces: {}, processes: {} } as Discovery)
 
     // Tree node expansion is a component-local state.
     const [expanded, setExpanded] = useState([])
-
-    // To emulate actions via react's properties architecture and then getting
-    // the dependencies correct, we need to store the previous action. Sigh,
-    // bloat react-ion.
-    const oldaction = useRef("")
 
     // Trigger an action when the action "state" changes; we are ignoing any
     // stuff appended to the commands, as we need to add noise to the commands
     // in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
-        if (action === oldaction.current) {
-            return;
-        }
-        oldaction.current = action;
-        if (action.startsWith(EXPANDALL_ACTION)) {
-        } else if (action.startsWith(COLLAPSEALL_ACTION)) {
-            setExpanded(collapsedids(discovery.namespaces, nstype))
+        switch (action.action) {
+            case EXPANDALL:
+                // expand all namespaces as well as all confined processes.
+                const allns = Object.values(discovery.namespaces)
+                    .filter(ns => ns.type === nstype)
+                const allnsids = allns.map(ns => ns.nsid.toString())
+                const allprocids = allns.map(ns => findNamespaceProcesses(ns))
+                    .flat()
+                    .map(proc => proc.pid.toString())
+                setExpanded(allnsids.concat(allprocids))
+                break
+            case COLLAPSEALL:
+                // collapse everything except for the root namespaces.
+                const allrootnsids = Object.values(discovery.namespaces)
+                    .filter(ns => ns.type === nstype && ns.parent == null)
+                    .map(ns => ns.nsid.toString())
+                setExpanded(allrootnsids)
+                break
         }
     }, [action, nstype, discovery])
 
+    // Whenever the discovery changes, we want to update the expansion state of
+    // the newly arrived namespaces. We default to newly seen "root" namespaces
+    // being expanded to show their processes (if there are multiple leader and
+    // sub-leader processes).
     useEffect(() => {
-        // FIXME:
-        setExpanded(collapsedids(discovery.namespaces, nstype))
+        // Unfortunately, the material-ui tree maintains only a single list of
+        // expanded node ids. In order to not touch the expanded/collapsed state
+        // of existing nodes we thus first need to find out which nodes actually
+        // are new (and for hierarchical namespaces we don't care about
+        // hierarchy).
+        const previousNamespaces = previousDiscovery.current.namespaces as NamespaceMap
+        const oldNamespaceIds = Object.values(previousNamespaces)
+            .filter(ns => ns.type === nstype)
+            .map(ns => ns.nsid)
+        // We want to expand only new namespaces and never touch their expansion
+        // state lateron.
+        const expandingNamespaces = Object.values(discovery.namespaces)
+            .filter(ns => ns.type === nstype)
+            .filter(ns => !oldNamespaceIds.includes(ns.nsid))
+        // Finally update the expansion state of the tree; this must include the
+        // already expanded nodes (state), so that already expanded nodes don't
+        // collapse on the next refresh.
+        const expandNodeIds = expandingNamespaces.map(ns => ns.nsid.toString())
+        setExpanded(previouslyExpanded => previouslyExpanded.concat(expandNodeIds))
         previousDiscovery.current = discovery
     }, [nstype, discovery])
-
-    const rootnsItems = Object.values(discovery.namespaces)
-        .filter(ns => ns.type === nstype && ns.parent == null)
-        .sort(compareNamespaceById)
-        .map(ns => NamespaceTreeItem(ns, showSystemProcesses));
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
     // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
     // state of the tree.
     const handleToggle = (event, nodeIds) => {
-        setExpanded(nodeIds);
+        setExpanded(nodeIds)
     }
 
+    // Memorize the tree items, so we don't need to rerender them unless we've
+    // got new discovery data or the display filter changes; this avoids
+    // rerendering the tree contents when changing the "expanded" tree state.
+    const treeItemsMemo = useMemo(() => (
+        Object.values(discovery.namespaces)
+            .filter(ns => ns.type === nstype && ns.parent == null)
+            .sort(compareNamespaceById)
+            .map(ns => NamespaceTreeItem(ns, showSystemProcesses))
+    ), [discovery, showSystemProcesses, nstype])
+
     return (
-        (rootnsItems.length &&
+        (treeItemsMemo.length &&
             <TreeView
                 className="namespacetree"
+                disableSelection={true}
                 onNodeToggle={handleToggle}
                 defaultCollapseIcon={<ExpandMoreIcon />}
                 defaultExpandIcon={<ChevronRightIcon />}
                 expanded={expanded}
-            >{rootnsItems}</TreeView>
+            >{treeItemsMemo}</TreeView>
         ) || (Object.keys(discovery.namespaces).length &&
             <Typography variant="body1" color="textSecondary">
                 this Linux system doesn't have any "{nstype}" namespaces

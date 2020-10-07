@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
@@ -23,15 +23,7 @@ import TreeView from '@material-ui/lab/TreeView'
 import { useDiscovery } from 'components/discovery'
 import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
-
-export const EXPANDALL_ACTION = "expandall"
-export const COLLAPSEALL_ACTION = "collapseall"
-
-// treeAction returns the specified tree action with some noise tacked on,
-// ensuring that the tree component state will change and the component then can
-// pick up the "new" command. This IS ugly, no chance to paint enough lipstick
-// on this pig.
-export const treeAction = (action) => action + Math.floor(100000 + Math.random() * 900000).toString()
+import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 
 // The UserNamespaceTree component renders a tree of user namespaces, including
 // owned non-user namespaces. Furthermore, it renders additional information,
@@ -42,7 +34,7 @@ export const treeAction = (action) => action + Math.floor(100000 + Math.random()
 //
 // This component also supports sending action commands for expanding or
 // collapsing (almost) all user namespaces via the properties mechanism.
-export const UserNamespaceTree = ({ action }) => {
+export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */ => {
 
     // Discovery data comes in via a dedicated discovery context.
     const discovery = useDiscovery()
@@ -53,33 +45,27 @@ export const UserNamespaceTree = ({ action }) => {
     // Tree node expansion is a component-local state.
     const [expanded, setExpanded] = useState([])
 
-    // To emulate actions via react's properties architecture and then getting
-    // the dependencies correct, we need to store the previous action. Sigh,
-    // bloat react-ion.
-    const oldaction = useRef("")
-
     // Trigger an action when the action "state" changes; we are ignoing any
     // stuff appended to the commands, as we need to add noise to the commands
     // in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
-        if (action === oldaction.current) {
-            return
-        }
-        oldaction.current = action
-        if (action.startsWith(EXPANDALL_ACTION)) {
-            // expand all user namespaces and all included process nodes.
-            const alluserns = Object.values(discovery.namespaces)
-                .filter(ns => ns.type === "user")
-                .map(ns => ns.nsid.toString())
-            const allealdormen = Object.values(discovery.namespaces)
-                .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
-                .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString())
-            setExpanded(alluserns.concat(allealdormen))
-        } else if (action.startsWith(COLLAPSEALL_ACTION)) {
-            const topuserns = Object.values(discovery.namespaces)
-                .filter(ns => ns.type === "user" && ns.parent === null)
-                .map(ns => ns.nsid.toString())
-            setExpanded(topuserns)
+        switch (action.action) {
+            case EXPANDALL:
+                // expand all user namespaces and all included process nodes.
+                const alluserns = Object.values(discovery.namespaces)
+                    .filter(ns => ns.type === "user")
+                    .map(ns => ns.nsid.toString())
+                const allealdormen = Object.values(discovery.namespaces)
+                    .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
+                    .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString())
+                setExpanded(alluserns.concat(allealdormen))
+                break
+            case COLLAPSEALL:
+                const topuserns = Object.values(discovery.namespaces)
+                    .filter(ns => ns.type === "user" && ns.parent === null)
+                    .map(ns => ns.nsid.toString())
+                setExpanded(topuserns)
+                break
         }
     }, [action, discovery])
 
@@ -105,7 +91,7 @@ export const UserNamespaceTree = ({ action }) => {
         // user namespaces; we'll next sort out which user namespaces are
         // actually new, as to not touch existing user namespaces.
         const usernsCandidatesFilter = Object.keys(previousNamespaces).length ?
-            ((ns: Namespace) => ns.type === NamespaceType.user) : 
+            ((ns: Namespace) => ns.type === NamespaceType.user) :
             ((ns: Namespace) => ns.type === NamespaceType.user && ns.parent === null);
         const expandingUserns = Object.values(discovery.namespaces)
             .filter(usernsCandidatesFilter)
@@ -133,25 +119,30 @@ export const UserNamespaceTree = ({ action }) => {
         setExpanded(nodeIds);
     }
 
-    // In the discovery heap find only the topmost user namespaces; that is,
-    // user namespaces without any parent. This should return only one user
-    // namespace (but covers its a** in case a discovery might someday turn up
-    // multiple user namespaces without parents, due to bind-mounting some which
-    // are ourside the reach of the discoverer).
-    const rootusernsItems = Object.values(discovery.namespaces)
-        .filter(ns => ns.type === "user" && ns.parent === null)
-        .sort(compareNamespaceById)
-        .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />)
+    // Memorize the tree items, so we don't need to rerender them unless we've
+    // got new discovery data or the display filter changes; this avoids
+    // rerendering the tree contents when changing the "expanded" tree state.
+    const treeItemsMemo = useMemo(() => (
+        // In the discovery heap find only the topmost user namespaces; that is,
+        // user namespaces without any parent. This should return only one user
+        // namespace (but covers its a** in case a discovery might someday turn up
+        // multiple user namespaces without parents, due to bind-mounting some which
+        // are ourside the reach of the discoverer).
+        Object.values(discovery.namespaces)
+            .filter(ns => ns.type === "user" && ns.parent === null)
+            .sort(compareNamespaceById)
+            .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />)
+    ), [discovery])
 
     return (
-        (rootusernsItems.length &&
+        (treeItemsMemo.length &&
             <TreeView
                 className="namespacetree"
                 onNodeToggle={handleToggle}
                 defaultCollapseIcon={<ExpandMoreIcon />}
                 defaultExpandIcon={<ChevronRightIcon />}
                 expanded={expanded}
-            >{rootusernsItems}</TreeView>
+            >{treeItemsMemo}</TreeView>
         ) || (
             <Typography variant="body1" color="textSecondary">
                 nothing discovered yet, please refresh
