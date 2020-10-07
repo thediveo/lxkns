@@ -93,6 +93,7 @@ func startServer(address string) (net.Addr, error) {
 	r.HandleFunc("/api/namespaces", GetNamespacesHandler).Methods("GET")
 	r.HandleFunc("/api/processes", GetProcessesHandler).Methods("GET")
 	r.HandleFunc("/api/pidmap", GetPIDMapHandler).Methods("GET")
+	r.PathPrefix("/api").HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNotFound) })
 
 	spa := appHandler{staticPath: "web/lxkns/build", indexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)

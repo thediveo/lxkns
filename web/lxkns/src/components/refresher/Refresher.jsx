@@ -12,26 +12,30 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react'
 
-import { makeStyles } from '@material-ui/core/styles';
-import { green } from '@material-ui/core/colors';
-import Fade from '@material-ui/core/Fade';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { useAtom } from 'jotai'
 
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import SyncIcon from '@material-ui/icons/Sync';
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { makeStyles } from '@material-ui/core/styles'
+import { green } from '@material-ui/core/colors'
+import Fade from '@material-ui/core/Fade'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
-import { RefreshContext } from 'components/discovery';
+import IconButton from '@material-ui/core/IconButton'
+import Tooltip from '@material-ui/core/Tooltip'
+import Menu from '@material-ui/core/Menu'
+import MenuItem from '@material-ui/core/MenuItem'
+import RefreshIcon from '@material-ui/icons/Refresh'
+import SyncIcon from '@material-ui/icons/Sync'
+import SyncDisabledIcon from '@material-ui/icons/SyncDisabled'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+
+import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from 'components/discovery'
+import useId from 'hooks/id';
 
 const intervals = [
     { text: 'off', interval: null },
+    { text: '500ms', interval: 500 },
     { text: '1s', interval: 1000 },
     { text: '5s', interval: 5 * 1000 },
     { text: '10s', interval: 10 * 1000 },
@@ -64,10 +68,11 @@ const useStyles = makeStyles((theme) => ({
 // a rotating progress indicator appears around the refresh button.
 const Refresher = () => {
     const classes = useStyles();
+    const menuId = useId('refreshermenu');
 
-    // Get the refresh context, so that we can both show the current refresh
-    // interval and refreshing state, but also change the refresh parameters.
-    const refresh = useContext(RefreshContext);
+    // Refresh interval and status.
+    const [refreshInterval, setRefreshInterval] = useAtom(discoveryRefreshIntervalAtom)
+    const [refreshing, setRefreshing] = useAtom(discoveryRefreshingAtom)
 
     // Used for popping up the interval menu.
     const [anchorEl, setAnchorEl] = useState(null);
@@ -81,14 +86,14 @@ const Refresher = () => {
     const handleIntervalMenuItemClick = (event, interval) => {
         setAnchorEl(null);
         console.log("setting auto-refresh to: ", interval ? (interval / 1000) + "s" : "off");
-        refresh.setInterval(interval);
+        setRefreshInterval(interval);
     };
 
     // User clicks outside the popped up interval menu.
     const handleIntervalMenuClose = () => setAnchorEl(null);
 
-    const intervalTitle = refresh.interval !== null 
-        ? "auto-refresh interval " + intervaltext(refresh.interval) 
+    const intervalTitle = refreshInterval !== null 
+        ? "auto-refresh interval " + intervaltext(refreshInterval) 
         : "auto-refresh off";
 
     return (
@@ -96,9 +101,9 @@ const Refresher = () => {
             <Tooltip title="refresh">
                 <div className={classes.wrapper}>
                     <IconButton color="inherit"
-                        onClick={refresh.triggerRefresh}
+                        onClick={() => setRefreshing(true)}
                     ><RefreshIcon /></IconButton>
-                    {refresh.refreshing &&
+                    {refreshing &&
                         <Fade in={true} style={{ transitionDelay: '500ms' }} unmountOnExit>
                             <CircularProgress size={32} className={classes.discoveryprogress} />
                         </Fade>
@@ -108,16 +113,16 @@ const Refresher = () => {
             <Tooltip title={intervalTitle}>
                 <IconButton
                     aria-haspopup="true"
-                    aria-controls="intervalmenu"
+                    aria-controls={menuId}
                     onClick={handleIntervalButtonClick}
                     color="inherit"
                 >
-                    {refresh.interval !== null ? <SyncIcon /> : <SyncDisabledIcon />}
+                    {refreshInterval !== null ? <SyncIcon /> : <SyncDisabledIcon />}
                     <ExpandMoreIcon />
                 </IconButton>
             </Tooltip>
             <Menu
-                id="intervalmenu"
+                id={menuId}
                 anchorEl={anchorEl}
                 keepMounted
                 open={Boolean(anchorEl)}
@@ -126,7 +131,7 @@ const Refresher = () => {
                 {intervals.map((intervalitem, ) => (
                     <MenuItem
                         key={intervalitem.interval}
-                        selected={intervalitem.interval === refresh.interval}
+                        selected={intervalitem.interval === refreshInterval}
                         onClick={(event) => handleIntervalMenuItemClick(event, intervalitem.interval)}
                     >
                         {intervalitem.text}

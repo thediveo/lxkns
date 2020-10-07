@@ -13,7 +13,7 @@ RUN apk add --no-cache --update-cache gcc musl-dev
 # up things in case the dependencies do not change. This then reduces the amount
 # of fetching and compiling required when compiling the final binary later.
 COPY go.mod go.sum ./
-RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get
+RUN go mod download
 # And now, finally, we build the lxkns service itself.
 COPY . .
 RUN go build -v -o /lxkns ./cmd/lxkns
@@ -24,7 +24,7 @@ WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
-COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/jsconfig.json ./
+COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/tsconfig.json ./
 RUN yarn install
 # Now build the production-optimized web app.
 COPY web/lxkns/public/ ./public/

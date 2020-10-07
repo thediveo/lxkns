@@ -13,18 +13,17 @@
 // under the License.
 
 import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './app';
 
-// Import only the necessary Roboto fonts, so they are available "offline"
-// without CDN.
-import "fontsource-roboto/400.css";
-import "fontsource-roboto/500.css";
+import LaunchIcon from '@material-ui/icons/Launch';
 
-ReactDOM.render(
-	<React.StrictMode>
-		<App />
-	</React.StrictMode>,
-	document.getElementById('root')
-);
+const extlink = (href, linktext, spaced) => (<>
+    {spaced && ' '}
+    <LaunchIcon fontSize="inherit" className="inlineicon" style={{ verticalAlign: 'middle' }} /><a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+    >{linktext}</a>
+    {spaced && ' '}
+</>);
+
+export default extlink;
