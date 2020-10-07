@@ -80,16 +80,44 @@ namespaces" react app:
 2. and then navigate to http://localhost:5010. The lxkns web app should load
    automatically and then display the discovery results. The app bar controls
    show tooltips when hovering over them.
-   - `>` collapses all user namespace nodes, except for the initial user namespace.
-   - `v` expands all user namespace nodes.
+   - `☰` opens the drawer, where you can navigate to different namespace views.
+     In particular, an "all" namespaces view along the user namespace hierarchy,
+     as well as per-type views which focus on a specific type of namespace each,
+     with the attached processes, organized by their cgroup hierarchy.
+   - `>` collapses all namespace nodes, except for top-level nodes (initial user
+     and PID namespaces, all other namespaces).
+   - `v` expands all namespace nodes.
    - `⟳` manuals refresh -- whenevery you want; displays a progress indicator in
      case of slow refreshes.
    - `🔄` opens a pop-up menu to change the refresh interval or switch off
      automatic refresh. Your refresh setting will be stored in your browser's
      local storage.
-   - `🛈` shows some app blurb.
 
-   ![linux namespace discovery app](docs/lxkns-app.jpeg)
+#### Obligatory Eye Candy
+
+The lxkns web app offers several different views onto the Linux kernel namespaces. To navigate between them, click on the "hamburger" icon to open the drawer or swipe from the left on touch-enabled devices.
+
+![lxkns app navigation](docs/lxkns-app-drawer.png)
+
+See all network namespaces with the "leader" processes attached to them. Please
+note the cgroup paths, which help us in identifying Docker containers.
+
+![lxkns app network namespaces](docs/lxkns-app-netns.png)
+
+There's a neat feature in the lxkns app: if we look more closely at the PID
+namespaces we notice that one of our Docker containers (the one with the lxkns
+service) doesn't use its own PID namespace, but instead is attached to the
+initial PID namespace.
+
+![lxkns app PID namespaces](docs/lxkns-app-pidns.png)
+
+Besides the namespace-type specific views, there's the all-in-one view, which is
+organized along the hierarchy of user namespaces. The rationale here is that in
+the Linux kernel architecture, user namespaces own all other namespaces.
+
+![lxkns app all namespaces](docs/lxkns-app.jpeg)
+
+#### lxkns Service Container Deployment
 
 Some deployment notes about the lxkns service container:
 
