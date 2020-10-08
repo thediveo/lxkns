@@ -25,6 +25,9 @@ coverage:
 	scripts/cov.sh
 
 deploy:
+	@VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
+		echo "building version" $${VERSION} && \
+		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 

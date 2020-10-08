@@ -12,15 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './app';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import './index.css'
+import App from './app'
 
 // Import only the necessary Roboto fonts, so they are available "offline"
 // without CDN.
-import "fontsource-roboto/400.css";
-import "fontsource-roboto/500.css";
+import "fontsource-roboto/400.css"
+import "fontsource-roboto/500.css"
+import "fontsource-roboto/700.css"
 
 ReactDOM.render(
 	<React.StrictMode>

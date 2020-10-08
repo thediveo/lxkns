@@ -15,7 +15,14 @@ RUN apk add --no-cache --update-cache gcc musl-dev
 COPY go.mod go.sum ./
 RUN go mod download
 # And now, finally, we build the lxkns service itself.
-COPY . .
+COPY api/ ./api/
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY log/ ./log/
+COPY model/ ./model/
+COPY ops/ ./ops/
+COPY species/ ./species/
+COPY *.go ./
 RUN go build -v -o /lxkns ./cmd/lxkns
 
 # 2nd stage: builds the lxkns web client react application.
