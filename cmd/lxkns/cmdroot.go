@@ -38,8 +38,10 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 		log.Debugf("debug logging enabled")
 	}
 	// And now for the real meat.
-	log.Infof("this is the lxkns Linux-kernel namespaces discovery service version %s", lxkns.SemVersion)
-	log.Infof("https://github.com/thediveo/lxkns")
+	log.Infof("This is the lxkns Linux-kernel namespaces discovery service and web app, version %s",
+		lxkns.SemVersion)
+	log.Infof("Copyright (c) Harald Albrecht, 2020..., see: https://github.com/thediveo/lxkns")
+	log.Infof("This software is licensed under the Apache License, version 2.0, see: https://www.apache.org/licenses/LICENSE-2.0")
 
 	log.Infof("running as user ID %d", os.Geteuid())
 	mycaps := strings.Join(caps.ProcessCapabilities(model.PIDType(os.Getpid())), ", ")
