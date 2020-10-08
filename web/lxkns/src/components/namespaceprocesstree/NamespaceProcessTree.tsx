@@ -181,8 +181,13 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} } as Discovery)
 
-    // Tree node expansion is a component-local state.
+    // Tree node expansion is a component-local state. We need to also use a
+    // reference to the really current expansion state as for yet unknown
+    // reasons setExpanded() will pass stale state information to its reducer.
     const [expanded, setExpanded] = useState([])
+    const currExpanded = useRef([])
+
+    useEffect(() => { currExpanded.current = expanded }, [expanded])
 
     // Trigger an action when the action "state" changes; we are ignoing any
     // stuff appended to the commands, as we need to add noise to the commands
@@ -232,7 +237,7 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
         // already expanded nodes (state), so that already expanded nodes don't
         // collapse on the next refresh.
         const expandNodeIds = expandingNamespaces.map(ns => ns.nsid.toString())
-        setExpanded(previouslyExpanded => previouslyExpanded.concat(expandNodeIds))
+        setExpanded(currExpanded.current.concat(expandNodeIds))
         previousDiscovery.current = discovery
     }, [nstype, discovery])
 

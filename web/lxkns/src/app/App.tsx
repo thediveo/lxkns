@@ -36,7 +36,6 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import InfoIcon from '@material-ui/icons/Info'
 
-import './App.css'
 import lxknsTheme from './appstyles'
 
 import Discovery, { useDiscovery } from 'components/discovery'
