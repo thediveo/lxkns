@@ -12,8 +12,10 @@ unmarshalling namespace discovery results to and from JSON – which is especial
 useful to separate the super-privileged scanner from non-root frontends: run
 namespace discoveries as a containerized service.
 
-In addition, `lxkns` comes with a set of unique CLI namespace discovery tools
+In addition, `lxkns` comes with a set of unique web and CLI namespace discovery tools
 and also helps Go programs with switching namespaces.
+
+[![lxkns web app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 And all that tested with Go 1.13-1.15. And even with support for the new time
 namespaces.
@@ -68,6 +70,7 @@ But `lxkns` is more than "just" a Golang package. It also features...
 
 - **lxkns discovery service** exposing namespace discovery information via a
   simple REST API. Of course, our service is build with, guess, `lxkns`.
+- **web app** for browsing discovered Linux namespaces in Linux hosts.
 - **CLI tools** also build on top of `lxkns` (we _do_ eat our own dog food).
 
 ### 🐋 lxkns REST Service
