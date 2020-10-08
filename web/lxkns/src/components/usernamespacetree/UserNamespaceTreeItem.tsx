@@ -61,7 +61,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
         .sort(compareProcessByNameId)
         .map(proc =>
             <TreeItem
-                className="tenantprocess"
+                className="controlledprocess"
                 key={proc.pid}
                 nodeId={namespace.nsid.toString() + '-' + proc.pid.toString()}
                 label={<ProcessInfo process={proc} />}>{
@@ -87,6 +87,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
     // (grrr).
     return (
         <TreeItem
+            className="namespace"
             key={namespace.nsid}
             nodeId={namespace.nsid.toString()}
             label={<NamespaceInfo namespace={namespace} />}
