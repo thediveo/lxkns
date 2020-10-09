@@ -123,7 +123,7 @@ var _ = Describe("namespaces JSON", func() {
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
 		Expect(ns).NotTo(BeNil())
 		d := NewNamespacesDict(nil)
-		j, err := d.MarshalNamespace(ns)
+		j, err := d.marshalNamespace(ns, nil)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -144,7 +144,7 @@ var _ = Describe("namespaces JSON", func() {
 		// information. But it must not contain an owner reference, this is
 		// the parent reference instead.
 		parentuserns := userns.(model.Hierarchy).Parent().(model.Namespace)
-		j, err = d.MarshalNamespace(userns)
+		j, err = d.marshalNamespace(userns, nil)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -166,7 +166,7 @@ var _ = Describe("namespaces JSON", func() {
 		)))
 
 		// Check for the correct child list of the parent user namespace.
-		j, err = d.MarshalNamespace(parentuserns)
+		j, err = d.marshalNamespace(parentuserns, nil)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -187,7 +187,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// Also check the grandparent user namespace.
 		grandpa := parentuserns.(model.Hierarchy).Parent().(model.Namespace)
-		j, err = d.MarshalNamespace(grandpa)
+		j, err = d.marshalNamespace(grandpa, nil)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -220,7 +220,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// First create a JSON textual representation for a user namespace we
 		// want to unmarshal next...
-		j, err := d.MarshalNamespace(userns)
+		j, err := d.marshalNamespace(userns, nil)
 		Expect(err).To(Succeed())
 
 		// ...now check that unmarshalling correctly works.
@@ -231,7 +231,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// Check that unmarshalling a (flat) namespace also works correctly.
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
-		j, err = nsdict.MarshalNamespace(ns)
+		j, err = nsdict.marshalNamespace(ns, nil)
 		Expect(err).To(Succeed())
 
 		ns2, err := nsdict.UnmarshalNamespace(j)

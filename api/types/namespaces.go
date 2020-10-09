@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os/user"
 	"strconv"
 
 	"github.com/thediveo/lxkns"
@@ -75,6 +74,7 @@ func (d NamespacesDict) Get(nsid species.NamespaceID, nstype species.NamespaceTy
 // MarshalJSON emits a Linux-kernel namespace dictionary as JSON, with details
 // about the individual namespaces.
 func (d *NamespacesDict) MarshalJSON() ([]byte, error) {
+	usernames := lxkns.DiscoverUserNames(*d.AllNamespaces)
 	b := bytes.Buffer{}
 	b.WriteRune('{')
 	first := true
@@ -88,7 +88,7 @@ func (d *NamespacesDict) MarshalJSON() ([]byte, error) {
 			b.WriteRune('"')
 			b.WriteString(strconv.FormatUint(ns.ID().Ino, 10))
 			b.WriteString(`":`)
-			nsjson, err := d.MarshalNamespace(ns)
+			nsjson, err := d.marshalNamespace(ns, usernames)
 			if err != nil {
 				return nil, err
 			}
@@ -114,13 +114,13 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// NamespaceUnmarshal is the JSON serializable (digital!) twin to namespace
+// NamespaceUnMarshal is the JSON serializable (digital!) twin to namespace
 // objects, yet just for unmarshalling: the rationale to differentiate between
 // marshalling and unmarshalling is that on unmarshalling we ignore some
 // information which might be present, as we need to regenerate it anyway
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
-type NamespaceUnmarshal struct {
+type NamespaceUnMarshal struct {
 	ID       uint64          `json:"nsid"`                // namespace ID.
 	Type     string          `json:"type"`                // "net", "user", et cetera...
 	Owner    uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
@@ -135,18 +135,18 @@ type NamespaceUnmarshal struct {
 // convenience to some JSON consumers, but which we rather prefer to ignore on
 // unmarshalling.
 type NamespaceMarshal struct {
-	NamespaceUnmarshal
+	NamespaceUnMarshal
 	Ealdorman model.PIDType `json:"ealdorman,omitempty"`   // PID of most senior leader process
 	Children  []uint64      `json:"children,omitempty"`    // PID/user: IDs of child namespaces
 	Tenants   []uint64      `json:"possessions,omitempty"` // user: list of owned namespace IDs
 }
 
 // MarshalNamespace emits a Namespace in JSON textual format.
-func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
+func (d NamespacesDict) marshalNamespace(ns model.Namespace, usernames map[uint32]string) ([]byte, error) {
 	// First set up the marshalling data used with all types of namespaces,
 	// albeit some fields might not be marshalled when not in use.
 	aux := NamespaceMarshal{
-		NamespaceUnmarshal: NamespaceUnmarshal{
+		NamespaceUnMarshal: NamespaceUnMarshal{
 			ID:      ns.ID().Ino,
 			Type:    ns.Type().Name(),
 			Ref:     ns.Ref(),
@@ -179,10 +179,7 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 	// And now take care of what is special for user namespaces; such as
 	// enforcing sending a user ID, even if it is 0/root (which often will be
 	// the case).
-	username := ""
-	if user, err := user.LookupId(strconv.Itoa(uns.UID())); err == nil {
-		username = user.Name
-	}
+	username, _ := usernames[uint32(uns.UID())]
 	return json.Marshal(&struct {
 		NamespaceMarshal
 		UserUID  int    `json:"user-id"`   // enforce owner's user ID (UID)
@@ -203,7 +200,7 @@ func (d NamespacesDict) MarshalNamespace(ns model.Namespace) ([]byte, error) {
 func (d NamespacesDict) UnmarshalNamespace(data []byte) (model.Namespace, error) {
 	// Unmarshal the required information so we can at least create a "bare"
 	// namespace object of the correct type and with the correct ID.
-	var aux NamespaceUnmarshal
+	var aux NamespaceUnMarshal
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return nil, err
 	}
