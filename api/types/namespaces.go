@@ -179,7 +179,7 @@ func (d NamespacesDict) marshalNamespace(ns model.Namespace, usernames map[uint3
 	// And now take care of what is special for user namespaces; such as
 	// enforcing sending a user ID, even if it is 0/root (which often will be
 	// the case).
-	username, _ := usernames[uint32(uns.UID())]
+	username := usernames[uint32(uns.UID())]
 	return json.Marshal(&struct {
 		NamespaceMarshal
 		UserUID  int    `json:"user-id"`   // enforce owner's user ID (UID)

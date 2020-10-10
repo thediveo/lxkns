@@ -15,10 +15,11 @@
 package lxkns
 
 import (
+	"bufio"
 	"encoding/json"
 	"os"
-	"os/user"
 	"strconv"
+	"strings"
 
 	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns/log"
@@ -30,59 +31,39 @@ import (
 // names, if any.
 type UidUsernameMap map[uint32]string
 
-// A list of uids to ask the user information oracle for.
-type userIds []uint32
-
 // DiscoverUserNames returns the mapping from user identifiers (uids, found as
-// owners of user namespaces) to their corresponding user names, if any.
+// owners of user namespaces) to their corresponding user names, if any. The
+// namespaces information is required so that the information can be
+// discovered from the initial mount namespace of the host.
 func DiscoverUserNames(namespaces model.AllNamespaces) UidUsernameMap {
-	useridmap := UidUsernameMap{} // not the real one, but just for collecting unique uids
-	// Scan all user namespaces for their owner uids; all other namespaces
-	// don't have owning users, but instead owning user namespaces.
-	for _, userns := range namespaces[model.UserNS] {
-		owneruid := uint32(userns.(model.Ownership).UID())
-		if _, ok := useridmap[owneruid]; !ok {
-			useridmap[owneruid] = ""
-		}
-	}
-	uids := userIds{}
-	for uid := range useridmap {
-		uids = append(uids, uid)
-	}
-	return queryUserNames(uids, namespaces)
-}
-
-// queryUserNames is a lower-level function that takes a set of uids and
-// queries the operating system, swiching into the initial mount namespace if
-// necessary.
-//
-// Note: /etc/passwd actually isn't the single point of truth. Normally,
-// getpwnam() (getpwuid(), ...) handles the situation of having multiple
-// points of truth for user information. But they are designed to be oracles,
-// in the sense that only given a concrete uid or user name they will answer
-// with concrete information about this user, and only this particular user.
-// So we need to pass in a list of uids for which we're seeking the
-// corresponding user names.
-func queryUserNames(uids userIds, namespaces model.AllNamespaces) UidUsernameMap {
 	var usernames UidUsernameMap
-	jsonuids, err := json.Marshal(uids)
-	if err != nil {
-		return usernames
-	}
-	envvars := []string{"UIDS=" + string(jsonuids)}
 	// We need to read the user names while in the initial mount namespace, as
 	// otherwise we'll end up with the wrong /etc/passwd. If we cannot access
 	// the initial mount namespace, then silently fall back to reading from
 	// our current mount namespace.
 	mntnsid, err := ops.NamespacePath("/proc/1/ns/mnt").ID()
 	if err != nil {
-		log.Infof("cannt access initial mount namespace, falling back to own mount namespace")
-		return userNamesOracle(uids)
+		log.Infof("cannot access initial mount namespace, falling back to own mount namespace")
+		return userNamesFromPasswd()
+	}
+	mymntnsid, err := ops.NamespacePath("/proc/self/ns/mnt").ID()
+	if err == nil && mymntnsid == mntnsid {
+		return userNamesFromPasswd()
+	}
+	// Safety net: if we don't have information about the mount namespace of
+	// process PID 1, then there's something rotten and we go for an empty
+	// mapping instead.
+	if namespaces[model.MountNS][mntnsid] == nil {
+		log.Warnf("missing information about PID 1 mount namespace")
+		return UidUsernameMap{}
 	}
 	if err := ReexecIntoActionEnv(
 		"discover-uid-names",
 		MountEnterNamespaces(namespaces[model.MountNS][mntnsid], namespaces),
-		envvars, &usernames); err != nil {
+		nil,
+		&usernames,
+	); err != nil {
+		// Failed to enter the namespace, so we return an empty user name map.
 		log.Errorf("cannot read user name information from initial mount namespace")
 		return UidUsernameMap{}
 	}
@@ -99,25 +80,37 @@ func init() {
 // up which get passed via an environment variable, runs the query, and then
 // sends back the results as JSON via stdout.
 func readUidNames() {
-	uidsparam, ok := os.LookupEnv("UIDS")
-	if !ok {
-		panic("missing uids")
-	}
-	var uids userIds
-	if err := json.Unmarshal([]byte(uidsparam), &uids); err != nil {
-		panic(err.Error())
-	}
-	if err := json.NewEncoder(os.Stdout).Encode(userNamesOracle(uids)); err != nil {
+	if err := json.NewEncoder(os.Stdout).Encode(userNamesFromPasswd()); err != nil {
 		panic(err.Error())
 	}
 }
 
-// userNamesOracle looks up the (loginq) names for the given user identifiers.
-func userNamesOracle(uids userIds) UidUsernameMap {
+// userNamesFromPasswd parses /etc/passwd in the currently active mount
+// namespace and return the mapping from user IDs (uids) to user names.
+func userNamesFromPasswd() UidUsernameMap {
 	usernames := UidUsernameMap{}
-	for _, uid := range uids {
-		if u, _ := user.LookupId(strconv.FormatUint(uint64(uid), 10)); u != nil {
-			usernames[uid] = u.Username
+	f, err := os.Open("/etc/passwd")
+	if err != nil {
+		return usernames
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		// Scanning follows the rules the glibc seems to follow, ignoring
+		// empty lines and lines starting with a "#" comment symbol.
+		// Additionally, we skip user names which start with either "+" or
+		// "-".
+		line := scanner.Text()
+		if line == "" || line[0] == '#' {
+			continue
+		}
+		fields := strings.SplitN(line, ":", 4)
+		if len(fields) < 4 || fields[0] == "" || fields[2] == "" ||
+			fields[0][0] == '+' || fields[0][0] == '-' {
+			continue
+		}
+		if uid, err := strconv.Atoi(fields[2]); err == nil {
+			usernames[uint32(uid)] = fields[0]
 		}
 	}
 	return usernames

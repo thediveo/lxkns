@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/getkin/kin-openapi v0.22.1
 	github.com/gorilla/mux v1.8.0
-	github.com/muesli/termenv v0.7.2
+	github.com/muesli/termenv v0.7.4
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/sirupsen/logrus v1.7.0
@@ -17,7 +17,7 @@ require (
 	github.com/thediveo/go-plugger v0.9.0
 	github.com/thediveo/gons v0.9.5
 	github.com/thediveo/klo v1.0.0
-	github.com/thediveo/testbasher v1.0.2
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+	github.com/thediveo/testbasher v1.0.3
+	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634
 	gopkg.in/yaml.v2 v2.3.0
 )

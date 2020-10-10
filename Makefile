@@ -9,7 +9,9 @@ goversion = 1.15 1.13
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
-testcontaineropts := --privileged --pid host
+testcontaineropts := \
+	--pid=host \
+	--privileged
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 
@@ -42,7 +44,7 @@ test: # runs all tests in a container
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
 		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
-		docker run --pid=host -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
+		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
 	done; \
 	echo "🎉 🎉 🎉 All tests passed"
 
