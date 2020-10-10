@@ -9,7 +9,9 @@ goversion = 1.15 1.13
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
-testcontaineropts := --privileged --pid host
+testcontaineropts := \
+	--pid=host \
+	--privileged
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 

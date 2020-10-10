@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/user"
+	"regexp"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -38,21 +38,14 @@ var (
 	scripts    = testbasher.Basher{}
 	scriptscmd *testbasher.TestCommand
 	userns     model.Namespace
-	username   string
+	usernames  lxkns.UidUsernameMap
 )
 
 var _ = BeforeSuite(func() {
-	user, err := user.Current()
-	Expect(err).To(Succeed())
-	username = user.Name
-	if username == "" && os.Geteuid() == 0 {
-		username = "root"
-	}
-
 	scripts.Common(nstest.NamespaceUtilsScript)
 	scripts.Script("main", `
 unshare -Ur unshare -U $stage2 # create a new user ns inside another user ns (so we get a proper owner relationship).
-	`)
+`)
 	scripts.Script("stage2", `
 process_namespaceid user # prints the user namespace ID of "the" process.
 read # wait for test to proceed()
@@ -64,10 +57,16 @@ read # wait for test to proceed()
 	disco.SkipBindmounts = true
 	disco.SkipFds = true
 	disco.SkipTasks = true
-	allns = lxkns.Discover(disco) // "nearlyallns"
+	allns = lxkns.Discover(disco) // "nearly-all-ns"
 
 	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)
 	Expect(userns).NotTo(BeNil())
+
+	// For some JSON tests we need the names of the users owning user
+	// namespaces. We're expecting here that the user name discovery has been
+	// tested in its own defining module and thus use its results as-is for
+	// simplicity.
+	usernames = lxkns.DiscoverUserNames(allns.Namespaces)
 })
 
 var _ = AfterSuite(func() {
@@ -123,7 +122,7 @@ var _ = Describe("namespaces JSON", func() {
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
 		Expect(ns).NotTo(BeNil())
 		d := NewNamespacesDict(nil)
-		j, err := d.MarshalNamespace(ns)
+		j, err := d.marshalNamespace(ns, nil)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -144,7 +143,7 @@ var _ = Describe("namespaces JSON", func() {
 		// information. But it must not contain an owner reference, this is
 		// the parent reference instead.
 		parentuserns := userns.(model.Hierarchy).Parent().(model.Namespace)
-		j, err = d.MarshalNamespace(userns)
+		j, err = d.marshalNamespace(userns, usernames)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -162,11 +161,11 @@ var _ = Describe("namespaces JSON", func() {
 			userns.Ealdorman().PID,
 			parentuserns.ID().Ino,
 			userns.(model.Ownership).UID(),
-			username,
+			usernames[uint32(userns.(model.Ownership).UID())],
 		)))
 
 		// Check for the correct child list of the parent user namespace.
-		j, err = d.MarshalNamespace(parentuserns)
+		j, err = d.marshalNamespace(parentuserns, usernames)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -182,12 +181,12 @@ var _ = Describe("namespaces JSON", func() {
 			parentuserns.(model.Hierarchy).Parent().(model.Namespace).ID().Ino,
 			childlist(parentuserns.(model.Hierarchy)),
 			parentuserns.(model.Ownership).UID(),
-			username,
+			usernames[uint32(parentuserns.(model.Ownership).UID())],
 		)))
 
 		// Also check the grandparent user namespace.
 		grandpa := parentuserns.(model.Hierarchy).Parent().(model.Namespace)
-		j, err = d.MarshalNamespace(grandpa)
+		j, err = d.marshalNamespace(grandpa, usernames)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
@@ -197,7 +196,7 @@ var _ = Describe("namespaces JSON", func() {
 				"ealdorman": %d,
 				"children": %s,
 				"user-id": %d,
-				"user-name": "root"
+				"user-name": %q
 			}`,
 			grandpa.ID().Ino,
 			refifnotempty(grandpa.Ref()),
@@ -205,6 +204,7 @@ var _ = Describe("namespaces JSON", func() {
 			grandpa.Ealdorman().PID,
 			childlist(grandpa.(model.Hierarchy)),
 			grandpa.(model.Ownership).UID(),
+			usernames[uint32(grandpa.(model.Ownership).UID())],
 		)))
 	})
 
@@ -220,7 +220,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// First create a JSON textual representation for a user namespace we
 		// want to unmarshal next...
-		j, err := d.MarshalNamespace(userns)
+		j, err := d.marshalNamespace(userns, nil)
 		Expect(err).To(Succeed())
 
 		// ...now check that unmarshalling correctly works.
@@ -231,7 +231,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// Check that unmarshalling a (flat) namespace also works correctly.
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
-		j, err = nsdict.MarshalNamespace(ns)
+		j, err = nsdict.marshalNamespace(ns, nil)
 		Expect(err).To(Succeed())
 
 		ns2, err := nsdict.UnmarshalNamespace(j)
@@ -244,6 +244,7 @@ var _ = Describe("namespaces JSON", func() {
 		d.AllNamespaces[model.UserNS][userns.ID()] = userns
 		j, err := json.Marshal(d)
 		Expect(err).To(Succeed())
+		username := regexp.MustCompile(`"user-name":"(.*?)"`).FindStringSubmatch(string(j))[1]
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 			"%d": {
 				"nsid": %[1]d,

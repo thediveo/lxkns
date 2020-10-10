@@ -102,7 +102,6 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	// visited twice.
 	visitedmntns := map[species.NamespaceID]bool{}
 	ownmntnsid, _ := ops.NamespacePath("/proc/self/ns/mnt").ID()
-	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 	visitedmntns[ownmntnsid] = true
 	// Find any bind-mounted namespaces in the current namespace we're running
 	// in, and add them to the results.
@@ -132,32 +131,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		}
 		log.Debugf("scanning mnt:[%d] (%q) for bind-mounted namespaces...",
 			mntns.ID().Ino, mntns.Ref())
-		// If we're running without the necessary privileges to change into
-		// mount namespaces, but we are running under the user which is the
-		// owner of the mount namespace, then we first gain the necessary
-		// privileges by switching into the user namespace for the mount
-		// namespace we're the owner (creator) of, and then can successfully
-		// enter the mount namespaces. And yes, this is how Linux namespaces,
-		// and especially the user namespaces and setns() are supposed to
-		// work. Simplicity if for the World's most stable genius, we're going
-		// for the real stuff instead.
-		enterns := []model.Namespace{mntns}
-		if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {
-			usernsid, _ := usermntnsref.ID()
-			// Do not leak, release user namespace immediately, as we're done with it.
-			usermntnsref.(io.Closer).Close()
-			if userns, ok := result.Namespaces[model.UserNS][usernsid]; ok &&
-				userns.ID() != ownusernsid {
-				// Prepend the user namespace to the list of namespaces we
-				// need to enter, due to the magic capabilities of entering
-				// user namespaces. And, by the way, worst programming
-				// language syntax ever, even more so than Perl. TECO isn't in
-				// the competition, though.
-				enterns = append([]model.Namespace{userns}, enterns...)
-			}
-		}
-		// Finally, we can try to enter the mount namespace in order to find
-		// out which namespace-related bind mounts might be found there...
+		enterns := MountEnterNamespaces(mntns, result.Namespaces)
 		visitedmntns[mntns.ID()] = true
 		var ownedbindmounts []BindmountedNamespaceInfo
 		if err := ReexecIntoAction(
