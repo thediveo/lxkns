@@ -14,6 +14,15 @@
 
 import React from 'react'
 
+import Box from '@material-ui/core/Box'
+import Table from '@material-ui/core/Table'
+import TableBody from '@material-ui/core/TableBody'
+import TableCell from '@material-ui/core/TableCell'
+import TableContainer from '@material-ui/core/TableContainer'
+import TableHead from '@material-ui/core/TableHead'
+import TableRow from '@material-ui/core/TableRow'
+import Paper from '@material-ui/core/Paper'
+
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 
@@ -21,6 +30,17 @@ import extlink from 'components/extlink'
 
 import LxknsIcon from "./lxkns.svg"
 import version from '../version'
+import NamespaceInfo from 'components/namespaceinfo'
+import { Namespace } from 'models/lxkns'
+
+const NamespaceExample = ({ type, initial }: { type: string, initial?: boolean }) => <NamespaceInfo namespace={{
+    nsid: 4026531837,
+    type: type,
+    ealdorman: {},
+    initial: initial,
+    parent: null,
+    children: [],
+} as Namespace} noprocess={true} />
 
 // Render information about this web application.
 export const About = () => (<>
@@ -54,26 +74,64 @@ export const About = () => (<>
         currently defined:
     </Typography>
 
+    <Box m={2}>
+        <TableContainer component={Paper}>
+            <Table size="small">
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Partion</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="cgroup" /></TableCell>
+                        <TableCell>partitions the root directory of cgroup controllers in the file system.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="ipc" /></TableCell>
+                        <TableCell>partitions SYSV inter-process communication and
+                            POSIX message queues.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="mnt" /></TableCell>
+                        <TableCell>partitions file system mount points.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="net" /></TableCell>
+                        <TableCell>partitions network stacks with their interfaces,
+                            addresses, ports, et cetera.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="pid" /></TableCell>
+                        <TableCell>partitions process identifiers (PIDs); this is a
+                        hierarchical namespace type, so processes in a parent PID namespace
+                            see all processes in child PID namespaces, but not vice versa.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="user" /></TableCell>
+                        <TableCell>partitions user and group identifiers (UIDs, GIDs);
+                        this is a nested namespace type, so a particular user namespace
+                            is affected by the chain of parent user namespaces.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="uts" /></TableCell>
+                        <TableCell>partitions the host name and NIS domain name.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><NamespaceExample type="time" /></TableCell>
+                        <TableCell>since Linux 5.6, partitions the boot and monotonic
+                            clocks.</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </TableContainer>
+    </Box>
+
     <Typography variant="body1" paragraph={true}>
-        <ul>
-            <li><b>cgroup</b>: partitions the root directory of cgroup controllers
-                in the file system.
-            </li>
-            <li><b>ipc</b>: partitions SYSV inter-process communication and
-                POSIX message queues.</li>
-            <li><b>mount</b>: partitions mount points.</li>
-            <li><b>net</b>: partitions network stacks with their interfaces,
-                addresses, ports, et cetera.</li>
-            <li><b>pid</b>: partitions process identifiers (PIDs); this is a
-                hierarchical namespace type, so processes in a parent PID namespace
-                see all processes in child PID namespaces, but not vice versa.</li>
-            <li><b>user</b>: partitions user and group identifiers (UIDs, GIDs);
-                this is a nested namespace type, so a particular user namespace
-                is affected by the chain of parent user namespaces.</li>
-            <li><b>uts</b>: partitions the host name and NIS domain name.</li>
-            <li><b>time</b>: since Linux 5.6, partitions the boot and monotonic
-                clocks.</li>
-        </ul>
+        The so-called "initial namespaces" are created automatically by the Linux kernel itself when
+        it starts. Initial namespaces are represented using a dashed border like this in order to make
+        them easily identifiable: <NamespaceExample type="net" initial={true} />.
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
@@ -92,7 +150,7 @@ export const About = () => (<>
         are then shown below the namespaces they are joined to. In case all
         processes joined to a specific namespace are in the same cgroup, the
         "most senior" process of them will be shown right next to the namespace
-        information instead.  
+        information instead.
     </Typography>
 
     <Typography variant="body1" paragraph={true}>

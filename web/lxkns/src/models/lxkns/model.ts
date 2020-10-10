@@ -28,6 +28,10 @@ export enum NamespaceType {
     time = 'time'
 }
 
+/**
+ * Information about a Linux-kernel namespace, with its relationship to other
+ * Linux namespaces, as well as to processes.
+ */
 export interface Namespace {
     /** identifier of this namespace (an inode number, without a device id) */
     nsid: number
@@ -61,8 +65,16 @@ export interface Namespace {
     children: Namespace[]
     /** for user namespaces the owned (possessed?!) non-user namespaces. */
     tenants: Namespace[]
+    /** calculated: initial namespace? */
+    initial?: boolean
 }
 
+/**
+ * Each OS-level process is attached to namespaces, exactly one of each type.
+ * However, some namespace types might not be available, depending on the
+ * version of the Linux kernel the discovery was carried out (notably, the time
+ * namespaces).
+ */
 export interface NamespaceSet {
     cgroup: Namespace
     ipc: Namespace
@@ -76,6 +88,12 @@ export interface NamespaceSet {
 
 export interface NamespaceMap { [key: string]: Namespace }
 
+/**
+ * Information about a single OS-level process, within the process hierarchy.
+ * Each process is always attached to namespaces, one of each type (except for
+ * namespace types not enabled or present on a particular Linux kernel
+ * instance).
+ */
 export interface Process {
     pid: number
     ppid: number
@@ -90,6 +108,9 @@ export interface Process {
 
 export interface ProcessMap { [key: string]: Process }
 
+/**
+ * The results of a discovery from the REST API endpoint /api/namespaces.
+ */
 export interface Discovery {
     namespaces: NamespaceMap
     processes: ProcessMap

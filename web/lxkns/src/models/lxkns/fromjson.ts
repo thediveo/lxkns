@@ -102,6 +102,15 @@ export const fromjson = (discoverydata: any): Discovery => {
         }
     });
 
+    // Try to figure out which namespaces are the initial namespaces...
+    if (discovery.processes[1] && discovery.processes[2]) {
+        // At least someone has put some effort into fooling us...
+        Object.values(discovery.processes[1].namespaces).forEach(
+            // Make thousands of gophers cry in syntactic agony...
+            ns => (discovery.namespaces[ns.nsid.toString()].initial = true)
+        )
+    }
+
     // A small step for me, a huge misstep for type safety...
     return discovery
 }

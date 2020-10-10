@@ -33,6 +33,13 @@ import { Namespace, NamespaceType } from 'models/lxkns'
 
 import { makeStyles } from '@material-ui/core'
 
+// https://stackoverflow.com/a/53309284
+const dashedBorder = (fg: string = '#000', bg: string = '#fff') => `
+linear-gradient(to right, ${fg} 50%, ${bg} 0%) top/5px 2px repeat-x,
+linear-gradient(${fg} 50%, ${bg} 0%) right/2px 5px repeat-y,
+linear-gradient(to right, ${fg} 50%, ${bg} 0%) bottom/5px 2px repeat-x,
+linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
+
 // Component styling...
 const useStyles = makeStyles({
     namespace: {
@@ -82,9 +89,6 @@ const useStyles = makeStyles({
         '&$pid': {
             backgroundColor: '#daddf2',
         },
-        '&$time': {
-            backgroundColor: 'mediumaquamarine',
-        },
         '&$user': {
             width: '9.5em',
             textAlign: 'center',
@@ -93,7 +97,44 @@ const useStyles = makeStyles({
         },
         '&$uts': {
             backgroundColor: '#fff2d9',
-        }
+        },
+        '&$time': {
+            backgroundColor: '#bdffe8',
+        },
+    },
+    initialNamespace: {
+        '&$cgroup': {
+            background: dashedBorder('#a68383', '#fce1e1'),
+            backgroundColor: '#fce1e1',
+        },
+        '&$ipc': {
+            background: dashedBorder('#a1a885', '#f5ffcc'),
+            backgroundColor: '#f5ffcc',
+        },
+        '&$mnt': {
+            background: dashedBorder('#a2adb0', '#e4f2f5'),
+            backgroundColor: '#e4f2f5',
+        },
+        '&$net': {
+            background: dashedBorder('#879c87', '#e0ffe0'),
+            backgroundColor: '#e0ffe0',
+        },
+        '&$pid': {
+            background: dashedBorder('#9a9dad', '#daddf2'),
+            backgroundColor: '#daddf2',
+        },
+        '&$user': {
+            background: dashedBorder('#808080', '#e9e8e8'),
+            backgroundColor: '#e9e8e8',
+        },
+        '&$uts': {
+            background: dashedBorder('#a68546', '#fff2d9'),
+            backgroundColor: '#fff2d9',
+        },
+        '&$time': {
+            background: dashedBorder('#84b3a2', '#bdffe8'),
+            backgroundColor: '#bdffe8',
+        },
     },
     userchildrenInfo: {
         display: 'inline-block',
@@ -121,7 +162,7 @@ interface NamespaceIcon {
 // Maps namespace types to icons and suitable tooltip texts.
 const namespaceTypeIcons: { [key in NamespaceType]: NamespaceIcon } = {
     [NamespaceType.cgroup]: { tooltip: "control group", icon: CarCruiseControl },
-    [NamespaceType.ipc]: { tooltip: "inter-process", icon: PhoneInTalkIcon},
+    [NamespaceType.ipc]: { tooltip: "inter-process", icon: PhoneInTalkIcon },
     [NamespaceType.mnt]: { tooltip: "mount", icon: Database },
     [NamespaceType.net]: { tooltip: "network", icon: Lan },
     [NamespaceType.pid]: { tooltip: "process identifier", icon: MemoryIcon },
@@ -169,11 +210,13 @@ const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
 
     // For user namespaces also prepare ownership information.
     const ownerinfo = namespace.type === NamespaceType.user &&
+        'user-id' in namespace &&
         <span className="owner">
             owned by UID {namespace['user-id']} {namespace['user-name'] && ('"' + namespace['user-name'] + '"')}
         </span>
 
     const children = namespace.type === NamespaceType.user &&
+        namespace.children.length > 0 &&
         <span className={classes.userchildrenInfo}>
             [<SubdirectoryArrowRightIcon fontSize="inherit" />
             {countNamespaceWithChildren(-1, namespace)}]
@@ -181,7 +224,7 @@ const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
 
     return (
         <span className={`${classes.namespace} ${namespace.type}`}>
-            <NamespacePill namespace={namespace} />
+            <NamespacePill namespace={namespace} className={namespace.initial ? `${classes.initialNamespace}` : ``} />
             {children}
             {procinfo || pathinfo} {ownerinfo}
         </span>
@@ -199,6 +242,8 @@ const countNamespaceWithChildren = (acc: number, ns: Namespace) =>
 export interface NamespaceProps {
     /** namespace with type and identifier. */
     namespace: Namespace
+    /** optional CSS class name(s) */
+    className?: string
 }
 
 /**
@@ -207,7 +252,7 @@ export interface NamespaceProps {
  * notation. Yet it gets some simple graphical adornments; in particular, an
  * icon matching the type of namespace.
  */
-export const NamespacePill = ({ namespace }: NamespaceProps) => {
+export const NamespacePill = ({ namespace, className }: NamespaceProps) => {
     const classes = useStyles()
 
     // Ouch ... Tooltip won't display its tooltip on a <> child, but
@@ -219,8 +264,8 @@ export const NamespacePill = ({ namespace }: NamespaceProps) => {
     // open.
     return (
         <Tooltip title={`${namespaceTypeIcons[namespace.type].tooltip} namespace`}>
-            <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
-                {CreateNamespaceTypeIcon(namespace.type, {fontSize: 'inherit'})}
+            <span className={`${classes.namespacePill} ${classes[namespace.type]} ${className}`}>
+                {CreateNamespaceTypeIcon(namespace.type, { fontSize: 'inherit' })}
                 {namespace.type}:[{namespace.nsid}]
             </span>
         </Tooltip>
