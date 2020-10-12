@@ -26,13 +26,18 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import Divider from '@material-ui/core/Divider'
 
 // Width of drawer.
-const drawerWidth = 240
+const defaultDrawerWidth = 240
 
 // We need some styling for the AppBar in order to correctly flex the title so
 // it takes up the available space and pushes the app bar tools to the right.
 const useStyles = makeStyles((theme) => ({
-    menuButton: { marginRight: theme.spacing(2) },
-    drawer: { width: drawerWidth, flexShrink: 0 },
+    menuButton: { 
+        marginRight: theme.spacing(2) 
+    },
+    drawer: { 
+        width: (drawerWidth: number):number => drawerWidth ? drawerWidth : defaultDrawerWidth, 
+        flexShrink: 0 
+    },
     drawerHeader: {
         display: 'flex',
         flexDirection: 'row',
@@ -41,7 +46,9 @@ const useStyles = makeStyles((theme) => ({
         ...theme.mixins.toolbar, // necessary for content to be below app bar
         justifyContent: 'flex-end',
     },
-    drawerPaper: { width: drawerWidth },
+    drawerPaper: { 
+        width: (drawerWidth: number):number => drawerWidth ? drawerWidth : defaultDrawerWidth 
+    },
     title: { flexGrow: 1 }
 }))
 
@@ -65,6 +72,8 @@ export interface AppBarDrawerProps {
      * navigate to a different route.
      */
     drawer?: (drawerCloser: drawerCloser) => React.ReactNode
+    /** override drawer width */
+    drawerWidth?: number
 }
 
 /**
@@ -72,7 +81,7 @@ export interface AppBarDrawerProps {
  * covers the gory details of giving an application an app bar with tools, as
  * well as a drawer for navigation, et cetera.
  */
-const AppBarDrawer = ({ title, tools, drawertitle, drawer }: AppBarDrawerProps) => {
+const AppBarDrawer = ({ title, tools, drawertitle, drawer, drawerWidth }: AppBarDrawerProps) => {
 
     // Not much state here in ... Denmark?!
     const [drawerOpen, setDrawerOpen] = useState(false)
@@ -84,7 +93,7 @@ const AppBarDrawer = ({ title, tools, drawertitle, drawer }: AppBarDrawerProps) 
     const toggleDrawer = () => { setDrawerOpen(!drawerOpen) }
 
     const theme = useTheme()
-    const classes = useStyles()
+    const classes = useStyles(drawerWidth)
 
     return (<>
         <AppBar position="static">

@@ -15,9 +15,10 @@
 import React from 'react'
 import { useLocation, Link } from "react-router-dom"
 
-import Typography from '@material-ui/core/Typography'
 import ListItem from '@material-ui/core/ListItem'
-import ListItemIcon from '@material-ui/core/ListItemIcon'
+import ListItemAvatar from '@material-ui/core/ListItemAvatar'
+import Avatar from '@material-ui/core/Avatar'
+import ListItemText from '@material-ui/core/ListItemText'
 
 export interface DrawerLinkItemProps {
     /** drawer item icon, which automatically will be enclosed in ListItemIcon
@@ -47,8 +48,8 @@ export const DrawerLinkItem = ({ icon, label, path }: DrawerLinkItemProps) => {
             to={path}
             selected={selected}
         >
-            {icon && <ListItemIcon>{icon}</ListItemIcon>}
-            <Typography>{label}</Typography>
+            {icon && <ListItemAvatar><Avatar>{icon}</Avatar></ListItemAvatar>}
+            <ListItemText primary={label} />
         </ListItem>
     )
 }

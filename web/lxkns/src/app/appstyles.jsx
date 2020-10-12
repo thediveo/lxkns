@@ -13,6 +13,8 @@
 // under the License.
 
 import { createMuiTheme } from '@material-ui/core'
+import { fade } from '@material-ui/core/styles/colorManipulator'
+
 
 // First create the "default" theme, so we can reuse some of its definitions in
 // our additional styles. See also: https://stackoverflow.com/a/62453393
@@ -39,9 +41,19 @@ const lxknsTheme = createMuiTheme({
                     '& .controlledprocess .controlledprocess': {
                         marginLeft: '1.1em',
                     },
+                },
+                // style to active route and hover for the drawer items to follow the theme.
+                '.MuiListItem-root.Mui-selected, .MuiListItem-root.Mui-selected:hover': {
+                    backgroundColor: [fade(globalTheme.palette.primary.dark, 0.1), '!important'],
+                },
+                '.MuiListItem-root:hover': {
+                    backgroundColor: [fade(globalTheme.palette.primary.dark, 0.05), '!important'],
+                },
+                '.MuiAvatar-colorDefault': {
+                    backgroundColor: [fade(globalTheme.palette.primary.light, 1), '!important'],
                 }
-            }
-        }
+            },
+        },
     },
 }, globalTheme)
 

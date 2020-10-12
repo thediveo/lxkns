@@ -58,17 +58,25 @@ interface viewItem {
     type?: string /** type of namespace to show, if any */
 }
 
-const views: viewItem[] = [
-    { icon: <HomeIcon />, label: "all namespaces", path: "/" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.user), label: "user", path: "/user", type: "user" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.pid), label: "PID", path: "/pid", type: "pid" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.cgroup), label: "cgroup", path: "/cgroup", type: "cgroup" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.ipc), label: "IPC", path: "/ipc", type: "ipc" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.mnt), label: "mount", path: "/mnt", type: "mnt" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.net), label: "network", path: "/net", type: "net" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.uts), label: "UTS", path: "/uts", type: "uts" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.time), label: "time", path: "/time", type: "time" },
-    { icon: <InfoIcon />, label: "information", path: "/about" },
+/**
+ * Side drawer items, organized into groups which will later be visually
+ * separated by dividers.
+ */
+const views: viewItem[][] = [
+    [
+        { icon: <HomeIcon />, label: "all namespaces", path: "/" },
+    ], [
+        { icon: CreateNamespaceTypeIcon(NamespaceType.user), label: "user namespaces", path: "/user", type: "user" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.pid), label: "PID namespaces", path: "/pid", type: "pid" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.cgroup), label: "cgroup namespaces", path: "/cgroup", type: "cgroup" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.ipc), label: "IPC namespaces", path: "/ipc", type: "ipc" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.mnt), label: "mount namespaces", path: "/mnt", type: "mnt" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.net), label: "network namespaces", path: "/net", type: "net" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.uts), label: "UTS namespaces", path: "/uts", type: "uts" },
+        { icon: CreateNamespaceTypeIcon(NamespaceType.time), label: "time namespaces", path: "/time", type: "time" },
+    ], [
+        { icon: <InfoIcon />, label: "information", path: "/about" },
+    ]
 ]
 
 /**
@@ -87,13 +95,17 @@ const LxknsApp = () => {
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
 
     const path = useLocation().pathname
-    const typeview = views.find(view => view.path === path && view.type)
+
+    // Note: JS returns undefined if the result doesn't turn up a match; that's
+    // what we want ... and millions of Gophers are starting to cry (again).
+    const [typeview] = views.filter(group => group.some(view => view.path === path && view.type)).flat()
 
     const discovery = useDiscovery()
 
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
+                drawerWidth={300}
                 title={
                     <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
                         Linux {typeview && `${typeview.type} `}Namespaces
@@ -119,16 +131,19 @@ const LxknsApp = () => {
                     <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
                 </>}
                 drawer={closeDrawer => <>
-                    <List onClick={closeDrawer}>
-                        {views.map((viewitem, idx) =>
-                            <DrawerLinkItem
-                                key={idx}
-                                icon={viewitem.icon}
-                                label={viewitem.label}
-                                path={viewitem.path}
-                            />
-                        )}
-                    </List>
+                    {views.map((group, groupidx) => <>
+                        {groupidx > 0 && <Divider/>}
+                        <List onClick={closeDrawer}>
+                            {group.map((viewitem, idx) =>
+                                    <DrawerLinkItem
+                                        key={groupidx*100+idx}
+                                        icon={viewitem.icon}
+                                        label={viewitem.label}
+                                        path={viewitem.path}
+                                    />
+                            )}
+                        </List>
+                    </>)}
                     <Divider />
                     <List>
                         <ListItem>
@@ -146,13 +161,13 @@ const LxknsApp = () => {
                     render={() =>
                         <Switch>
                             <Route exact path="/about" render={() => <About />} />
-                            {views.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
+                            {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
                                 <Route
                                     exact path={viewitem.path}
                                     render={() => <NamespaceProcessTree type={viewitem.type} action={treeaction} />}
                                     key={idx}
                                 />
-                            )}
+                            )).flat()}
                             <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
                         </Switch>
                     }
