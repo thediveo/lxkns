@@ -115,6 +115,7 @@ $`,
 			out.Reset()
 			rootCmd := newRootCmd()
 			rootCmd.SetOut(&out)
+			rootCmd.SetErr(&out)
 			rootCmd.SetArgs([]string{
 				fmt.Sprintf("--pid=%d", initpid),
 				fmt.Sprintf("--ns=%s", run.ns),
