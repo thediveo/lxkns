@@ -28,15 +28,13 @@ import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
-import { Box, Divider, ThemeProvider } from '@material-ui/core'
+import { Box, createMuiTheme, Divider, ThemeProvider, useMediaQuery } from '@material-ui/core'
 import Toggle from '@material-ui/core/Switch'
 
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import InfoIcon from '@material-ui/icons/Info'
-
-import lxknsTheme from './appstyles'
 
 import Discovery, { useDiscovery } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
@@ -50,6 +48,8 @@ import version from '../version'
 import About from './About'
 import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
 import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
+import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
+import { themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -105,12 +105,12 @@ const LxknsApp = () => {
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
-                drawerWidth={300}
-                title={
+                drawerwidth={300}
+                title={<>
                     <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
-                        Linux {typeview && `${typeview.type} `}Namespaces
+                        <Typography variant="h6">Linux {typeview && `${typeview.type} `}Namespaces</Typography>
                     </Badge>
-                }
+                </>}
                 tools={() => <>
                     <Tooltip title="expand initial user namespace(s) only">
                         <IconButton color="inherit"
@@ -132,15 +132,15 @@ const LxknsApp = () => {
                 </>}
                 drawer={closeDrawer => <>
                     {views.map((group, groupidx) => <>
-                        {groupidx > 0 && <Divider/>}
+                        {groupidx > 0 && <Divider />}
                         <List onClick={closeDrawer}>
                             {group.map((viewitem, idx) =>
-                                    <DrawerLinkItem
-                                        key={groupidx*100+idx}
-                                        icon={viewitem.icon}
-                                        label={viewitem.label}
-                                        path={viewitem.path}
-                                    />
+                                <DrawerLinkItem
+                                    key={groupidx * 100 + idx}
+                                    icon={viewitem.icon}
+                                    label={viewitem.label}
+                                    path={viewitem.path}
+                                />
                             )}
                         </List>
                     </>)}
@@ -177,21 +177,42 @@ const LxknsApp = () => {
         </Box>)
 }
 
-// We need to wrap the application as otherwise we won't get a confirmer ...
-// ouch. And since we're already at wrapping things, let's just wrap up all the
-// other wrapping here... *snicker*.
-const App = () => (
-    <ThemeProvider theme={lxknsTheme}>
-        <SnackbarProvider maxSnack={3}>
-            <StateProvider>
+const ThemedApp = () => {
+
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+    const [theme] = useAtom(themeAtom)
+    const themeType = theme === THEME_USERPREF
+        ? (prefersDarkMode ? 'dark' : 'light')
+        : (theme === THEME_DARK ? 'dark' : 'light')
+
+    const appTheme = React.useMemo(() => createMuiTheme(
+        {
+            palette: {
+                type: themeType,
+                primary: { main: '#009999' },
+                secondary: { main: '#ffc400' },
+            },
+        },
+        themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
+    ), [themeType])
+
+    return (
+        <ThemeProvider theme={appTheme}>
+            <CssBaseline />
+            <SnackbarProvider maxSnack={3}>
                 <Discovery />
                 <Router>
-                    <CssBaseline />
                     <LxknsApp />
                 </Router>
-            </StateProvider>
-        </SnackbarProvider>
-    </ThemeProvider>
+            </SnackbarProvider>
+        </ThemeProvider>
+    )
+}
+
+const App = () => (
+    <StateProvider>
+        <ThemedApp />
+    </StateProvider>
 )
 
 export default App

@@ -40,7 +40,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         switch (ns.type) {
             case NamespaceType.user:
                 ns.tenants = []
-            /* fall through */
+                // falls through
             case NamespaceType.pid:
                 ns.children = []
         }

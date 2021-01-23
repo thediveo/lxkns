@@ -14,13 +14,30 @@
 
 import { createMuiTheme } from '@material-ui/core'
 import { fade } from '@material-ui/core/styles/colorManipulator'
+import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
-// First create the "default" theme, so we can reuse some of its definitions in
-// our additional styles. See also: https://stackoverflow.com/a/62453393
+// We augment the existing Material-UI theme with new elements for uniform color
+// styling of lxkns UI elements beyond the predefined Material UI elements. This
+// avoids scattering and potentially duplicating the same color configurations
+// all over the various lxkns-specific UI elements.
+//
+// See also:
+// https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
+declare module '@material-ui/core/styles/createPalette' {
+    interface Palette {
+    }
+    // allow configuration using `createMuiTheme`
+    interface PaletteOptions {
+    }
+}
+
+// FIXME: remove and refactor CSS into components.
 const globalTheme = createMuiTheme()
 
-const lxknsTheme = createMuiTheme({
+
+// The (basic) light theme parts specific to lxkns.
+export const lxknsLightTheme = {
     overrides: {
         MuiCssBaseline: {
             '@global': {
@@ -55,6 +72,15 @@ const lxknsTheme = createMuiTheme({
             },
         },
     },
-}, globalTheme)
+    palette: {
+    },
+}
 
-export default lxknsTheme
+// The dark theme, based on the light theme.
+export const lxknsDarkTheme = mergeDeep(
+    cloneDeep(lxknsLightTheme),
+    {
+        palette: {
+        },
+    }
+)

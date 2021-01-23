@@ -26,7 +26,7 @@ import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 
-import extlink from 'components/extlink'
+import { ExtLink } from 'components/extlink'
 
 import LxknsIcon from "./lxkns.svg"
 import version from '../version'
@@ -54,14 +54,14 @@ export const About = () => (<>
     </Typography>
 
     <Typography variant="body2" paragraph={true}>
-        GitHub: {extlink('https://github.com/thediveo/lxkns', 'thediveo/lxkns', true)}
+        GitHub: <ExtLink href="https://github.com/thediveo/lxkns">thediveo/lxkns</ExtLink>
         <br />
-        license: {extlink('https://www.apache.org/licenses/LICENSE-2.0', 'Apache License 2.0', true)}
+        license: <ExtLink href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</ExtLink>
     </Typography>
 
     <Typography variant="body1" paragraph={true}>
         This app displays all Linux-kernel
-        {extlink('https://man7.org/linux/man-pages/man7/namespaces.7.html', 'namespaces', true)}
+        <ExtLink href="https://man7.org/linux/man-pages/man7/namespaces.7.html">namespaces</ExtLink>
         discovered inside a Linux host. Namespaces can be either displayed in
         an all-inclusive view (the "home" view), or for each type of namespace
         individually.
