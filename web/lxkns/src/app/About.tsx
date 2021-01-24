@@ -30,17 +30,18 @@ import { ExtLink } from 'components/extlink'
 
 import LxknsIcon from "./lxkns.svg"
 import version from '../version'
-import NamespaceInfo from 'components/namespaceinfo'
 import { Namespace } from 'models/lxkns'
+import { NamespaceInfo } from 'components/namespaceinfo'
 
-const NamespaceExample = ({ type, initial }: { type: string, initial?: boolean }) => <NamespaceInfo namespace={{
-    nsid: 4026531837,
-    type: type,
-    ealdorman: {},
-    initial: initial,
-    parent: null,
-    children: [],
-} as Namespace} noprocess={true} />
+const NamespaceExample = ({ type, initial }: { type: string, initial?: boolean }) =>
+    <NamespaceInfo namespace={{
+        nsid: 4026531837,
+        type: type,
+        ealdorman: {},
+        initial: initial,
+        parent: null,
+        children: [],
+    } as Namespace} noprocess={true} />
 
 // Render information about this web application.
 export const About = () => (<>

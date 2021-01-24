@@ -12,12 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
-import TreeItem from '@material-ui/lab/TreeItem';
+import React from 'react'
+import TreeItem from '@material-ui/lab/TreeItem'
 
-import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo';
 import ProcessInfo from 'components/processinfo'
-import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace } from 'models/lxkns';
+import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace } from 'models/lxkns'
+import { NamespaceInfo } from 'components/namespaceinfo';
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.

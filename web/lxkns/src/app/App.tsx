@@ -41,7 +41,6 @@ import UserNamespaceTree from 'components/usernamespacetree'
 import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
-import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
 import { NamespaceType } from 'models/lxkns'
 
 import version from '../version'
@@ -50,6 +49,7 @@ import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
 import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
 import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
 import { themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
+import { NamespaceIcon } from 'components/namespaceicon'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -66,14 +66,38 @@ const views: viewItem[][] = [
     [
         { icon: <HomeIcon />, label: "all namespaces", path: "/" },
     ], [
-        { icon: CreateNamespaceTypeIcon(NamespaceType.user), label: "user namespaces", path: "/user", type: "user" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.pid), label: "PID namespaces", path: "/pid", type: "pid" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.cgroup), label: "cgroup namespaces", path: "/cgroup", type: "cgroup" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.ipc), label: "IPC namespaces", path: "/ipc", type: "ipc" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.mnt), label: "mount namespaces", path: "/mnt", type: "mnt" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.net), label: "network namespaces", path: "/net", type: "net" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.uts), label: "UTS namespaces", path: "/uts", type: "uts" },
-        { icon: CreateNamespaceTypeIcon(NamespaceType.time), label: "time namespaces", path: "/time", type: "time" },
+        {
+            icon: <NamespaceIcon type={NamespaceType.user} />,
+            label: "user namespaces", path: "/user", type: "user"
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.pid} />, 
+            label: "PID namespaces", path: "/pid", type: "pid" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.cgroup} />, 
+            label: "cgroup namespaces", path: "/cgroup", type: "cgroup" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.ipc} />, 
+            label: "IPC namespaces", path: "/ipc", type: "ipc" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.mnt} />, 
+            label: "mount namespaces", path: "/mnt", type: "mnt" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.net} />, 
+            label: "network namespaces", path: "/net", type: "net" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.uts} />, 
+            label: "UTS namespaces", path: "/uts", type: "uts" 
+        },
+        { 
+            icon: <NamespaceIcon type={NamespaceType.time} />, 
+            label: "time namespaces", path: "/time", type: "time" 
+        },
     ], [
         { icon: <InfoIcon />, label: "information", path: "/about" },
     ]

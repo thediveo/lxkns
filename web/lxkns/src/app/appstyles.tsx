@@ -26,9 +26,12 @@ import { cloneDeep, merge as mergeDeep } from 'lodash'
 // https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
 declare module '@material-ui/core/styles/createPalette' {
     interface Palette {
+        // filesystem reference of a namespace
+        nsref: string,
     }
     // allow configuration using `createMuiTheme`
     interface PaletteOptions {
+        nsref?: string,
     }
 }
 
@@ -73,6 +76,7 @@ export const lxknsLightTheme = {
         },
     },
     palette: {
+        nsref: '#cfa65d',
     },
 }
 

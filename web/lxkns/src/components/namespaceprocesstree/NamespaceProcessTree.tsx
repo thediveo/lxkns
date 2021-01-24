@@ -25,9 +25,9 @@ import TreeItem from '@material-ui/lab/TreeItem'
 
 import { useDiscovery } from 'components/discovery'
 import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
-import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo'
 import ProcessInfo from 'components/processinfo'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
+import { NamespaceInfo } from 'components/namespaceinfo'
 
 
 /** local storage key for the show system processes filter setting. */

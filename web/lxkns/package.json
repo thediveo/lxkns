@@ -15,14 +15,17 @@
     "@types/color-rgba": "^2.1.0",
     "@types/react-router-dom": "^5.1.5",
     "babel-loader": "~8.1.0",
+    "clsx": "^1.1.1",
     "color-rgba": "^2.2.3",
     "elliptic": "^6.5.3",
     "fontsource-roboto": "^3.0.3",
     "fontsource-roboto-mono": "^4.0.0",
     "glob": "^7.1.6",
     "http-proxy": "^1.18.1",
+    "http-proxy-middleware": "^1.0.6",
     "jotai": "^0.8.1",
     "material-ui-confirm": "^2.1.1",
+    "md5": "^2.3.0",
     "mdi-material-ui": "^6.19.0",
     "mdx-loader": "^3.0.2",
     "node-forge": "^0.10.0",
@@ -77,6 +80,5 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "/",
-  "proxy": "http://localhost:5010"
+  "homepage": "/"
 }
