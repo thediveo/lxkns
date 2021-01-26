@@ -9,9 +9,19 @@ goversion = 1.15 1.13
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
+# To suckessfully run the tests, we need CRAP_SYS_ADMIN capabilities.
 testcontaineropts := \
-	--pid=host \
-	--privileged
+	--pid host \
+	--cap-drop ALL \
+	--cap-add CAP_SYS_ADMIN \
+	--cap-add CAP_SYS_CHROOT \
+	--cap-add CAP_SYS_PTRACE \
+	--cap-add CAP_DAC_READ_SEARCH \
+	--cap-add CAP_SETUID \
+	--cap-add CAP_SETGID \
+	--security-opt systempaths=unconfined \
+	--security-opt apparmor=unconfined \
+	--security-opt seccomp=unconfined
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 
