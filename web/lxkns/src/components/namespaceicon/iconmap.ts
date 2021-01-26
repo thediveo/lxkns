@@ -14,8 +14,8 @@
 
 import React from 'react'
 
-import { Person } from '@material-ui/icons'
-import { CarCruiseControl, Database, Lan, Laptop, Memory, PhoneInTalk, Timer } from 'mdi-material-ui'
+import { Person, Timer } from '@material-ui/icons'
+import { CarCruiseControl, Database, Lan, Laptop, Memory, PhoneInTalk } from 'mdi-material-ui'
 
 import { NamespaceType } from "models/lxkns"
 import { SvgIconProps } from '@material-ui/core'

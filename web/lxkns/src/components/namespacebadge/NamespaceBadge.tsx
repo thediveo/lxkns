@@ -41,11 +41,17 @@ const useStyles = makeStyles((theme) => ({
 
         marginTop: '0.2ex',
         marginBottom: '0.2ex',
-        marginRight: '0.5em',
         paddingLeft: '0.2em',
         paddingRight: '0.2em',
         paddingTop: '0.2ex',
         borderRadius: '0.2em',
+
+        // type icon placement...
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.05ex',
+        },
 
         // ...and now for the namespace-type specific styling.
         '&$cgroup': {
@@ -126,7 +132,7 @@ const useStyles = makeStyles((theme) => ({
 export interface NamespaceBadgeProps {
     /** namespace with type, identifier and initial namespace indication. */
     namespace: Namespace
-    /** optional CSS class name(s) */
+    /** optional CSS class name(s). */
     className?: string
 }
 

@@ -22,6 +22,7 @@ import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
 import { Process } from 'models/lxkns'
 
 import { makeStyles } from '@material-ui/core'
+import clsx from 'clsx'
 
 // Component styling
 const processnameColor = 'darkgreen'
@@ -34,18 +35,20 @@ const useStyles = makeStyles({
         whiteSpace: 'nowrap',
         '& .MuiSvgIcon-root': {
             marginRight: '0.15em',
-            verticalAlign: 'middle',
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
         },
     },
     processName: {
         fontStyle: 'italic',
         color: processnameColor,
         '&::before': {
-            content: '"\\22"',
+            content: '"«"',
             fontStyle: 'normal',
         },
         '&::after': {
-            content: '"\\22"',
+            content: '"»"',
             fontStyle: 'normal',
         },
     },
@@ -54,8 +57,8 @@ const useStyles = makeStyles({
     },
     cgroupPath: {
         color: cgrouppathColor,
-        '&::before': { content: '"\\22"' },
-        '&::after': { content: '"\\22"' },
+        '&::before': { content: '"«"' },
+        '&::after': { content: '"»"' },
     }
 })
 
@@ -66,6 +69,8 @@ const useStyles = makeStyles({
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
+    /** optional CSS class name(s). */
+    className?: string
 }
 
 /** 
@@ -81,11 +86,11 @@ export interface ProcessInfoProps {
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
-export const ProcessInfo = ({ process }: ProcessInfoProps) => {
+export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
     const classes = useStyles()
 
     return !!process && (
-        <span className={classes.processInfo}>
+        <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
                 <RunFast
                     fontSize="inherit"
@@ -96,7 +101,7 @@ export const ProcessInfo = ({ process }: ProcessInfoProps) => {
             </></Tooltip>
             {process.cgroup && (
                 <Tooltip title="control-group path" className="cgroupinfo">
-                    <span className={classes.cgroupInfo}>
+                    <span className={clsx(classes.cgroupInfo, className)}>
                         <CarCruiseControl
                             fontSize="inherit"
                             style={{ color: cgrouppathColor }}
