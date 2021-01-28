@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
 export interface ExtLinkProps {
     /** href URL */
     href: string
-    /** children to render within the content pane. */
+    /** children to render inside the hyperlink. */
     children: React.ReactNode
 }
 

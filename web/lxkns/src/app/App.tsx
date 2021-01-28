@@ -15,8 +15,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-router-dom'
 
-import useErrorBoundary from "use-error-boundary"
-
 import { SnackbarProvider } from 'notistack'
 
 import { Provider as StateProvider, useAtom } from 'jotai'
@@ -31,6 +29,7 @@ import ListItem from '@material-ui/core/ListItem'
 import { Box, createMuiTheme, Divider, ThemeProvider, useMediaQuery } from '@material-ui/core'
 import Toggle from '@material-ui/core/Switch'
 
+import HelpIcon from '@material-ui/icons/Help'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
@@ -44,12 +43,13 @@ import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
 
 import version from '../version'
-import About from './About'
 import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
 import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
 import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
 import { themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 import { NamespaceIcon } from 'components/namespaceicon'
+import { About } from 'views/about'
+import { Help } from 'views/help'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -70,36 +70,37 @@ const views: viewItem[][] = [
             icon: <NamespaceIcon type={NamespaceType.user} />,
             label: "user namespaces", path: "/user", type: "user"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.pid} />, 
-            label: "PID namespaces", path: "/pid", type: "pid" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.pid} />,
+            label: "PID namespaces", path: "/pid", type: "pid"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.cgroup} />, 
-            label: "cgroup namespaces", path: "/cgroup", type: "cgroup" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.cgroup} />,
+            label: "cgroup namespaces", path: "/cgroup", type: "cgroup"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.ipc} />, 
-            label: "IPC namespaces", path: "/ipc", type: "ipc" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.ipc} />,
+            label: "IPC namespaces", path: "/ipc", type: "ipc"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.mnt} />, 
-            label: "mount namespaces", path: "/mnt", type: "mnt" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.mnt} />,
+            label: "mount namespaces", path: "/mnt", type: "mnt"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.net} />, 
-            label: "network namespaces", path: "/net", type: "net" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.net} />,
+            label: "network namespaces", path: "/net", type: "net"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.uts} />, 
-            label: "UTS namespaces", path: "/uts", type: "uts" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.uts} />,
+            label: "UTS namespaces", path: "/uts", type: "uts"
         },
-        { 
-            icon: <NamespaceIcon type={NamespaceType.time} />, 
-            label: "time namespaces", path: "/time", type: "time" 
+        {
+            icon: <NamespaceIcon type={NamespaceType.time} />,
+            label: "time namespaces", path: "/time", type: "time"
         },
     ], [
-        { icon: <InfoIcon />, label: "information", path: "/about" },
+        { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
+        { icon: <InfoIcon />, label: "about", path: "/about" },
     ]
 ]
 
@@ -112,7 +113,6 @@ const views: viewItem[][] = [
  * - scrollable content area.
  */
 const LxknsApp = () => {
-    const { ErrorBoundary } = useErrorBoundary()
 
     const [treeaction, setTreeAction] = useTreeAction()
 
@@ -181,22 +181,23 @@ const LxknsApp = () => {
                 </>}
             />
             <Box m={1} flex={1} overflow="auto">
-                <ErrorBoundary
-                    render={() =>
-                        <Switch>
-                            <Route exact path="/about" render={() => <About />} />
-                            {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
-                                <Route
-                                    exact path={viewitem.path}
-                                    render={() => <NamespaceProcessTree type={viewitem.type} action={treeaction} />}
-                                    key={idx}
-                                />
-                            )).flat()}
-                            <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
-                        </Switch>
-                    }
-                    renderError={({ error }) => <pre>{error.toString()}</pre>}
-                />
+                <Switch>
+                    <Route exact path="/about"><About /></Route>
+                    <Route path="/help"><Help /></Route>
+                    {/* let's generate the different namespace type view routes programmatically */}
+                    {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
+                        <Route exact path={viewitem.path} key={idx}>
+                            <Box m={1} flex={1} overflow="auto">
+                                <NamespaceProcessTree type={viewitem.type} action={treeaction} />
+                            </Box>
+                        </Route>
+                    )).flat()}
+                    <Route path="/">
+                        <Box m={1} flex={1} overflow="auto">
+                            <UserNamespaceTree action={treeaction} />
+                        </Box>
+                    </Route>
+                </Switch>
             </Box>
         </Box>)
 }
