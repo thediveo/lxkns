@@ -122,7 +122,9 @@ const LxknsApp = () => {
 
     // Note: JS returns undefined if the result doesn't turn up a match; that's
     // what we want ... and millions of Gophers are starting to cry (again).
-    const [typeview] = views.filter(group => group.some(view => view.path === path && view.type)).flat()
+    const [typeview] = views
+        .flat()
+        .filter(view => view.path === path && view.type)
 
     const discovery = useDiscovery()
 
@@ -132,7 +134,7 @@ const LxknsApp = () => {
                 drawerwidth={300}
                 title={<>
                     <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
-                        <Typography variant="h6">Linux {typeview && `${typeview.type} `}Namespaces</Typography>
+                        <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>
                     </Badge>
                 </>}
                 tools={() => <>
