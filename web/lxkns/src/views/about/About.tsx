@@ -18,8 +18,6 @@ import { Box } from '@material-ui/core'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { SmartA } from 'components/smarta'
 
-import { NamespaceBadge } from 'components/namespacebadge'
-
 /* eslint import/no-webpack-loader-syntax: off */
 import AboutMDX from "!babel-loader!mdx-loader!./About.mdx"
 
@@ -28,7 +26,7 @@ export const About = () => {
 
     return (
         <Box m={2} flex={1} overflow="auto">
-            <MuiMarkdown mdx={AboutMDX} shortcodes={{a:SmartA, NamespaceBadge}} />
+            <MuiMarkdown mdx={AboutMDX} shortcodes={{a:SmartA}} />
         </Box>
     )
 }

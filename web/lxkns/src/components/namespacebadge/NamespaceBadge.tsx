@@ -19,16 +19,32 @@ import Tooltip from '@material-ui/core/Tooltip'
 
 import { Namespace } from 'models/lxkns'
 
-import { makeStyles } from '@material-ui/core'
+import { darken, lighten, makeStyles, Theme } from '@material-ui/core'
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
 
 
-// https://stackoverflow.com/a/53309284
+// Based on the general idea from https://stackoverflow.com/a/53309284 "how to
+// increase space between dotted border dots".
 const dashedBorder = (fg: string = '#000', bg: string = '#fff') => `
 linear-gradient(to right, ${fg} 50%, ${bg} 0%) top/5px 2px repeat-x,
 linear-gradient(${fg} 50%, ${bg} 0%) right/2px 5px repeat-y,
 linear-gradient(to right, ${fg} 50%, ${bg} 0%) bottom/5px 2px repeat-x,
 linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
+
+// Creates a dashed border based on the badge (background) color as defined for
+// the specified type of namespace. Please note that we need to explicity define
+// backgroundColor again, as it gets trashed when setting the background to
+// achieve a dashed border; for this reason we return an object with background
+// and backgroundColor instead of just a background CSS property value string.
+const themedDashedBorder = (nstype: string, theme: Theme) => {
+    const color = theme.palette.namespace[nstype]
+    return {
+        background: dashedBorder(
+            theme.palette.type === 'light' ? darken(color, 0.4) : lighten(color, 0.4),
+            color),
+        backgroundColor: color,
+    }
+}
 
 const useStyles = makeStyles((theme) => ({
     namespaceBadge: {
@@ -53,79 +69,47 @@ const useStyles = makeStyles((theme) => ({
             top: '0.05ex',
         },
 
-        // ...and now for the namespace-type specific styling.
-        '&$cgroup': {
-            backgroundColor: '#fce1e1',
-        },
-        '&$ipc': {
-            backgroundColor: '#f5ffcc',
-        },
-        '&$mnt': {
-            backgroundColor: '#e4f2f5',
-        },
-        '&$net': {
-            backgroundColor: '#e0ffe0',
-        },
-        '&$pid': {
-            backgroundColor: '#daddf2',
-        },
-        '&$user': {
-            width: '9.5em',
-            textAlign: 'center',
-            backgroundColor: '#e9e8e8',
-            fontWeight: 'bold',
-        },
-        '&$uts': {
-            backgroundColor: '#fff2d9',
-        },
-        '&$time': {
-            backgroundColor: '#bdffe8',
-        },
     },
+    // ...and now for the namespace-type specific styling.
+    cgroup: {
+        backgroundColor: theme.palette.namespace.cgroup,
+    },
+    ipc: {
+        backgroundColor: theme.palette.namespace.ipc,
+    },
+    mnt: {
+        backgroundColor: theme.palette.namespace.mnt,
+    },
+    net: {
+        backgroundColor: theme.palette.namespace.net,
+    },
+    pid: {
+        backgroundColor: theme.palette.namespace.pid,
+    },
+    user: {
+        width: '9.5em',
+        textAlign: 'center',
+        backgroundColor: theme.palette.namespace.user,
+        fontWeight: 'bold',
+    },
+    uts: {
+        backgroundColor: theme.palette.namespace.uts,
+    },
+    time: {
+        backgroundColor: theme.palette.namespace.time,
+    },
+    // initial namespaces get a dashed border, with the dash color derived from
+    // the badge background color.
     initialNamespace: {
-        '&$cgroup': {
-            background: dashedBorder('#a68383', '#fce1e1'),
-            backgroundColor: '#fce1e1',
-        },
-        '&$ipc': {
-            background: dashedBorder('#a1a885', '#f5ffcc'),
-            backgroundColor: '#f5ffcc',
-        },
-        '&$mnt': {
-            background: dashedBorder('#a2adb0', '#e4f2f5'),
-            backgroundColor: '#e4f2f5',
-        },
-        '&$net': {
-            background: dashedBorder('#879c87', '#e0ffe0'),
-            backgroundColor: '#e0ffe0',
-        },
-        '&$pid': {
-            background: dashedBorder('#9a9dad', '#daddf2'),
-            backgroundColor: '#daddf2',
-        },
-        '&$user': {
-            background: dashedBorder('#808080', '#e9e8e8'),
-            backgroundColor: '#e9e8e8',
-        },
-        '&$uts': {
-            background: dashedBorder('#a68546', '#fff2d9'),
-            backgroundColor: '#fff2d9',
-        },
-        '&$time': {
-            background: dashedBorder('#84b3a2', '#bdffe8'),
-            backgroundColor: '#bdffe8',
-        },
+        '&$cgroup': themedDashedBorder('cgroup', theme),
+        '&$ipc': themedDashedBorder('ipc', theme),
+        '&$mnt': themedDashedBorder('mnt', theme),
+        '&$net': themedDashedBorder('net', theme),
+        '&$pid': themedDashedBorder('pid', theme),
+        '&$user': themedDashedBorder('user', theme),
+        '&$uts': themedDashedBorder('uts', theme),
+        '&$time': themedDashedBorder('time', theme),
     },
-    // The following is required so we can reference and thus combine
-    // selectors for namespace type-specific styling of the "pill".
-    cgroup: {},
-    ipc: {},
-    mnt: {},
-    net: {},
-    pid: {},
-    user: {},
-    uts: {},
-    time: {}
 }))
 
 

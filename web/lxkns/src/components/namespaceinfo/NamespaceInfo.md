@@ -13,7 +13,15 @@ import { ComponentCard } from "styleguidist/ComponentCard";
 import { initProc } from "models/lxkns/mock";
 
 <ComponentCard>
-  <NamespaceInfo namespace={initProc.namespaces.user} />
+  <NamespaceInfo
+    namespace={{
+      ...initProc.namespaces.user,
+      ealdorman: {
+        ...initProc,
+        cgroup: "/world/domination",
+      },
+    }}
+  />
 </ComponentCard>;
 ```
 
@@ -33,7 +41,7 @@ import { initProc } from "models/lxkns/mock";
 
 ### Hidden Intermediate Hierarchical Namespaces
 
-Hierarchical namespaces may be sitting somewhere in the hierarchy  where they
+Hierarchical namespaces may be sitting somewhere in the hierarchy where they
 don't have any attached processes, but child namespaces. We call them "hidden"
 in the sense that they do not appear anywhere in the virtual filesystem and can
 only be found via the `NS_GET_PARENT` `ioctl()`.
@@ -46,7 +54,7 @@ import { initProc } from "models/lxkns/mock";
   <NamespaceInfo
     namespace={{
       ...initProc.namespaces.pid,
-      reference: '',
+      reference: "",
       ealdorman: null,
       leaders: [],
     }}
@@ -66,7 +74,7 @@ import { initProc } from "models/lxkns/mock";
   <NamespaceInfo
     namespace={{
       ...initProc.namespaces.pid,
-      reference: '/run/mnt/foobar',
+      reference: "/run/mnt/foobar",
       ealdorman: null,
       leaders: [],
     }}

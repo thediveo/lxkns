@@ -214,8 +214,6 @@ const ThemedApp = () => {
         {
             palette: {
                 type: themeType,
-                primary: { main: '#009999' },
-                secondary: { main: '#ffc400' },
             },
         },
         themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,

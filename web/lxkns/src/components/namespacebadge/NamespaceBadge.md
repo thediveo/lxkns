@@ -1,21 +1,25 @@
 At the moment, the Linux kernel defines the following types of namespaces, which
-lxkns renders as following:
+lxkns renders as following (in this case also marked as initial namespaces):
 
 ```tsx
-import { ComponentCard } from 'styleguidist/ComponentCard';
+import { ComponentCard } from "styleguidist/ComponentCard";
 import { NamespaceType } from "models/lxkns";
-import { initProc } from 'models/lxkns/mock';
+import { initProc } from "models/lxkns/mock";
 
 <>
-  {Object.values(NamespaceType).sort().map((nstype, idx) => [
-    idx > 0 && <br/>,
-    <div>{nstype} namespace badge:</div>,
-    <ComponentCard>
-      <NamespaceBadge namespace={{
-          ...initProc.namespaces.pid,
-          type: nstype,
-      }} />
-    </ComponentCard>
-  ])}
-</>
+  {Object.values(NamespaceType)
+    .sort()
+    .map((nstype, idx) => [
+      idx > 0 && <br />,
+      <div>{nstype} namespace badge:</div>,
+      <ComponentCard>
+        <NamespaceBadge
+          namespace={{
+            ...initProc.namespaces.pid,
+            type: nstype,
+          }}
+        />
+      </ComponentCard>,
+    ])}
+</>;
 ```

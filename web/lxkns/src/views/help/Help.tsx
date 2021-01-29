@@ -13,7 +13,6 @@
 // under the License.
 
 import React from 'react'
-import { Link } from 'react-router-dom'
 
 import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
 import { MuiMarkdown } from 'components/muimarkdown'

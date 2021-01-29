@@ -24,11 +24,8 @@ import { Process } from 'models/lxkns'
 import { makeStyles } from '@material-ui/core'
 import clsx from 'clsx'
 
-// Component styling
-const processnameColor = 'darkgreen'
-const cgrouppathColor = 'dimgray'
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     // The whole component as such...
     processInfo: {
         display: 'inline-block',
@@ -38,11 +35,12 @@ const useStyles = makeStyles({
             verticalAlign: 'text-top',
             position: 'relative',
             top: '0.1ex',
+            color: theme.palette.process,
         },
     },
     processName: {
         fontStyle: 'italic',
-        color: processnameColor,
+        color: theme.palette.process,
         '&::before': {
             content: '"«"',
             fontStyle: 'normal',
@@ -54,13 +52,19 @@ const useStyles = makeStyles({
     },
     cgroupInfo: {
         marginLeft: '0.5em',
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
+            color: theme.palette.cgroup,
+        },
     },
     cgroupPath: {
-        color: cgrouppathColor,
+        color: theme.palette.cgroup,
         '&::before': { content: '"«"' },
         '&::after': { content: '"»"' },
     }
-})
+}))
 
 /**
  * The `ProcessInfo` component expects only a single property: the process to
@@ -92,20 +96,14 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
     return !!process && (
         <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
-                <RunFast
-                    fontSize="inherit"
-                    style={{ color: processnameColor }}
-                />
+                <RunFast fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
             {process.cgroup && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
-                        <CarCruiseControl
-                            fontSize="inherit"
-                            style={{ color: cgrouppathColor }}
-                        />
+                        <CarCruiseControl fontSize="inherit" />
                         <span className={classes.cgroupPath}>{process.cgroup}</span>
                     </span>
                 </Tooltip>)}

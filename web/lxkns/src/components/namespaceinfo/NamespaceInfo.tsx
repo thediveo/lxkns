@@ -26,7 +26,7 @@ import clsx from 'clsx'
 
 
 // Component styling...
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     namespace: {
         display: 'inline-block',
         whiteSpace: 'nowrap',
@@ -50,7 +50,13 @@ const useStyles = makeStyles({
     },
     ownerInfo: {
     },
-})
+    ownerName: {
+        color: theme.palette.ownername,
+        '&.root': { color: theme.palette.ownerroot },
+        '&::before': { content: '"«"' },
+        '&::after': { content: '"»"' },
+    },
+}))
 
 // Reduce function returning the (recursive) sum of children and grand-children
 // plus this namespace itself.
@@ -98,7 +104,13 @@ export const NamespaceInfo = ({ namespace, noprocess, className }: NamespaceInfo
     const ownerinfo = namespace.type === NamespaceType.user &&
         'user-id' in namespace &&
         <span className={classes.ownerInfo}>
-            owned by UID {namespace['user-id']} {namespace['user-name'] && ('"' + namespace['user-name'] + '"')}
+            owned by UID {namespace['user-id']}
+            {namespace['user-name'] && <>
+                {' '}
+                <span className={clsx(classes.ownerName, namespace['user-name'] === 'root' && 'root')}>
+                    {namespace['user-name']}
+                </span>
+            </>}
         </span>
 
     // For PID and user namespaces determine the total number of children and

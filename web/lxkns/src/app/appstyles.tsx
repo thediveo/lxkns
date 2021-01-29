@@ -13,6 +13,7 @@
 // under the License.
 
 import { createMuiTheme } from '@material-ui/core'
+import { amber, blue, blueGrey, brown, green, grey, indigo, lime, pink, red, teal, yellow } from '@material-ui/core/colors'
 import { fade } from '@material-ui/core/styles/colorManipulator'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
@@ -26,12 +27,40 @@ import { cloneDeep, merge as mergeDeep } from 'lodash'
 // https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
 declare module '@material-ui/core/styles/createPalette' {
     interface Palette {
-        // filesystem reference of a namespace
-        nsref: string,
+        // namespace badge background colors
+        namespace: {
+            cgroup: string,
+            ipc: string,
+            mnt: string,
+            net: string,
+            pid: string,
+            user: string,
+            uts: string,
+            time: string,
+        },
+        nsref: string, // filesystem reference of a namespace
+        process: string, // process information (name&PID)
+        cgroup: string, // process cgroup path
+        ownername: string, // owner user name
+        ownerroot: string, // owner user root
     }
     // allow configuration using `createMuiTheme`
     interface PaletteOptions {
+        namespace?: {
+            cgroup?: string,
+            ipc?: string,
+            mnt?: string,
+            net?: string,
+            pid?: string,
+            user?: string,
+            uts?: string,
+            time?: string,
+        },
         nsref?: string,
+        process?: string,
+        cgroup?: string,
+        ownername?: string,
+        ownerroot?: string,
     }
 }
 
@@ -76,7 +105,21 @@ export const lxknsLightTheme = {
         },
     },
     palette: {
-        nsref: '#cfa65d',
+        namespace: {
+            cgroup: red[50],
+            ipc: lime[50],
+            mnt: blue[50],
+            net: green[50],
+            pid: indigo[50],
+            user: blueGrey[50],
+            uts: brown[50],
+            time: amber[50],
+        },
+        nsref: yellow[800],
+        process: teal[700],
+        cgroup: grey[600],
+        ownername: lime[800],
+        ownerroot: pink[700],
     },
 }
 
