@@ -18,6 +18,7 @@ import MenuIcon from '@material-ui/icons/Menu'
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import { AppBar, Divider, IconButton, makeStyles, SwipeableDrawer, Toolbar, useTheme } from '@material-ui/core'
+import clsx from 'clsx'
 
 
 // Width of drawer.
@@ -28,6 +29,7 @@ const defaultDrawerWidth = 240
 // The drawer width can be parameterized; for this we need to define the
 // properties getting passed later to the useStyles() returned by makeStyles(). 
 interface StyleProps {
+    /** width of app drawer in pixels */
     drawerWidth: number,
 }
 
@@ -84,6 +86,8 @@ export interface AppBarDrawerProps {
      * pixels if unspecified.
      */
     drawerwidth?: number
+    /** CSS style class name(s) for drawer. */
+    drawerClassName?: string,
 }
 
 /**
@@ -112,7 +116,7 @@ export interface AppBarDrawerProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 const AppBarDrawer = ({
-    title, tools, drawertitle, drawer, drawerwidth: drawerWidth
+    title, tools, drawertitle, drawer, drawerwidth: drawerWidth, drawerClassName,
 }: AppBarDrawerProps) => {
 
     // Not much state here in ... Denmark?!
@@ -148,7 +152,7 @@ const AppBarDrawer = ({
             </Toolbar>
         </AppBar>
         <SwipeableDrawer
-            className={classes.drawer}
+            className={clsx(classes.drawer, drawerClassName)}
             classes={{ paper: classes.drawerPaper }}
             open={drawerOpen}
             onOpen={openDrawer}

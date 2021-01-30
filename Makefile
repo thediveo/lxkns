@@ -1,6 +1,7 @@
 # Where to install the CLI tool binaries to
 PREFIX ?= /usr/local
 GOPATH = $(shell go env GOPATH)
+GIT_VERSION = $(shell git describe --tags 2>/dev/null || echo "v0.0.0")
 
 # Go version to use when building the test containers; start with a version
 # 1.14+ first to get better testbasher diagnosis in case a test script runs
@@ -37,10 +38,8 @@ coverage:
 	scripts/cov.sh
 
 deploy:
-	@VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
-		echo "building version" $${VERSION} && \
-		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build
+	@echo "deploying version" $${GIT_VERSION}
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build --build-arg GIT_VERSION=$(GIT_VERSION)
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy:
@@ -62,14 +61,10 @@ report:
 	@./scripts/goreportcard.sh
 
 buildapp:
-	@VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
-		echo "building version" $${VERSION} && \
-		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
+	@echo "building version" $${GIT_VERSION}
 	@cd web/lxkns && yarn build
 
 startapp:
-	@VERSION=$$(awk 'match($$0, /const SemVersion = "(.+)"/, m) { print m[1] }' defs.go) && \
-		echo "building version" $${VERSION} && \
-		echo "const version = '$${VERSION}'; export default version;" > web/lxkns/src/version.js
+	@echo "starting version" $${GIT_VERSION}
 	@cd web/lxkns && yarn start
 	

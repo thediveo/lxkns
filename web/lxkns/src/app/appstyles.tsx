@@ -14,7 +14,6 @@
 
 import { createMuiTheme } from '@material-ui/core'
 import { amber, blue, blueGrey, brown, green, grey, indigo, lime, pink, red, teal, yellow } from '@material-ui/core/colors'
-import { fade } from '@material-ui/core/styles/colorManipulator'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
@@ -91,16 +90,6 @@ export const lxknsLightTheme = {
                         marginLeft: '1.1em',
                     },
                 },
-                // style to active route and hover for the drawer items to follow the theme.
-                '.MuiListItem-root.Mui-selected, .MuiListItem-root.Mui-selected:hover': {
-                    backgroundColor: [fade(globalTheme.palette.primary.dark, 0.1), '!important'],
-                },
-                '.MuiListItem-root:hover': {
-                    backgroundColor: [fade(globalTheme.palette.primary.dark, 0.05), '!important'],
-                },
-                '.MuiAvatar-colorDefault': {
-                    backgroundColor: [fade(globalTheme.palette.primary.light, 1), '!important'],
-                }
             },
         },
     },
@@ -128,6 +117,20 @@ export const lxknsDarkTheme = mergeDeep(
     cloneDeep(lxknsLightTheme),
     {
         palette: {
+            namespace: {
+                cgroup: red[900],
+                ipc: lime[900],
+                mnt: blue[900],
+                net: green[900],
+                pid: indigo[900],
+                user: blueGrey[700],
+                uts: brown[700],
+                time: amber[900],
+            },
+            process: teal[300],
+            cgroup: grey[500],
+            ownername: lime[500],
+            ownerroot: pink[500],
         },
     }
 )

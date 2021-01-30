@@ -25,10 +25,9 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import { Box, createMuiTheme, Divider, ThemeProvider, useMediaQuery } from '@material-ui/core'
-import Toggle from '@material-ui/core/Switch'
+import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery } from '@material-ui/core'
 
+import SettingsIcon from '@material-ui/icons/Settings'
 import HelpIcon from '@material-ui/icons/Help'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -42,11 +41,9 @@ import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
 
-import version from '../version'
 import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
-import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
 import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
-import { themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
+import { Settings, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 import { NamespaceIcon } from 'components/namespaceicon'
 import { About } from 'views/about'
 import { Help } from 'views/help'
@@ -99,10 +96,32 @@ const views: viewItem[][] = [
             label: "time namespaces", path: "/time", type: "time"
         },
     ], [
+        { icon: <SettingsIcon />, label: "settings", path: "/settings" },
         { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
         { icon: <InfoIcon />, label: "about", path: "/about" },
     ]
 ]
+
+
+const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
+    theme.palette.type === 'light'
+    ? fade(theme.palette.primary[el], f)
+    : fade(theme.palette.primary[el], 1-f)
+)
+
+const useStyles = makeStyles((theme) => ({
+    drawer: {
+        '& .MuiListItem-root.Mui-selected, & .MuiListItem-root.Mui-selected:hover': {
+            backgroundColor: themedFade(theme, 'dark', 0.2),
+        },
+        '& .MuiListItem-root:hover': {
+            backgroundColor: themedFade(theme, 'dark', 0.05),
+        },
+        '& .MuiListItemIcon-root .MuiSvgIcon-root': {
+            color: theme.palette.primary.light,
+        }
+    }
+}))
 
 /**
  * The `LxknsApp` component renders the general app layout without thinking
@@ -114,9 +133,9 @@ const views: viewItem[][] = [
  */
 const LxknsApp = () => {
 
-    const [treeaction, setTreeAction] = useTreeAction()
+    const classes = useStyles()
 
-    const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
+    const [treeaction, setTreeAction] = useTreeAction()
 
     const path = useLocation().pathname
 
@@ -132,19 +151,20 @@ const LxknsApp = () => {
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 drawerwidth={300}
+                drawerClassName={classes.drawer}
                 title={<>
                     <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
                         <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>
                     </Badge>
                 </>}
                 tools={() => <>
-                    <Tooltip title="expand initial user namespace(s) only">
+                    <Tooltip key="collapseall" title="expand initial user namespace(s) only">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(COLLAPSEALL)}>
                             <ChevronRightIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="expand all">
+                    <Tooltip key="expandall" title="expand all">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(EXPANDALL)}>
                             <ExpandMoreIcon />
@@ -153,16 +173,17 @@ const LxknsApp = () => {
                     <Refresher />
                 </>}
                 drawertitle={() => <>
-                    <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">lxkns</Typography>
-                    <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
+                    <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">
+                        lxkns
+                    </Typography>
                 </>}
                 drawer={closeDrawer => <>
                     {views.map((group, groupidx) => <>
-                        {groupidx > 0 && <Divider />}
-                        <List onClick={closeDrawer}>
+                        {groupidx > 0 && <Divider key={`div-${groupidx}`} />}
+                        <List onClick={closeDrawer} key={groupidx}>
                             {group.map((viewitem, idx) =>
                                 <DrawerLinkItem
-                                    key={groupidx * 100 + idx}
+                                    key={`${groupidx}-${idx}`}
                                     icon={viewitem.icon}
                                     label={viewitem.label}
                                     path={viewitem.path}
@@ -170,32 +191,23 @@ const LxknsApp = () => {
                             )}
                         </List>
                     </>)}
-                    <Divider />
-                    <List>
-                        <ListItem>
-                            <Toggle
-                                checked={showSystemProcesses}
-                                onChange={() => setShowSystemProcesses(!showSystemProcesses)}
-                                color="primary"
-                            />system processes
-                        </ListItem>
-                    </List>
                 </>}
             />
-            <Box m={1} flex={1} overflow="auto">
+            <Box m={0} flex={1} overflow="auto">
                 <Switch>
+                    <Route exact path="/settings"><Settings /></Route>
                     <Route exact path="/about"><About /></Route>
                     <Route path="/help"><Help /></Route>
                     {/* let's generate the different namespace type view routes programmatically */}
                     {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
                         <Route exact path={viewitem.path} key={idx}>
-                            <Box m={1} flex={1} overflow="auto">
+                            <Box m={0} flex={1} overflow="auto">
                                 <NamespaceProcessTree type={viewitem.type} action={treeaction} />
                             </Box>
                         </Route>
                     )).flat()}
                     <Route path="/">
-                        <Box m={1} flex={1} overflow="auto">
+                        <Box m={0} flex={1} overflow="auto">
                             <UserNamespaceTree action={treeaction} />
                         </Box>
                     </Route>

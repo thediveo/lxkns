@@ -29,7 +29,7 @@ import Icon from '@material-ui/core/Icon'
 import { ExtLink } from 'components/extlink'
 
 import LxknsIcon from "./lxkns.svg"
-import version from '../version'
+//import version from '../version'
 import { Namespace } from 'models/lxkns'
 import { NamespaceInfo } from 'components/namespaceinfo'
 
@@ -49,10 +49,6 @@ export const About = () => (<>
         <Icon><img src={LxknsIcon} alt="" /></Icon>
             Linux Kernel Namespaces Discovery App
         </Typography>
-
-    <Typography variant="body2" paragraph={true}>
-        app version {version}
-    </Typography>
 
     <Typography variant="body2" paragraph={true}>
         GitHub: <ExtLink href="https://github.com/thediveo/lxkns">thediveo/lxkns</ExtLink>

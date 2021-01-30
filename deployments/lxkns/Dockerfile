@@ -36,7 +36,8 @@ RUN yarn install
 # Now build the production-optimized web app.
 COPY web/lxkns/public/ ./public/
 COPY web/lxkns/src/ ./src/
-RUN yarn build
+ARG GIT_VERSION
+RUN yarn imagebuild
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
