@@ -16,11 +16,10 @@ import React from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
-import TocIcon from '@material-ui/icons/Toc'
 
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/muimarkdown/ChapterSkeleton'
-import { ChevronLeft, ChevronRight } from '@material-ui/icons'
+import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@material-ui/icons'
 
 const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px

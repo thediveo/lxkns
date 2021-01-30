@@ -1,22 +1,25 @@
+import { Toc as TocIcon } from "@material-ui/icons";
+
 # lxkns
 
 This app displays Linux-kernel
 [namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) discovered
-by the lxkns service in a Linux host.
+by the lxkns service in a Linux host. These namespaces partition certain kinds
+of Linux resources, so that processes that are members of a particular namespace
+only see these resources isolated in that namespace.
 
-Namespaces partition certain kinds of Linux resources, so that processes that
-are members of a namespace only see their own isolated resources from those
-namespaces they are attached to. In a weird twist of penguin logic, "namespaces"
-do not have names. Historically, the first type of namespace in Linux was the
-"mount" namespace and thus is also about file system paths ... and this is where
-the meaning of "namespace" actually originates from.
+Namespaces can be either displayed in an all-inclusive view (the "all
+namespaces" view), or filtered for each type of namespace individually.
 
+In a weird twist of penguin logic, "namespaces" actually do not have any names.
+Historically, the first type of namespace in Linux was the "mount" namespace
+which is about system paths and partitioning mount points ... and this is where
+the meaning of namespace actually originates from.
 
-Please follow now our tour through lxkns by clicking on the next chapter button
-at the end of this help chapter.
-
-You can also freely navigate between the help chapters using the chapter
-navigation button in the top right of this chapter.
+Please follow now our tour through lxkns by clicking on the "REFRESH&nbsp;>"
+button at the end of this text. You can also freely navigate between the help
+chapters using the chapter navigation button <TocIcon className="icon" /> in the
+top right of this chapter.
 
 ###### Trademarks
 

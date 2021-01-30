@@ -21,7 +21,8 @@ import {
     Divider,
     Table, TableBody, TableCell, TableHead, TableRow,
     Typography,
-    makeStyles
+    makeStyles,
+    lighten
 } from '@material-ui/core'
 
 import { ChapterSkeleton } from './ChapterSkeleton'
@@ -134,8 +135,14 @@ const MuiComponents = {
 // fit into the overall styling.
 const useStyles = makeStyles((theme) => ({
     markdown: {
-        '& .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6, & .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
-            color: theme.palette.primary.main,
+        // Make sure to properly reset the text color according to the primary
+        // text color.
+        color: theme.palette.text.primary,
+        // ...and now for the details...
+        '& .MuiTypography-h1, & .MuiTypography-h2, & .MuiTypography-h3, & .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6, & .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
+            color: theme.palette.type === 'light'
+                ? theme.palette.primary.main
+                : theme.palette.primary.light,
         },
         '& .MuiTypography-h4:first-of-type': {
             marginTop: theme.spacing(1),
@@ -163,6 +170,17 @@ const useStyles = makeStyles((theme) => ({
             padding: 1,
             borderRadius: theme.spacing(1) / 2,
         },
+        '& a:link': {
+            color: theme.palette.type === 'light'
+                ? theme.palette.primary.main
+                : theme.palette.primary.light
+        },
+        '& a:visited': {
+            color: theme.palette.type === 'light'
+                ? theme.palette.primary.dark
+                : lighten(theme.palette.primary.light, 0.3)
+        },
+        '& a:hover, & a:active': { color: theme.palette.secondary.main },
     }
 }))
 
@@ -182,7 +200,8 @@ export interface MuiMarkdownProps {
  * Renders the given MDX using Material-UI `Typography` components (where
  * appropriate). The MDX can be either statically imported beforehand or also
  * lazily imported using `React.lazy()`. This component will handle both use
- * cases transparently.
+ * cases transparently: it uses a `React.Suspense` child component and shows a
+ * `ChapterSkeleton` component while lazily loading MDX.
  *
  * - uses [mdx-js/mdx](https://github.com/mdx-js/mdx).
  * - headings automatically get `id` slugs via

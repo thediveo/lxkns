@@ -1,0 +1,82 @@
+import { Ghost } from 'mdi-material-ui';
+
+# Namespaces
+
+## Types
+
+| Type | Structure | Resource Partioning |
+| --- | --- | --- |
+| <NamespaceExample type="cgroup" /> | flat | partitions the root directory of cgroup controllers in the file system. [cgroup_namespaces(7)](https://man7.org/linux/man-pages/man7/cgroup_namespaces.7.html) |
+| <NamespaceExample type="ipc" /> | flat | partitions SYSV inter-process communication and POSIX message queues. [ipc_namespaces(7)](https://man7.org/linux/man-pages/man7/ipc_namespaces.7.html) |
+| <NamespaceExample type="mnt" /> | flat | partitions file system mount points. [mount_namespaces(7)](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html) |
+| <NamespaceExample type="net" /> | flat | partitions network stacks with their interfaces, addresses, ports, et cetera. [network_namespaces(7)](https://man7.org/linux/man-pages/man7/network_namespaces.7.html) |
+| <NamespaceExample type="pid" /> | hierarchical | partitions process identifiers (PIDs); this is a hierarchical namespace type, so processes in a parent PID namespace see all processes in child PID namespaces, but not vice versa. [pid_namespaces(7)](https://man7.org/linux/man-pages/man7/pid_namespaces.7.html) |
+| <NamespaceExample type="user" /> | hierarchical | partitions user and group identifiers (UIDs, GIDs); this is a nested namespace type, so a particular user namespace is affected by the chain of parent user namespaces. [user_namespaces(7)](https://man7.org/linux/man-pages/man7/user_namespaces.7.html) |
+| <NamespaceExample type="uts" /> | flat | partitions the host name and NIS domain name; the type name "uts" stems from the term "Unix time sharing". [uts_namespaces(7)](https://man7.org/linux/man-pages/man7/uts_namespaces.7.html) |
+| <NamespaceExample type="time" /> | flat | since Linux 5.6, partitions the boot and monotonic clocks. [time_namespaces(7)](https://man7.org/linux/man-pages/man7/time_namespaces.7.html) |
+
+## Identification
+
+Lxkns follows the textual representation of namespace identifiers as used in the
+Linux kernel, for instance, when executing "`ls -l /proc/self/ns/net`": the type
+of namespace, followed by the inode number of the namespace. The identifier of a
+namespace is constant only during its lifetime and can be recycled at any time
+afterwards.
+
+## Flat versus Hierarchy
+
+Most types of the Linux kernel namespaces are **flat** – another example of
+weird pinguin humor. For example, two network namespaces do not have any
+relationship.
+
+Only **PID** and **user** namespaces always form hierarchies, with their
+"initial" PID and user namespaces forming the roots. It's not possible to create
+a *new root* PID or user namespace.
+
+## Processes
+
+Processes are always attached (or "joined") to exactly one namespace of each
+type – unless a particular Linux kernel doesn't support the specific type of
+namespace. It is impossible for a process to not being attached to a particular
+type of namespace when the Linux kernel supports that type; processes cannot
+detach from namespaces.
+
+However, given enough privileges ("capabilities"), processes can switch between
+namespaces; subject to some further restrictions based on the type of namespace.
+
+## Initial Namespaces
+
+The so-called "initial namespaces" are created automatically by the Linux kernel
+itself when it starts. Initial namespaces are represented using a dashed border
+like this in order to make them easily identifiable: <NamespaceExample
+type="net" initial={true} />.
+
+Certain system operations can be carried out only in initial namespaces and are
+blocked in other non-initial namespaces.
+
+## Namespace Lifetime
+
+Linux kernel namespaces exist as long as they are "used", or more precisely,
+referenced at least in one of the following ways:
+
+- at least one process is attached ("joined") to the namespace,
+
+- the namespace has been bind-mounted,
+
+- the namespace is referenced by an open file descriptor of a process,
+
+- the PID or user namespace has at least one child namespace that still exists.
+  
+  > lxkns shows a <Ghost fontSize="inherit"/> in this case, when no other kind
+  of reference exists and the PID/user namespace is kind of "hidden" inside the
+  namespace hierarchy.
+
+## ...and Containers?
+
+Namespaces and containers are separate concepts:
+
+- namespaces are first-class Linux-kernel elements.
+
+- containers are user-space constructs, which vary in what types of namespaces
+  they use, or if they use namespaces at all. The Linux kernel doesn't know
+  anything about containers.

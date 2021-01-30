@@ -18,6 +18,7 @@ import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
+import { Namespace } from 'models/lxkns'
 
 
 /**
@@ -31,14 +32,26 @@ const ch = (name: string) => React.lazy(() => import(`!babel-loader!mdx-loader!.
 const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
+    { title: 'Views', chapter: ch('Views'), slug: 'views' },
+    { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
+    { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
 ]
 
+const NamespaceExample = ({ type, initial }) =>
+    <NamespaceBadge namespace={{
+        nsid: 4026531837,
+        type: type,
+        ealdorman: {},
+        initial: initial,
+        parent: null,
+        children: [],
+    } as Namespace} />
 
 export const Help = () => (
     <HelpViewer
         chapters={chapters}
         baseroute="/help"
         markdowner={MuiMarkdown}
-        shortcodes={{a:SmartA, NamespaceBadge}}
+        shortcodes={{a:SmartA, NamespaceBadge, NamespaceExample}}
     />
 )

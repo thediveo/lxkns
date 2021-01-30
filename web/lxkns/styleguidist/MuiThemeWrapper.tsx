@@ -26,7 +26,7 @@ import { createMuiTheme, CssBaseline, ThemeProvider } from '@material-ui/core'
 import { lxknsLightTheme } from 'app/appstyles'
 
 
-const gwTheme = createMuiTheme(
+const lightTheme = createMuiTheme(
     {
         palette: {
             type: 'light',
@@ -37,7 +37,7 @@ const gwTheme = createMuiTheme(
 
 
 const MuiThemeWrapper = ({ children }) => (
-    <ThemeProvider theme={gwTheme}>
+    <ThemeProvider theme={lightTheme}>
         <CssBaseline />
         <Router>
             {children}

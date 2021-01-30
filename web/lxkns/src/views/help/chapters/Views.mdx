@@ -1,0 +1,23 @@
+# Views
+
+## Home View
+
+The "home" display is organized along the hierarchy of [user
+namespaces](/help/namespaces) and shows *all* namespaces.
+
+Non-user namespaces as well as child user namespaces are shown beneath the
+particular user namespace which is owning them. "Owning a namespace" here means
+that a namespace was created by a process while the process was attached to that
+specific user namespace.
+
+## Type-Specific Views
+
+The type-specific namespace views are slightly different: first, they show only
+namespaces of a specific type. Then, they are mostly *flat* views, except for
+PID and user namespace views.
+
+In case there are multiple bunches of processes, each bunch with its own cgroup
+controller, these are then shown below the namespaces they are joined to. In
+case all processes joined to a specific namespace are in the same cgroup, the
+"most senior" process of them will be shown right next to the namespace
+information instead.
