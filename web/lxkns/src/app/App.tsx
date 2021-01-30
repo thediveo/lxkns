@@ -36,7 +36,6 @@ import InfoIcon from '@material-ui/icons/Info'
 
 import Discovery, { useDiscovery } from 'components/discovery'
 import UserNamespaceTree from 'components/usernamespacetree'
-import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
@@ -47,6 +46,7 @@ import { Settings, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 import { NamespaceIcon } from 'components/namespaceicon'
 import { About } from 'views/about'
 import { Help } from 'views/help'
+import { NamespaceProcessTree } from 'components/namespaceprocesstree'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
