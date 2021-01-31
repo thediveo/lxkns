@@ -19,6 +19,8 @@ import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
+import { Box } from '@material-ui/core'
+import { Card } from '@material-ui/core'
 
 
 /**
@@ -37,6 +39,16 @@ const chapters: HelpViewerChapter[] = [
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
 ]
 
+const Example = ({ children }: { children: React.ReactNode }) => (
+    <Box m={2}>
+        <Card>
+            <Box m={1}>
+                {children}
+            </Box>
+        </Card>
+    </Box>
+)
+
 const NamespaceExample = ({ type, initial }) =>
     <NamespaceBadge namespace={{
         nsid: 4026531837,
@@ -52,6 +64,6 @@ export const Help = () => (
         chapters={chapters}
         baseroute="/help"
         markdowner={MuiMarkdown}
-        shortcodes={{a:SmartA, NamespaceBadge, NamespaceExample}}
+        shortcodes={{ a: SmartA, Example, NamespaceBadge, NamespaceExample }}
     />
 )

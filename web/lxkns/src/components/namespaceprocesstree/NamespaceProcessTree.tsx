@@ -140,6 +140,7 @@ const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) =
 export interface NamespaceProcessTreeProps {
     type?: string
     action: Action
+    discovery: Discovery
 }
 
 /**
@@ -151,15 +152,12 @@ export interface NamespaceProcessTreeProps {
  *
  * @param type type of namespace.
  */
-export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps) => {
+export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
     // System process filter setting.
     const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
-
-    // Discovery data.
-    const discovery = useDiscovery()
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} } as Discovery)

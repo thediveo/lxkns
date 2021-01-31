@@ -35,7 +35,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import InfoIcon from '@material-ui/icons/Info'
 
 import Discovery, { useDiscovery } from 'components/discovery'
-import UserNamespaceTree from 'components/usernamespacetree'
+import { UserNamespaceTree } from 'components/usernamespacetree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
@@ -105,8 +105,8 @@ const views: viewItem[][] = [
 
 const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
     theme.palette.type === 'light'
-    ? fade(theme.palette.primary[el], f)
-    : fade(theme.palette.primary[el], 1-f)
+        ? fade(theme.palette.primary[el], f)
+        : fade(theme.palette.primary[el], 1 - f)
 )
 
 const useStyles = makeStyles((theme) => ({
@@ -202,13 +202,13 @@ const LxknsApp = () => {
                     {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
                         <Route exact path={viewitem.path} key={idx}>
                             <Box m={0} flex={1} overflow="auto">
-                                <NamespaceProcessTree type={viewitem.type} action={treeaction} />
+                                <NamespaceProcessTree type={viewitem.type} discovery={discovery} action={treeaction} />
                             </Box>
                         </Route>
                     )).flat()}
                     <Route path="/">
                         <Box m={0} flex={1} overflow="auto">
-                            <UserNamespaceTree action={treeaction} />
+                            <UserNamespaceTree discovery={discovery} action={treeaction} />
                         </Box>
                     </Route>
                 </Switch>

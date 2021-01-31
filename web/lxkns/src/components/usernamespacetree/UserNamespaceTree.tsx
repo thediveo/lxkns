@@ -20,10 +20,17 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 
-import { useDiscovery } from 'components/discovery'
-import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
+import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
+
+
+export interface UserNamespaceTreeProps {
+    /** trigger tree action. */
+    action: Action
+    /** discovery data. */
+    discovery: Discovery
+}
 
 // The UserNamespaceTree component renders a tree of user namespaces, including
 // owned non-user namespaces. Furthermore, it renders additional information,
@@ -34,10 +41,7 @@ import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 //
 // This component also supports sending action commands for expanding or
 // collapsing (almost) all user namespaces via the properties mechanism.
-export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */ => {
-
-    // Discovery data comes in via a dedicated discovery context.
-    const discovery = useDiscovery()
+export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps) => {
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} })
