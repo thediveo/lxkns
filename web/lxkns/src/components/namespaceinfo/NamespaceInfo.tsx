@@ -32,6 +32,9 @@ const useStyles = makeStyles((theme) => ({
         whiteSpace: 'nowrap',
         verticalAlign: 'middle',
     },
+    shared: {
+        color: `${theme.palette.text.disabled} !important`,
+    },
     procInfo: {
         marginLeft: '0.5em',
     },
@@ -69,8 +72,10 @@ export interface NamespaceInfoProps {
     namespace: Namespace,
     /** suppress rendering leader process information.  */
     noprocess?: boolean,
+    /** is this a namespace shared with other leader processes? */
+    shared?: boolean,
     /** optional CSS class name(s). */
-    className?: string
+    className?: string,
 }
 
 /**
@@ -81,7 +86,9 @@ export interface NamespaceInfoProps {
  * Please note: this component never renders any child namespaces (even if the
  * given namespace is either a PID or user namespace).
  */
-export const NamespaceInfo = ({ namespace, noprocess, className }: NamespaceInfoProps) => {
+export const NamespaceInfo = ({
+    namespace, noprocess, shared, className
+}: NamespaceInfoProps) => {
 
     const classes = useStyles()
 
@@ -122,8 +129,8 @@ export const NamespaceInfo = ({ namespace, noprocess, className }: NamespaceInfo
         </span>
 
     return (
-        <span className={clsx(classes.namespace, namespace.type, className)}>
-            <NamespaceBadge namespace={namespace} />
+        <span className={clsx(classes.namespace, namespace.type, shared && classes.shared, className)}>
+            <NamespaceBadge namespace={namespace} shared={shared} />
             {children}
             {procinfo || pathinfo} {ownerinfo}
         </span>

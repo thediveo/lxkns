@@ -23,3 +23,16 @@ import { initProc } from "models/lxkns/mock";
     ])}
 </>;
 ```
+
+The rendering slightly changes for namespaces which are seen as "shared" between
+multiple leader processes: the badges then get washed out and the text fades to
+gray 𝅘𝅥🎜.
+
+```tsx
+import { ComponentCard } from "styleguidist/ComponentCard";
+import { initProc } from "models/lxkns/mock";
+
+<ComponentCard>
+  <NamespaceBadge namespace={initProc.namespaces.cgroup} shared={true} />
+</ComponentCard>;
+```

@@ -60,12 +60,11 @@ import { styles } from "@material-ui/core/Typography/Typography";
 
 const themes = [
   createMuiTheme({ palette: { type: "light" } }),
-  createMuiTheme({ palette: { type: "dark" } }),
+  //createMuiTheme({ palette: { type: "dark" } }),
 ];
 
 const T = () => {
   const typo = makeStyles(styles, {name: 'MuiTypography'})()
-  console.log("typo styles", typo)
   return null
 };
 

@@ -26,9 +26,11 @@ than the most senior "leader" process of the user namespace, then lxkns will
 automatically be group owned namespaces by their leader processes. This helps in
 quickly understanding how namespaces relate to leader processes.
 
-> **Note:** lxkns shows a "shared" namespace only for the most senior leader
-  process in the process tree. A "shared" namespace can nevertheless have
-  processes from several leader sub-trees attached to them.
+> **Note:** lxkns always shows all namespaces (except for the user namespace)
+  for the leader processes with different cgroup paths, but "fades" namespaces
+  that are the same as the most senior leader process. For lack of a better
+  word, we term such namespaces "shared", but the Linux kernel doesn't know or
+  care about such situations.
 
 When the Linux kernel initializes, it creates a set of so-called "initial"
 namespaces: these are indicated by dashed borders around their namespace

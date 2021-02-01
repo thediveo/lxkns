@@ -19,7 +19,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 
 import { Namespace } from 'models/lxkns'
 
-import { darken, lighten, makeStyles, Theme } from '@material-ui/core'
+import { darken, fade, lighten, makeStyles, Theme } from '@material-ui/core'
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
 
 
@@ -36,11 +36,12 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // backgroundColor again, as it gets trashed when setting the background to
 // achieve a dashed border; for this reason we return an object with background
 // and backgroundColor instead of just a background CSS property value string.
-const themedDashedBorder = (nstype: string, theme: Theme) => {
-    const color = theme.palette.namespace[nstype]
+const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
+    const color = shared ? fade(theme.palette.namespace[nstype], 0.5) : theme.palette.namespace[nstype]
+    const change = shared ? 0.2 : 0.4
     return {
         background: dashedBorder(
-            theme.palette.type === 'light' ? darken(color, 0.4) : lighten(color, 0.4),
+            theme.palette.type === 'light' ? darken(color, change) : lighten(color, change),
             color),
         backgroundColor: color,
     }
@@ -69,6 +70,9 @@ const useStyles = makeStyles((theme) => ({
             top: '0.05ex',
         },
 
+    },
+    shared: {
+        color: theme.palette.text.disabled,
     },
     // ...and now for the namespace-type specific styling.
     cgroup: {
@@ -102,13 +106,28 @@ const useStyles = makeStyles((theme) => ({
     // the badge background color.
     initialNamespace: {
         '&$cgroup': themedDashedBorder('cgroup', theme),
+        '&$cgroup$shared': themedDashedBorder('cgroup', theme, 'shared'),
+
         '&$ipc': themedDashedBorder('ipc', theme),
+        '&$ipc$shared': themedDashedBorder('ipc', theme, 'shared'),
+
         '&$mnt': themedDashedBorder('mnt', theme),
+        '&$mnt$shared': themedDashedBorder('mnt', theme, 'shared'),
+
         '&$net': themedDashedBorder('net', theme),
+        '&$net$shared': themedDashedBorder('net', theme, 'shared'),
+
         '&$pid': themedDashedBorder('pid', theme),
+        '&$pid$shared': themedDashedBorder('pid', theme, 'shared'),
+
         '&$user': themedDashedBorder('user', theme),
+        '&$user$shared': themedDashedBorder('user', theme, 'shared'),
+
         '&$uts': themedDashedBorder('uts', theme),
+        '&$uts$shared': themedDashedBorder('uts', theme, 'shared'),
+
         '&$time': themedDashedBorder('time', theme),
+        '&$time$shared': themedDashedBorder('time', theme, 'shared'),
     },
 }))
 
@@ -116,6 +135,8 @@ const useStyles = makeStyles((theme) => ({
 export interface NamespaceBadgeProps {
     /** namespace with type, identifier and initial namespace indication. */
     namespace: Namespace
+    /** is this a namespace shared with other leader processes? */
+    shared?: boolean,
     /** optional CSS class name(s). */
     className?: string
 }
@@ -129,7 +150,7 @@ export interface NamespaceBadgeProps {
  * namespace is an initial namespace then it gets visually marked using a dashed
  * border.
  */
-export const NamespaceBadge = ({ namespace, className }: NamespaceBadgeProps) => {
+export const NamespaceBadge = ({ namespace, shared, className }: NamespaceBadgeProps) => {
 
     const classes = useStyles()
 
@@ -141,10 +162,11 @@ export const NamespaceBadge = ({ namespace, className }: NamespaceBadgeProps) =>
     // https://github.com/facebook/create-react-app/issues/8687 ... which still
     // is open.
     return (
-        <Tooltip title={`${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
+        <Tooltip title={`${shared ? '«shared» ' : ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
             <span className={clsx(
                 classes.namespaceBadge,
                 classes[namespace.type],
+                shared && classes.shared,
                 className,
                 namespace.initial && classes.initialNamespace
             )}>

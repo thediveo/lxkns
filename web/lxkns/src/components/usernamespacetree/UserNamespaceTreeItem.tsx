@@ -16,7 +16,7 @@ import React from 'react'
 import TreeItem from '@material-ui/lab/TreeItem'
 
 import ProcessInfo from 'components/processinfo'
-import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace } from 'models/lxkns'
+import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
 import { NamespaceInfo } from 'components/namespaceinfo';
 
 // Return the ealdormen processes attached to namespaces owned by the specified
@@ -66,13 +66,20 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
                 nodeId={namespace.nsid.toString() + '-' + proc.pid.toString()}
                 label={<ProcessInfo process={proc} />}>{
                     Object.values(proc.namespaces)
-                        .filter(tenant => tenant.owner === namespace && tenant.ealdorman === proc)
+                        //.filter(tenant => tenant.owner === namespace && tenant.ealdorman === proc)
+                        .filter((tenant: Namespace) => tenant.type !== NamespaceType.user)
                         .sort((tenant1, tenant2) => tenant1.type.localeCompare(tenant2.type))
                         .map(tenant => <TreeItem
                             className="tenant"
                             key={tenant.nsid}
                             nodeId={tenant.nsid.toString()}
-                            label={<NamespaceInfo noprocess={true} namespace={tenant} />}
+                            label={
+                                <NamespaceInfo
+                                    shared={tenant.owner !== namespace || tenant.ealdorman !== proc}
+                                    noprocess={true}
+                                    namespace={tenant}
+                                />
+                            }
                         />)
                 }</TreeItem>
         );
