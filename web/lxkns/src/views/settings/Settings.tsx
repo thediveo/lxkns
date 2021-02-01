@@ -25,6 +25,7 @@ import {
 
 const themeKey = 'lxkns.theme'
 const showSystemProcessesKey = 'lxkns.showsystemprocesses'
+const showSharedNamespacesKey = 'lxkns.showsharedns'
 
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
@@ -32,6 +33,7 @@ export const THEME_DARK = -1
 export const themeAtom = localStorageAtom(themeKey, THEME_USERPREF)
 
 export const showSystemProcessesAtom = localStorageAtom(showSystemProcessesKey, false)
+export const showSharedNamespacesAtom = localStorageAtom(showSharedNamespacesKey, true)
 
 
 const useStyles = makeStyles((theme) => ({
@@ -55,6 +57,7 @@ export const Settings = () => {
     // Tons of settings to play around with...
     const [theme, setTheme] = useAtom(themeAtom)
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
+    const [showSharedNamespaces, setShowSharedNamespaces] = useAtom(showSharedNamespacesAtom)
 
     const handleThemeChange = (event: React.ChangeEvent<{ value: number }>) => {
         setTheme(event.target.value)
@@ -92,11 +95,21 @@ export const Settings = () => {
                     <Card>
                         <List>
                             <ListItem>
-                                <ListItemText primary="Show system Processes" />
+                                <ListItemText primary="Show system processes" />
                                 <ListItemSecondaryAction>
                                     <Toggle
                                         checked={showSystemProcesses}
                                         onChange={() => setShowSystemProcesses(!showSystemProcesses)}
+                                        color="primary"
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemText primary="Show shared non-user namespaces" />
+                                <ListItemSecondaryAction>
+                                    <Toggle
+                                        checked={showSharedNamespaces}
+                                        onChange={() => setShowSharedNamespaces(!showSharedNamespaces)}
                                         color="primary"
                                     />
                                 </ListItemSecondaryAction>
