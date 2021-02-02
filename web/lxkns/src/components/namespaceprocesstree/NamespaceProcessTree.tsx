@@ -23,11 +23,10 @@ import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 import TreeItem from '@material-ui/lab/TreeItem'
 
-import { useDiscovery } from 'components/discovery'
-import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import ProcessInfo from 'components/processinfo'
-import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { NamespaceInfo } from 'components/namespaceinfo'
+import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
+import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { showSystemProcessesAtom } from 'views/settings'
 
 

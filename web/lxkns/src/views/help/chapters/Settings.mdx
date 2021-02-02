@@ -2,7 +2,7 @@
 
 ## Appearance
 
-Switch the UI theme between:
+Switch the **UI theme** between:
 
 - light theme,
 
@@ -13,6 +13,8 @@ Switch the UI theme between:
 
 ## Display
 
+### System Processes
+
 Show or hide **system processes**, where system processes are processes
 belonging to one of the following cgroups (control groups):
 
@@ -22,3 +24,12 @@ belonging to one of the following cgroups (control groups):
 
 Defaults to hiding system processes in order to reduce the amount of process
 information.
+
+### Shared Namespaces
+
+Show or hide **shared non-user namespaces**: these are namespaces that are used
+– "shared" – by multiple leader processes (and their subprocesses) with
+different cgroup controllers but the same owning user namespace.
+
+Defaults to showing all non-user namespaces of a leader process, regardless of
+whether a namespace is unique to that leader process, or not. 
