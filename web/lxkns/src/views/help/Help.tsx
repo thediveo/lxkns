@@ -35,6 +35,7 @@ const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'Views', chapter: ch('Views'), slug: 'views' },
+    { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
     { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
 ]

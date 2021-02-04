@@ -2,6 +2,10 @@ import { Ghost } from 'mdi-material-ui';
 
 # Namespaces
 
+The Linux-kernel defines a fixed set of namespace _types_; the list of types has
+slowly grown over time. This set is fixed for a particular compiled kernel and
+cannot be changed or extended while a kernel runs.
+
 ## Types
 
 | Type | Structure | Resource Partioning |
@@ -17,13 +21,15 @@ import { Ghost } from 'mdi-material-ui';
 
 ## Identification
 
-Lxkns follows the textual representation of namespace identifiers as used in the
-Linux kernel, for instance, when executing "`ls -l /proc/self/ns/net`": the type
-of namespace, followed by the inode number of the namespace. The identifier of a
-namespace is constant only during its lifetime and can be recycled at any time
-afterwards.
+Linux-kernel namespaces do **not** have names.
 
-## Flat versus Hierarchy
+For identifying individual namespaces, Lxkns follows the textual representation
+used throughout the Linux kernel, for instance, when executing "`ls -l
+/proc/self/ns/net`": the type of namespace, followed by the inode number of the
+namespace. The identifier of a namespace is constant only during its lifetime
+and can be recycled at any time afterwards.
+
+## Flat Versus Hierarchy
 
 Most types of the Linux kernel namespaces are **flat** – another example of
 weird pinguin humor. For example, two network namespaces do not have any
@@ -51,8 +57,8 @@ itself when it starts. Initial namespaces are represented using a dashed border
 like this in order to make them easily identifiable: <NamespaceExample
 type="net" initial={true} />.
 
-Certain system operations can be carried out only in initial namespaces and are
-blocked in other non-initial namespaces.
+> Certain system operations can be carried out only in initial namespaces and
+  are blocked in other non-initial namespaces.
 
 ## Namespace Lifetime
 

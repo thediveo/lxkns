@@ -122,7 +122,7 @@ export const NamespaceInfo = ({
 
     // For PID and user namespaces determine the total number of children and
     // grandchildren.
-    const children = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) &&
+    const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
         namespace.children.length > 0 &&
         <span className={classes.userchildrenInfo}>
             [<AccountTreeIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
@@ -131,7 +131,7 @@ export const NamespaceInfo = ({
     return (
         <span className={clsx(classes.namespace, namespace.type, shared && classes.shared, className)}>
             <NamespaceBadge namespace={namespace} shared={shared} />
-            {children}
+            {childrenCount}
             {procinfo || pathinfo} {ownerinfo}
         </span>
     )

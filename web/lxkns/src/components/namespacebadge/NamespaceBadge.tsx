@@ -37,7 +37,7 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // achieve a dashed border; for this reason we return an object with background
 // and backgroundColor instead of just a background CSS property value string.
 const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
-    const color = shared ? fade(theme.palette.namespace[nstype], 0.5) : theme.palette.namespace[nstype]
+    const color = shared ? fade(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
     const change = shared ? 0.2 : 0.4
     return {
         background: dashedBorder(

@@ -13,7 +13,7 @@
 // under the License.
 
 import { createMuiTheme } from '@material-ui/core'
-import { amber, blue, blueGrey, brown, green, grey, indigo, lime, pink, red, teal, yellow } from '@material-ui/core/colors'
+import { amber, blue, blueGrey, brown, green, grey, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
@@ -99,7 +99,7 @@ export const lxknsLightTheme = {
             ipc: lime[50],
             mnt: blue[50],
             net: green[50],
-            pid: indigo[50],
+            pid: purple[50],
             user: blueGrey[50],
             uts: brown[50],
             time: amber[50],
@@ -122,7 +122,7 @@ export const lxknsDarkTheme = mergeDeep(
                 ipc: lime[900],
                 mnt: blue[900],
                 net: green[900],
-                pid: indigo[900],
+                pid: purple[900],
                 user: blueGrey[700],
                 uts: brown[700],
                 time: amber[900],

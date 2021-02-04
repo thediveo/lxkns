@@ -52,7 +52,7 @@ interface viewItem {
     icon: JSX.Element /** drawer item icon */
     label: string /** drawer item label */
     path: string /** route path */
-    type?: string /** type of namespace to show, if any */
+    type?: NamespaceType /** type of namespace to show, if any */
 }
 
 /**
@@ -65,35 +65,35 @@ const views: viewItem[][] = [
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
-            label: "user namespaces", path: "/user", type: "user"
+            label: "user namespaces", path: "/user", type: NamespaceType.user
         },
         {
             icon: <NamespaceIcon type={NamespaceType.pid} />,
-            label: "PID namespaces", path: "/pid", type: "pid"
+            label: "PID namespaces", path: "/pid", type: NamespaceType.pid
         },
         {
             icon: <NamespaceIcon type={NamespaceType.cgroup} />,
-            label: "cgroup namespaces", path: "/cgroup", type: "cgroup"
+            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup
         },
         {
             icon: <NamespaceIcon type={NamespaceType.ipc} />,
-            label: "IPC namespaces", path: "/ipc", type: "ipc"
+            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc
         },
         {
             icon: <NamespaceIcon type={NamespaceType.mnt} />,
-            label: "mount namespaces", path: "/mnt", type: "mnt"
+            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt
         },
         {
             icon: <NamespaceIcon type={NamespaceType.net} />,
-            label: "network namespaces", path: "/net", type: "net"
+            label: "network namespaces", path: "/net", type: NamespaceType.net
         },
         {
             icon: <NamespaceIcon type={NamespaceType.uts} />,
-            label: "UTS namespaces", path: "/uts", type: "uts"
+            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts
         },
         {
             icon: <NamespaceIcon type={NamespaceType.time} />,
-            label: "time namespaces", path: "/time", type: "time"
+            label: "time namespaces", path: "/time", type: NamespaceType.time
         },
     ], [
         { icon: <SettingsIcon />, label: "settings", path: "/settings" },
@@ -147,18 +147,25 @@ const LxknsApp = () => {
 
     const discovery = useDiscovery()
 
+    // Number of namespaces shown ... either type-specific or total number.
+    const count = typeview
+        ? Object.values(discovery.namespaces)
+            .filter(netns => netns.type === typeview.type)
+            .length
+        : Object.keys(discovery.namespaces).length
+
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 drawerwidth={300}
                 drawerClassName={classes.drawer}
                 title={<>
-                    <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
+                    <Badge badgeContent={count} color="secondary">
                         <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>
                     </Badge>
                 </>}
                 tools={() => <>
-                    <Tooltip key="collapseall" title="expand initial user namespace(s) only">
+                    <Tooltip key="collapseall" title="expand top-level namespace(s) only">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(COLLAPSEALL)}>
                             <ChevronRightIcon />

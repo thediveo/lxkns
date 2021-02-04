@@ -7,19 +7,44 @@ import { discovery } from "../fakehelpdata";
 ## Home View
 
 The "home" display shows all discovered [namespaces](/help/namespaces),
-organized along the hierarchy of the so-called user namespaces.
+organized along the hierarchy of the so-called user namespaces. For example:
 
 <Example>
   <UserNamespaceTree discovery={discovery} action={{ action: "" }} />
 </Example>
 
+### Initial Namespaces
+
+As the Linux kernel initializes it creates a set of so-called "initial"
+namespaces: these are indicated by dashed borders around their namespace
+"badges".
+
+### Number of Child User/PID Namespaces
+
 When user namespaces have child user namespaces, then the total number of child
 and grandchild user namespaces is shown right after a user namespace "badge".
 
-Non-user namespaces as well as child user namespaces are shown beneath the
-particular user namespace which is owning them. "Owning a namespace" here means
-that a namespace was created by a process while the process was attached to that
-specific user namespace.
+### "Leader" Processes
+
+Often, multiple (well, _many_) processes are "attached" to (using) the same
+namespace. Instead of showing the complete mess, lxkns partitions the attached
+processes into groups and shows only the "leader process" for each group.
+Grouping is done based on the process tree: a leader process is the topmost
+process in the process tree still attached to the same namespace as its
+children.
+
+If processes attached to the same namespace are controlled by different cgroups
+(using different cgroup paths), then lxkns divides them into separate groups,
+based on the cgroup paths found.
+
+### Owned Namespaces
+
+Non-user namespaces as well as child user namespaces are shown indented and
+beneath the particular user namespace which is owning them. "Owning a namespace"
+here means that a namespace was created by a process while the process was
+attached to that specific user namespace.
+
+### "Shared" Namespaces
 
 When the namespaces owned by a user namespace are attached to processes other
 than the most senior "leader" process of the user namespace, then lxkns will
@@ -29,34 +54,33 @@ quickly understanding how namespaces relate to leader processes.
 > **Note:** lxkns always shows all namespaces (except for the user namespace)
   for the leader processes with different cgroup paths, but "fades" namespaces
   that are the same as the most senior leader process. For lack of a better
-  word, we term such namespaces "shared", but the Linux kernel doesn't know or
-  care about such situations.
-
-When the Linux kernel initializes, it creates a set of so-called "initial"
-namespaces: these are indicated by dashed borders around their namespace
-"badges".
+  word, we term such namespaces "shared", but this is our user-land terminology,
+  but not Linux-kernel terminology.
 
 ## Type-Specific Views
 
 The type-specific namespace views are slightly different: first, they show only
 namespaces of a specific type. Then, they are mostly _flat_ views, except for
-PID and user namespace views. For instance, these are views of only _user_ or
-_mount_ namespaces, respectively:
+PID and user namespace views. For instance, this is a view into only _user_
+namespaces, now _without_ the owned namespaces:
 
 <Example>
   <NamespaceProcessTree type="user" discovery={discovery} action={{ action: "" }} />
 </Example>
+
+And this is an example view into only _PID_ namespaces:
 
 <Example>
   <NamespaceProcessTree type="mnt" discovery={discovery} action={{ action: "" }} />
 </Example>
 
 In case the processes attached to a namespace belong to different cgroup
-controllers, then additionally all the topmost processes in the process tree
-with differing cgroup paths are shown. This is especially usefull in such cases,
-where containers share namespaces (either with other containers or the host).
-Such as in case of our "lxkns" service container that needs its processes to run
-attached to the host's initial PID namespace for correct namespace discovery:
+controllers, then additionally all the leader (topmost) processes in the process
+tree with differing cgroup paths are shown. This is especially usefull in such
+cases, where containers share namespaces (either with other containers or the
+host). Such as in case of our "lxkns" service container that needs its processes
+to run attached to the host's initial PID namespace for correct namespace
+discovery:
 
 <Example>
   <NamespaceProcessTree type="pid" discovery={discovery} action={{ action: "" }} />
