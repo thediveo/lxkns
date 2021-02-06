@@ -165,7 +165,7 @@ const LxknsApp = () => {
                     </Badge>
                 </>}
                 tools={() => <>
-                    <Tooltip key="collapseall" title="expand top-level namespace(s) only">
+                    <Tooltip key="collapseall" title="expand only top-level namespace(s)">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(COLLAPSEALL)}>
                             <ChevronRightIcon />

@@ -17,15 +17,16 @@ import React from 'react'
 import { useAtom } from 'jotai'
 import { localStorageAtom } from 'utils/persistentsettings'
 
-import { 
-    Box, Card, Grid, List, ListItem, ListItemSecondaryAction, ListItemText, 
-    makeStyles, MenuItem, Select, Switch as Toggle, Typography 
+import {
+    Box, Card, Divider, Grid, List, ListItem, ListItemSecondaryAction, ListItemText,
+    makeStyles, MenuItem, Select, Switch as Toggle, Typography
 } from '@material-ui/core'
 
 
 const themeKey = 'lxkns.theme'
 const showSystemProcessesKey = 'lxkns.showsystemprocesses'
 const showSharedNamespacesKey = 'lxkns.showsharedns'
+const expandInitiallyKey = 'lxkns.expandinitially'
 
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
@@ -34,6 +35,7 @@ export const themeAtom = localStorageAtom(themeKey, THEME_USERPREF)
 
 export const showSystemProcessesAtom = localStorageAtom(showSystemProcessesKey, false)
 export const showSharedNamespacesAtom = localStorageAtom(showSharedNamespacesKey, true)
+export const expandInitiallyAtom = localStorageAtom(expandInitiallyKey, true)
 
 
 const useStyles = makeStyles((theme) => ({
@@ -58,6 +60,7 @@ export const Settings = () => {
     const [theme, setTheme] = useAtom(themeAtom)
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
     const [showSharedNamespaces, setShowSharedNamespaces] = useAtom(showSharedNamespacesAtom)
+    const [expandInitially, setExpandInitially] = useAtom(expandInitiallyAtom)
 
     const handleThemeChange = (event: React.ChangeEvent<{ value: number }>) => {
         setTheme(event.target.value)
@@ -104,12 +107,34 @@ export const Settings = () => {
                                     />
                                 </ListItemSecondaryAction>
                             </ListItem>
+                            <Divider />
                             <ListItem>
-                                <ListItemText primary="Show shared non-user namespaces" />
+                                <ListItemText
+                                    primary="Show shared non-user namespaces"
+                                    secondary={showSharedNamespaces
+                                        ? 'all namespaces for a leader process'
+                                        : 'namespaces different from parent leader process'}
+                                />
                                 <ListItemSecondaryAction>
                                     <Toggle
                                         checked={showSharedNamespaces}
                                         onChange={() => setShowSharedNamespaces(!showSharedNamespaces)}
+                                        color="primary"
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            <Divider />
+                            <ListItem>
+                                <ListItemText
+                                    primary="Initially expand all new namespaces"
+                                    secondary={expandInitially
+                                        ? 'expand all new'
+                                        : 'expand only top-level new namespaces'}
+                                />
+                                <ListItemSecondaryAction>
+                                    <Toggle
+                                        checked={expandInitially}
+                                        onChange={() => setExpandInitially(!expandInitially)}
                                         color="primary"
                                     />
                                 </ListItemSecondaryAction>

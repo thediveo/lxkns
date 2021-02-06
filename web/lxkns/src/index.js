@@ -20,10 +20,10 @@ import App from './app'
 
 // Import only the necessary Roboto fonts, so they are available "offline"
 // without CDN.
-import "fontsource-roboto/400.css"
-import "fontsource-roboto/500.css"
-import "fontsource-roboto/700.css"
-import 'fontsource-roboto-mono/400.css'
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
+import '@fontsource/roboto-mono/400.css'
 
 // HACK: for reasons yet unknown to mankind, the usual direct import of
 // 'core-js/features/array/flat' doesn't correctly fix missing Array.flat() on

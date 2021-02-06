@@ -16,10 +16,10 @@ import React from 'react'
 //import { BrowserRouter as Router } from 'react-router-dom'
 import { MemoryRouter as Router } from 'react-router'
 
-import "fontsource-roboto/400.css"
-import "fontsource-roboto/500.css"
-import "fontsource-roboto/700.css"
-import "fontsource-roboto-mono/400.css"
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
+import '@fontsource/roboto-mono/400.css'
 
 import { createMuiTheme, ThemeProvider } from '@material-ui/core'
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline'

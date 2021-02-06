@@ -27,7 +27,7 @@ import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
-import { showSystemProcessesAtom } from 'views/settings'
+import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 
 
 /** Internal helper to filter "system(d)" processes. */
@@ -158,6 +158,9 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
     // System process filter setting.
     const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
 
+    // Expand new nodes?
+    const [expandInitially] = useAtom(expandInitiallyAtom)
+
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} } as Discovery)
 
@@ -170,7 +173,7 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
     // Remember the current tree node expansion state in order to be able to
     // later determine how to correctly deal with discovery updates and node
     // expansion.
-    useEffect(() => { 
+    useEffect(() => {
         currExpanded.current = expanded
     }, [expanded])
 
@@ -215,8 +218,11 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
             .map(ns => ns.nsid)
         // We want to expand only new namespaces and never touch their expansion
         // state lateron.
-        const expandingNamespaces = Object.values(discovery.namespaces)
-            .filter(ns => ns.type === nstype)
+        const expandingNamespaces = (expandInitially
+            ? Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype)
+            : Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype && ns.initial))
             .filter(ns => !oldNamespaceIds.includes(ns.nsid))
         // Finally update the expansion state of the tree; this must include the
         // already expanded nodes (state), so that already expanded nodes don't
@@ -224,7 +230,7 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
         const expandNodeIds = expandingNamespaces.map(ns => ns.nsid.toString())
         setExpanded(currExpanded.current.concat(expandNodeIds))
         previousDiscovery.current = discovery
-    }, [nstype, discovery])
+    }, [nstype, discovery, expandInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
