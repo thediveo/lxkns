@@ -126,7 +126,7 @@ export const Settings = () => {
                             <Divider />
                             <ListItem>
                                 <ListItemText
-                                    primary="Initially expand all new namespaces"
+                                    primary="Expand all new namespaces"
                                     secondary={expandInitially
                                         ? 'expand all new'
                                         : 'expand only top-level new namespaces'}

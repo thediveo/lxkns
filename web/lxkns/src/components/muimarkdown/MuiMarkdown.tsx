@@ -180,7 +180,12 @@ const useStyles = makeStyles((theme) => ({
                 ? theme.palette.primary.dark
                 : lighten(theme.palette.primary.light, 0.3)
         },
-        '& a:hover, & a:active': { color: theme.palette.secondary.main },
+        '& a:hover, & a:active': { 
+            color: theme.palette.secondary.main 
+        },
+        '& code': {
+            fontFamily: 'Roboto Mono',
+        }
     }
 }))
 
