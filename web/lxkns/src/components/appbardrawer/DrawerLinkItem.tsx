@@ -1,4 +1,4 @@
-// Copyright 2020 Harald Albrecht.
+// Copyright 2020 by Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -15,28 +15,33 @@
 import React from 'react'
 import { useLocation, Link } from "react-router-dom"
 
-import Typography from '@material-ui/core/Typography'
-import ListItem from '@material-ui/core/ListItem'
-import ListItemIcon from '@material-ui/core/ListItemIcon'
+import { Avatar, ListItem, ListItemAvatar, ListItemIcon, Typography } from '@material-ui/core'
 
 export interface DrawerLinkItemProps {
-    /** drawer item icon, which automatically will be enclosed in ListItemIcon
+    /** 
+     * drawer item icon, which automatically will be enclosed in ListItemIcon
      * components.
      */
     icon?: React.ReactNode
+    /** render the drawer item icon as an avatar. */
+    avatar?: boolean
     /** label of the drawer item. */
-    label: React.ReactNode
+    label: React.ReactNode | string
     /** route path to activate when the user clicks on this drawer item. */
     path: string
 }
 
 /**
  * `DrawerLinkItem` renders an individual item inside an
- * [`AppBarDrawer`](#appbardrawer) and links this item to a specific route
- * path. It is a convenience component that simplifies describing the drawer
- * items with their icons and route paths.
+ * [`AppBarDrawer`](#appbardrawer) and links it to a specific route path. It
+ * is a convenience component that simplifies describing the drawer items with
+ * their icons and route paths.
+ *
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
-export const DrawerLinkItem = ({ icon, label, path }: DrawerLinkItemProps) => {
+export const DrawerLinkItem = ({ icon, avatar, label, path }: DrawerLinkItemProps) => {
+
     const location = useLocation()
     const selected = location.pathname === path
 
@@ -47,7 +52,11 @@ export const DrawerLinkItem = ({ icon, label, path }: DrawerLinkItemProps) => {
             to={path}
             selected={selected}
         >
-            {icon && <ListItemIcon>{icon}</ListItemIcon>}
+            {(avatar && icon &&
+                <ListItemAvatar><Avatar>{icon}</Avatar></ListItemAvatar>
+            ) || (
+                icon && <ListItemIcon>{icon}</ListItemIcon>
+            )}
             <Typography>{label}</Typography>
         </ListItem>
     )

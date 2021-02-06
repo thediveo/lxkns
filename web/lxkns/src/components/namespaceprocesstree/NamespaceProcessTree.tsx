@@ -14,7 +14,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 
-import { atom, useAtom } from 'jotai'
+import { useAtom } from 'jotai'
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
@@ -23,30 +23,12 @@ import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 import TreeItem from '@material-ui/lab/TreeItem'
 
-import { useDiscovery } from 'components/discovery'
-import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
-import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo'
 import ProcessInfo from 'components/processinfo'
+import { NamespaceInfo } from 'components/namespaceinfo'
+import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
+import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 
-
-/** local storage key for the show system processes filter setting. */
-const showSystemProcessesKey = 'lxkns.showSystemProcesses'
-
-/** Filter state for showing/hiding "system" processes. */
-export const showSystemProcessesAtom = atom(
-    // initialize with what the local store has to offer: if it's saying "on",
-    // then the filter will be on, that is, show the system processes. As this
-    // is not a function, but an initial value, it will be evaluated only once
-    // upon creating the atom.
-    localStorage.getItem(showSystemProcessesKey) === 'on',
-    // we supply our own setter function, as it allows us to save the filter
-    // state to local storage besides updating the atom's value.
-    (get, set, newState) => {
-        set(showSystemProcessesAtom, newState === true)
-        localStorage.setItem(showSystemProcessesKey, (newState ? 'on' : 'off'))
-    }
-)
 
 /** Internal helper to filter "system(d)" processes. */
 const showProcess = (process: Process, showSystemProcs: boolean) =>
@@ -157,6 +139,7 @@ const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) =
 export interface NamespaceProcessTreeProps {
     type?: string
     action: Action
+    discovery: Discovery
 }
 
 /**
@@ -168,15 +151,15 @@ export interface NamespaceProcessTreeProps {
  *
  * @param type type of namespace.
  */
-export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps) => {
+export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
     // System process filter setting.
     const [showSystemProcesses] = useAtom(showSystemProcessesAtom)
 
-    // Discovery data.
-    const discovery = useDiscovery()
+    // Expand new nodes?
+    const [expandInitially] = useAtom(expandInitiallyAtom)
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} } as Discovery)
@@ -187,11 +170,16 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
     const [expanded, setExpanded] = useState([])
     const currExpanded = useRef([])
 
-    useEffect(() => { currExpanded.current = expanded }, [expanded])
+    // Remember the current tree node expansion state in order to be able to
+    // later determine how to correctly deal with discovery updates and node
+    // expansion.
+    useEffect(() => {
+        currExpanded.current = expanded
+    }, [expanded])
 
-    // Trigger an action when the action "state" changes; we are ignoing any
-    // stuff appended to the commands, as we need to add noise to the commands
-    // in order to make state changes trigger. Oh, well, bummer.
+    // Trigger an action when the action "state" changes; we are looking only at
+    // the action itself, ignoring its mutation counter, as we need to add noise
+    // to the commands in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         switch (action.action) {
             case EXPANDALL:
@@ -230,8 +218,11 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
             .map(ns => ns.nsid)
         // We want to expand only new namespaces and never touch their expansion
         // state lateron.
-        const expandingNamespaces = Object.values(discovery.namespaces)
-            .filter(ns => ns.type === nstype)
+        const expandingNamespaces = (expandInitially
+            ? Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype)
+            : Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype && ns.initial))
             .filter(ns => !oldNamespaceIds.includes(ns.nsid))
         // Finally update the expansion state of the tree; this must include the
         // already expanded nodes (state), so that already expanded nodes don't
@@ -239,7 +230,7 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
         const expandNodeIds = expandingNamespaces.map(ns => ns.nsid.toString())
         setExpanded(currExpanded.current.concat(expandNodeIds))
         previousDiscovery.current = discovery
-    }, [nstype, discovery])
+    }, [nstype, discovery, expandInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
@@ -281,4 +272,4 @@ export const NamespaceProcessTree = ({ type, action }: NamespaceProcessTreeProps
     )
 }
 
-export default NamespaceProcessTree;
+export default NamespaceProcessTree

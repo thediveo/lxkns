@@ -15,8 +15,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-router-dom'
 
-import useErrorBoundary from "use-error-boundary"
-
 import { SnackbarProvider } from 'notistack'
 
 import { Provider as StateProvider, useAtom } from 'jotai'
@@ -27,49 +25,103 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import { Box, Divider, ThemeProvider } from '@material-ui/core'
-import Toggle from '@material-ui/core/Switch'
+import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery } from '@material-ui/core'
 
+import SettingsIcon from '@material-ui/icons/Settings'
+import HelpIcon from '@material-ui/icons/Help'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import InfoIcon from '@material-ui/icons/Info'
 
-import lxknsTheme from './appstyles'
-
 import Discovery, { useDiscovery } from 'components/discovery'
-import UserNamespaceTree from 'components/usernamespacetree'
-import NamespaceProcessTree from 'components/namespaceprocesstree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
-import { CreateNamespaceTypeIcon } from 'components/namespaceinfo'
 import { NamespaceType } from 'models/lxkns'
 
-import version from '../version'
-import About from './About'
 import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
-import { showSystemProcessesAtom } from 'components/namespaceprocesstree'
+import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
+import { Settings, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
+import { NamespaceIcon } from 'components/namespaceicon'
+import { About } from 'views/about'
+import { Help } from 'views/help'
+import { AllNamespaces } from 'views/allnamespaces'
+import { TypedNamespaces } from 'views/typednamespaces'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
     label: string /** drawer item label */
     path: string /** route path */
-    type?: string /** type of namespace to show, if any */
+    type?: NamespaceType /** type of namespace to show, if any */
 }
 
-const views: viewItem[] = [
-    { icon: <HomeIcon />, label: "all namespaces", path: "/" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.user), label: "user", path: "/user", type: "user" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.pid), label: "PID", path: "/pid", type: "pid" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.cgroup), label: "cgroup", path: "/cgroup", type: "cgroup" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.ipc), label: "IPC", path: "/ipc", type: "ipc" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.mnt), label: "mount", path: "/mnt", type: "mnt" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.net), label: "network", path: "/net", type: "net" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.uts), label: "UTS", path: "/uts", type: "uts" },
-    { icon: CreateNamespaceTypeIcon(NamespaceType.time), label: "time", path: "/time", type: "time" },
-    { icon: <InfoIcon />, label: "information", path: "/about" },
+/**
+ * Side drawer items, organized into groups which will later be visually
+ * separated by dividers.
+ */
+const views: viewItem[][] = [
+    [
+        { icon: <HomeIcon />, label: "all namespaces", path: "/" },
+    ], [
+        {
+            icon: <NamespaceIcon type={NamespaceType.user} />,
+            label: "user namespaces", path: "/user", type: NamespaceType.user
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.pid} />,
+            label: "PID namespaces", path: "/pid", type: NamespaceType.pid
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.cgroup} />,
+            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.ipc} />,
+            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.mnt} />,
+            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.net} />,
+            label: "network namespaces", path: "/net", type: NamespaceType.net
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.uts} />,
+            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts
+        },
+        {
+            icon: <NamespaceIcon type={NamespaceType.time} />,
+            label: "time namespaces", path: "/time", type: NamespaceType.time
+        },
+    ], [
+        { icon: <SettingsIcon />, label: "settings", path: "/settings" },
+        { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
+        { icon: <InfoIcon />, label: "about", path: "/about" },
+    ]
 ]
+
+
+const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
+    theme.palette.type === 'light'
+        ? fade(theme.palette.primary[el], f)
+        : fade(theme.palette.primary[el], 1 - f)
+)
+
+const useStyles = makeStyles((theme) => ({
+    drawer: {
+        '& .MuiListItem-root.Mui-selected, & .MuiListItem-root.Mui-selected:hover': {
+            backgroundColor: themedFade(theme, 'dark', 0.2),
+        },
+        '& .MuiListItem-root:hover': {
+            backgroundColor: themedFade(theme, 'dark', 0.05),
+        },
+        '& .MuiListItemIcon-root .MuiSvgIcon-root': {
+            color: theme.palette.primary.light,
+        }
+    }
+}))
 
 /**
  * The `LxknsApp` component renders the general app layout without thinking
@@ -80,33 +132,46 @@ const views: viewItem[] = [
  * - scrollable content area.
  */
 const LxknsApp = () => {
-    const { ErrorBoundary } = useErrorBoundary()
+
+    const classes = useStyles()
 
     const [treeaction, setTreeAction] = useTreeAction()
 
-    const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
-
     const path = useLocation().pathname
-    const typeview = views.find(view => view.path === path && view.type)
+
+    // Note: JS returns undefined if the result doesn't turn up a match; that's
+    // what we want ... and millions of Gophers are starting to cry (again).
+    const [typeview] = views
+        .flat()
+        .filter(view => view.path === path && view.type)
 
     const discovery = useDiscovery()
+
+    // Number of namespaces shown ... either type-specific or total number.
+    const count = typeview
+        ? Object.values(discovery.namespaces)
+            .filter(netns => netns.type === typeview.type)
+            .length
+        : Object.keys(discovery.namespaces).length
 
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
-                title={
-                    <Badge badgeContent={Object.keys(discovery.namespaces).length} color="secondary">
-                        Linux {typeview && `${typeview.type} `}Namespaces
+                drawerwidth={300}
+                drawerClassName={classes.drawer}
+                title={<>
+                    <Badge badgeContent={count} color="secondary">
+                        <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>
                     </Badge>
-                }
+                </>}
                 tools={() => <>
-                    <Tooltip title="expand initial user namespace(s) only">
+                    <Tooltip key="collapseall" title="expand only top-level namespace(s)">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(COLLAPSEALL)}>
                             <ChevronRightIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="expand all">
+                    <Tooltip key="expandall" title="expand all">
                         <IconButton color="inherit"
                             onClick={() => setTreeAction(EXPANDALL)}>
                             <ExpandMoreIcon />
@@ -114,69 +179,84 @@ const LxknsApp = () => {
                     </Tooltip>
                     <Refresher />
                 </>}
-                drawertitle={() => <>
-                    <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">lxkns</Typography>
-                    <Typography variant="body2" color="textSecondary" component="span">&#32;{version}</Typography>
-                </>}
-                drawer={closeDrawer => <>
-                    <List onClick={closeDrawer}>
-                        {views.map((viewitem, idx) =>
-                            <DrawerLinkItem
-                                key={idx}
-                                icon={viewitem.icon}
-                                label={viewitem.label}
-                                path={viewitem.path}
-                            />
-                        )}
-                    </List>
-                    <Divider />
-                    <List>
-                        <ListItem>
-                            <Toggle
-                                checked={showSystemProcesses}
-                                onChange={() => setShowSystemProcesses(!showSystemProcesses)}
-                                color="primary"
-                            />system processes
-                        </ListItem>
-                    </List>
-                </>}
-            />
-            <Box m={1} flex={1} overflow="auto">
-                <ErrorBoundary
-                    render={() =>
-                        <Switch>
-                            <Route exact path="/about" render={() => <About />} />
-                            {views.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
-                                <Route
-                                    exact path={viewitem.path}
-                                    render={() => <NamespaceProcessTree type={viewitem.type} action={treeaction} />}
-                                    key={idx}
+                drawertitle={() =>
+                    <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">
+                        lxkns
+                    </Typography>
+                }
+                drawer={closeDrawer =>
+                    views.map((group, groupidx) => [
+                        groupidx > 0 && <Divider key={`div-${groupidx}`} />,
+                        <List onClick={closeDrawer} key={groupidx}>
+                            {group.map((viewitem, idx) =>
+                                <DrawerLinkItem
+                                    key={`${groupidx}-${idx}`}
+                                    icon={viewitem.icon}
+                                    label={viewitem.label}
+                                    path={viewitem.path}
                                 />
                             )}
-                            <Route path="/" render={() => <UserNamespaceTree action={treeaction} />} />
-                        </Switch>
-                    }
-                    renderError={({ error }) => <pre>{error.toString()}</pre>}
-                />
+                        </List>
+                    ])
+                }
+            />
+            <Box m={0} flex={1} overflow="auto">
+                <Switch>
+                    <Route exact path="/settings"><Settings /></Route>
+                    <Route exact path="/about"><About /></Route>
+                    <Route path="/help"><Help /></Route>
+                    <Route
+                        exact path={
+                            views.map(group => group.filter(viewitem => !!viewitem.type))
+                                .flat().map(viewitem => viewitem.path)}
+                    >
+                        <TypedNamespaces discovery={discovery} action={treeaction} />
+                    </Route>
+                    <Route path="/"><AllNamespaces discovery={discovery} action={treeaction} /></Route>
+                </Switch>
             </Box>
         </Box>)
 }
 
-// We need to wrap the application as otherwise we won't get a confirmer ...
-// ouch. And since we're already at wrapping things, let's just wrap up all the
-// other wrapping here... *snicker*.
-const App = () => (
-    <ThemeProvider theme={lxknsTheme}>
-        <SnackbarProvider maxSnack={3}>
-            <StateProvider>
+// Wrap the Lxkns app component into a theme provider that switches between
+// light and dark themes depending on theme type configuration state.
+const ThemedApp = () => {
+
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+    const [theme] = useAtom(themeAtom)
+    const themeType = theme === THEME_USERPREF
+        ? (prefersDarkMode ? 'dark' : 'light')
+        : (theme === THEME_DARK ? 'dark' : 'light')
+
+    const appTheme = React.useMemo(() => createMuiTheme(
+        {
+            palette: {
+                type: themeType,
+            },
+        },
+        themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
+    ), [themeType])
+
+    return (
+        <ThemeProvider theme={appTheme}>
+            <CssBaseline />
+            <SnackbarProvider maxSnack={3}>
                 <Discovery />
                 <Router>
-                    <CssBaseline />
                     <LxknsApp />
                 </Router>
-            </StateProvider>
-        </SnackbarProvider>
-    </ThemeProvider>
+            </SnackbarProvider>
+        </ThemeProvider>
+    )
+}
+
+// Finally, the exported App component wraps the themed app component into a
+// Jotai state provider, to keep state provision and app theme switching
+// separated.
+const App = () => (
+    <StateProvider>
+        <ThemedApp />
+    </StateProvider>
 )
 
 export default App

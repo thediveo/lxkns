@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 
 // useInterval is the declarative cousin to JS' setInternval, using react hooks.
-// See: https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+// See: https://overreacted.io/making-setinterval-declarative-with-react-hooks/;
+// the posted code is licensed under the MIT license, see:
+// https://github.com/gaearon/overreacted.io/blob/master/LICENSE-code-snippets.
 const useInterval = (callback, delay) => {
     const savedCallback = useRef(); // no useState() here.
 

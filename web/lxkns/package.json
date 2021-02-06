@@ -3,39 +3,71 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@material-ui/core": "^4.11.0",
+    "@fontsource/roboto": "^4.2.0",
+    "@fontsource/roboto-mono": "^4.2.0",
+    "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
+    "@svgr/babel-plugin-remove-jsx-attribute": "^5.4.0",
+    "@svgr/cli": "^5.5.0",
+    "@svgr/core": "^5.5.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "@types/color-rgba": "^2.1.0",
     "@types/react-router-dom": "^5.1.5",
-    "elliptic": "^6.5.3",
-    "fontsource-roboto": "^3.0.3",
+    "babel-loader": "~8.1.0",
+    "clsx": "^1.1.1",
+    "color-rgba": "^2.2.3",
+    "elliptic": "^6.5.4",
+    "glob": "^7.1.6",
     "http-proxy": "^1.18.1",
-    "jotai": "^0.8.1",
+    "http-proxy-middleware": "^1.0.6",
+    "jotai": "^0.14.0",
     "material-ui-confirm": "^2.1.1",
-    "mdi-material-ui": "^6.19.0",
+    "md5": "^2.3.0",
+    "mdi-material-ui": "^6.22.0",
+    "mdx-loader": "^3.0.2",
     "node-forge": "^0.10.0",
     "notistack": "^1.0.0",
     "react": "^16.13.1",
+    "react-docgen-typescript": "^1.20.5",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.3",
+    "react-scripts": "4.0.2",
     "react-styleguidist": "^11.1.0",
     "react-transition-group": "^4.4.1",
+    "ts-loader": "^8.0.15",
+    "ts-node": "^9.1.1",
     "typescript": "^4.0.3",
+    "url-loader": "^4.1.1",
     "use-error-boundary": "^2.0.4",
     "websocket-extensions": "^0.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts start",
+    "build": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts build",
+    "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "styleguide": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist server",
+    "styleguide:build": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist build"
+  },
+  "babel": {
+    "presets": [
+      "babel-preset-react-app"
+    ]
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "overrides": [
+      {
+        "files": [
+          "**/*.ts?(x)"
+        ],
+        "rules": {}
+      }
+    ]
   },
   "browserslist": {
     "production": [
@@ -49,6 +81,5 @@
       "last 1 safari version"
     ]
   },
-  "homepage": ".",
-  "proxy": "http://localhost:5010"
+  "homepage": "/"
 }

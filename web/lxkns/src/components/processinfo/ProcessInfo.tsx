@@ -22,42 +22,49 @@ import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
 import { Process } from 'models/lxkns'
 
 import { makeStyles } from '@material-ui/core'
+import clsx from 'clsx'
 
-// Component styling
-const processnameColor = 'darkgreen'
-const cgrouppathColor = 'dimgray'
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     // The whole component as such...
     processInfo: {
         display: 'inline-block',
         whiteSpace: 'nowrap',
         '& .MuiSvgIcon-root': {
             marginRight: '0.15em',
-            verticalAlign: 'middle',
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
+            color: theme.palette.process,
         },
     },
     processName: {
         fontStyle: 'italic',
-        color: processnameColor,
+        color: theme.palette.process,
         '&::before': {
-            content: '"\\22"',
+            content: '"«"',
             fontStyle: 'normal',
         },
         '&::after': {
-            content: '"\\22"',
+            content: '"»"',
             fontStyle: 'normal',
         },
     },
     cgroupInfo: {
         marginLeft: '0.5em',
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
+            color: theme.palette.cgroup,
+        },
     },
     cgroupPath: {
-        color: cgrouppathColor,
-        '&::before': { content: '"\\22"' },
-        '&::after': { content: '"\\22"' },
+        color: theme.palette.cgroup,
+        '&::before': { content: '"«"' },
+        '&::after': { content: '"»"' },
     }
-})
+}))
 
 /**
  * The `ProcessInfo` component expects only a single property: the process to
@@ -66,6 +73,8 @@ const useStyles = makeStyles({
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
+    /** optional CSS class name(s). */
+    className?: string
 }
 
 /** 
@@ -81,26 +90,20 @@ export interface ProcessInfoProps {
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
-export const ProcessInfo = ({ process }: ProcessInfoProps) => {
+export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
     const classes = useStyles()
 
     return !!process && (
-        <span className={classes.processInfo}>
+        <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
-                <RunFast
-                    fontSize="inherit"
-                    style={{ color: processnameColor }}
-                />
+                <RunFast fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
             {process.cgroup && (
                 <Tooltip title="control-group path" className="cgroupinfo">
-                    <span className={classes.cgroupInfo}>
-                        <CarCruiseControl
-                            fontSize="inherit"
-                            style={{ color: cgrouppathColor }}
-                        />
+                    <span className={clsx(classes.cgroupInfo, className)}>
+                        <CarCruiseControl fontSize="inherit" />
                         <span className={classes.cgroupPath}>{process.cgroup}</span>
                     </span>
                 </Tooltip>)}

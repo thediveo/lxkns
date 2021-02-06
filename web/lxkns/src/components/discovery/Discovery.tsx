@@ -15,7 +15,7 @@
 import { useEffect } from 'react'
 
 import { atom, useAtom } from 'jotai'
-import { Setter } from 'jotai/types'
+import { Setter } from 'jotai/core/types'
 
 import { useSnackbar } from 'notistack'
 

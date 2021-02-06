@@ -16,14 +16,19 @@ import { Namespace, Process } from './model'
 
 /**
  * Returns a number indicating whether a first namespace comes before a second
- * namespace (<0), is the same (0), or comes after (>0). Namespaces are
- * ordered simply by their namespace identifiers, which are inode numbers.
+ * namespace (<0), is the same (0), or comes after (>0). Namespaces are ordered
+ * simply by their namespace identifiers, which are inode numbers. Initial
+ * namespaces are always ordered before non-initial namespaces.
  *
  * @param ns1 one namespace.
  * @param ns2 another namespace.
  */
-export const compareNamespaceById = (ns1: Namespace, ns2: Namespace) =>
-    ns1.nsid - ns2.nsid
+export const compareNamespaceById = (ns1: Namespace, ns2: Namespace) => {
+    if (ns1.initial !== ns2.initial) {
+        return ns1.initial ? -1 : 1
+    }
+    return ns1.nsid - ns2.nsid
+}
 
 /**
  * Returns a number indicating whether a first namespace comes before a second
@@ -55,13 +60,18 @@ export const compareNamespaceByRefTypeId = (ns1: Namespace, ns2: Namespace) => {
 
 /**
  * Returns a number indicating whether a first process comes before a second
- * process (<0), is the same (0), or comes after (>0). Processes are ordered
- * by their names, taking the current locale settings into account. If the
- * names of two processes are the same ("bash", ...), then the processes
- * identifiers (PIDs) are compared instead to break the tie.
+ * process (<0), is the same (0), or comes after (>0). Processes are ordered by
+ * their names, taking the current locale settings into account. The only
+ * exception is the initial process which always comes first. If the names of
+ * two processes are the same ("bash", ...), then the processes identifiers
+ * (PIDs) are compared instead to break the tie.
  *
  * @param proc1 one process.
  * @param proc2 another process.
  */
-export const compareProcessByNameId = (proc1: Process, proc2: Process) =>
-    proc1.name.localeCompare(proc2.name) || proc2.pid - proc1.pid
+export const compareProcessByNameId = (proc1: Process, proc2: Process) => {
+    if (proc1.pid === 1 || proc2.pid === 1) {
+        return proc1.pid === 1 ? -1 : 1
+    }
+    return proc1.name.localeCompare(proc2.name) || proc2.pid - proc1.pid
+}

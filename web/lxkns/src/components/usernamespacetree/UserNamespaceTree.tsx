@@ -20,10 +20,19 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 
-import { useDiscovery } from 'components/discovery'
-import { compareNamespaceById, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
+import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
+import { expandInitiallyAtom } from 'views/settings'
+import { useAtom } from 'jotai'
+
+
+export interface UserNamespaceTreeProps {
+    /** trigger tree action. */
+    action: Action
+    /** discovery data. */
+    discovery: Discovery
+}
 
 // The UserNamespaceTree component renders a tree of user namespaces, including
 // owned non-user namespaces. Furthermore, it renders additional information,
@@ -34,10 +43,9 @@ import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 //
 // This component also supports sending action commands for expanding or
 // collapsing (almost) all user namespaces via the properties mechanism.
-export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */ => {
+export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps) => {
 
-    // Discovery data comes in via a dedicated discovery context.
-    const discovery = useDiscovery()
+    const [expandInitially] = useAtom(expandInitiallyAtom)
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {} })
@@ -79,13 +87,14 @@ export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */
     // processes) which we want to automatically expand in the tree view. We
     // won't touch the expansion state of existing user namespace tree nodes.
     useEffect(() => {
-        // We want to determine which user namespace tree nodes should be expanded,
-        // taking into account which user namespace nodes currently are expanded and
-        // which user namespace nodes are now being added anew. The difficulty here
-        // is that we only know which nodes are expanded, but we don't know which
-        // nodes are collapsed. So we first need to calculate which user namespace
-        // nodes are really new; we just need the user namespace IDs, as this is
-        // what we're identifying the tree nodes by.
+        // We want to determine which user namespace tree nodes should be
+        // expanded, taking into account which user namespace nodes currently
+        // are expanded and which user namespace nodes are now being added anew.
+        // The difficulty here is that we only know which nodes are expanded,
+        // but we don't know which nodes are collapsed. So we first need to
+        // calculate which user namespace nodes are really new; we just need the
+        // user namespace IDs, as this is what we're identifying the tree nodes
+        // by.
         const previousNamespaces = previousDiscovery.current.namespaces as NamespaceMap
         const oldUsernsIds = Object.values(previousNamespaces)
             .filter(ns => ns.type === 'user')
@@ -95,18 +104,20 @@ export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */
         // letting pass only the root user namespaces, lateron we let pass all
         // user namespaces; we'll next sort out which user namespaces are
         // actually new, as to not touch existing user namespaces.
-        const usernsCandidatesFilter = Object.keys(previousNamespaces).length ?
-            ((ns: Namespace) => ns.type === NamespaceType.user) :
-            ((ns: Namespace) => ns.type === NamespaceType.user && ns.parent === null);
+        const usernsCandidatesFilter = expandInitially && Object.keys(previousNamespaces).length
+            ? ((ns: Namespace) => ns.type === NamespaceType.user)
+            : ((ns: Namespace) => ns.type === NamespaceType.user && ns.parent === null);
         const expandingUserns = Object.values(discovery.namespaces)
             .filter(usernsCandidatesFilter)
             .filter(ns => !oldUsernsIds.includes(ns.nsid))
         // Additionally also open any process child nodes below the new user
         // namespace tree nodes.
-        const expandingProcIds = expandingUserns
-            .map(userns => uniqueProcsOfTenants(userns)
-                .map(proc => userns.nsid.toString() + "-" + proc.pid.toString()))
-            .flat()
+        const expandingProcIds = expandInitially
+            ? expandingUserns
+                .map(userns => uniqueProcsOfTenants(userns)
+                    .map(proc => userns.nsid.toString() + "-" + proc.pid.toString()))
+                .flat()
+            : []
         // Finally update the expansion state of the tree; this must include the
         // already expanded nodes (state), and we add our to-be-expanded-soon
         // nodes.
@@ -114,7 +125,7 @@ export const UserNamespaceTree = ({ action }: { action: Action }) /* facepalm */
             .concat(expandingProcIds)
         setExpanded(currExpanded.current.concat(expandNodeIds));
         previousDiscovery.current = discovery;
-    }, [discovery])
+    }, [discovery, expandInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to

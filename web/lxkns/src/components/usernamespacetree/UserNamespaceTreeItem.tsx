@@ -12,31 +12,40 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
-import TreeItem from '@material-ui/lab/TreeItem';
+import React from 'react'
+import { useAtom } from 'jotai'
 
-import NamespaceInfo from 'components/namespaceinfo/NamespaceInfo';
-import ProcessInfo from 'components/processinfo'
-import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace } from 'models/lxkns';
+import TreeItem from '@material-ui/lab/TreeItem'
+
+import { ProcessInfo } from 'components/processinfo'
+import { NamespaceInfo } from 'components/namespaceinfo'
+import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
+import { showSharedNamespacesAtom } from 'views/settings'
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.
 export const uniqueProcsOfTenants = (usernamespace: Namespace) => {
-    const uniqueprocs = {} as ProcessMap
+    const uniqueprocs: ProcessMap = {}
     Object.values(usernamespace.tenants)
-        .filter(tenant => tenant.ealdorman !== null)
-        .forEach(tenant =>
-            uniqueprocs[tenant.ealdorman.pid] = tenant.ealdorman);
-    return Object.values(uniqueprocs);
-};
+        .forEach(tenant => {
+            if (tenant.ealdorman) {
+                uniqueprocs[tenant.ealdorman.pid] = tenant.ealdorman
+            }
+        })
+    return Object.values(uniqueprocs)
+}
 
 export interface UserNamespaceTreeItemProps {
+    /** user namespace object */
     namespace: Namespace
 }
 
 // Component UserNamespaceTreeItem renders a user namespace tree item, as well
 // as the owned non-user namespaces and child user namespaces.
 export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps) => {
+
+    const [showSharedNamespaces] = useAtom(showSharedNamespacesAtom)
+
     // Generally speaking, we now separate the "tenants" into bind-mounted
     // namespaces and namespaces "inhabited" by processes.
 
@@ -63,23 +72,36 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
             <TreeItem
                 className="controlledprocess"
                 key={proc.pid}
-                nodeId={namespace.nsid.toString() + '-' + proc.pid.toString()}
-                label={<ProcessInfo process={proc} />}>{
-                    Object.values(proc.namespaces)
-                        .filter(tenant => tenant.owner === namespace && tenant.ealdorman === proc)
-                        .sort((tenant1, tenant2) => tenant1.type.localeCompare(tenant2.type))
-                        .map(tenant => <TreeItem
+                nodeId={`${namespace.nsid}-${proc.pid}`}
+                label={<ProcessInfo process={proc} />}
+            >
+                {Object.values(proc.namespaces)
+                    // either (a) show all non-user namespaces to which a
+                    // process is attached, or (b) show only those non-user
+                    // namespaces that are specific to this process and not
+                    // "shared" with other leaders in the same user namespace. 
+                    .filter(showSharedNamespaces
+                        ? (tenant: Namespace) => tenant.type !== NamespaceType.user
+                        : (tenant: Namespace) => tenant.owner === namespace && tenant.ealdorman === proc)
+                    .sort((tenant1, tenant2) => tenant1.type.localeCompare(tenant2.type))
+                    .map(tenant =>
+                        <TreeItem
                             className="tenant"
                             key={tenant.nsid}
-                            nodeId={tenant.nsid.toString()}
-                            label={<NamespaceInfo noprocess={true} namespace={tenant} />}
+                            nodeId={`${namespace.nsid}-${proc.pid}-${tenant.nsid}`}
+                            label={<NamespaceInfo
+                                shared={tenant.owner !== namespace || tenant.ealdorman !== proc}
+                                noprocess={true}
+                                namespace={tenant}
+                            />}
                         />)
-                }</TreeItem>
-        );
+                }
+            </TreeItem>
+        )
 
     const children = Object.values(namespace.children)
         .sort(compareNamespaceById)
-        .map(childns => <UserNamespaceTreeItem key={childns.nsid} namespace={childns} />);
+        .map(childns => <UserNamespaceTreeItem key={childns.nsid} namespace={childns} />)
 
     // Please note that we need destructure or concatenate the resulting two
     // sets of tenant nodes and children nodes, as otherwise the enclosing
@@ -89,7 +111,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
         <TreeItem
             className="namespace"
             key={namespace.nsid}
-            nodeId={namespace.nsid.toString()}
+            nodeId={`${namespace.nsid}`}
             label={<NamespaceInfo namespace={namespace} />}
         >
             {[...procs, ...bindmounts, ...children]}
@@ -97,4 +119,4 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
     )
 }
 
-export default UserNamespaceTreeItem;
+export default UserNamespaceTreeItem

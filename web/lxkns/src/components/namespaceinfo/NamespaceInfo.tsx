@@ -14,150 +14,89 @@
 
 import React from 'react'
 
-import PersonIcon from '@material-ui/icons/Person'
-import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk'
-import TimerIcon from '@material-ui/icons/Timer'
-import MemoryIcon from '@material-ui/icons/Memory'
-import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRight'
-import Tooltip from '@material-ui/core/Tooltip'
-
-import Ghost from 'mdi-material-ui/Ghost'
-import Database from 'mdi-material-ui/Database'
-import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
-import Lan from 'mdi-material-ui/Lan'
-import Laptop from 'mdi-material-ui/Laptop'
-import FileLinkOutline from 'mdi-material-ui/FileLinkOutline'
+import AccountTreeIcon from '@material-ui/icons/AccountTree'
 
 import { ProcessInfo } from 'components/processinfo'
 import { Namespace, NamespaceType } from 'models/lxkns'
 
 import { makeStyles } from '@material-ui/core'
+import { NamespaceRef } from 'components/namespaceref'
+import { NamespaceBadge } from 'components/namespacebadge'
+import clsx from 'clsx'
+
 
 // Component styling...
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     namespace: {
         display: 'inline-block',
         whiteSpace: 'nowrap',
         verticalAlign: 'middle',
     },
-    namespacePath: {
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        fontStyle: 'italic',
-        color: '#bf8d19',
-        '& .MuiSvgIcon-root': {
-            marginRight: '0.15em',
-            verticalAlign: 'middle',
-        },
+    shared: {
+        color: `${theme.palette.text.disabled} !important`,
     },
-    namespacePill: {
-        minWidth: '11.5em',
-        verticalAlign: 'middle',
-
-        display: 'inline-flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-
-        marginTop: '0.2ex',
-        marginBottom: '0.2ex',
-        marginRight: '0.5em',
-        paddingLeft: '0.2em',
-        paddingRight: '0.2em',
-        paddingTop: '0.2ex',
-        borderRadius: '0.2em',
-
-        // ...and now for the namespace-type specific styling.
-        '&$cgroup': {
-            backgroundColor: '#fce1e1',
-        },
-        '&$ipc': {
-            backgroundColor: '#f5ffcc',
-        },
-        '&$mnt': {
-            backgroundColor: '#e4f2f5',
-        },
-        '&$net': {
-            backgroundColor: '#e0ffe0',
-        },
-        '&$pid': {
-            backgroundColor: '#daddf2',
-        },
-        '&$time': {
-            backgroundColor: 'mediumaquamarine',
-        },
-        '&$user': {
-            width: '9.5em',
-            textAlign: 'center',
-            backgroundColor: '#e9e8e8',
-            fontWeight: 'bold',
-        },
-        '&$uts': {
-            backgroundColor: '#fff2d9',
-        }
+    procInfo: {
+        marginLeft: '0.5em',
+    },
+    pathInfo: {
+        marginLeft: '0.5em',
     },
     userchildrenInfo: {
         display: 'inline-block',
         whiteSpace: 'nowrap',
-        marginRight: '0.5em',
+        marginLeft: '0.5em',
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
+        },
     },
-    // The following is required so we can reference and thus combine
-    // selectors for namespace type-specific styling of the "pill".
-    cgroup: {},
-    ipc: {},
-    mnt: {},
-    net: {},
-    pid: {},
-    user: {},
-    uts: {},
-    time: {}
-})
+    ownerInfo: {
+    },
+    ownerName: {
+        color: theme.palette.ownername,
+        '&.root': { color: theme.palette.ownerroot },
+        '&::before': { content: '"«"' },
+        '&::after': { content: '"»"' },
+    },
+}))
 
-// Maps Linux-kernel namespace types to icons, including tooltips.
-interface NamespaceIcon {
-    tooltip: string
-    icon: any
-}
+// Reduce function returning the (recursive) sum of children and grand-children
+// plus this namespace itself.
+const countNamespaceWithChildren = (sum: number, ns: Namespace) =>
+    sum + ns.children.reduce(countNamespaceWithChildren, 1)
 
-// Maps namespace types to icons and suitable tooltip texts.
-const namespaceTypeIcons: { [key in NamespaceType]: NamespaceIcon } = {
-    [NamespaceType.cgroup]: { tooltip: "control group", icon: CarCruiseControl },
-    [NamespaceType.ipc]: { tooltip: "inter-process", icon: PhoneInTalkIcon},
-    [NamespaceType.mnt]: { tooltip: "mount", icon: Database },
-    [NamespaceType.net]: { tooltip: "network", icon: Lan },
-    [NamespaceType.pid]: { tooltip: "process identifier", icon: MemoryIcon },
-    [NamespaceType.user]: { tooltip: "user", icon: PersonIcon },
-    [NamespaceType.uts]: { tooltip: "*nix time sharing system", icon: Laptop },
-    [NamespaceType.time]: { tooltip: "monotonous timers", icon: TimerIcon },
+
+export interface NamespaceInfoProps {
+    /** namespace with type, identifier and initial namespace indication. */
+    namespace: Namespace,
+    /** suppress rendering leader process information.  */
+    noprocess?: boolean,
+    /** is this a namespace shared with other leader processes? */
+    shared?: boolean,
+    /** optional CSS class name(s). */
+    className?: string,
 }
 
 /**
- * Creates an icon based on the type of namespace and optional icon properties.
+ * Component `Namespace` renders information about a particular namespace. The
+ * type and ID get rendered, as well as the most senior process with its name,
+ * or alternatively a bind-mounted or fd reference.
  *
- * @param type type of namespace, one of NamespaceType.cgroup, et cetera.
- * @param props icon properties.
+ * Please note: this component never renders any child namespaces (even if the
+ * given namespace is either a PID or user namespace).
  */
-export const CreateNamespaceTypeIcon = (type: NamespaceType, props?: any) =>
-    React.createElement(namespaceTypeIcons[type].icon, props)
+export const NamespaceInfo = ({
+    namespace, noprocess, shared, className
+}: NamespaceInfoProps) => {
 
-export interface NamespaceInfoProps {
-    namespace: Namespace,
-    noprocess?: boolean,
-}
-
-// Component `Namespace` renders information about a particular namespace. The
-// type and ID get rendered, as well as the most senior process with its name,
-// or alternatively a bind-mounted or fd reference.
-//
-// Please note: this component never renders any child namespaces (even if it
-// is a PID and user namespace).
-const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
     const classes = useStyles()
 
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID. Unless the process information is to be suppressed.
     const procinfo = !noprocess && namespace.ealdorman &&
-        <ProcessInfo process={namespace.ealdorman} />
+        <ProcessInfo process={namespace.ealdorman} className={classes.procInfo} />
 
     // If there isn't any process attached to this namespace, prepare
     // information about bind mounts and fd references, if possible. This also
@@ -165,99 +104,35 @@ const NamespaceInfo = ({ namespace, noprocess }: NamespaceInfoProps) => {
     // hierarchy without any other references to them anymore beyond the
     // parent-child references.
     const pathinfo = !namespace.ealdorman &&
-        <NamespacePath namespace={namespace} />
+        <NamespaceRef namespace={namespace} className={classes.pathInfo} />
 
-    // For user namespaces also prepare ownership information.
+    // For user namespaces also prepare ownership information: the user name as
+    // well as the UID of the Linux user "owning" the user namespace.
     const ownerinfo = namespace.type === NamespaceType.user &&
-        <span className="owner">
-            owned by UID {namespace['user-id']} {namespace['user-name'] && ('"' + namespace['user-name'] + '"')}
+        'user-id' in namespace &&
+        <span className={classes.ownerInfo}>
+            owned by UID {namespace['user-id']}
+            {namespace['user-name'] && <>
+                {' '}
+                <span className={clsx(classes.ownerName, namespace['user-name'] === 'root' && 'root')}>
+                    {namespace['user-name']}
+                </span>
+            </>}
         </span>
 
-    const children = namespace.type === NamespaceType.user &&
+    // For PID and user namespaces determine the total number of children and
+    // grandchildren.
+    const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
+        namespace.children.length > 0 &&
         <span className={classes.userchildrenInfo}>
-            [<SubdirectoryArrowRightIcon fontSize="inherit" />
-            {countNamespaceWithChildren(-1, namespace)}]
+            [<AccountTreeIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
         </span>
 
     return (
-        <span className={`${classes.namespace} ${namespace.type}`}>
-            <NamespacePill namespace={namespace} />
-            {children}
+        <span className={clsx(classes.namespace, namespace.type, shared && classes.shared, className)}>
+            <NamespaceBadge namespace={namespace} shared={shared} />
+            {childrenCount}
             {procinfo || pathinfo} {ownerinfo}
         </span>
-    )
-}
-
-export default NamespaceInfo;
-
-// reduce function returning the sum of children and grand-children plus this
-// namespace itself.
-const countNamespaceWithChildren = (acc: number, ns: Namespace) =>
-    acc + ns.children.reduce(countNamespaceWithChildren, 1)
-
-
-export interface NamespaceProps {
-    /** namespace with type and identifier. */
-    namespace: Namespace
-}
-
-/**
- * Component `NamespacePill` renders a namespace "pill" consisting of just the
- * namespace's type and identifier, in the typical "nstype:[nsid]" textual
- * notation. Yet it gets some simple graphical adornments; in particular, an
- * icon matching the type of namespace.
- */
-export const NamespacePill = ({ namespace }: NamespaceProps) => {
-    const classes = useStyles()
-
-    // Ouch ... Tooltip won't display its tooltip on a <> child, but
-    // instead we have to use a <span> to make it work as expected...
-
-    // Ouch #2: don't put comments into return statements, as this will break
-    // the optimized build. Ouch ouch ouch ... see also issue #8687,
-    // https://github.com/facebook/create-react-app/issues/8687 ... and still
-    // open.
-    return (
-        <Tooltip title={`${namespaceTypeIcons[namespace.type].tooltip} namespace`}>
-            <span className={`${classes.namespacePill} ${classes[namespace.type]}`}>
-                {CreateNamespaceTypeIcon(namespace.type, {fontSize: 'inherit'})}
-                {namespace.type}:[{namespace.nsid}]
-            </span>
-        </Tooltip>
-    )
-}
-
-/**
- * 
- */
-const NamespacePath = ({ namespace }: NamespaceProps) => {
-    const classes = useStyles()
-
-    const isProcfdPath = namespace.reference &&
-        namespace.reference.startsWith('/proc/') &&
-        namespace.reference.includes('/fd/')
-
-    return (
-        (!namespace.reference &&
-            <Tooltip title={"intermediate hidden " + namespace.type + " namespace"}>
-                <span className={classes.namespacePath}>
-                    <Ghost fontSize="inherit" />
-                </span>
-            </Tooltip>
-        ) || (isProcfdPath &&
-            <Tooltip title="kept alive by file descriptor">
-                <span className={classes.namespacePath}>
-                    <FileLinkOutline fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
-                </span>
-            </Tooltip>
-        ) || (
-            <Tooltip title="bind mount">
-                <span className={classes.namespacePath}>
-                    <FileLinkOutline fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
-                </span>
-            </Tooltip>
-        )
     )
 }

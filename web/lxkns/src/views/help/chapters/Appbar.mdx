@@ -1,0 +1,35 @@
+import MenuIcon from '@material-ui/icons/Menu';
+import Badge from '@material-ui/core/Badge';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import SyncIcon from '@material-ui/icons/Sync';
+
+# Application Bar
+
+## <MenuIcon className="icon"/> Drawer
+
+The <MenuIcon className="icon"/> button in the application bar opens the
+(navigation) drawer. The drawer switches between different namespace views and
+also provides access to [settings](/help/settings) and information about this
+application.
+
+## <Badge badgeContent="42" color="secondary">Namespaces</Badge>
+
+The number badge in the application bar displays the number of namespaces
+currently shown.
+
+## <ChevronRightIcon className="icon"/> Expand Top-Level Only
+
+The <ChevronRightIcon className="icon"/> button collapses the view except for
+the top-level namespace(s) and the attached (cgroup'ed) leader processes.
+
+## <ExpandMoreIcon className="icon"/> Expand All
+
+The <ExpandMoreIcon className="icon"/> button expands all namespaces with all
+their attached (cgroup'ed) leader processes.
+
+## <span style={{whiteSpace: 'nowrap'}}><RefreshIcon className="icon"/><SyncIcon className="icon"/><ExpandMoreIcon className="icon"/></span> Refresh
+
+The remaining application bar buttons are for [refreshing the discovery data as
+well as controlling the refresh interval](/help/refresh).

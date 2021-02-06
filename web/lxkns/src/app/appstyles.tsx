@@ -1,0 +1,136 @@
+// Copyright 2020 Harald Albrecht.
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy
+// of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
+import { createMuiTheme } from '@material-ui/core'
+import { amber, blue, blueGrey, brown, green, grey, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
+import { cloneDeep, merge as mergeDeep } from 'lodash'
+
+
+// We augment the existing Material-UI theme with new elements for uniform color
+// styling of lxkns UI elements beyond the predefined Material UI elements. This
+// avoids scattering and potentially duplicating the same color configurations
+// all over the various lxkns-specific UI elements.
+//
+// See also:
+// https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
+declare module '@material-ui/core/styles/createPalette' {
+    interface Palette {
+        // namespace badge background colors
+        namespace: {
+            cgroup: string,
+            ipc: string,
+            mnt: string,
+            net: string,
+            pid: string,
+            user: string,
+            uts: string,
+            time: string,
+        },
+        nsref: string, // filesystem reference of a namespace
+        process: string, // process information (name&PID)
+        cgroup: string, // process cgroup path
+        ownername: string, // owner user name
+        ownerroot: string, // owner user root
+    }
+    // allow configuration using `createMuiTheme`
+    interface PaletteOptions {
+        namespace?: {
+            cgroup?: string,
+            ipc?: string,
+            mnt?: string,
+            net?: string,
+            pid?: string,
+            user?: string,
+            uts?: string,
+            time?: string,
+        },
+        nsref?: string,
+        process?: string,
+        cgroup?: string,
+        ownername?: string,
+        ownerroot?: string,
+    }
+}
+
+// FIXME: remove and refactor CSS into components.
+const globalTheme = createMuiTheme()
+
+
+// The (basic) light theme parts specific to lxkns.
+export const lxknsLightTheme = {
+    overrides: {
+        MuiCssBaseline: {
+            '@global': {
+                // Please note: now automatic translation into class names is
+                // off, so don't forget the prefix dots on CSS class names.
+                '.namespacetree': {
+                    '& .MuiTreeItem-group': {
+                        marginLeft: '2em',
+                    },
+                    '& .namespace .controlledprocess': {
+                        marginLeft: '2em',
+                    },
+                    '& .namespace .controlledprocess .MuiTreeItem-content::before': {
+                        content: '"····"',
+                        marginRight: '0.35em',
+                        color: globalTheme.palette.text.disabled,
+                    },
+                    '& .controlledprocess .controlledprocess': {
+                        marginLeft: '1.1em',
+                    },
+                },
+            },
+        },
+    },
+    palette: {
+        namespace: {
+            cgroup: red[50],
+            ipc: lime[50],
+            mnt: blue[50],
+            net: green[50],
+            pid: purple[50],
+            user: blueGrey[50],
+            uts: brown[50],
+            time: amber[50],
+        },
+        nsref: yellow[800],
+        process: teal[700],
+        cgroup: grey[600],
+        ownername: lime[800],
+        ownerroot: pink[700],
+    },
+}
+
+// The dark theme, based on the light theme.
+export const lxknsDarkTheme = mergeDeep(
+    cloneDeep(lxknsLightTheme),
+    {
+        palette: {
+            namespace: {
+                cgroup: red[900],
+                ipc: lime[900],
+                mnt: blue[900],
+                net: green[900],
+                pid: purple[900],
+                user: blueGrey[700],
+                uts: brown[700],
+                time: amber[900],
+            },
+            process: teal[300],
+            cgroup: grey[500],
+            ownername: lime[500],
+            ownerroot: pink[500],
+        },
+    }
+)

@@ -1,0 +1,39 @@
+# Settings
+
+## Appearance
+
+Switch the **UI theme** between:
+
+- light theme,
+
+- dark theme,
+
+- either light or dark theme based on user preference – only some web browsers
+  support this feature, depending on desktop integration.
+
+## Display
+
+### System Processes
+
+Show or hide **system processes**, where system processes are processes
+belonging to one of the following cgroups (control groups):
+
+- `/system.slice/*`
+- `/init.scope/*`
+- `/user.slice`
+
+Defaults to hiding system processes in order to reduce the amount of process
+information.
+
+### Shared Namespaces
+
+Show or hide **shared non-user namespaces**: these are namespaces that are used
+– "shared" – by multiple leader processes (and their subprocesses) with
+different cgroup controllers but the same owning user namespace.
+
+Defaults to showing all non-user namespaces of a leader process, regardless of
+whether a namespace is unique to that leader process, or not. 
+
+### Expand Newly Discovered Namespaces
+
+Automatically expand all newly discovered namespaces, or leave them collapsed.

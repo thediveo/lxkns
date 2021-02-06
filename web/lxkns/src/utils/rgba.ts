@@ -12,18 +12,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react';
+import colorRgba from 'color-rgba'
 
-import LaunchIcon from '@material-ui/icons/Launch';
-
-const extlink = (href, linktext, spaced) => (<>
-    {spaced && ' '}
-    <LaunchIcon fontSize="inherit" className="inlineicon" style={{ verticalAlign: 'middle' }} /><a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-    >{linktext}</a>
-    {spaced && ' '}
-</>);
-
-export default extlink;
+/**
+ * Returns a CSS "rgba(...)" color string given a CSS color string and an alpha
+ * (transparency) value.
+ *
+ * @param color color string, such as "#rgb", "#rrggbb", "rgb(r,g,b)", et
+ * cetera.
+ * @param alpha alpha value in the range of [0..1].
+ */
+export const rgba = (color: string, alpha: number) => {
+    const [r, g, b,] = colorRgba(color)
+    return `rgba(${r},${g},${b},${alpha})`
+}

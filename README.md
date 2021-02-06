@@ -7,18 +7,24 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
-nook and cranny of your Linux hosts. This package also features marshalling and
-unmarshalling namespace discovery results to and from JSON – which is especially
-useful to separate the super-privileged scanner from non-root frontends: run
-namespace discoveries as a containerized service.
+nook and cranny of your Linux hosts.
 
-In addition, `lxkns` comes with a set of unique web and CLI namespace discovery tools
-and also helps Go programs with switching namespaces.
+- browser discovery tool with containerized backend discovery service.
 
-[![lxkns web app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
+- CLI namespace discovery tools.
 
-And all that tested with Go 1.13-1.15. And even with support for the new time
-namespaces.
+- features marshalling and unmarshalling namespace discovery results to and from
+  JSON – which is especially useful to separate the super-privileged scanner
+  from non-root frontends: run namespace discoveries as a containerized service.
+
+- helps Go programs with switching namespaces.
+
+- tested with Go 1.13-1.15.
+
+- supports even the new(er) "time" Linux-kernel namespaces.
+
+[![lxkns web
+app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 ## 🔎 Comprehensive Namespace Discovery
 
@@ -482,19 +488,43 @@ func main() {
 
 ## 🔧 Tinkering
 
-`make` targets:
+### `make` Targets
+
 - `test`: builds and runs all tests inside a container; the tests are run twice,
   once as root and once as a non-root user.
+
 - `deploy` and `undeploy`: builds and starts, or stops, the containerized lxkns
   discovery service.
+
 - `coverage`: runs a full coverage on all tests in the module, once as root,
   once as non-root, resulting in a single `coverage.html`.
+
 - `clean`: removes coverage files, as well as any top-level CLI tool binaries
   that happened to end up there instead of `${GOPATH}/bin`.
+
 - `install`: builds and installs the binaries into `${GOPATH}/bin`, then
   installs these binaries into `/usr/local/bin`.
 
+
+### Automated Test Notes
+
+- all lxkns library tests (including the CLI tools) can be run in a test
+  container, see the `deployments/test` directory for how the test container is
+  built.
+
+- we finally got rid of `--privileged` even for the test container. The last
+  missing piece in the puzzle was `--security-opt systempaths=unconfined` in
+  order to successfully pass tests in child PID namespaces (and even inside
+  child user namespaces to get a better kick out of it) which require remounting
+  `/proc`. See also the [Docker Engine 19.03 release
+  notes](https://docs.docker.com/engine/release-notes/19.03/), and [PR #1808:
+  add cli integration for unconfined
+  systempaths](https://github.com/docker/cli/pull/1808).
+
+- It's funny to see how people get happy when `--privileged` gets dropped, yet
+  `CRAP_SYS_ADMIN` and `CAP_SYS_PTRACE` doesn't ring a bell – when they should
+  ring for kingdom come.
 ## ⚖️ Copyright and License
 
-`lxkns` is Copyright 2020 Harald Albrecht, and licensed under the Apache
+`lxkns` is Copyright 2020‒21 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.
