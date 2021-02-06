@@ -57,7 +57,7 @@ read # wait for test to proceed()
 
 		netnsid := nstest.CmdDecodeNSId(cmd)
 
-		// Try to refernce and lock the new network namespace created by the
+		// Try to reference and lock the new network namespace created by the
 		// test script, then try to enter it and run a separate process attached
 		// to the new network namespace.
 		lockednetns, netnsunlocker, err := PortableReference{ID: netnsid, Type: species.CLONE_NEWNET}.Open()

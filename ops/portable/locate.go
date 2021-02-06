@@ -35,8 +35,9 @@ func LocateNamespace(nsid species.NamespaceID, nstype species.NamespaceType) mod
 	return LocateNamespaceInNamespaces(nsid, nstype, discovery.Namespaces)
 }
 
-// LocateNamespaces tries to recover the path reference to a "lost" namespace
-// based on its ID and type, using the specified namespace information (map).
+// LocateNamespaceInNamespaces tries to recover the path reference to a "lost"
+// namespace based on its ID and type, using the specified namespace information
+// (map).
 func LocateNamespaceInNamespaces(nsid species.NamespaceID, nstype species.NamespaceType, allnamespaces model.AllNamespaces) model.Namespace {
 	if nstype == 0 {
 		nstype = species.AllNS
