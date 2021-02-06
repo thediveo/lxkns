@@ -179,14 +179,14 @@ const LxknsApp = () => {
                     </Tooltip>
                     <Refresher />
                 </>}
-                drawertitle={() => <>
+                drawertitle={() =>
                     <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">
                         lxkns
                     </Typography>
-                </>}
-                drawer={closeDrawer => <>
-                    {views.map((group, groupidx) => <>
-                        {groupidx > 0 && <Divider key={`div-${groupidx}`} />}
+                }
+                drawer={closeDrawer =>
+                    views.map((group, groupidx) => [
+                        groupidx > 0 && <Divider key={`div-${groupidx}`} />,
                         <List onClick={closeDrawer} key={groupidx}>
                             {group.map((viewitem, idx) =>
                                 <DrawerLinkItem
@@ -197,8 +197,8 @@ const LxknsApp = () => {
                                 />
                             )}
                         </List>
-                    </>)}
-                </>}
+                    ])
+                }
             />
             <Box m={0} flex={1} overflow="auto">
                 <Switch>
@@ -218,6 +218,8 @@ const LxknsApp = () => {
         </Box>)
 }
 
+// Wrap the Lxkns app component into a theme provider that switches between
+// light and dark themes depending on theme type configuration state.
 const ThemedApp = () => {
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
@@ -248,6 +250,9 @@ const ThemedApp = () => {
     )
 }
 
+// Finally, the exported App component wraps the themed app component into a
+// Jotai state provider, to keep state provision and app theme switching
+// separated.
 const App = () => (
     <StateProvider>
         <ThemedApp />
