@@ -14,16 +14,18 @@
 
 import React from 'react'
 
-import { Box } from '@material-ui/core'
-import { MuiMarkdown } from 'components/muimarkdown'
-import { SmartA } from 'components/smarta'
-
-/* eslint import/no-webpack-loader-syntax: off */
-import AboutMDX from "!babel-loader!mdx-loader!./About.mdx"
+import { Discovery } from 'models/lxkns'
+import { Action } from 'app/treeaction'
+import { UserNamespaceTree } from 'components/usernamespacetree'
 
 
-export const About = () => (
-    <Box m={2} flex={1} overflow="auto">
-        <MuiMarkdown mdx={AboutMDX} shortcodes={{ a: SmartA }} />
-    </Box>
+export interface AllNamespacesProps {
+    /** lxkns discovery data */
+    discovery: Discovery
+    /** tree action */
+    action: Action
+}
+
+export const AllNamespaces = ({discovery, action}: AllNamespacesProps) => (
+    <UserNamespaceTree discovery={discovery} action={action} />
 )

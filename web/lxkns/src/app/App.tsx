@@ -35,7 +35,6 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import InfoIcon from '@material-ui/icons/Info'
 
 import Discovery, { useDiscovery } from 'components/discovery'
-import { UserNamespaceTree } from 'components/usernamespacetree'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
@@ -46,7 +45,8 @@ import { Settings, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 import { NamespaceIcon } from 'components/namespaceicon'
 import { About } from 'views/about'
 import { Help } from 'views/help'
-import { NamespaceProcessTree } from 'components/namespaceprocesstree'
+import { AllNamespaces } from 'views/allnamespaces'
+import { TypedNamespaces } from 'views/typednamespaces'
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -205,19 +205,14 @@ const LxknsApp = () => {
                     <Route exact path="/settings"><Settings /></Route>
                     <Route exact path="/about"><About /></Route>
                     <Route path="/help"><Help /></Route>
-                    {/* let's generate the different namespace type view routes programmatically */}
-                    {views.map(group => group.filter(viewitem => !!viewitem.type).map((viewitem, idx) =>
-                        <Route exact path={viewitem.path} key={idx}>
-                            <Box m={0} flex={1} overflow="auto">
-                                <NamespaceProcessTree type={viewitem.type} discovery={discovery} action={treeaction} />
-                            </Box>
-                        </Route>
-                    )).flat()}
-                    <Route path="/">
-                        <Box m={0} flex={1} overflow="auto">
-                            <UserNamespaceTree discovery={discovery} action={treeaction} />
-                        </Box>
+                    <Route
+                        exact path={
+                            views.map(group => group.filter(viewitem => !!viewitem.type))
+                                .flat().map(viewitem => viewitem.path)}
+                    >
+                        <TypedNamespaces discovery={discovery} action={treeaction} />
                     </Route>
+                    <Route path="/"><AllNamespaces discovery={discovery} action={treeaction} /></Route>
                 </Switch>
             </Box>
         </Box>)

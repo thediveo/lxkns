@@ -21,7 +21,8 @@ import "fontsource-roboto/500.css"
 import "fontsource-roboto/700.css"
 import "fontsource-roboto-mono/400.css"
 
-import { createMuiTheme, CssBaseline, ThemeProvider } from '@material-ui/core'
+import { createMuiTheme, ThemeProvider } from '@material-ui/core'
+import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline'
 
 import { lxknsLightTheme } from 'app/appstyles'
 
@@ -38,10 +39,11 @@ const lightTheme = createMuiTheme(
 
 const MuiThemeWrapper = ({ children }) => (
     <ThemeProvider theme={lightTheme}>
-        <CssBaseline />
-        <Router>
-            {children}
-        </Router>
+        <ScopedCssBaseline>
+            <Router>
+                {children}
+            </Router>
+        </ScopedCssBaseline>
     </ThemeProvider>
 )
 

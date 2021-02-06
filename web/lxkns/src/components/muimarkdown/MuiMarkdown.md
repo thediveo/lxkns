@@ -55,12 +55,11 @@ This component has basic support for light and dark theming.
 import { ComponentCard } from "styleguidist/ComponentCard";
 import MinExampleMDX from "!babel-loader!mdx-loader!./example/minexample.mdx";
 import { createMuiTheme, ThemeProvider, makeStyles } from "@material-ui/core";
-import CssBaseline from "@material-ui/core/CssBaseline";
 import { styles } from "@material-ui/core/Typography/Typography";
 
 const themes = [
   createMuiTheme({ palette: { type: "light" } }),
-  //createMuiTheme({ palette: { type: "dark" } }),
+  createMuiTheme({ palette: { type: "dark" } }),
 ];
 
 const T = () => {
@@ -69,10 +68,10 @@ const T = () => {
 };
 
 <>
-  {themes.map((theme) => (
+  {themes.map((theme, idx) => (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <T />
+      {idx > 0 && <br/>}
+      with {theme.palette.type} theme:
       <ComponentCard>
         <MuiMarkdown mdx={MinExampleMDX} />
       </ComponentCard>

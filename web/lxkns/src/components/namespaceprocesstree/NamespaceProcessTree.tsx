@@ -167,11 +167,16 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
     const [expanded, setExpanded] = useState([])
     const currExpanded = useRef([])
 
-    useEffect(() => { currExpanded.current = expanded }, [expanded])
+    // Remember the current tree node expansion state in order to be able to
+    // later determine how to correctly deal with discovery updates and node
+    // expansion.
+    useEffect(() => { 
+        currExpanded.current = expanded
+    }, [expanded])
 
-    // Trigger an action when the action "state" changes; we are ignoing any
-    // stuff appended to the commands, as we need to add noise to the commands
-    // in order to make state changes trigger. Oh, well, bummer.
+    // Trigger an action when the action "state" changes; we are looking only at
+    // the action itself, ignoring its mutation counter, as we need to add noise
+    // to the commands in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         switch (action.action) {
             case EXPANDALL:

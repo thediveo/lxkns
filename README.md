@@ -7,18 +7,24 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
-nook and cranny of your Linux hosts. This package also features marshalling and
-unmarshalling namespace discovery results to and from JSON – which is especially
-useful to separate the super-privileged scanner from non-root frontends: run
-namespace discoveries as a containerized service.
+nook and cranny of your Linux hosts.
 
-In addition, `lxkns` comes with a set of unique web and CLI namespace discovery tools
-and also helps Go programs with switching namespaces.
+- browser discovery tool with containerized backend discovery service.
 
-[![lxkns web app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
+- CLI namespace discovery tools.
 
-And all that tested with Go 1.13-1.15. And even with support for the new(er)
-"time" Linux-kernel namespaces.
+- features marshalling and unmarshalling namespace discovery results to and from
+  JSON – which is especially useful to separate the super-privileged scanner
+  from non-root frontends: run namespace discoveries as a containerized service.
+
+- helps Go programs with switching namespaces.
+
+- tested with Go 1.13-1.15.
+
+- supports even the new(er) "time" Linux-kernel namespaces.
+
+[![lxkns web
+app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 ## 🔎 Comprehensive Namespace Discovery
 

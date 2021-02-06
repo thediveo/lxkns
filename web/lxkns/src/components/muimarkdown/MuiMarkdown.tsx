@@ -197,11 +197,12 @@ export interface MuiMarkdownProps {
 }
 
 /**
- * Renders the given MDX using Material-UI `Typography` components (where
- * appropriate). The MDX can be either statically imported beforehand or also
- * lazily imported using `React.lazy()`. This component will handle both use
- * cases transparently: it uses a `React.Suspense` child component and shows a
- * `ChapterSkeleton` component while lazily loading MDX.
+ * Renders the given [MDX](https://mdxjs.com/) using Material-UI `Typography`
+ * components (where appropriate). The MDX can be either statically imported
+ * beforehand or also lazily imported when needed using `React.lazy()`. This
+ * component will handle both use cases transparently: it uses a
+ * `React.Suspense` child component and shows a `ChapterSkeleton` component
+ * while lazily loading MDX.
  *
  * - uses [mdx-js/mdx](https://github.com/mdx-js/mdx).
  * - headings automatically get `id` slugs via
