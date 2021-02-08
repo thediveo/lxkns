@@ -12,8 +12,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-router-dom'
+import React, { useMemo } from 'react'
+import { BrowserRouter as Router, Switch, Route, useLocation, useHistory } from 'react-router-dom'
+import { createBrowserHistory } from 'history'
 
 import { SnackbarProvider } from 'notistack'
 
@@ -237,14 +238,20 @@ const ThemedApp = () => {
         themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
     ), [themeType])
 
+    // Add Cypress end-to-end test support by exposing our router history to it,
+    // so tests can navigate within our application without reloading the app
+    // anew, loosing all state.
+    const history = useHistory()
+    if (history && window['Cypress']) {
+        window['cy-react-history'] = history
+    }
+
     return (
         <ThemeProvider theme={appTheme}>
             <CssBaseline />
             <SnackbarProvider maxSnack={3}>
                 <Discovery />
-                <Router>
                     <LxknsApp />
-                </Router>
             </SnackbarProvider>
         </ThemeProvider>
     )
@@ -252,10 +259,13 @@ const ThemedApp = () => {
 
 // Finally, the exported App component wraps the themed app component into a
 // Jotai state provider, to keep state provision and app theme switching
-// separated.
+// separated. And we also place the router high up here, so we can get the
+// history object in the ThemedApp for passing it to Cypress, if present.
 const App = () => (
     <StateProvider>
-        <ThemedApp />
+        <Router>
+            <ThemedApp />
+        </Router>
     </StateProvider>
 )
 
