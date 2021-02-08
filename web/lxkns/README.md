@@ -124,3 +124,10 @@ interface.
 
 - `styleguidist/` – support for the lxkns style guide using [React
   Styleguidist](https://react-styleguidist.js.org/).
+
+- `cypress/` – configuration of the [Cypress](https://cypress.io) Javascript
+  end-to-end testing framework.
+
+  > **Note:** while integration tests are (as it is custom) in
+  > `integration/*.ts`, component tests are packed together with the individual
+  > components they are testing as `src/components/*.spec.ts`.

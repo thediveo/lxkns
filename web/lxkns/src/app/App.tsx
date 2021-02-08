@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { BrowserRouter as Router, Switch, Route, useLocation, useHistory } from 'react-router-dom'
 import { createBrowserHistory } from 'history'
 
@@ -242,9 +242,12 @@ const ThemedApp = () => {
     // so tests can navigate within our application without reloading the app
     // anew, loosing all state.
     const history = useHistory()
-    if (history && window['Cypress']) {
-        window['cy-react-history'] = history
-    }
+
+    useEffect(() => {
+        if (history && window['Cypress']) {
+            window['cy-react-history'] = history
+        }    
+    }, [history])
 
     return (
         <ThemeProvider theme={appTheme}>

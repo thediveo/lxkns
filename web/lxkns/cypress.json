@@ -1,3 +1,6 @@
 {
-    "baseUrl": "http://localhost:3030"
+    "baseUrl": "http://localhost:3030",
+    "experimentalComponentTesting": true,
+    "componentFolder": "src",
+    "testFiles": "**/*.spec.[j|t]s?(x)"
 }
