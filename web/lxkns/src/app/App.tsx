@@ -12,9 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Switch, Route, useLocation, useHistory } from 'react-router-dom'
-import { createBrowserHistory } from 'history'
 
 import { SnackbarProvider } from 'notistack'
 
