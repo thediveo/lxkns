@@ -11,7 +11,6 @@ describe('NamespaceIcon', () => {
                 <NamespaceIcon key={nstype} id={nstype} type={nstype} />
             )}
         </>)
-        cy.waitForReact()
         Object.values(NamespaceType).forEach(nstype => {
             cy.get(`#${nstype}`)
                 .get('svg').should('exist')
@@ -20,7 +19,6 @@ describe('NamespaceIcon', () => {
 
     it('does not render non-existing namespace type', () => {
         mount(<NamespaceIcon id="icon" type={'foobar' as NamespaceType} />)
-        cy.waitForReact()
         cy.get('#icon').should('not.exist')
     })
 
