@@ -28,5 +28,4 @@ describe('SmartA', () => {
             .contains('help')
     })
 
-
 })

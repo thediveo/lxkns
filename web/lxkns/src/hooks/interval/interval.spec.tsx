@@ -5,19 +5,21 @@ import useInterval from './interval'
 // Simple functional component to test the useInterval hook while changing the
 // interval.
 const Ticker = ({ callback }: { callback: () => void }) => {
-    
+
     const [interval, setInterval] = useState(null)
 
     useInterval(callback, interval)
 
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setInterval(event.target.value)
+        // oh dear HTML5, selecting the null value gives us the "off" value
+        // instead, so we need to map "off" back to a null value. Ouch.
+        setInterval(event.target.value !== 'off' ? event.target.value : null)
     }
 
     return (<>
-        <div id="interval">interval: {interval}</div>
-        <select id="ticker" name="interval" size={5} onChange={handleChange}>
-            <option value={null} selected>off</option>
+        <div id="interval">interval: {interval || 'off'}</div>
+        <select id="ticker" name="interval" size={5} defaultValue={null} onChange={handleChange}>
+            <option value={null}>off</option>
             <option value={1000}>1s</option>
             <option value={5000}>5s</option>
         </select>
@@ -60,7 +62,8 @@ describe('interval', () => {
         cy.clock().then(() => {
             mount(<Ticker callback={cb} />)
         })
-        cy.tick(10000)
+        cy
+            .tick(10000)
             .get('@stub', { timeout: 0 })
             .should('not.have.been.called')
 
@@ -72,12 +75,24 @@ describe('interval', () => {
             .get('@stub', { timeout: 0 }).should('have.been.calledOnce')
             .tick(10000)
             .get('@stub', { timeout: 0 }).should('have.been.calledThrice')
-            
+
             .get('#ticker').select('off')
             .get('@stub', { timeout: 0 }).should('have.been.calledThrice')
             .get('#interval').contains('interval: off')
             .tick(10000)
             .get('@stub', { timeout: 0 }).should('have.been.calledThrice')
+
+            .get('#ticker').select('1s')
+            .get('#interval').contains('interval: 1000')
+            .tick(2000)
+            .get('@stub', { timeout: 0 }).should('have.been.callCount', 5)
+            .tick(500)
+            .get('@stub', { timeout: 0 }).should('have.been.callCount', 5)
+
+            .get('#ticker').select('off')
+            .get('#interval').contains('interval: off')
+            .tick(10000)
+            .get('@stub', { timeout: 0 }).should('have.been.callCount', 5)
     })
 
 })

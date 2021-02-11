@@ -32,6 +32,6 @@ export interface NamespaceIconProps extends SvgIconProps {
  * icons are SVG icons.
  */
 export const NamespaceIcon = ({type, ...props}: NamespaceIconProps) =>
-    type ?
+    type && namespaceTypeInfo[type] ?
         React.createElement(namespaceTypeInfo[type].icon, props)
         : null
