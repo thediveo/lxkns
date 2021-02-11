@@ -1,7 +1,7 @@
-describe('lxkns end-to-end', () => {
+describe('lxkns app', () => {
 
     before(() => {
-        cy.log('loads UI')
+        cy.log('loads')
         cy.visit('/')
         cy.waitForReact(1000, '#root')
 
@@ -34,3 +34,5 @@ describe('lxkns end-to-end', () => {
     })
 
 })
+
+export { }

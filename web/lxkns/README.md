@@ -20,7 +20,9 @@ interface.
     installed alongside nodejs: `npm -g install yarn`.
   - install all dependencies for this web app: `yarn install`.
   - start the lxkns service: `run deploy`.
-  - start the wep app development server: `yarn start`. 
+  - start the wep app development server: `yarn start`.
+  - run unit and end-to-end tests: `yarn cypress:run`. Or interactively: `yarn
+    cypress`.
 
 ## Overview
 
@@ -130,4 +132,4 @@ interface.
 
   > **Note:** while integration tests are (as it is custom) in
   > `integration/*.ts`, component tests are packed together with the individual
-  > components they are testing as `src/components/*.spec.ts`.
+  > components and hooks they are testing as `src/components/*.spec.tsx`.

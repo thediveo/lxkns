@@ -50,6 +50,7 @@
     "build": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts build",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
     "cypress": "cypress open",
+    "cypress:run": "cypress run",
     "eject": "react-scripts eject",
     "styleguide": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist server",
     "styleguide:build": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist build"
