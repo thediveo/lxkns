@@ -59,6 +59,8 @@ describe('MuiMarkdown', () => {
         cy.waitForReact()
         cy.get('#myfallback').should('exist')
             .contains('myfallback')
+
+        cy.then(() => {deferredImportPromise.reject})
     })
 
 })

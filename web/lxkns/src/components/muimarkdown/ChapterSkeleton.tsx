@@ -14,9 +14,23 @@
 
 import React from 'react'
 
-import { Typography } from '@material-ui/core'
+import { makeStyles, Theme, Typography } from '@material-ui/core'
 import { Skeleton } from '@material-ui/lab'
 
+
+interface chapterSkeletonStyleProps {
+    rem: number
+}
+
+const useStyles = makeStyles<Theme, chapterSkeletonStyleProps>({
+    skeleton: {
+        width: props => `${props.rem}rem`,
+        '& > :nth-child(1)': { width: props => `${props.rem*0.55}rem` },
+        '& > :nth-child(2)': { width: props => `${props.rem*0.9}rem` },
+        '& > :nth-child(3)': { width: props => `${props.rem}rem` },
+        '& > :nth-child(4)': { width: props => `${props.rem*0.7}rem` },
+    }
+})
 
 export interface ChapterSkeletonProps {
     /** width of skeleton in 'rem'. */
@@ -29,12 +43,12 @@ export interface ChapterSkeletonProps {
  */
 export const ChapterSkeleton = ({ rem }: ChapterSkeletonProps) => {
 
-    rem = rem || 15
+    const classes = useStyles({rem: rem || 15})
 
-    return (<>
-        <Typography variant="h4" style={{ width: `${rem / 1.75}rem` }}><Skeleton animation="wave" /></Typography>
-        <Typography variant="body1" style={{ width: `${rem}rem` }}><Skeleton animation="wave" /></Typography>
-        <Typography variant="body1" style={{ width: `${rem}rem` }}><Skeleton animation="wave" /></Typography>
-        <Typography variant="body1" style={{ width: `${rem / 1.2}rem` }}><Skeleton animation="wave" /></Typography>
-    </>)
+    return (<div className={classes.skeleton}>
+        <Typography variant="h4"><Skeleton animation="wave" /></Typography>
+        <Typography variant="body1"><Skeleton animation="wave" /></Typography>
+        <Typography variant="body1"><Skeleton animation="wave" /></Typography>
+        <Typography variant="body1"><Skeleton animation="wave" /></Typography>
+    </div>)
 }
