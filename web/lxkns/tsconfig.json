@@ -23,7 +23,8 @@
     "noFallthroughCasesInSwitch": false,
     "types": [
       "cypress",
-      "cypress-react-selector"
+      "cypress-react-selector",
+      "cypress-react-router"
     ]
   },
   "include": [

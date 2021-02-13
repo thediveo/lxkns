@@ -5743,6 +5743,11 @@ cyclist@^1.0.1:
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-1.0.1.tgz#596e9698fd0c80e12038c2b82d6eb1b35b6224d9"
   integrity sha1-WW6WmP0MgOEgOMK4LW6xs1tiJNk=
 
+cypress-react-router@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/cypress-react-router/-/cypress-react-router-1.0.1.tgz#cd838501fa82c134e0f3a03a3b40d386da487af8"
+  integrity sha512-HFxogRj9CLm58XlJQWZgbjYZMFrgklpvoy9AYKfs59dLBydQgtUM1oJg6OmPwUXVXstOCeGJKNMtrimiJaHZnA==
+
 cypress-react-selector@^2.3.6:
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/cypress-react-selector/-/cypress-react-selector-2.3.6.tgz#f884292c22c5cd783bfad4c991842e5be4df9380"

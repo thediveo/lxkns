@@ -18,3 +18,4 @@ import './commands'
 
 import '@cypress/react/support'
 import 'cypress-react-selector'
+import 'cypress-react-router/add-commands'

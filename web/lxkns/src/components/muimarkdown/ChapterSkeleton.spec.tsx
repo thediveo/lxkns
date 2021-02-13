@@ -13,33 +13,22 @@
 // under the License.
 
 import React from 'react'
-import { BrowserRouter } from 'react-router-dom'
 import { mount } from '@cypress/react'
-import SmartA from './SmartA'
+import { ChapterSkeleton } from './ChapterSkeleton'
 
-describe('SmartA', () => {
+describe('ChapterSkeleton', () => {
 
-    it('adorns external links', () => {
+    it('renders', () => {
         mount(
-            <SmartA href="http://nottheendoftheinternet.null">Not the End of The Internet</SmartA>
+            <ChapterSkeleton rem={10} />
         )
         cy.waitForReact()
-        cy.get('span')
-            .should('exist')
-            .contains('Not the End of The Internet')
-    })
-
-    it('renders internal links plainly', () => {
-        mount(
-            <BrowserRouter>
-                <SmartA href="/help">help</SmartA>
-            </BrowserRouter>
-        )
-        cy.waitForReact()
-        cy.get('a')
-            .should('exist')
-            .and('have.attr', 'href', '/help')
-            .contains('help')
+        cy.react('Typography', { props: { variant: 'h4' } })
+            .should('have.length', 1)
+            .find('.MuiSkeleton-root')
+        cy.react('Typography', { props: { variant: 'body1' } })
+            .should('have.length', 3)
+            .find('.MuiSkeleton-root')
     })
 
 })

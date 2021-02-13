@@ -19,29 +19,9 @@
 declare global {
     namespace Cypress {
         interface Chainable {
-            /**
-             * Custom command to navigate to a pathname without reloading a
-             * single page application.
-             *
-             * @example cy.navigate('/help')
-             */
-            navigate(pathname: string): Chainable<Window>
         }
     }
 }
-
-Cypress.Commands.add(
-    'navigate',
-    (pathname: string) => {
-        cy.window().then((w) => {
-            // Use if exposed react history object if available, otherwise fall
-            // back to the browser's HTML5 DOM history object.
-            w['cy-react-history']
-                ? w['cy-react-history'].push(pathname)
-                : w.history.pushState({ path: pathname }, '', pathname)
-        })
-    }
-)
 
 // Make this a module.
 export { }
