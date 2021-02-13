@@ -180,8 +180,8 @@ const useStyles = makeStyles((theme) => ({
                 ? theme.palette.primary.dark
                 : lighten(theme.palette.primary.light, 0.3)
         },
-        '& a:hover, & a:active': { 
-            color: theme.palette.secondary.main 
+        '& a:hover, & a:active': {
+            color: theme.palette.secondary.main
         },
         '& code': {
             fontFamily: 'Roboto Mono',
@@ -227,7 +227,7 @@ export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMa
     const classes = useStyles()
 
     return (
-        <React.Suspense fallback={fallback || ChapterSkeleton}>
+        <React.Suspense fallback={fallback || <ChapterSkeleton />}>
             <MDXProvider components={{ ...MuiComponents, ...shortcodes }}>
                 <div className={clsx(className, classes.markdown)}>
                     <Mdx />

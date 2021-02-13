@@ -49,8 +49,8 @@
     "start": "REACT_APP_GIT_VERSION=$(git describe --tags) PORT=3030 react-scripts start",
     "build": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts build",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
-    "cypress": "cypress open",
-    "cypress:run": "cypress run",
+    "cypress": "NODE_ENV=test cypress open",
+    "cypress:run": "NODE_ENV=test cypress run",
     "eject": "react-scripts eject",
     "styleguide": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist server",
     "styleguide:build": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist build"
@@ -87,6 +87,7 @@
   "devDependencies": {
     "cypress": "^6.4.0",
     "cypress-react-router": "^1.0.1",
-    "cypress-react-selector": "^2.3.6"
+    "cypress-react-selector": "^2.3.6",
+    "p-defer": "^3.0.0"
   }
 }

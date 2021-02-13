@@ -23,10 +23,10 @@ describe('ChapterSkeleton', () => {
             <ChapterSkeleton rem={10} />
         )
         cy.waitForReact()
-        cy.react('Typography', { props: { variant: 'h4' } })
+        cy.get('.MuiTypography-h4')
             .should('have.length', 1)
             .find('.MuiSkeleton-root')
-        cy.react('Typography', { props: { variant: 'body1' } })
+        cy.get('.MuiTypography-body1')
             .should('have.length', 3)
             .find('.MuiSkeleton-root')
     })
