@@ -9,6 +9,7 @@
         "types": [
             "node",
             "cypress",
+            "cypress-react-router",
             "cypress-react-selector"
         ]
     },

@@ -12,6 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+/// <reference types="../../cypress/support" />
+
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { CypressHistorySupport } from 'cypress-react-router'
@@ -48,6 +50,7 @@ describe('HelpViewer', () => {
             .click()
 
         cy
+            .history().its('location').its('pathname').should('equal', '/foo/help/foobar')
             .get('@hv').find('h4').contains('Foo Bar')
             .get('button.prev').contains('Intro')
             .get('button.next').contains('A New Chapter')
@@ -62,13 +65,15 @@ describe('HelpViewer', () => {
             .get('@nav').click()
             .get('.MuiPopover-paper').find('li').each((navitem, idx) => {
                 expect(navitem.text()).to.equal(chapters[idx].title)
-                if (idx === chapters.length-1) {
+                if (idx === chapters.length - 1) {
                     expect(navitem).to.have.class('Mui-selected')
                 }
             })
             .first().click()
 
-        cy.get('@hv').find('h4').contains('Introduction')
+        cy
+            .get('@hv').find('h4').contains('Introduction')
+            .history().its('location').its('pathname').should('equal', '/foo/help/intro')
     })
 
 

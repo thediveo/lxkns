@@ -15,13 +15,10 @@
 // See also:
 // https://github.com/omerose/cypress-support/blob/master/cypress/support/commands.ts
 
-// Must be declared global to be detected by typescript (allows import/export)
-declare global {
-    namespace Cypress {
-        interface Chainable {
-        }
-    }
-}
+Cypress.Commands.add(
+    'history',
+    () => cy.window().its('cyHistory')
+)
 
 // Make this a module.
 export { }
