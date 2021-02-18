@@ -88,6 +88,12 @@ export interface NamespaceSet {
 
 export interface NamespaceMap { [key: string]: Namespace }
 
+export enum FridgeState {
+    Thawed = 0,
+    Freezing,
+    Frozen
+}
+
 /**
  * Information about a single OS-level process, within the process hierarchy.
  * Each process is always attached to namespaces, one of each type (except for
@@ -103,6 +109,10 @@ export interface Process {
     cmdline: string
     starttime: number
     cgroup: string
+    fridgecgroup: string
+    fridge: FridgeState
+    selffridge: FridgeState
+    parentfridge: FridgeState
     namespaces: NamespaceSet
 }
 

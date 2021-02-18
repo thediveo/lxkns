@@ -64,7 +64,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         ns.ealdorman = ((ns as NamespaceJson).ealdorman &&
             discovery.processes[(ns as NamespaceJson).ealdorman.toString()]) || null;
 
-        // resolve namspace hierarchy references, if present.
+        // resolve namespace hierarchy references, if present.
         switch (ns.type) {
             case NamespaceType.user:
             case NamespaceType.pid:
