@@ -22,7 +22,8 @@ testcontaineropts := \
 	--cap-add CAP_SETGID \
 	--security-opt systempaths=unconfined \
 	--security-opt apparmor=unconfined \
-	--security-opt seccomp=unconfined
+	--security-opt seccomp=unconfined \
+	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 

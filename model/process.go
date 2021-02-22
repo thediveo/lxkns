@@ -50,6 +50,21 @@ const (
 	ProcessFrozen
 )
 
+// String returns the textual representation of the "fridge" status of a
+// process.
+func (s ProcessFridgeStatus) String() string {
+	switch s {
+	case ProcessThawed:
+		return "thawed"
+	case ProcessFreezing:
+		return "freezing"
+	case ProcessFrozen:
+		return "frozen"
+	default:
+		return fmt.Sprintf("ProcessFridgeStatus(%d)", s)
+	}
+}
+
 // Process represents our very limited view and even more limited interest in
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
