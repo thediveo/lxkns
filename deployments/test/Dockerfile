@@ -9,6 +9,7 @@ COPY --chown=luser deployments/test/runtests /
 # Cache dependencies to some extend, to speed up things...
 COPY --chown=luser go.mod go.sum ./
 RUN su luser -c "go mod graph | awk '{if (\$1 !~ \"@\") print \$2}' | xargs go get"
+#RUN su luser -c "go mod download -x"
 # Copy in the full lxkns module; unfortunately, tests cannot be prebuild and we
 # cannot run tests on namespaces in a build container, so that's all we can do
 # here.

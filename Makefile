@@ -6,7 +6,7 @@ GIT_VERSION = $(shell git describe --tags 2>/dev/null || echo "v0.0.0")
 # Go version to use when building the test containers; start with a version
 # 1.14+ first to get better testbasher diagnosis in case a test script runs
 # into trouble.
-goversion = 1.15 1.13
+goversion = 1.16 1.15
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree
 
