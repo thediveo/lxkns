@@ -18,6 +18,7 @@ testcontaineropts := \
 	--cap-add CAP_SYS_CHROOT \
 	--cap-add CAP_SYS_PTRACE \
 	--cap-add CAP_DAC_READ_SEARCH \
+	--cap-add CAP_DAC_OVERRIDE \
 	--cap-add CAP_SETUID \
 	--cap-add CAP_SETGID \
 	--security-opt systempaths=unconfined \

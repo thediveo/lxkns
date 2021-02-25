@@ -16,7 +16,9 @@ package model
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -41,7 +43,11 @@ var _ = Describe("cgrouping", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
-
+		// Pick up the path of the freezer cgroup root; this allows this test to
+		// automatically adjust. However it requires that when we run inside a
+		// test container we got full cgroup access by bind-mounting the cgroups
+		// root into our container. Otherwise, we won't be able to create our
+		// own freezer (sub) cgroup controller :(
 		fridgeroot := ""
 	Fridge:
 		for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
@@ -54,28 +60,40 @@ var _ = Describe("cgrouping", func() {
 		}
 		Expect(fridgeroot).NotTo(BeZero(), "detecting freezer cgroup root")
 
+		freezercgname := fmt.Sprintf("lxkns%d", rand.Intn(100000)+100000)
+
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Script("main", fmt.Sprintf(`
+set -e
+CTRL=%s
 sleep 1d &
 PID=$!
 # create new freezer controller and put the sleep task under its control,
 # then freeze it.
-mkdir %[1]s/lxkns
-echo $PID > %[1]s/lxkns/tasks
-echo $PID
+mkdir $CTRL 2>&1 # crash reading PID with error message from mkdir if it failed
+echo $PID > $CTRL/cgroup.procs
+# Safety guard: check that there's exactly one process under control.
+cat $CTRL/cgroup.procs | wc -l
+cat $CTRL/cgroup.procs
 read # wait to proceed() and only then freeze the process.
-echo "FROZEN" > %[1]s/lxkns/freezer.state
+echo "FROZEN" > $CTRL/freezer.state
 read # wait to proceed() and then thaw the process again.
-echo "THAWED" > %[1]s/lxkns/freezer.state
+echo "THAWED" > $CTRL/freezer.state
 read # wait to proceed().
 kill $PID
-rmdir %[1]s/lxkns
-`, fridgeroot))
+rmdir $CTRL
+`, filepath.Join(fridgeroot, freezercgname)))
 		cmd := scripts.Start("main")
 		defer cmd.Close()
+
+		var controlleds int
+		cmd.Decode(&controlleds)
+		Expect(controlleds).To(Equal(1), "oh, no! Fridge %q is empty.", filepath.Join(fridgeroot, freezercgname))
+
 		var pid PIDType
 		cmd.Decode(&pid)
+		Expect(pid).NotTo(BeZero())
 
 		f := func() *Process {
 			p := NewProcessTable()
@@ -83,7 +101,7 @@ rmdir %[1]s/lxkns
 		}
 		Expect(f()).Should(PointTo(MatchFields(IgnoreExtras, Fields{
 			"Fridge":       Equal(ProcessThawed),
-			"FridgeCgroup": Equal("/lxkns"),
+			"FridgeCgroup": Equal(filepath.Join("/", freezercgname)),
 			"Selffridge":   Equal(ProcessThawed),
 			"Parentfridge": Equal(ProcessThawed),
 		})))
