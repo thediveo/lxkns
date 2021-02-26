@@ -14,7 +14,9 @@
 
 import React from 'react'
 
-import AccountTreeIcon from '@material-ui/icons/AccountTree'
+import { AccountTree, Person } from '@material-ui/icons'
+
+import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
 import { Namespace, NamespaceType } from 'models/lxkns'
@@ -52,6 +54,11 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     ownerInfo: {
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.1ex',
+        },
     },
     ownerName: {
         color: theme.palette.ownername,
@@ -111,7 +118,9 @@ export const NamespaceInfo = ({
     const ownerinfo = namespace.type === NamespaceType.user &&
         'user-id' in namespace &&
         <span className={classes.ownerInfo}>
-            owned by UID {namespace['user-id']}
+            owned {
+                namespace['user-id'] ? <Person fontSize="inherit" /> : <Rude fontSize="inherit" />
+            } by UID {namespace['user-id']}
             {namespace['user-name'] && <>
                 {' '}
                 <span className={clsx(classes.ownerName, namespace['user-name'] === 'root' && 'root')}>
@@ -125,7 +134,7 @@ export const NamespaceInfo = ({
     const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
         namespace.children.length > 0 &&
         <span className={classes.userchildrenInfo}>
-            [<AccountTreeIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
+            [<AccountTree fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
         </span>
 
     return (

@@ -18,7 +18,8 @@ import clsx from 'clsx'
 import { Pause, PlayArrow } from '@material-ui/icons'
 import { makeStyles, Tooltip } from '@material-ui/core'
 
-import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
+import CgroupNamespace from 'icons/namespaces/Cgroup'
+import ProcessIcon from 'icons/Process'
 
 import { FridgeState, Process } from 'models/lxkns'
 
@@ -104,13 +105,14 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
     return !!process && (
         <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
+                <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
             {process.cgroup && process.cgroup !== "/" && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
-                        <CarCruiseControl className={classes.cgroupIcon} fontSize="inherit" />
+                        <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />
                         {fridge}
                         <span className={classes.cgroupPath}>{process.cgroup}</span>
                     </span>
