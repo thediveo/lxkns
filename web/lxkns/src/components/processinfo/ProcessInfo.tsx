@@ -18,7 +18,6 @@ import clsx from 'clsx'
 import { Pause, PlayArrow } from '@material-ui/icons'
 import { makeStyles, Tooltip } from '@material-ui/core'
 
-import RunFast from 'mdi-material-ui/RunFast'
 import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
 
 import { FridgeState, Process } from 'models/lxkns'
@@ -100,12 +99,11 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
     const classes = useStyles()
 
     const fridge = process.fridge !== FridgeState.Thawed
-        ? <Pause fontSize="inherit" /> : null
+        ? <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
         <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
-                <RunFast fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
