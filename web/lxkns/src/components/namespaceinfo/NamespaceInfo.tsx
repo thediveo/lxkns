@@ -118,9 +118,9 @@ export const NamespaceInfo = ({
     const ownerinfo = namespace.type === NamespaceType.user &&
         'user-id' in namespace &&
         <span className={classes.ownerInfo}>
-            owned {
+            owned by {
                 namespace['user-id'] ? <Person fontSize="inherit" /> : <Rude fontSize="inherit" />
-            } by UID {namespace['user-id']}
+            } UID {namespace['user-id']}
             {namespace['user-name'] && <>
                 {' '}
                 <span className={clsx(classes.ownerName, namespace['user-name'] === 'root' && 'root')}>
