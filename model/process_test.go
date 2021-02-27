@@ -15,6 +15,7 @@
 package model
 
 import (
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -22,6 +23,36 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+var _ = Describe("ProcessFridgeStatus", func() {
+
+	It("marshals JSON", func() {
+		Expect(ProcessThawed.MarshalJSON()).To(Equal([]byte(`"thawed"`)))
+		Expect(ProcessFreezing.MarshalJSON()).To(Equal([]byte(`"freezing"`)))
+		Expect(ProcessFrozen.MarshalJSON()).To(Equal([]byte(`"frozen"`)))
+	})
+
+	It("unmarshals JSON", func() {
+		for _, state := range []ProcessFridgeStatus{
+			ProcessThawed,
+			ProcessFreezing,
+			ProcessFrozen,
+		} {
+			res := ProcessFridgeStatus(255)
+			Expect((&res).UnmarshalJSON([]byte(fmt.Sprintf("%d", state)))).To(Succeed())
+			Expect(res).To(Equal(state))
+			res = ProcessFridgeStatus(255)
+			Expect((&res).UnmarshalJSON([]byte(fmt.Sprintf("%q", state)))).To(Succeed())
+			Expect(res).To(Equal(state))
+		}
+
+		var res ProcessFridgeStatus
+		Expect((&res).UnmarshalJSON([]byte(`[42]`))).NotTo(Succeed())
+		Expect((&res).UnmarshalJSON([]byte(`false`))).NotTo(Succeed())
+		Expect((&res).UnmarshalJSON([]byte(`null`))).NotTo(Succeed())
+	})
+
+})
 
 var _ = Describe("Process", func() {
 

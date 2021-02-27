@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Namespace, NamespaceType, Process, Discovery } from './model'
+import { Namespace, NamespaceType, Process, Discovery, FridgeState } from './model'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -23,6 +23,11 @@ interface NamespaceJson extends Omit<Namespace, 'ealdorman' | 'leaders' | 'names
     leaders: (Process | number)[]
     owner: Namespace | number
     namespaces: NamespaceSetJson
+}
+
+// Cap capitalizes the first letter only
+function Cap(s: string) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**
@@ -40,7 +45,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         switch (ns.type) {
             case NamespaceType.user:
                 ns.tenants = []
-                // falls through
+            // falls through
             case NamespaceType.pid:
                 ns.children = []
         }
@@ -80,9 +85,18 @@ export const fromjson = (discoverydata: any): Discovery => {
         }
     });
 
-    // Process all, erm, processes and add object references for the hierarchy,
-    // making navigation quick and easy.
+    // Process all, erm, processes and convert and initialize reference fields
+    // correctly.
     Object.values(discovery.processes).forEach(proc => {
+        if (typeof proc.fridge === 'string') {
+            proc.fridge = FridgeState[Cap(proc.fridge)]
+        }
+        if (typeof proc.selffridge === 'string') {
+            proc.selffridge = FridgeState[Cap(proc.selffridge)]
+        }
+        if (typeof proc.parentfridge === 'string') {
+            proc.parentfridge = FridgeState[Cap(proc.parentfridge)]
+        }
         proc.parent = null;
         proc.children = [];
     });

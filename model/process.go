@@ -23,6 +23,7 @@ package model
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -63,6 +64,41 @@ func (s ProcessFridgeStatus) String() string {
 	default:
 		return fmt.Sprintf("ProcessFridgeStatus(%d)", s)
 	}
+}
+
+// MarshalJSON marshals a process fridge status as a JSON string with the fixed
+// enum values "thawed", "freezing", and "frozen".
+func (s ProcessFridgeStatus) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(s.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON unmarshals either a JSON string or a number into a process
+// fridge status enum value.
+func (s *ProcessFridgeStatus) UnmarshalJSON(b []byte) error {
+	var fridgestatus interface{}
+	if err := json.Unmarshal(b, &fridgestatus); err == nil {
+		switch fridgestatus := fridgestatus.(type) {
+		case float64:
+			*s = ProcessFridgeStatus(fridgestatus)
+			return nil
+		case string:
+			switch fridgestatus {
+			case "thawed":
+				*s = ProcessThawed
+			case "freezing":
+				*s = ProcessFreezing
+			case "frozen":
+				*s = ProcessFrozen
+			default:
+				return fmt.Errorf("invalid ProcessFridgeStatus %q", fridgestatus)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot convert %q to ProcessFridgeStatus", b)
 }
 
 // Process represents our very limited view and even more limited interest in

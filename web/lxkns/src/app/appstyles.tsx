@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { createMuiTheme } from '@material-ui/core'
 import { amber, blue, blueGrey, brown, green, grey, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 

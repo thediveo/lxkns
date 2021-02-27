@@ -50,9 +50,9 @@ const proc1JSON = `{
 	"starttime": 123,
 	"cgroup": "",
 	"fridgecgroup": "",
-	"fridge": 0,
-	"selffridge": 0,
-	"parentfridge": 0
+	"fridge": "thawed",
+	"selffridge": "thawed",
+	"parentfridge": "thawed"
 }`
 
 var proc2 = &model.Process{
@@ -80,9 +80,9 @@ const proc2JSON = `{
 	"starttime": 666666,
 	"cgroup": "süstem.sluice",
 	"fridgecgroup": "süstem.sluice/lxkns",
-	"fridge": 1,
-	"selffridge": 2,
-	"parentfridge": 0
+	"fridge": "freezing",
+	"selffridge": "frozen",
+	"parentfridge": "thawed"
 }`
 
 var namespaceset = model.NamespacesSet{
