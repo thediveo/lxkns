@@ -23,12 +23,15 @@ package model
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/log"
 )
 
@@ -37,19 +40,84 @@ import (
 // abbreviation, nor an ordinary word (yet/still) in itself.
 type PIDType int32
 
+// ProcessFridgeStatus represents the the cgroup freezer state of a process
+// (rather, it's cpu/freezer cgroup). See also:
+// https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst.
+type ProcessFridgeStatus uint8
+
+const (
+	ProcessThawed ProcessFridgeStatus = iota
+	ProcessFreezing
+	ProcessFrozen
+)
+
+// String returns the textual representation of the "fridge" status of a
+// process.
+func (s ProcessFridgeStatus) String() string {
+	switch s {
+	case ProcessThawed:
+		return "thawed"
+	case ProcessFreezing:
+		return "freezing"
+	case ProcessFrozen:
+		return "frozen"
+	default:
+		return fmt.Sprintf("ProcessFridgeStatus(%d)", s)
+	}
+}
+
+// MarshalJSON marshals a process fridge status as a JSON string with the fixed
+// enum values "thawed", "freezing", and "frozen".
+func (s ProcessFridgeStatus) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(s.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON unmarshals either a JSON string or a number into a process
+// fridge status enum value.
+func (s *ProcessFridgeStatus) UnmarshalJSON(b []byte) error {
+	var fridgestatus interface{}
+	if err := json.Unmarshal(b, &fridgestatus); err == nil {
+		switch fridgestatus := fridgestatus.(type) {
+		case float64:
+			*s = ProcessFridgeStatus(fridgestatus)
+			return nil
+		case string:
+			switch fridgestatus {
+			case "thawed":
+				*s = ProcessThawed
+			case "freezing":
+				*s = ProcessFreezing
+			case "frozen":
+				*s = ProcessFrozen
+			default:
+				return fmt.Errorf("invalid ProcessFridgeStatus %q", fridgestatus)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot convert %q to ProcessFridgeStatus", b)
+}
+
 // Process represents our very limited view and even more limited interest in
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID          PIDType       `json:"pid"`       // this process' identifier.
-	PPID         PIDType       `json:"ppid"`      // parent's process identifier.
-	Parent       *Process      `json:"-"`         // our parent's process description.
-	Children     []*Process    `json:"-"`         // child processes.
-	Name         string        `json:"name"`      // synthesized name of process.
-	Cmdline      []string      `json:"cmdline"`   // command line of process.
-	Namespaces   NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
-	Starttime    uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
-	Controlgroup string        `json:"cgroup"`    // (relative) path of control group for this process.
+	PID          PIDType             `json:"pid"`          // this process' identifier.
+	PPID         PIDType             `json:"ppid"`         // parent's process identifier.
+	Parent       *Process            `json:"-"`            // our parent's process description.
+	Children     []*Process          `json:"-"`            // child processes.
+	Name         string              `json:"name"`         // synthesized name of process.
+	Cmdline      []string            `json:"cmdline"`      // command line of process.
+	Namespaces   NamespacesSet       `json:"-"`            // the 7 namespaces joined by this process.
+	Starttime    uint64              `json:"starttime"`    // time of process start, since the Kernel boot epoch.
+	Controlgroup string              `json:"cgroup"`       // (relative) path of CPU control group for this process.
+	FridgeCgroup string              `json:"fridgecgroup"` // (relative) path of freezer control group for this process.
+	Fridge       ProcessFridgeStatus `json:"fridge"`       // effective freezer state.
+	Selffridge   ProcessFridgeStatus `json:"selffridge"`   // own freezer state as last set; only ProcessThawned or ProcessFrozen.
+	Parentfridge ProcessFridgeStatus `json:"parentfridge"` // parent freezer state as last set; only ProcessThawned or ProcessFrozen.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick
@@ -255,25 +323,84 @@ func (l ProcessListByPID) Less(i, j int) bool {
 }
 
 // scanCgroups scans all processes for their control groups; it scans only on a
-// specific type of controller, the "cpu" v1 controller on the assumption that
-// this controller is widely used. In contrast, the "memory" controller has been
-// unfortunately been disabled on some architectures (ARM) for some time.
+// specific type of controller, the "cpu" v1 controller on (1) the assumption
+// that this controller is widely used and (2) we're interested in the fridge
+// (well, "freezer") state. On a side note, the "memory" controller
+// unfortunately has been disabled on some architectures (ARM) for some time.
 func (p ProcessTable) scanCgroups() error {
+	fridgeroot := ""
+Fridge:
+	for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
+		for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
+			if sopt == "freezer" {
+				fridgeroot = mountinfo.MountPoint
+				break Fridge
+			}
+		}
+	}
 	for pid, proc := range p {
-		proc.Controlgroup = processCgroup("cpu", pid)
+		controllers := processCgroup(cgrouptypes, pid)
+		proc.Controlgroup = controllers[0]
+		proc.FridgeCgroup = controllers[1]
+
+		// Please note: "the root cgroup is non-freezable and the above
+		// interface files don't exist."
+		// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
+		fridgepath := filepath.Join(fridgeroot, controllers[1])
+		if state, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.state")); err == nil {
+			switch strings.TrimSuffix(string(state), "\n") {
+			case "FREEZING":
+				proc.Fridge = ProcessFreezing
+			case "FROZEN":
+				proc.Fridge = ProcessFrozen
+			case "THAWED":
+				fallthrough
+			default:
+				proc.Fridge = ProcessThawed
+			}
+		} else {
+			proc.Fridge = ProcessThawed
+		}
+		if selfstate, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.self_freezing")); err == nil {
+			switch strings.TrimSuffix(string(selfstate), "\n") {
+			case "1":
+				proc.Selffridge = ProcessFrozen
+			default:
+				proc.Selffridge = ProcessThawed
+			}
+		} else {
+			proc.Selffridge = ProcessThawed
+		}
+		if parentstate, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.parent_freezing")); err == nil {
+			switch strings.TrimSuffix(string(parentstate), "\n") {
+			case "1":
+				proc.Parentfridge = ProcessFrozen
+			default:
+				proc.Parentfridge = ProcessThawed
+			}
+		} else {
+			proc.Parentfridge = ProcessThawed
+		}
 	}
 	return nil
 }
 
-// processCgroup returns the name (hierarchy path) of the cpu cgroup a specific
-// process is in. If its the "/" cgroup hierarchy, then an empty string is
-// returned instead (to reduce clutter).
+var cgrouptypes = []string{"cpu", "freezer"}
+
+// processCgroup returns the name (hierarchy path) of some of the cgroup
+// controllers a specific process is in (as specified in the controllertypes
+// parameter). If a controller path is the "/" cgroup hierarchy, then an empty
+// string is returned instead (to reduce clutter).
 //
-// Note: the cgroup path returned is relative to this process cgroup roots.
-func processCgroup(controller string, pid PIDType) string {
+// Note: the cgroup path(s) returned is (are) relative to their respective
+// process cgroup roots (as can be found by inspecting mountinfo), even as they
+// start with "/" (at least when discovered inside the initial mount+cgroup
+// namespaces).
+func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
+	paths = make([]string, len(controllertypes))
 	cgroup, err := os.Open(fmt.Sprintf("/proc/%d/cgroup", pid))
 	if err != nil {
-		return ""
+		return
 	}
 	defer cgroup.Close()
 	scanner := bufio.NewScanner(cgroup)
@@ -290,20 +417,14 @@ func processCgroup(controller string, pid PIDType) string {
 			if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
 				controllers := strings.Split(fields[1], ",")
 				for _, ctrl := range controllers {
-					if ctrl == controller {
-						// Return the full cgroup path based on the specified
-						// base path and the relative cgroup path of the
-						// process; don't forget to remove the leading "/" from
-						// the cgroup-originating path...
-						cg := fields[2]
-						if cg == "/" {
-							return ""
+					for idx, controllertype := range controllertypes {
+						if ctrl == controllertype {
+							paths[idx] = fields[2]
 						}
-						return cg
 					}
 				}
 			}
 		}
 	}
-	return ""
+	return
 }

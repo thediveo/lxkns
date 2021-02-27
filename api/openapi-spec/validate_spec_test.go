@@ -91,7 +91,11 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 				"cmdline": ["/bin/bash"],
 				"namespaces": {},
 				"starttime": 745077,
-				"cgroup": "/user.slice"
+				"cgroup": "/user.slice",
+				"fridgecgroup": "/fridge.sliced/user",
+				"fridge": "freezing",
+				"selffridge": "frozen",
+				"parentfridge": "thawed"
 			},
 			"2574": {
 				"namespaces": {
@@ -105,7 +109,11 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 				"cmdline": [
 					"/lib/systemd/systemd",
 					"--user"
-				]
+				],
+				"fridgecgroup": "/outofcontrol",
+				"fridge": "frozen",
+				"selffridge": "frozen",
+				"parentfridge": "frozen"
 			}
 		}`)
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed())

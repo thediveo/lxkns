@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.14.0
+    version: 0.16.0
     description: 'Discover Linux-kernel namespaces, almost everywhere in a Linux host.'
     contact:
         url: 'https://github.com/thediveo/lxkns'
@@ -148,6 +148,10 @@ components:
                 - starttime
                 - cgroup
                 - namespaces
+                - fridgecgroup
+                - fridge
+                - selffridge
+                - parentfridge
             type: object
             properties:
                 pid:
@@ -193,6 +197,18 @@ components:
                     description: |-
                         References the namespaces this process is joined to, in form of the namespace
                         IDs (inode numbers).
+                fridgecgroup:
+                    description: The freezer cgroup path name in the hierarchy this process is in.
+                    type: string
+                fridge:
+                    $ref: '#/components/schemas/ProcessFridgeStatus'
+                    description: The effective freezer state of this process.
+                selffridge:
+                    $ref: '#/components/schemas/ProcessFridgeStatus'
+                    description: This process' own freezer state as last set. It cannot be "freezing".
+                parentfridge:
+                    $ref: '#/components/schemas/ProcessFridgeStatus'
+                    description: This parent freezer state as last set. It cannot be "freezing".
             example:
                 namespaces:
                     mnt: 4026531840
@@ -498,10 +514,9 @@ components:
                         format: int32
                         type: integer
                 ealdorman:
-                    description: |-
-                        PID of the most senior leader process joined to this namespace.
-                    type: integer
                     format: int32
+                    description: PID of the most senior leader process joined to this namespace.
+                    type: integer
                 parent:
                     format: int64
                     description: 'Only for PID and user namespaces: the ID of the parent namespace.'
@@ -705,3 +720,10 @@ components:
                 user: 4026531837
                 pid: 4026531836
                 net: 4026531905
+        ProcessFridgeStatus:
+            description: ''
+            enum:
+                - thawed
+                - freezing
+                - frozen
+            type: string
