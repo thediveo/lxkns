@@ -66,7 +66,7 @@ citestapp:
 	go build -v ./cmd/lxkns
 	sudo ./lxkns --debug --http localhost:5100 & \
 		LXKNSPID=$$! && \
-		(cd web/lxkns && yarn cypress:run --env baseUrl=http://localhost:5100) ; \
+		(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100) ; \
 		kill $$LXKNSPID && \
 		timeout 10s tail --pid=$$LXKNSPID -f /dev/null
 
