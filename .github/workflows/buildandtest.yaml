@@ -31,4 +31,4 @@ jobs:
       run: sudo go test -v ./... && go test -v ./...
 
     - name: Test WebUI units and end-to-end
-      run: make citestapp
+      run: (cd web/lxkns && yarn install) && make citestapp
