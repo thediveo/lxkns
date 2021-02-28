@@ -8,7 +8,7 @@ GIT_VERSION = $(shell git describe --tags 2>/dev/null || echo "v0.0.0")
 # into trouble.
 goversion = 1.15 1.13
 
-tools := dumpns lsallns lspidns lsuns nscaps pidtree
+tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 
 # To suckessfully run the tests, we need CRAP_SYS_ADMIN capabilities.
 testcontaineropts := \
@@ -49,13 +49,26 @@ install:
 	go install -v ./cmd/... ./examples/lsallns
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
-test: # runs all tests in a container
+# runs all tests in a container
+test:
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
 		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
 		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
 	done; \
 	echo "🎉 🎉 🎉 All tests passed"
+
+# builds a static webapp and the lxkns service, then runs the service and the
+# webapp unit and end-to-end tests, and finally stops the lxkns service after
+# the tests have run.
+citestapp:
+	cd web/lxkns && yarn build
+	go build -v ./cmd/lxkns
+	sudo ./lxkns --debug --http localhost:5100 & \
+		LXKNSPID=$$! && \
+		(cd web/lxkns && yarn cypress:run --env baseUrl=http://localhost:5100) ; \
+		kill $$LXKNSPID && \
+		timeout 10s tail --pid=$$LXKNSPID -f /dev/null
 
 report:
 	@./scripts/goreportcard.sh
