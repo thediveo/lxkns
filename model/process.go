@@ -40,9 +40,13 @@ import (
 // abbreviation, nor an ordinary word (yet/still) in itself.
 type PIDType int32
 
-// ProcessFridgeStatus represents the the cgroup freezer state of a process
-// (rather, it's cpu/freezer cgroup). See also:
-// https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst.
+// ProcessFridgeStatus represents the the freezer state of a process. For
+// cgroups v1 this represents the freezer cgroup state. For cgroups v2 in a
+// unified hierarchy this represents the unified cgroup freezer status. See
+// also:
+// https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
+// and
+// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files.
 type ProcessFridgeStatus uint8
 
 const (
@@ -105,16 +109,19 @@ func (s *ProcessFridgeStatus) UnmarshalJSON(b []byte) error {
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID          PIDType             `json:"pid"`          // this process' identifier.
-	PPID         PIDType             `json:"ppid"`         // parent's process identifier.
-	Parent       *Process            `json:"-"`            // our parent's process description.
-	Children     []*Process          `json:"-"`            // child processes.
-	Name         string              `json:"name"`         // synthesized name of process.
-	Cmdline      []string            `json:"cmdline"`      // command line of process.
-	Namespaces   NamespacesSet       `json:"-"`            // the 7 namespaces joined by this process.
-	Starttime    uint64              `json:"starttime"`    // time of process start, since the Kernel boot epoch.
-	Controlgroup string              `json:"cgroup"`       // (relative) path of CPU control group for this process.
-	FridgeCgroup string              `json:"fridgecgroup"` // (relative) path of freezer control group for this process.
+	PID          PIDType       `json:"pid"`       // this process' identifier.
+	PPID         PIDType       `json:"ppid"`      // parent's process identifier.
+	Parent       *Process      `json:"-"`         // our parent's process description.
+	Children     []*Process    `json:"-"`         // child processes.
+	Name         string        `json:"name"`      // synthesized name of process.
+	Cmdline      []string      `json:"cmdline"`   // command line of process.
+	Namespaces   NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+	Starttime    uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
+	Controlgroup string        `json:"cgroup"`    // (relative) path of CPU control group for this process.
+	// (relative) path of freezer control group for this process. Please note
+	// that for a cgroup v2 unified and non-hybrid hierarchy this path will
+	// always be the same as for Controlgroup.
+	FridgeCgroup string              `json:"fridgecgroup"`
 	Fridge       ProcessFridgeStatus `json:"fridge"`       // effective freezer state.
 	Selffridge   ProcessFridgeStatus `json:"selffridge"`   // own freezer state as last set; only ProcessThawned or ProcessFrozen.
 	Parentfridge ProcessFridgeStatus `json:"parentfridge"` // parent freezer state as last set; only ProcessThawned or ProcessFrozen.
@@ -328,7 +335,9 @@ func (l ProcessListByPID) Less(i, j int) bool {
 // (well, "freezer") state. On a side note, the "memory" controller
 // unfortunately has been disabled on some architectures (ARM) for some time.
 func (p ProcessTable) scanCgroups() error {
+	// Try to find the freezer cgroup v1 hierarchy root, if available...
 	fridgeroot := ""
+	fridgev1 := true
 Fridge:
 	for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
 		for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
@@ -338,48 +347,23 @@ Fridge:
 			}
 		}
 	}
+	// ...otherwise, there must be a cgroups v2 unified hierarchy.
+	if fridgeroot == "" {
+		mountinfo := mntinfo.MountsOfType(-1, "cgroup2")
+		if len(mountinfo) > 0 {
+			fridgev1 = false
+			fridgeroot = mountinfo[0].MountPoint
+		}
+	}
+	// Finally scan the processes for their cgroups...
 	for pid, proc := range p {
 		controllers := processCgroup(cgrouptypes, pid)
 		proc.Controlgroup = controllers[0]
 		proc.FridgeCgroup = controllers[1]
-
-		// Please note: "the root cgroup is non-freezable and the above
-		// interface files don't exist."
-		// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
-		fridgepath := filepath.Join(fridgeroot, controllers[1])
-		if state, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.state")); err == nil {
-			switch strings.TrimSuffix(string(state), "\n") {
-			case "FREEZING":
-				proc.Fridge = ProcessFreezing
-			case "FROZEN":
-				proc.Fridge = ProcessFrozen
-			case "THAWED":
-				fallthrough
-			default:
-				proc.Fridge = ProcessThawed
-			}
+		if fridgev1 {
+			freezerV1(proc, filepath.Join(fridgeroot, controllers[1]))
 		} else {
-			proc.Fridge = ProcessThawed
-		}
-		if selfstate, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.self_freezing")); err == nil {
-			switch strings.TrimSuffix(string(selfstate), "\n") {
-			case "1":
-				proc.Selffridge = ProcessFrozen
-			default:
-				proc.Selffridge = ProcessThawed
-			}
-		} else {
-			proc.Selffridge = ProcessThawed
-		}
-		if parentstate, err := ioutil.ReadFile(filepath.Join(fridgepath, "freezer.parent_freezing")); err == nil {
-			switch strings.TrimSuffix(string(parentstate), "\n") {
-			case "1":
-				proc.Parentfridge = ProcessFrozen
-			default:
-				proc.Parentfridge = ProcessThawed
-			}
-		} else {
-			proc.Parentfridge = ProcessThawed
+			freezerV2(proc, filepath.Join(fridgeroot, controllers[1]))
 		}
 	}
 	return nil
@@ -387,14 +371,106 @@ Fridge:
 
 var cgrouptypes = []string{"cpu", "freezer"}
 
+// freezerV2 reads and stores the cgroups v2 freezer status information for the
+// specified process.
+func freezerV2(proc *Process, fridgepath string) {
+	// Please note that the v2 root cgroup doesn't have the "cgroup.freeze"
+	// interface file. Other than that, see
+	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
+	// for details.
+	//
+	// Now, the v2 freezer uses "cgroup.freeze" to indicate the desired self
+	// state, thus replacing v1's "freezer.self_freezing".
+	if state, err := ioutil.ReadFile(
+		filepath.Join(fridgepath, "cgroup.freeze")); err == nil {
+		switch strings.TrimSuffix(string(state), "\n") {
+		case "1":
+			proc.Selffridge = ProcessFrozen
+		default:
+			proc.Selffridge = ProcessThawed
+		}
+	}
+	// But, where's v1's "freezer.state", that is, the process' effective state?
+	// It can now be found as one of possibly many event entries in
+	// "cgroup.events". Yuk.
+	freezerState := ProcessThawed
+	if events, err := ioutil.ReadFile(
+		filepath.Join(fridgepath, "cgroup.events")); err == nil {
+		for _, event := range strings.Split(string(events), "\n") {
+			if strings.HasPrefix(event, "frozen ") {
+				if event[7] == '1' {
+					freezerState = ProcessFrozen
+				}
+				break
+			}
+		}
+	}
+	// Emulate the effective "freezer.state" from v1: take the effective state
+	// from the events interface file, but assume the "freezing" state iff this
+	// process should be frozen, yet the events yet don't indicate so.
+	if proc.Selffridge == ProcessFrozen && freezerState != ProcessFrozen {
+		proc.Fridge = ProcessFreezing
+	} else {
+		proc.Fridge = freezerState
+	}
+	// TODO: parent_freezing
+}
+
+// freezerV1 reads and stores the cgroups v1 freezer status information for the
+// specified process.
+func freezerV1(proc *Process, fridgepath string) {
+	// Please note: "the root cgroup is non-freezable and the above
+	// interface files don't exist."
+	// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
+	if state, err := ioutil.ReadFile(
+		filepath.Join(fridgepath, "freezer.state")); err == nil {
+		switch strings.TrimSuffix(string(state), "\n") {
+		case "FREEZING":
+			proc.Fridge = ProcessFreezing
+		case "FROZEN":
+			proc.Fridge = ProcessFrozen
+		case "THAWED":
+			fallthrough
+		default:
+			proc.Fridge = ProcessThawed
+		}
+	} else {
+		proc.Fridge = ProcessThawed
+	}
+	if selfstate, err := ioutil.ReadFile(
+		filepath.Join(fridgepath, "freezer.self_freezing")); err == nil {
+		switch strings.TrimSuffix(string(selfstate), "\n") {
+		case "1":
+			proc.Selffridge = ProcessFrozen
+		default:
+			proc.Selffridge = ProcessThawed
+		}
+	} else {
+		proc.Selffridge = ProcessThawed
+	}
+	if parentstate, err := ioutil.ReadFile(
+		filepath.Join(fridgepath, "freezer.parent_freezing")); err == nil {
+		switch strings.TrimSuffix(string(parentstate), "\n") {
+		case "1":
+			proc.Parentfridge = ProcessFrozen
+		default:
+			proc.Parentfridge = ProcessThawed
+		}
+	} else {
+		proc.Parentfridge = ProcessThawed
+	}
+}
+
 // processCgroup returns the name (hierarchy path) of some of the cgroup
 // controllers a specific process is in (as specified in the controllertypes
-// parameter). If a controller path is the "/" cgroup hierarchy, then an empty
-// string is returned instead (to reduce clutter).
+// parameter).
+//
+// We first try to find the specified cgroup v1 controllers if available and
+// only then fall back to the unified cgroups v2 hierarchy.
 //
 // Note: the cgroup path(s) returned is (are) relative to their respective
 // process cgroup roots (as can be found by inspecting mountinfo), even as they
-// start with "/" (at least when discovered inside the initial mount+cgroup
+// start with "/" (at least when discovered inside the initial pid+cgroup
 // namespaces).
 func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	paths = make([]string, len(controllertypes))
@@ -404,6 +480,7 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	}
 	defer cgroup.Close()
 	scanner := bufio.NewScanner(cgroup)
+	unifiedroot := "" // (if detected) the cgroups v2 unified hierarchy root
 	for scanner.Scan() {
 		if err == nil {
 			// See https://man7.org/linux/man-pages/man7/cgroups.7.html, section
@@ -414,17 +491,37 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 			// cgroups hierarchy; it is relative to the mount point of the
 			// hierarchy -- which in turn depends on the mount namespace of this
 			// process :)
+			//
+			// For the unified cgroups v2 hierarchy the second field will be
+			// empty, which otherwise would specify the particular cgroup v1
+			// hierarchy/-ies.
 			if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
-				controllers := strings.Split(fields[1], ",")
-				for _, ctrl := range controllers {
-					for idx, controllertype := range controllertypes {
-						if ctrl == controllertype {
-							paths[idx] = fields[2]
+				if fields[1] != "" {
+					// cgroups v1 hierarchies
+					controllers := strings.Split(fields[1], ",")
+					for _, ctrl := range controllers {
+						for idx, controllertype := range controllertypes {
+							if ctrl == controllertype {
+								paths[idx] = fields[2]
+							}
 						}
 					}
+				} else {
+					// when we come across a single unified cgroups v2 hierarchy
+					// root, remember it so we can later fix any missing
+					// controller paths.
+					unifiedroot = fields[2]
 				}
 			}
 		}
 	}
+	// Now fix the missing cgroups v2 controller paths we couldn't satisfy from
+	// v1 (if present).
+	for idx, path := range paths {
+		if path == "" {
+			paths[idx] = unifiedroot
+		}
+	}
+	// Hopefully, we've gathered all controller paths by now.
 	return
 }

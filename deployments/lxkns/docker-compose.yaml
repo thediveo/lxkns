@@ -35,3 +35,8 @@ services:
             - DAC_READ_SEARCH # for fully discovering bind-mounted namespaces
         # We need the full PID view for correct scanning.
         pid: host
+        # when operating in a "pure" unified cgroup hierarchy without any traces
+        # of v1+v2 hybrid hierarchies, then Docker now defaults to creating
+        # private cgroup namespaces for containers. Of course, this is exactly
+        # what defeats the purpose of system diagnosis containers, such as lxkns.
+        # cgroup: host
