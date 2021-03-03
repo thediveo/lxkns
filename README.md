@@ -9,7 +9,7 @@
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
 nook and cranny of your Linux hosts.
 
-- browser discovery tool with containerized backend discovery service.
+- discovery web frontend and containerized backend discovery service.
 
 - CLI namespace discovery tools.
 
@@ -19,9 +19,12 @@ nook and cranny of your Linux hosts.
 
 - helps Go programs with switching namespaces.
 
-- tested with Go 1.13-1.15.
+- tested with Go 1.13-1.16.
 
 - supports even the new(er) "time" Linux-kernel namespaces.
+
+Watch the short overview video how to find your way around discovery web
+frontend:
 
 [![lxkns web
 app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
@@ -61,14 +64,38 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > possible in their `main()` function. For this, you need to `import
 > "github.com/thediveo/gons/reexec"`.
 
-In addition, lxkns also discovers some control group information for the
-processes attached to namespaces. In particular, the discovery will relate
-processes to the control groups created for the "cpu" v1 controller type. To a
-limited extend, the names of these control groups will relate to the
+
+## Cgroup v1, v1+v2, v2 Support
+
+In addition to namespaces and their related processes, lxkns also discovers the
+freezer state and (freezer) cgroup controller path information for the processes
+attached to namespaces.
+
+> **Important!** When the lxkns service is deployed containerized using the
+> included `deployments/lxkns/docker-compose.yaml` it will automatically detect
+> system configurations where Docker places the service container in its own
+> cgroup namespace. In order to provide full discovery information the lxkns
+> service then automatically switches back out of the container's cgroup
+> namespace into the initial cgroup namespace. The rationale here is that
+> docker-compose unfortunately lacks support for the `--cgroupns=host` CLI flag
+> ([issue #8167](https://github.com/docker/compose/issues/8167)) and thus
+> switching is necessary as a stop-gap measure.
+
+- **cgroups v1**: lxkns automatically detects the v1 freezer hierarchy and its
+  location.
+- "hybrid" **cgroups v1+v2**: if the v1 freezer hierarchy is mounted, lxkns will
+  automatically detect and use it; otherwise, lxkns will use the unified cgroups
+  v2 hierarchy instead, with its built-in core freezer (Linux kernel 5.2 and
+  later).
+- "pure" **cgroups v2**: lxkns will automatically detect and use the unified
+  cgroups v2 hierarchy, if no v1 freezer hierarchy is present.
+
+To a limited extend, the names of (freezer) control groups often relate to the
 partitioning of processes using Linux kernel namespaces. For instance, processes
-in Docker containers will show control group names in the form of `docker/<id>`,
-where the id is the usual 64 hex char string. Plain containerd container
-processes will show up with `<namespace>/<id>` control group names.
+in Docker containers will show control group names in the form of `docker/<id>`
+(or `docker-<id>.scope`, or ...), where the id is the usual 64 hex char string.
+Plain containerd container processes will show up with `<namespace>/<id>`
+control group names.
 
 ## 🧰 lxkns Tools
 
