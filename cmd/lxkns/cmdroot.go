@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns"
@@ -61,7 +62,13 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 			// In order to safely switch the cgroup namespace in a Golang app
 			// with potentially several OS threads bouncing around by now we can
 			// only lock our current OS thread, switch into the initial cgroup
-			// namespace, and finally reexecute ourselves again.
+			// namespace, and finally reexecute ourselves again. We don't use
+			// our re-execution support package here, as that on purpose is
+			// designed to not be re-executable from a child and provides a
+			// JSON-oriented result interface (which we don't need). Instead, we
+			// just use the few and simple primitives, namely
+			// runtime.LockOSThread() and ops.Execute(). Everything else is
+			// debug logging and error handling.
 			log.Infof("switching from current cgroup:[%d] into initial cgroup:[%d] and re-executing...",
 				currentcgroupnsid.Ino, initialcgroupnsid.Ino)
 			runtime.LockOSThread()
@@ -95,6 +102,8 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 			}
 		}
 	} else if switchedCgroup {
+		// After re-execution log information about the current cgroup
+		// namespace, which hopefully will be the initial cgroup namespace...
 		initialcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/1/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 		currentcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 		isInitial := ""
@@ -102,6 +111,23 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 			isInitial = "initial "
 		}
 		log.Infof("re-executed in %scgroup:[%d]", isInitial, currentcgroupnsid.Ino)
+		// Unfortunately, we end up here with /proc/self/stat stating our
+		// process name as "exe", because we executed our own executable. This
+		// is not terribly useful and user/admin friendly, so we try to set our
+		// own process name from our first command line argument.
+		runtime.LockOSThread() // this still runs on the main thread...!
+		proc := model.NewProcess(model.PIDType(os.Getpid()))
+		procname := append([]byte(proc.Basename()), 0)
+		ptr := unsafe.Pointer(&procname[0])
+		// prctl(PR_SET_NAME, ...) will silently truncate any process name
+		// deemed too long, see also:
+		// https://man7.org/linux/man-pages/man2/prctl.2.html
+		if _, _, errno := syscall.RawSyscall6(syscall.SYS_PRCTL, syscall.PR_SET_NAME, uintptr(ptr), 0, 0, 0, 0); errno != 0 {
+			log.Errorf("cannot fix process name: %s", syscall.Errno(errno).Error())
+		} else {
+			log.Debugf("fixed re-executed process name to %q", proc.Basename())
+		}
+		runtime.UnlockOSThread()
 	}
 
 	// And now for the real meat.
