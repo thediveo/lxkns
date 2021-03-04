@@ -34,7 +34,8 @@ import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 const showProcess = (process: Process, showSystemProcs: boolean) =>
     showSystemProcs ||
     (process.pid > 2 &&
-        !process.cgroup.startsWith('/system.slice/') &&
+        !(process.cgroup.startsWith('/system.slice/') &&
+            !process.cgroup.startsWith('/system.slice/docker-')) &&
         !process.cgroup.startsWith('/init.scope/') &&
         process.cgroup !== '/user.slice')
 
