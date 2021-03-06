@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Namespace, NamespaceType, Process, Discovery, FridgeState } from './model'
+import { Namespace, NamespaceType, Process, Discovery } from './model'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -88,15 +88,6 @@ export const fromjson = (discoverydata: any): Discovery => {
     // Process all, erm, processes and convert and initialize reference fields
     // correctly.
     Object.values(discovery.processes).forEach(proc => {
-        if (typeof proc.fridge === 'string') {
-            proc.fridge = FridgeState[Cap(proc.fridge)]
-        }
-        if (typeof proc.selffridge === 'string') {
-            proc.selffridge = FridgeState[Cap(proc.selffridge)]
-        }
-        if (typeof proc.parentfridge === 'string') {
-            proc.parentfridge = FridgeState[Cap(proc.parentfridge)]
-        }
         proc.parent = null;
         proc.children = [];
     });

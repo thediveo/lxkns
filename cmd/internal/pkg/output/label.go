@@ -60,8 +60,8 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 			s += fmt.Sprintf("%q (%d)",
 				style.ProcessStyle.V(style.ProcessName(proc)),
 				proc.PID)
-			if proc.Controlgroup != "" {
-				s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ControlgroupDisplayName(proc.Controlgroup)))
+			if proc.CpuCgroup != "" {
+				s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ControlgroupDisplayName(proc.CpuCgroup)))
 			}
 		}
 		return s

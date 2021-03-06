@@ -33,9 +33,7 @@ var proc1 = &model.Process{
 	Name:         "(init)",
 	Starttime:    123,
 	Namespaces:   namespaceset,
-	Fridge:       model.ProcessThawed,
-	Selffridge:   model.ProcessThawed,
-	Parentfridge: model.ProcessThawed,
+	FridgeFrozen: false,
 }
 
 const proc1JSON = `{
@@ -48,11 +46,9 @@ const proc1JSON = `{
 	  "--world"
 	],
 	"starttime": 123,
-	"cgroup": "",
+	"cpucgroup": "",
 	"fridgecgroup": "",
-	"fridge": "thawed",
-	"selffridge": "thawed",
-	"parentfridge": "thawed"
+	"fridgefrozen": false
 }`
 
 var proc2 = &model.Process{
@@ -62,11 +58,9 @@ var proc2 = &model.Process{
 	Name:         "fool",
 	Starttime:    666666,
 	Namespaces:   namespaceset,
-	Controlgroup: "süstem.sluice",
+	CpuCgroup:    "süstem.sluice",
 	FridgeCgroup: "süstem.sluice/lxkns",
-	Fridge:       model.ProcessFreezing,
-	Selffridge:   model.ProcessFrozen,
-	Parentfridge: model.ProcessThawed,
+	FridgeFrozen: true,
 }
 
 const proc2JSON = `{
@@ -78,11 +72,9 @@ const proc2JSON = `{
 	  "/sbin/fool"
 	],
 	"starttime": 666666,
-	"cgroup": "süstem.sluice",
+	"cpucgroup": "süstem.sluice",
 	"fridgecgroup": "süstem.sluice/lxkns",
-	"fridge": "freezing",
-	"selffridge": "frozen",
-	"parentfridge": "thawed"
+	"fridgefrozen": true
 }`
 
 var namespaceset = model.NamespacesSet{

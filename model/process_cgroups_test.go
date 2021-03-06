@@ -28,6 +28,50 @@ import (
 	"github.com/thediveo/testbasher"
 )
 
+var _ = Describe("Freezer", func() {
+
+	It("reads v1 freezer state", func() {
+		proc := Process{FridgeFrozen: true}
+		freezerV1(&proc, "test/cgroupies/v1")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = true
+		freezerV1(&proc, "test/cgroupies/v1/thawed")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = true
+		freezerV1(&proc, "test/cgroupies/v1/somethingelse")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = false
+		freezerV1(&proc, "test/cgroupies/v1/freezing")
+		Expect(proc.FridgeFrozen).To(BeTrue())
+
+		proc.FridgeFrozen = false
+		freezerV1(&proc, "test/cgroupies/v1/frozen")
+		Expect(proc.FridgeFrozen).To(BeTrue())
+	})
+
+	It("reads v2 freezer state", func() {
+		proc := Process{FridgeFrozen: true}
+		freezerV2(&proc, "test/cgroupies/v2")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = true
+		freezerV2(&proc, "test/cgroupies/v2/thawed")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = true
+		freezerV2(&proc, "test/cgroupies/v2/gnawed")
+		Expect(proc.FridgeFrozen).To(BeFalse())
+
+		proc.FridgeFrozen = false
+		freezerV2(&proc, "test/cgroupies/v2/frozen")
+		Expect(proc.FridgeFrozen).To(BeTrue())
+	})
+
+})
+
 var _ = Describe("cgrouping", func() {
 
 	It("finds control groups of processes", func() {
@@ -43,12 +87,13 @@ var _ = Describe("cgrouping", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
-		// Pick up the path of the freezer cgroup root; this allows this test to
-		// automatically adjust. However it requires that when we run inside a
-		// test container we got full cgroup access by bind-mounting the cgroups
-		// root into our container. Otherwise, we won't be able to create our
-		// own freezer (sub) cgroup controller :(
+		// Pick up the path of the freezer v1 cgroup root; this allows this test
+		// to automatically adjust. However it requires that when we run inside
+		// a test container we got full cgroup access by bind-mounting the
+		// cgroups root into our container. Otherwise, we won't be able to
+		// create our own freezer (sub) cgroup controller :(
 		fridgeroot := ""
+		cgroupsv2 := false
 	Fridge:
 		for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
 			for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
@@ -57,6 +102,12 @@ var _ = Describe("cgrouping", func() {
 					break Fridge
 				}
 			}
+		}
+		// If we couldn't find a v1 freezer then there must be a unified v2
+		// hierarchy, so let's take that instead.
+		if fridgeroot == "" {
+			fridgeroot = mntinfo.MountsOfType(-1, "cgroup2")[0].MountPoint
+			cgroupsv2 = true
 		}
 		Expect(fridgeroot).NotTo(BeZero(), "detecting freezer cgroup root")
 
@@ -67,6 +118,7 @@ var _ = Describe("cgrouping", func() {
 		scripts.Script("main", fmt.Sprintf(`
 set -e
 CTRL=%s
+CGROUPSV2=%t
 sleep 1d &
 PID=$!
 # create new freezer controller and put the sleep task under its control,
@@ -77,13 +129,13 @@ echo $PID > $CTRL/cgroup.procs
 cat $CTRL/cgroup.procs | wc -l
 cat $CTRL/cgroup.procs
 read # wait to proceed() and only then freeze the process.
-echo "FROZEN" > $CTRL/freezer.state
+$CGROUPSV2 && echo "1" > $CTRL/cgroup.freeze || echo "FROZEN" > $CTRL/freezer.state
 read # wait to proceed() and then thaw the process again.
-echo "THAWED" > $CTRL/freezer.state
+$CGROUPSV2 && echo "0" > $CTRL/cgroup.freeze || echo "THAWED" > $CTRL/freezer.state
 read # wait to proceed().
 kill $PID
 rmdir $CTRL
-`, filepath.Join(fridgeroot, freezercgname)))
+`, filepath.Join(fridgeroot, freezercgname), cgroupsv2))
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 
@@ -100,25 +152,20 @@ rmdir $CTRL
 			return p[pid]
 		}
 		Expect(f()).Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"Fridge":       Equal(ProcessThawed),
+			"FridgeFrozen": BeFalse(),
 			"FridgeCgroup": Equal(filepath.Join("/", freezercgname)),
-			"Selffridge":   Equal(ProcessThawed),
-			"Parentfridge": Equal(ProcessThawed),
 		})))
 
 		// Freeze
 		cmd.Proceed()
 		Eventually(f, "4s", "500ms").Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"Fridge":       Equal(ProcessFrozen),
-			"Selffridge":   Equal(ProcessFrozen),
-			"Parentfridge": Equal(ProcessThawed),
+			"FridgeFrozen": BeTrue(),
 		})))
 
 		// Thaw
 		cmd.Proceed()
 		Eventually(f, "4s", "500ms").Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"Fridge":     Equal(ProcessThawed),
-			"Selffridge": Equal(ProcessThawed),
+			"FridgeFrozen": BeFalse(),
 		})))
 
 		cmd.Proceed()

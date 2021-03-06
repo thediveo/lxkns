@@ -146,12 +146,10 @@ components:
                 - name
                 - cmdline
                 - starttime
-                - cgroup
                 - namespaces
+                - cpucgroup
                 - fridgecgroup
-                - fridge
-                - selffridge
-                - parentfridge
+                - fridgefrozen
             type: object
             properties:
                 pid:
@@ -186,11 +184,12 @@ components:
                         It is taken from /proc/$PID/stat, see also
                         [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
                     type: integer
-                cgroup:
+                cpucgroup:
                     description: |-
-                        The cgroup (control group) path name in the hierarchy this process is in. The
+                        The (CPU) cgroup (control group) path name in the hierarchy this process is in. The
                         path name does not specify the root mount path of the complete hierarchy, but
-                        only the (pseudo) absolute path starting from this root.
+                        only the (pseudo) absolute path starting from the root of the particular (v1) or
+                        unified (v2) cgroup hierarchy.
                     type: string
                 namespaces:
                     $ref: '#/components/schemas/NamespacesSet'
@@ -200,15 +199,9 @@ components:
                 fridgecgroup:
                     description: The freezer cgroup path name in the hierarchy this process is in.
                     type: string
-                fridge:
-                    $ref: '#/components/schemas/ProcessFridgeStatus'
+                fridgefrozen:
                     description: The effective freezer state of this process.
-                selffridge:
-                    $ref: '#/components/schemas/ProcessFridgeStatus'
-                    description: This process' own freezer state as last set. It cannot be "freezing".
-                parentfridge:
-                    $ref: '#/components/schemas/ProcessFridgeStatus'
-                    description: This parent freezer state as last set. It cannot be "freezing".
+                    type: boolean
             example:
                 namespaces:
                     mnt: 4026531840
@@ -226,7 +219,7 @@ components:
                     - fixrtc
                     - splash
                 starttime: 0
-                cgroup: /init.scope
+                cpucgroup: /init.scope
         ProcessTable:
             description: |-
                 Information about all processes in the process tree, with each process item
@@ -254,7 +247,7 @@ components:
                         - fixrtc
                         - splash
                     starttime: 0
-                    cgroup: /init.scope
+                    cpucgroup: /init.scope
                 '137024':
                     namespaces:
                         mnt: 4026532517
@@ -270,7 +263,7 @@ components:
                     cmdline:
                         - /usr/lib/upower/upowerd
                     starttime: 3132568
-                    cgroup: /system.slice/upower.service
+                    cpucgroup: /system.slice/upower.service
         DiscoveryResult:
             description: |-
                 The discovered namespaces and processes with their mutual relationships, and
@@ -429,7 +422,7 @@ components:
                             - fixrtc
                             - splash
                         starttime: 0
-                        cgroup: /init.scope
+                        cpucgroup: /init.scope
                     '17':
                         namespaces:
                             mnt: 4026531840
@@ -445,7 +438,7 @@ components:
                         cmdline:
                             - ''
                         starttime: 0
-                        cgroup: ''
+                        cpucgroup: ''
                     '1692':
                         namespaces:
                             mnt: 4026532246
@@ -461,7 +454,7 @@ components:
                         cmdline:
                             - /lib/systemd/systemd-timesyncd
                         starttime: 2032
-                        cgroup: /system.slice/systemd-timesyncd.service
+                        cpucgroup: /system.slice/systemd-timesyncd.service
         Namespace:
             description: |-
                 Information about a single Linux-kernel namespace. Depending on the extent of
@@ -720,10 +713,3 @@ components:
                 user: 4026531837
                 pid: 4026531836
                 net: 4026531905
-        ProcessFridgeStatus:
-            description: ''
-            enum:
-                - thawed
-                - freezing
-                - frozen
-            type: string

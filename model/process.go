@@ -23,7 +23,6 @@ package model
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,91 +39,24 @@ import (
 // abbreviation, nor an ordinary word (yet/still) in itself.
 type PIDType int32
 
-// ProcessFridgeStatus represents the the freezer state of a process. For
-// cgroups v1 this represents the freezer cgroup state. For cgroups v2 in a
-// unified hierarchy this represents the unified cgroup freezer status. See
-// also:
-// https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
-// and
-// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files.
-type ProcessFridgeStatus uint8
-
-const (
-	ProcessThawed ProcessFridgeStatus = iota
-	ProcessFreezing
-	ProcessFrozen
-)
-
-// String returns the textual representation of the "fridge" status of a
-// process.
-func (s ProcessFridgeStatus) String() string {
-	switch s {
-	case ProcessThawed:
-		return "thawed"
-	case ProcessFreezing:
-		return "freezing"
-	case ProcessFrozen:
-		return "frozen"
-	default:
-		return fmt.Sprintf("ProcessFridgeStatus(%d)", s)
-	}
-}
-
-// MarshalJSON marshals a process fridge status as a JSON string with the fixed
-// enum values "thawed", "freezing", and "frozen".
-func (s ProcessFridgeStatus) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(s.String())
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
-}
-
-// UnmarshalJSON unmarshals either a JSON string or a number into a process
-// fridge status enum value.
-func (s *ProcessFridgeStatus) UnmarshalJSON(b []byte) error {
-	var fridgestatus interface{}
-	if err := json.Unmarshal(b, &fridgestatus); err == nil {
-		switch fridgestatus := fridgestatus.(type) {
-		case float64:
-			*s = ProcessFridgeStatus(fridgestatus)
-			return nil
-		case string:
-			switch fridgestatus {
-			case "thawed":
-				*s = ProcessThawed
-			case "freezing":
-				*s = ProcessFreezing
-			case "frozen":
-				*s = ProcessFrozen
-			default:
-				return fmt.Errorf("invalid ProcessFridgeStatus %q", fridgestatus)
-			}
-			return nil
-		}
-	}
-	return fmt.Errorf("cannot convert %q to ProcessFridgeStatus", b)
-}
-
 // Process represents our very limited view and even more limited interest in
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID          PIDType       `json:"pid"`       // this process' identifier.
-	PPID         PIDType       `json:"ppid"`      // parent's process identifier.
-	Parent       *Process      `json:"-"`         // our parent's process description.
-	Children     []*Process    `json:"-"`         // child processes.
-	Name         string        `json:"name"`      // synthesized name of process.
-	Cmdline      []string      `json:"cmdline"`   // command line of process.
-	Namespaces   NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
-	Starttime    uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
-	Controlgroup string        `json:"cgroup"`    // (relative) path of CPU control group for this process.
+	PID        PIDType       `json:"pid"`       // this process' identifier.
+	PPID       PIDType       `json:"ppid"`      // parent's process identifier.
+	Parent     *Process      `json:"-"`         // our parent's process description.
+	Children   []*Process    `json:"-"`         // child processes.
+	Name       string        `json:"name"`      // synthesized name of process.
+	Cmdline    []string      `json:"cmdline"`   // command line of process.
+	Namespaces NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+	Starttime  uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
+	CpuCgroup  string        `json:"cpucgroup"` // (relative) path of CPU control group for this process.
 	// (relative) path of freezer control group for this process. Please note
 	// that for a cgroup v2 unified and non-hybrid hierarchy this path will
-	// always be the same as for Controlgroup.
-	FridgeCgroup string              `json:"fridgecgroup"`
-	Fridge       ProcessFridgeStatus `json:"fridge"`       // effective freezer state.
-	Selffridge   ProcessFridgeStatus `json:"selffridge"`   // own freezer state as last set; only ProcessThawned or ProcessFrozen.
-	Parentfridge ProcessFridgeStatus `json:"parentfridge"` // parent freezer state as last set; only ProcessThawned or ProcessFrozen.
+	// always be the same as for CpuCgroup.
+	FridgeCgroup string `json:"fridgecgroup"`
+	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick
@@ -358,7 +290,7 @@ Fridge:
 	// Finally scan the processes for their cgroups...
 	for pid, proc := range p {
 		controllers := processCgroup(cgrouptypes, pid)
-		proc.Controlgroup = controllers[0]
+		proc.CpuCgroup = controllers[0]
 		proc.FridgeCgroup = controllers[1]
 		if fridgev1 {
 			freezerV1(proc, filepath.Join(fridgeroot, controllers[1]))
@@ -371,93 +303,45 @@ Fridge:
 
 var cgrouptypes = []string{"cpu", "freezer"}
 
-// freezerV2 reads and stores the cgroups v2 freezer status information for the
-// specified process.
+// freezerV2 reads and stores the cgroups v2 freezer effective status
+// information for the specified process.
 func freezerV2(proc *Process, fridgepath string) {
-	// Please note that the v2 root cgroup doesn't have the "cgroup.freeze"
-	// interface file. Other than that, see
-	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
-	// for details.
-	//
-	// Now, the v2 freezer uses "cgroup.freeze" to indicate the desired self
-	// state, thus replacing v1's "freezer.self_freezing".
-	if state, err := ioutil.ReadFile(
-		filepath.Join(fridgepath, "cgroup.freeze")); err == nil {
-		switch strings.TrimSuffix(string(state), "\n") {
-		case "1":
-			proc.Selffridge = ProcessFrozen
-		default:
-			proc.Selffridge = ProcessThawed
-		}
-	}
 	// But, where's v1's "freezer.state", that is, the process' effective state?
 	// It can now be found as one of possibly many event entries in
-	// "cgroup.events". Yuk.
-	freezerState := ProcessThawed
+	// "cgroup.events". Yuk. But please also note that the v2 root cgroup
+	// doesn't have the "cgroup.freeze" interface file. Other than that, see
+	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
+	// for details.
+	proc.FridgeFrozen = false
 	if events, err := ioutil.ReadFile(
 		filepath.Join(fridgepath, "cgroup.events")); err == nil {
 		for _, event := range strings.Split(string(events), "\n") {
 			if strings.HasPrefix(event, "frozen ") {
 				if event[7] == '1' {
-					freezerState = ProcessFrozen
+					proc.FridgeFrozen = true
 				}
 				break
 			}
 		}
 	}
-	// Emulate the effective "freezer.state" from v1: take the effective state
-	// from the events interface file, but assume the "freezing" state iff this
-	// process should be frozen, yet the events yet don't indicate so.
-	if proc.Selffridge == ProcessFrozen && freezerState != ProcessFrozen {
-		proc.Fridge = ProcessFreezing
-	} else {
-		proc.Fridge = freezerState
-	}
-	// TODO: parent_freezing
 }
 
-// freezerV1 reads and stores the cgroups v1 freezer status information for the
-// specified process.
+// freezerV1 reads and stores the cgroups v1 effective freezer status
+// information for the specified process and maps it onto our v2-like simplified
+// state model.
 func freezerV1(proc *Process, fridgepath string) {
 	// Please note: "the root cgroup is non-freezable and the above
 	// interface files don't exist."
 	// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
+	proc.FridgeFrozen = false
 	if state, err := ioutil.ReadFile(
 		filepath.Join(fridgepath, "freezer.state")); err == nil {
 		switch strings.TrimSuffix(string(state), "\n") {
 		case "FREEZING":
-			proc.Fridge = ProcessFreezing
-		case "FROZEN":
-			proc.Fridge = ProcessFrozen
-		case "THAWED":
 			fallthrough
-		default:
-			proc.Fridge = ProcessThawed
+		case "FROZEN":
+			proc.FridgeFrozen = true
 		}
-	} else {
-		proc.Fridge = ProcessThawed
-	}
-	if selfstate, err := ioutil.ReadFile(
-		filepath.Join(fridgepath, "freezer.self_freezing")); err == nil {
-		switch strings.TrimSuffix(string(selfstate), "\n") {
-		case "1":
-			proc.Selffridge = ProcessFrozen
-		default:
-			proc.Selffridge = ProcessThawed
-		}
-	} else {
-		proc.Selffridge = ProcessThawed
-	}
-	if parentstate, err := ioutil.ReadFile(
-		filepath.Join(fridgepath, "freezer.parent_freezing")); err == nil {
-		switch strings.TrimSuffix(string(parentstate), "\n") {
-		case "1":
-			proc.Parentfridge = ProcessFrozen
-		default:
-			proc.Parentfridge = ProcessThawed
-		}
-	} else {
-		proc.Parentfridge = ProcessThawed
 	}
 }
 

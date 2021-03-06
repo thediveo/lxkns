@@ -21,7 +21,7 @@ import { makeStyles, Tooltip } from '@material-ui/core'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
 
-import { FridgeState, Process } from 'models/lxkns'
+import { Process } from 'models/lxkns'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -99,8 +99,8 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
 
     const classes = useStyles()
 
-    const fridge = process.fridge !== FridgeState.Thawed
-        ? <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
+    const fridge = process.fridgefrozen ?
+        <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
         <span className={clsx(classes.processInfo, className)}>
@@ -109,12 +109,12 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
-            {process.cgroup && process.cgroup !== "/" && (
+            {process.cpucgroup && process.cpucgroup !== "/" && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
                         <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />
                         {fridge}
-                        <span className={classes.cgroupPath}>{process.cgroup}</span>
+                        <span className={classes.cgroupPath}>{process.cpucgroup}</span>
                     </span>
                 </Tooltip>)}
         </span>
