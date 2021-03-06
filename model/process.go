@@ -246,7 +246,7 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 		}
 	}
 	// Scan for the control groups of the processes in the table.
-	_ = pt.scanCgroups()
+	pt.scanCgroups()
 	// Phew: done.
 	return
 }
@@ -266,7 +266,7 @@ func (l ProcessListByPID) Less(i, j int) bool {
 // that this controller is widely used and (2) we're interested in the fridge
 // (well, "freezer") state. On a side note, the "memory" controller
 // unfortunately has been disabled on some architectures (ARM) for some time.
-func (p ProcessTable) scanCgroups() error {
+func (p ProcessTable) scanCgroups() {
 	// Try to find the freezer cgroup v1 hierarchy root, if available...
 	fridgeroot := ""
 	fridgev1 := true
@@ -298,7 +298,6 @@ Fridge:
 			freezerV2(proc, filepath.Join(fridgeroot, controllers[1]))
 		}
 	}
-	return nil
 }
 
 var cgrouptypes = []string{"cpu", "freezer"}
@@ -313,8 +312,7 @@ func freezerV2(proc *Process, fridgepath string) {
 	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
 	// for details.
 	proc.FridgeFrozen = false
-	if events, err := ioutil.ReadFile(
-		filepath.Join(fridgepath, "cgroup.events")); err == nil {
+	if events, err := ioutil.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
 		for _, event := range strings.Split(string(events), "\n") {
 			if strings.HasPrefix(event, "frozen ") {
 				if event[7] == '1' {

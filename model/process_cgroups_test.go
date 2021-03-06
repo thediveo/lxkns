@@ -77,7 +77,8 @@ var _ = Describe("cgrouping", func() {
 	It("finds control groups of processes", func() {
 		procs := NewProcessTable()
 		Expect(procs).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
-			"Controlgroup": Not(BeEmpty()),
+			"CpuCgroup": Not(BeEmpty()),
+			"FridgeCgroup": Not(BeEmpty()),
 		}))))
 	})
 
