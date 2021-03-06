@@ -140,7 +140,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			// the hierarchy, and then prepare for the next rung...
 			parentns.(namespaces.HierarchyConfigurer).AddChild(ns.(model.Hierarchy))
 			ns = parentns
-			nsf.(io.Closer).Close()
+			_ = nsf.(io.Closer).Close()
 			nsf = parentnsf
 		}
 		// Don't leak...

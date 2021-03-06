@@ -205,7 +205,7 @@ func ownedBindMounts() []BindmountedNamespaceInfo {
 		var ownernsid species.NamespaceID
 		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
-			usernsref.(io.Closer).Close() // do not leak.
+			_ = usernsref.(io.Closer).Close() // do not leak.
 		} else {
 			ownedbindmounts[idx].Log = append(ownedbindmounts[idx].Log, err.Error())
 		}
