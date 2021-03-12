@@ -76,6 +76,7 @@ func (p ProcessTable) scanFridges() {
 		if err := reexec.RunReexecAction(
 			"discover-fridges",
 			reexec.Namespaces([]reexec.Namespace{{Type: "mnt", Path: "/proc/1/ns/mnt"}}),
+			reexec.Param(fridgepaths),
 			reexec.Result(&frozens),
 		); err != nil {
 			log.Errorf("could not determine fridge states in mnt:[%d]: %s", initialns.Ino, err.Error())
@@ -174,8 +175,6 @@ func frozenV1(fridgepath string) (frozen bool) {
 		case "FROZEN":
 			frozen = true
 		}
-	} else {
-		log.Warnf("cannot access freezer state %q, err: %s", fridgepath, err.Error())
 	}
 	return
 }
