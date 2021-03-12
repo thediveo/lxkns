@@ -144,7 +144,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 			nsf = parentnsf
 		}
 		// Don't leak...
-		nsf.(io.Closer).Close()
+		_ = nsf.(io.Closer).Close()
 	}
 	log.Infof("found %d hidden %s namespaces", hidden, nstype.Name())
 }

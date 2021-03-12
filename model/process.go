@@ -21,16 +21,12 @@
 package model
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/log"
 )
 
@@ -203,17 +199,20 @@ func (p *Process) String() string {
 }
 
 // NewProcessTable takes returns the currently available processes (as usual,
-// without tasks=threads). The process table is in fact a map, indexed by
-// PIDs.
-func NewProcessTable() (pt ProcessTable) {
-	pt = newProcessTable("/proc")
+// without tasks/threads). The process table is in fact a map, indexed by PIDs.
+// When the freezer parameter is true then additionally the cgroup freezer
+// states will also be discovered; as this might require switching into the
+// initial mount namespace and this is possible in Go only when re-executing as
+// a child, the caller must explicitly request this additional discovery.
+func NewProcessTable(freezer bool) (pt ProcessTable) {
+	pt = newProcessTable(freezer, "/proc")
 	log.Infof("discovered %d processes", len(pt))
 	return
 }
 
 // newProcessTable implements NewProcessTable and allows for testing on fake
 // /proc "filesystems".
-func newProcessTable(procroot string) (pt ProcessTable) {
+func newProcessTable(freezer bool, procroot string) (pt ProcessTable) {
 	procentries, err := ioutil.ReadDir(procroot)
 	if err != nil {
 		return nil
@@ -245,8 +244,18 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 			parent.Children = append(parent.Children, proc)
 		}
 	}
-	// Scan for the control groups of the processes in the table.
+	// Scan for the control groups of the processes in the table. We always
+	// scan, as we can do so from our current mount and cgroup namespaces.
+	// However, in order to correctly discover the cgroup paths for all
+	// processes we need to run this while inside the initial cgroup namespace.
 	pt.scanCgroups()
+	// If requested, additionally scan for the freezer states; this is a more
+	// expensive operation in case we need to switch into the initial mount
+	// namespace, as otherwise we might not see the full cgroups freezer
+	// hierarchy.
+	if freezer {
+		pt.scanFridges()
+	}
 	// Phew: done.
 	return
 }
@@ -259,151 +268,4 @@ func (l ProcessListByPID) Len() int      { return len(l) }
 func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l ProcessListByPID) Less(i, j int) bool {
 	return l[i].PID < l[j].PID
-}
-
-// scanCgroups scans all processes for their control groups; it scans only on a
-// specific type of controller, the "cpu" v1 controller on (1) the assumption
-// that this controller is widely used and (2) we're interested in the fridge
-// (well, "freezer") state. On a side note, the "memory" controller
-// unfortunately has been disabled on some architectures (ARM) for some time.
-func (p ProcessTable) scanCgroups() {
-	// Try to find the freezer cgroup v1 hierarchy root, if available...
-	fridgeroot := ""
-	fridgev1 := true
-Fridge:
-	for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
-		for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
-			if sopt == "freezer" {
-				fridgeroot = mountinfo.MountPoint
-				break Fridge
-			}
-		}
-	}
-	// ...otherwise, there must be a cgroups v2 unified hierarchy.
-	if fridgeroot == "" {
-		mountinfo := mntinfo.MountsOfType(-1, "cgroup2")
-		if len(mountinfo) > 0 {
-			fridgev1 = false
-			fridgeroot = mountinfo[0].MountPoint
-		}
-	}
-	// Finally scan the processes for their cgroups...
-	for pid, proc := range p {
-		controllers := processCgroup(cgrouptypes, pid)
-		proc.CpuCgroup = controllers[0]
-		proc.FridgeCgroup = controllers[1]
-		if fridgev1 {
-			freezerV1(proc, filepath.Join(fridgeroot, controllers[1]))
-		} else {
-			freezerV2(proc, filepath.Join(fridgeroot, controllers[1]))
-		}
-	}
-}
-
-var cgrouptypes = []string{"cpu", "freezer"}
-
-// freezerV2 reads and stores the cgroups v2 freezer effective status
-// information for the specified process.
-func freezerV2(proc *Process, fridgepath string) {
-	// But, where's v1's "freezer.state", that is, the process' effective state?
-	// It can now be found as one of possibly many event entries in
-	// "cgroup.events". Yuk. But please also note that the v2 root cgroup
-	// doesn't have the "cgroup.freeze" interface file. Other than that, see
-	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
-	// for details.
-	proc.FridgeFrozen = false
-	if events, err := ioutil.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
-		for _, event := range strings.Split(string(events), "\n") {
-			if strings.HasPrefix(event, "frozen ") {
-				if event[7] == '1' {
-					proc.FridgeFrozen = true
-				}
-				break
-			}
-		}
-	}
-}
-
-// freezerV1 reads and stores the cgroups v1 effective freezer status
-// information for the specified process and maps it onto our v2-like simplified
-// state model.
-func freezerV1(proc *Process, fridgepath string) {
-	// Please note: "the root cgroup is non-freezable and the above
-	// interface files don't exist."
-	// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
-	proc.FridgeFrozen = false
-	if state, err := ioutil.ReadFile(
-		filepath.Join(fridgepath, "freezer.state")); err == nil {
-		switch strings.TrimSuffix(string(state), "\n") {
-		case "FREEZING":
-			fallthrough
-		case "FROZEN":
-			proc.FridgeFrozen = true
-		}
-	}
-}
-
-// processCgroup returns the name (hierarchy path) of some of the cgroup
-// controllers a specific process is in (as specified in the controllertypes
-// parameter).
-//
-// We first try to find the specified cgroup v1 controllers if available and
-// only then fall back to the unified cgroups v2 hierarchy.
-//
-// Note: the cgroup path(s) returned is (are) relative to their respective
-// process cgroup roots (as can be found by inspecting mountinfo), even as they
-// start with "/" (at least when discovered inside the initial pid+cgroup
-// namespaces).
-func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
-	paths = make([]string, len(controllertypes))
-	cgroup, err := os.Open(fmt.Sprintf("/proc/%d/cgroup", pid))
-	if err != nil {
-		return
-	}
-	defer cgroup.Close()
-	scanner := bufio.NewScanner(cgroup)
-	unifiedroot := "" // (if detected) the cgroups v2 unified hierarchy root
-	for scanner.Scan() {
-		if err == nil {
-			// See https://man7.org/linux/man-pages/man7/cgroups.7.html, section
-			// "NOTES", subsection "/proc files". For cgroups v1 controllers,
-			// the second field specifies the comma-separated list of the
-			// controllers bound to the hierarchy: here, we look for, say, the
-			// "cpu" controller. The third field specifies the path in the
-			// cgroups hierarchy; it is relative to the mount point of the
-			// hierarchy -- which in turn depends on the mount namespace of this
-			// process :)
-			//
-			// For the unified cgroups v2 hierarchy the second field will be
-			// empty, which otherwise would specify the particular cgroup v1
-			// hierarchy/-ies.
-			if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
-				if fields[1] != "" {
-					// cgroups v1 hierarchies
-					controllers := strings.Split(fields[1], ",")
-					for _, ctrl := range controllers {
-						for idx, controllertype := range controllertypes {
-							if ctrl == controllertype {
-								paths[idx] = fields[2]
-							}
-						}
-					}
-				} else {
-					// when we come across a single unified cgroups v2 hierarchy
-					// root, remember it so we can later fix any missing
-					// controller paths.
-					unifiedroot = fields[2]
-				}
-			}
-		}
-	}
-	// Now fix the missing cgroups v2 controller paths we couldn't satisfy from
-	// v1 (if present).
-	for idx, path := range paths {
-		if path == "" {
-			paths[idx] = unifiedroot
-		}
-	}
-	// Hopefully, we've gathered all controller paths by now.
-	return
 }

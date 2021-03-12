@@ -114,7 +114,7 @@ var _ = Describe("Process", func() {
 var _ = Describe("ProcessTable", func() {
 
 	It("reads synthetic /proc", func() {
-		pt := newProcessTable("test/proctable/proc")
+		pt := newProcessTable(false, "test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
 
@@ -127,11 +127,11 @@ var _ = Describe("ProcessTable", func() {
 	})
 
 	It("returns nil for inaccessible /proc", func() {
-		Expect(newProcessTable("test/nirvana")).To(BeNil())
+		Expect(newProcessTable(false, "test/nirvana")).To(BeNil())
 	})
 
 	It("gathers from real /proc", func() {
-		pt := NewProcessTable()
+		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		proc := pt[PIDType(os.Getpid())]
 		Expect(proc).NotTo(BeZero())

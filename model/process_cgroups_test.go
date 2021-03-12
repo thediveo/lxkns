@@ -31,43 +31,18 @@ import (
 var _ = Describe("Freezer", func() {
 
 	It("reads v1 freezer state", func() {
-		proc := Process{FridgeFrozen: true}
-		freezerV1(&proc, "test/cgroupies/v1")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = true
-		freezerV1(&proc, "test/cgroupies/v1/thawed")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = true
-		freezerV1(&proc, "test/cgroupies/v1/somethingelse")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = false
-		freezerV1(&proc, "test/cgroupies/v1/freezing")
-		Expect(proc.FridgeFrozen).To(BeTrue())
-
-		proc.FridgeFrozen = false
-		freezerV1(&proc, "test/cgroupies/v1/frozen")
-		Expect(proc.FridgeFrozen).To(BeTrue())
+		Expect(frozenV1("test/cgroupies/v1")).To(BeFalse())
+		Expect(frozenV1("test/cgroupies/v1/thawed")).To(BeFalse())
+		Expect(frozenV1("test/cgroupies/v1/somethingelse")).To(BeFalse())
+		Expect(frozenV1("test/cgroupies/v1/freezing")).To(BeTrue())
+		Expect(frozenV1("test/cgroupies/v1/frozen")).To(BeTrue())
 	})
 
 	It("reads v2 freezer state", func() {
-		proc := Process{FridgeFrozen: true}
-		freezerV2(&proc, "test/cgroupies/v2")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = true
-		freezerV2(&proc, "test/cgroupies/v2/thawed")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = true
-		freezerV2(&proc, "test/cgroupies/v2/gnawed")
-		Expect(proc.FridgeFrozen).To(BeFalse())
-
-		proc.FridgeFrozen = false
-		freezerV2(&proc, "test/cgroupies/v2/frozen")
-		Expect(proc.FridgeFrozen).To(BeTrue())
+		Expect(frozenV2("test/cgroupies/v2")).To(BeFalse())
+		Expect(frozenV2("test/cgroupies/v2/thawed")).To(BeFalse())
+		Expect(frozenV2("test/cgroupies/v2/gnawed")).To(BeFalse())
+		Expect(frozenV2("test/cgroupies/v2/frozen")).To(BeTrue())
 	})
 
 })
@@ -75,9 +50,9 @@ var _ = Describe("Freezer", func() {
 var _ = Describe("cgrouping", func() {
 
 	It("finds control groups of processes", func() {
-		procs := NewProcessTable()
+		procs := NewProcessTable(false)
 		Expect(procs).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
-			"CpuCgroup": Not(BeEmpty()),
+			"CpuCgroup":    Not(BeEmpty()),
 			"FridgeCgroup": Not(BeEmpty()),
 		}))))
 	})
@@ -149,7 +124,7 @@ rmdir $CTRL
 		Expect(pid).NotTo(BeZero())
 
 		f := func() *Process {
-			p := NewProcessTable()
+			p := NewProcessTable(true)
 			return p[pid]
 		}
 		Expect(f()).Should(PointTo(MatchFields(IgnoreExtras, Fields{

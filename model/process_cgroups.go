@@ -175,7 +175,7 @@ func frozenV1(fridgepath string) (frozen bool) {
 			frozen = true
 		}
 	} else {
-		log.Warnf("freezer.state ??? %q, err: %s", fridgepath, err.Error())
+		log.Warnf("cannot access freezer state %q, err: %s", fridgepath, err.Error())
 	}
 	return
 }

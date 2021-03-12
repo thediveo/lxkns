@@ -38,5 +38,9 @@ services:
         # when operating in a "pure" unified cgroup hierarchy without any traces
         # of v1+v2 hybrid hierarchies, then Docker now defaults to creating
         # private cgroup namespaces for containers. Of course, this is exactly
-        # what defeats the purpose of system diagnosis containers, such as lxkns.
+        # what defeats the purpose of system diagnosis containers, such as
+        # lxkns. Unfortunately, the compose definition yet doesn't support
+        # setting the cgroup namespace mode "private" or "host" (it simply
+        # doesn't exist).
+        #
         # cgroup: host
