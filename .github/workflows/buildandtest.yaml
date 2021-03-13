@@ -34,5 +34,8 @@ jobs:
     runs-on: ubuntu-20.04
     needs: buildandtest
     steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
     - name: Test WebUI units and end-to-end
       run: (cd web/lxkns && yarn install) && make citestapp
