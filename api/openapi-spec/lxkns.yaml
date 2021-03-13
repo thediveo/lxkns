@@ -292,6 +292,7 @@ components:
                     skipped-bindmounts: false
                     skipped-hierarchy: false
                     skipped-ownership: false
+                    skipped-freezer: false
                     scanned-namespace-types:
                         - time
                         - mnt
@@ -611,6 +612,11 @@ components:
                     type: boolean
                 skipped-ownership:
                     type: boolean
+                skipped-freezer:
+                    description: |-
+                        true if the discovery of the (effective) freezer states of processes has been
+                        skipped, so that all processes always appear to be "thawed" (running).
+                    type: boolean
                 scanned-namespace-types:
                     description: |-
                         List of namespace types included in the discovery. This information might help
@@ -626,6 +632,7 @@ components:
                 skipped-bindmounts: false
                 skipped-hierarchy: false
                 skipped-ownership: false
+                skipped-freezer: false
                 scanned-namespace-types:
                     - time
                     - mnt

@@ -65,7 +65,7 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > "github.com/thediveo/gons/reexec"`.
 
 
-## Cgroup v1, v1+v2, v2 Support
+## 🎛 Cgroup v1, v1+v2, v2 Support
 
 In addition to namespaces and their related processes, lxkns also discovers the
 freezer state and (freezer) cgroup controller path information for the processes
@@ -88,7 +88,7 @@ attached to namespaces.
   v2 hierarchy instead, with its built-in core freezer (Linux kernel 5.2 and
   later).
 - "pure" **cgroups v2**: lxkns will automatically detect and use the unified
-  cgroups v2 hierarchy, if no v1 freezer hierarchy is present.
+  cgroups v2 hierarchy when no v1 freezer hierarchy is present.
 
 To a limited extend, the names of (freezer) control groups often relate to the
 partitioning of processes using Linux kernel namespaces. For instance, processes
@@ -158,11 +158,23 @@ the Linux kernel architecture, user namespaces own all other namespaces.
 Some deployment notes about the lxkns service container:
 
 - **read-only:** the lxkns service can be used on a read-only container filesystem.
-- **non-root:** the holy grail of container hardening ... wait till you get to
+- **non-root:** the holy grail of container hardening … wait till you get to
   see our capabilities 😏
 - **unprivileged:** because that doesn't mean in-capable 😈
-- **capabilities:** not much to see here, just `CAP_SYS_ADMIN`,
-  `CAP_SYS_CHROOT`, `CAP_SYS_PTRACE`, and `CAP_DAC_READ_SEARCH`.
+- **capabilities:** not much to see here, just…
+  - `CAP_SYS_PTRACE` gives us access to the namespace information in the proc
+    filesystem.
+  - `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` allow us to switch (especially mount)
+    namespaces in order to look into more places compared to standard discovery
+    tools. Additionally, they allow us to switch the discovery service back into
+    the initial cgroup namespace in order to discover correct cgroup hierarchy
+    information. Similar, temporarily switching into the initial mount namespace
+    allows us to correctly pick up the freezer ("fridge") states of processes,
+    this works around having to either explicitly mount the host's cgroup into
+    the container or to unprotect the container's system paths (which
+    docker-compose yet does not support).
+  - `CAP_DAC_READ_SEARCH` allows us to discover bind-mounted namespaces without
+    interference by the indescretionary excess control.
 
 ### 🖥️ CLI Tools
 
