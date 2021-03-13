@@ -62,13 +62,18 @@ test:
 # webapp unit and end-to-end tests, and finally stops the lxkns service after
 # the tests have run.
 citestapp:
-	cd web/lxkns && yarn build
-	go build -v ./cmd/lxkns
-	sudo ./lxkns --debug --http localhost:5100 & \
-		LXKNSPID=$$! && \
-		(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100) ; \
-		kill $$LXKNSPID && \
-		timeout 10s tail --pid=$$LXKNSPID -f /dev/null
+	@sudo /bin/true
+	#cd web/lxkns && yarn build:dev
+	#go build -v ./cmd/lxkns
+	@TMPPIDFILE=$$(mktemp -p /tmp lxkns.service.pid.XXXXXXXXXX) && \
+	sudo bash -c "chown root $$TMPPIDFILE && ./lxkns --debug --http localhost:5100 & echo \$$! > $$TMPPIDFILE && chown \$$SUDO_USER $$TMPPIDFILE" && \
+	ls -l $$TMPPIDFILE && \
+	LXKNSPID=$$(cat $$TMPPIDFILE) && \
+	rm $$TMPPIDFILE && \
+	echo "*** lxkns service PID" $$LXKNSPID && \
+	(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100,screenshotOnRunFailure=false) ; \
+	sudo kill $$LXKNSPID && \
+	timeout 10s tail --pid=$$LXKNSPID -f /dev/null
 
 report:
 	@./scripts/goreportcard.sh

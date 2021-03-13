@@ -14,7 +14,6 @@ jobs:
       matrix:
         go: ['1.16', '1.14']
     steps:
-
     - name: Set up Go ${{matrix.go}}
       uses: actions/setup-go@v1
       with:
@@ -30,5 +29,10 @@ jobs:
     - name: Test Go packages
       run: sudo go test -v ./... && go test -v ./...
 
+  testwebapp:
+    name: Test web ui of lxkns service
+    runs-on: ubuntu-20.04
+    needs: buildandtest
+    steps:
     - name: Test WebUI units and end-to-end
       run: (cd web/lxkns && yarn install) && make citestapp

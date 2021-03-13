@@ -2109,14 +2109,14 @@
     strip-json-comments "^3.1.1"
 
 "@fontsource/roboto-mono@^4.2.0":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@fontsource/roboto-mono/-/roboto-mono-4.2.0.tgz#4b8e146551898455b8d6ee48702002ed91ba3a0d"
-  integrity sha512-6KaSXDmjtS2D8yAkKjNy+zZaYbSpEEV5Mx8GBFV98uKubwVThaSt3nbchz/cgH/W0vgb6WTctpj7y2Hhn8UoPw==
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@fontsource/roboto-mono/-/roboto-mono-4.2.2.tgz#deb736753e9680e94a11d6e162badf8636310942"
+  integrity sha512-qBEDhPHwN0m6VXSS1EGSAkmKT3gqfQZJyynSkSDQZNPRLeDVq7CTcmJWhjIqAFgVqJ4PNfMUIEl9+bqeBtlvhQ==
 
 "@fontsource/roboto@^4.2.0":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@fontsource/roboto/-/roboto-4.2.0.tgz#4f48e2aee60ca7b36c5fbbdaa3d06af89a0867f6"
-  integrity sha512-ToODF2lawS9DFmGEEoaEFXMwgA47c4EKWsfzEiJRHCujEORSaf5SNVTrKhVeZLdzF7v0h+5HgsQO5ZVbf1mA5A==
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@fontsource/roboto/-/roboto-4.2.2.tgz#39b87680b25915539e445cc6e0fac99e1a81f58b"
+  integrity sha512-VzYWCdqjrepaT7dezuaTZXKaW1L+f5FSp7DGxMqTrf81OTzh9xpKIpr8lgjPg2ZNwiT8rnU++mJ4hojsCnOoqw==
 
 "@hapi/address@2.x.x":
   version "2.1.4"
@@ -2942,6 +2942,11 @@
   version "14.14.22"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.22.tgz#0d29f382472c4ccf3bd96ff0ce47daf5b7b84b18"
   integrity sha512-g+f/qj/cNcqKkc3tFqlXOYjrmZA+jNBiDzbP3kH+B+otKFqAdPgVTGP1IeKRdMml/aE69as5S4FqtxAbl+LaMw==
+
+"@types/node@12.12.50":
+  version "12.12.50"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.50.tgz#e9b2e85fafc15f2a8aa8fdd41091b983da5fd6ee"
+  integrity sha512-5ImO01Fb8YsEOYpV+aeyGYztcYcjGsBvN4D7G5r1ef2cuQOpymjWNQi5V0rKHE6PC2ru3HkoUr/Br2/8GUA84w==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
@@ -5744,9 +5749,9 @@ cyclist@^1.0.1:
   integrity sha1-WW6WmP0MgOEgOMK4LW6xs1tiJNk=
 
 cypress-react-router@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/cypress-react-router/-/cypress-react-router-1.0.1.tgz#cd838501fa82c134e0f3a03a3b40d386da487af8"
-  integrity sha512-HFxogRj9CLm58XlJQWZgbjYZMFrgklpvoy9AYKfs59dLBydQgtUM1oJg6OmPwUXVXstOCeGJKNMtrimiJaHZnA==
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/cypress-react-router/-/cypress-react-router-1.0.2.tgz#55fe1848732c92df917d0f45b6658b0d6fdcdfd9"
+  integrity sha512-kjjVARkmPTRMM2oPDP6pxNdwKLZOaHrXq2/i7G6czTUUZAKB44NEU8Z4RdfeTJ8Vx1Y+zfCc96AVdj6in2OMTQ==
 
 cypress-react-selector@^2.3.6:
   version "2.3.6"
@@ -5755,14 +5760,15 @@ cypress-react-selector@^2.3.6:
   dependencies:
     resq "1.10.0"
 
-cypress@^6.4.0:
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/cypress/-/cypress-6.4.0.tgz#432c516bf4f1a0f042a6aa1f2c3a4278fa35a8b2"
-  integrity sha512-SrsPsZ4IBterudkoFYBvkQmXOVxclh1/+ytbzpV8AH/D2FA+s2Qy5ISsaRzOFsbQa4KZWoi3AKwREmF1HucYkg==
+cypress@^6.6.0:
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/cypress/-/cypress-6.6.0.tgz#659c64cdb06e51b6be18fdac39d8f192deb54fa0"
+  integrity sha512-+Xx3Zn653LJHUsCb9h1Keql2jlazbr1ROmbY6DFJMmXKLgXP4ez9cE403W93JNGRbZK0Tng3R/oP8mvd9XAPVg==
   dependencies:
     "@cypress/listr-verbose-renderer" "^0.4.1"
     "@cypress/request" "^2.88.5"
     "@cypress/xvfb" "^1.2.4"
+    "@types/node" "12.12.50"
     "@types/sinonjs__fake-timers" "^6.0.1"
     "@types/sizzle" "^2.3.2"
     arch "^2.1.2"
@@ -5775,7 +5781,7 @@ cypress@^6.4.0:
     commander "^5.1.0"
     common-tags "^1.8.0"
     dayjs "^1.9.3"
-    debug "^4.1.1"
+    debug "4.3.2"
     eventemitter2 "^6.4.2"
     execa "^4.0.2"
     executable "^4.1.1"
@@ -5792,7 +5798,7 @@ cypress@^6.4.0:
     moment "^2.29.1"
     ospath "^1.2.2"
     pretty-bytes "^5.4.1"
-    ramda "~0.26.1"
+    ramda "~0.27.1"
     request-progress "^3.0.0"
     supports-color "^7.2.0"
     tmp "~0.2.1"
@@ -5867,6 +5873,13 @@ debug@4.3.1, debug@^4.0.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.1.tgz#f0d229c505e0c6d8c49ac553d1b13dc183f6b2ee"
   integrity sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==
+  dependencies:
+    ms "2.1.2"
+
+debug@4.3.2:
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.2.tgz#f0a49c18ac8779e31d4a0c6029dfb76873c7428b"
+  integrity sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==
   dependencies:
     ms "2.1.2"
 
@@ -9282,9 +9295,9 @@ jest@26.6.0:
     jest-cli "^26.6.0"
 
 jotai@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/jotai/-/jotai-0.14.0.tgz#d4b73c6acd203503a342620a050f9bed8225fc85"
-  integrity sha512-A189j1apXl+mzKSAyQW2ZrEH1AaLMfdWP9ZPHc2uLIsoeOO3siMh3cJl97db3C25DNADVPW5lHDeNbSehystSw==
+  version "0.14.5"
+  resolved "https://registry.yarnpkg.com/jotai/-/jotai-0.14.5.tgz#8699b8dbbc417ad2ea4a486da34219546e350233"
+  integrity sha512-8WjJYxLKv79ZF3gRERcYqXkwRWtDQq01hQXdg+qcKE0MtQcwGyReM/WHFGRUhqHW51O8fsjk+9s7U6AJ+p9uLQ==
   dependencies:
     use-context-selector "1.3.7"
 
@@ -10730,9 +10743,9 @@ normalize-url@^3.0.0:
   integrity sha512-U+JJi7duF1o+u2pynbp2zXDW2/PADgC30f0GsHZtRh+HOcXHnw137TrNlyxxRvWW5fjKd3bcLHPxofWuCjaeZg==
 
 notistack@^1.0.0:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/notistack/-/notistack-1.0.3.tgz#ce86a5e8c2b192d713d655c0778347beb3ebead3"
-  integrity sha512-bRGF/eg2qNQ8BwagPLkHiqrz+W00PYtGY5Xl33I0Of1BTm7arksZO1JxssPTlti0qw127CxuWxm637ipn0eZ9g==
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/notistack/-/notistack-1.0.5.tgz#239d5888105c89a9a7f26d75a07d279446dc1624"
+  integrity sha512-xCMG0OhzEdczmDs2lDABEiphKQMZUavdOIRAJhfIcyJkCA4UqBDANL3YCLt+mz8VbAPCeKTn76kbCmYQIqksnA==
   dependencies:
     clsx "^1.1.0"
     hoist-non-react-statics "^3.3.0"
@@ -12411,10 +12424,15 @@ raf@^3.4.1:
   dependencies:
     performance-now "^2.1.0"
 
-ramda@0.26.1, ramda@~0.26.1:
+ramda@0.26.1:
   version "0.26.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.26.1.tgz#8d41351eb8111c55353617fc3bbffad8e4d35d06"
   integrity sha512-hLWjpy7EnsDBb0p+Z3B7rPi3GDeRG5ZtiI33kJhTt+ORCd38AbAIjB/9zRIUoeTbE/AVX5ZkU7m6bznsvrf8eQ==
+
+ramda@~0.27.1:
+  version "0.27.1"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.27.1.tgz#66fc2df3ef873874ffc2da6aa8984658abacf5c9"
+  integrity sha512-PgIdVpn5y5Yns8vqb8FzBUEYn98V3xcPgawAkkgj0YJ0qDsnHCiNmZYfOGMgOvoB0eWFLpYbhxUR3mxfDIMvpw==
 
 randombytes@^2.0.0, randombytes@^2.0.1, randombytes@^2.0.5, randombytes@^2.1.0:
   version "2.1.0"

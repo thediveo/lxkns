@@ -85,7 +85,7 @@
   },
   "homepage": "/",
   "devDependencies": {
-    "cypress": "^6.4.0",
+    "cypress": "^6.6.0",
     "cypress-react-router": "^1.0.1",
     "cypress-react-selector": "^2.3.6",
     "p-defer": "^3.0.0"

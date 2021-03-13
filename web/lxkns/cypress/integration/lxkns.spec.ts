@@ -19,7 +19,7 @@ describe('lxkns app', () => {
     before(() => {
         cy.log('loads')
         cy.visit('/')
-        cy.waitForReact(1000, '#root')
+        cy.waitForReact(2000, '#root')
 
         cy.log('refreshes')
         cy.react('Refresher')
