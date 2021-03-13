@@ -48,6 +48,7 @@
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=$(git describe --tags) PORT=3030 react-scripts start",
     "build": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts build",
+    "build:dev": "REACT_APP_GIT_VERSION=$(git describe --tags) react-scripts build --profile",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
     "cypress": "NODE_ENV=test cypress open",
     "cypress:run": "NODE_ENV=test cypress run",

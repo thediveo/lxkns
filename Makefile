@@ -65,15 +65,18 @@ test:
 # the tests have run.
 citestapp:
 	@sudo /bin/true
-	#cd web/lxkns && yarn build:dev
-	#go build -v ./cmd/lxkns
+	@cd web/lxkns && yarn build:dev
+	@go build -v ./cmd/lxkns
 	@TMPPIDFILE=$$(mktemp -p /tmp lxkns.service.pid.XXXXXXXXXX) && \
-	sudo bash -c "chown root $$TMPPIDFILE && ./lxkns --debug --http localhost:5100 & echo \$$! > $$TMPPIDFILE && chown \$$SUDO_USER $$TMPPIDFILE" && \
+	sudo chown root $$TMPPIDFILE && \
+	sudo bash -c "./lxkns --debug --http localhost:5100 & echo \$$! > $$TMPPIDFILE" && \
+	sudo bash -c "chown \$$SUDO_USER $$TMPPIDFILE" && \
 	ls -l $$TMPPIDFILE && \
 	LXKNSPID=$$(cat $$TMPPIDFILE) && \
 	rm $$TMPPIDFILE && \
-	echo "*** lxkns service PID" $$LXKNSPID && \
+	echo "lxkns background service PID:" $$LXKNSPID && \
 	(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100,screenshotOnRunFailure=false) ; \
+	echo "stopping lxkns background service and waiting for it exit..." && \
 	sudo kill $$LXKNSPID && \
 	timeout 10s tail --pid=$$LXKNSPID -f /dev/null
 
