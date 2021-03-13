@@ -6,7 +6,7 @@ GIT_VERSION = $(shell git describe --tags 2>/dev/null || echo "v0.0.0")
 # Go version to use when building the test containers; start with a version
 # 1.14+ first to get better testbasher diagnosis in case a test script runs
 # into trouble.
-goversion = 1.15 1.13
+goversion = 1.16 1.15
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 
@@ -18,11 +18,13 @@ testcontaineropts := \
 	--cap-add CAP_SYS_CHROOT \
 	--cap-add CAP_SYS_PTRACE \
 	--cap-add CAP_DAC_READ_SEARCH \
+	--cap-add CAP_DAC_OVERRIDE \
 	--cap-add CAP_SETUID \
 	--cap-add CAP_SETGID \
 	--security-opt systempaths=unconfined \
 	--security-opt apparmor=unconfined \
-	--security-opt seccomp=unconfined
+	--security-opt seccomp=unconfined \
+	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 

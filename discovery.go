@@ -29,9 +29,9 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// DiscoverOpts gives control over the extend and thus time and resources
-// spent on discovering Linux kernel namespaces, their relationships between
-// them, and with processes.
+// DiscoverOpts gives control over the extent of discovering Linux kernel
+// namespaces and thus time and resources spent, such as finding the
+// relationships between namespaces and with associated processes.
 type DiscoverOpts struct {
 	// The types of namespaces to discover: this is an OR'ed combination of
 	// Linux kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et
@@ -45,6 +45,7 @@ type DiscoverOpts struct {
 	SkipBindmounts bool `json:"skipped-bindmounts"` // Don't scan for bind-mounted namespaces.
 	SkipHierarchy  bool `json:"skipped-hierarchy"`  // Don't discover the hierarchy of PID and user namespaces.
 	SkipOwnership  bool `json:"skipped-ownership"`  // Don't discover the ownership of non-user namespaces.
+	SkipFreezer    bool `json:"skipped-freezer"`    // Don't discover the cgroup freezer state of processes.
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive
@@ -63,6 +64,7 @@ var NoDiscovery = DiscoverOpts{
 	SkipBindmounts: true,
 	SkipHierarchy:  true,
 	SkipOwnership:  true,
+	SkipFreezer:    true,
 }
 
 // DiscoveryResult stores the results of a tour through Linux processes and
@@ -169,9 +171,9 @@ func init() {
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
 func Discover(opts DiscoverOpts) *DiscoveryResult {
-	result := &DiscoveryResult{ // TODO: convenience f()
+	result := &DiscoveryResult{
 		Options:   opts,
-		Processes: model.NewProcessTable(),
+		Processes: model.NewProcessTable(!opts.SkipFreezer),
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.

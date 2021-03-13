@@ -38,7 +38,7 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // and backgroundColor instead of just a background CSS property value string.
 const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
     const color = shared ? fade(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
-    const change = shared ? 0.2 : 0.4
+    const change = shared ? 0.6 : 0.4
     return {
         background: dashedBorder(
             theme.palette.type === 'light' ? darken(color, change) : lighten(color, change),
@@ -162,7 +162,7 @@ export const NamespaceBadge = ({ namespace, shared, className }: NamespaceBadgeP
     // https://github.com/facebook/create-react-app/issues/8687 ... which still
     // is open.
     return (
-        <Tooltip title={`${shared ? '«shared» ' : ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
+        <Tooltip title={`${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial': ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
             <span className={clsx(
                 classes.namespaceBadge,
                 classes[namespace.type],

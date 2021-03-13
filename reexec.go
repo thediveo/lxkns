@@ -40,5 +40,9 @@ func ReexecIntoActionEnv(actionname string, namespaces []model.Namespace, envvar
 		rexns[idx].Type = "!" + namespaces[idx].Type().Name()
 		rexns[idx].Path = namespaces[idx].Ref()
 	}
-	return reexec.ForkReexecEnv(actionname, rexns, envvars, result)
+	return reexec.RunReexecAction(
+		actionname,
+		reexec.Namespaces(rexns),
+		reexec.Environment(envvars),
+		reexec.Result(result))
 }

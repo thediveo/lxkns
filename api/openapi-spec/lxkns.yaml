@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.14.0
+    version: 0.16.0
     description: 'Discover Linux-kernel namespaces, almost everywhere in a Linux host.'
     contact:
         url: 'https://github.com/thediveo/lxkns'
@@ -146,8 +146,10 @@ components:
                 - name
                 - cmdline
                 - starttime
-                - cgroup
                 - namespaces
+                - cpucgroup
+                - fridgecgroup
+                - fridgefrozen
             type: object
             properties:
                 pid:
@@ -182,17 +184,24 @@ components:
                         It is taken from /proc/$PID/stat, see also
                         [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
                     type: integer
-                cgroup:
+                cpucgroup:
                     description: |-
-                        The cgroup (control group) path name in the hierarchy this process is in. The
+                        The (CPU) cgroup (control group) path name in the hierarchy this process is in. The
                         path name does not specify the root mount path of the complete hierarchy, but
-                        only the (pseudo) absolute path starting from this root.
+                        only the (pseudo) absolute path starting from the root of the particular (v1) or
+                        unified (v2) cgroup hierarchy.
                     type: string
                 namespaces:
                     $ref: '#/components/schemas/NamespacesSet'
                     description: |-
                         References the namespaces this process is joined to, in form of the namespace
                         IDs (inode numbers).
+                fridgecgroup:
+                    description: The freezer cgroup path name in the hierarchy this process is in.
+                    type: string
+                fridgefrozen:
+                    description: The effective freezer state of this process.
+                    type: boolean
             example:
                 namespaces:
                     mnt: 4026531840
@@ -210,7 +219,7 @@ components:
                     - fixrtc
                     - splash
                 starttime: 0
-                cgroup: /init.scope
+                cpucgroup: /init.scope
         ProcessTable:
             description: |-
                 Information about all processes in the process tree, with each process item
@@ -238,7 +247,7 @@ components:
                         - fixrtc
                         - splash
                     starttime: 0
-                    cgroup: /init.scope
+                    cpucgroup: /init.scope
                 '137024':
                     namespaces:
                         mnt: 4026532517
@@ -254,7 +263,7 @@ components:
                     cmdline:
                         - /usr/lib/upower/upowerd
                     starttime: 3132568
-                    cgroup: /system.slice/upower.service
+                    cpucgroup: /system.slice/upower.service
         DiscoveryResult:
             description: |-
                 The discovered namespaces and processes with their mutual relationships, and
@@ -283,6 +292,7 @@ components:
                     skipped-bindmounts: false
                     skipped-hierarchy: false
                     skipped-ownership: false
+                    skipped-freezer: false
                     scanned-namespace-types:
                         - time
                         - mnt
@@ -413,7 +423,7 @@ components:
                             - fixrtc
                             - splash
                         starttime: 0
-                        cgroup: /init.scope
+                        cpucgroup: /init.scope
                     '17':
                         namespaces:
                             mnt: 4026531840
@@ -429,7 +439,7 @@ components:
                         cmdline:
                             - ''
                         starttime: 0
-                        cgroup: ''
+                        cpucgroup: ''
                     '1692':
                         namespaces:
                             mnt: 4026532246
@@ -445,7 +455,7 @@ components:
                         cmdline:
                             - /lib/systemd/systemd-timesyncd
                         starttime: 2032
-                        cgroup: /system.slice/systemd-timesyncd.service
+                        cpucgroup: /system.slice/systemd-timesyncd.service
         Namespace:
             description: |-
                 Information about a single Linux-kernel namespace. Depending on the extent of
@@ -498,10 +508,9 @@ components:
                         format: int32
                         type: integer
                 ealdorman:
-                    description: |-
-                        PID of the most senior leader process joined to this namespace.
-                    type: integer
                     format: int32
+                    description: PID of the most senior leader process joined to this namespace.
+                    type: integer
                 parent:
                     format: int64
                     description: 'Only for PID and user namespaces: the ID of the parent namespace.'
@@ -603,6 +612,11 @@ components:
                     type: boolean
                 skipped-ownership:
                     type: boolean
+                skipped-freezer:
+                    description: |-
+                        true if the discovery of the (effective) freezer states of processes has been
+                        skipped, so that all processes always appear to be "thawed" (running).
+                    type: boolean
                 scanned-namespace-types:
                     description: |-
                         List of namespace types included in the discovery. This information might help
@@ -618,6 +632,7 @@ components:
                 skipped-bindmounts: false
                 skipped-hierarchy: false
                 skipped-ownership: false
+                skipped-freezer: false
                 scanned-namespace-types:
                     - time
                     - mnt

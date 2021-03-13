@@ -102,7 +102,9 @@ export interface Process {
     name: string
     cmdline: string
     starttime: number
-    cgroup: string
+    cpucgroup: string
+    fridgecgroup: string
+    fridgefrozen: boolean
     namespaces: NamespaceSet
 }
 

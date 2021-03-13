@@ -36,6 +36,7 @@ var _ = Describe("discovery result JSON", func() {
 			"skipped-bindmounts": true,
 			"skipped-hierarchy": false,
 			"skipped-ownership": false,
+			"skipped-freezer": false,
 			"scanned-namespace-types": [
 			  "time",
 			  "mnt",

@@ -59,7 +59,7 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 			if proc := ns.Ealdorman(); proc != nil {
 				item.PID = int(proc.PID)
 				item.ProcName = proc.Name
-				item.Comment = proc.Controlgroup
+				item.Comment = proc.CpuCgroup
 			} else if ns.Ref() != "" {
 				item.Comment = "bound:" + ns.Ref()
 			}

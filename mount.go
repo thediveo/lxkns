@@ -42,7 +42,7 @@ func MountEnterNamespaces(
 		usernsid, _ := usermntnsref.ID()
 		// Do not leak, release user namespace immediately, as we're done with
 		// it.
-		usermntnsref.(io.Closer).Close()
+		_ = usermntnsref.(io.Closer).Close()
 		if userns, ok := namespaces[model.UserNS][usernsid]; ok &&
 			userns.ID() != ownusernsid {
 			// Prepend the user namespace to the list of namespaces we need to

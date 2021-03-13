@@ -170,7 +170,7 @@ func (pns *PlainNamespace) DetectOwner(nsr relations.Relation) {
 	// done using it. And yes, we're blindly type asserting here, so the
 	// caller must pass in a closeable namespace reference object.
 	pns.ownernsid, _ = usernsf.ID()
-	usernsf.(io.Closer).Close()
+	_ = usernsf.(io.Closer).Close()
 }
 
 // SetOwner set the namespace ID of the user namespace owning this namespace.

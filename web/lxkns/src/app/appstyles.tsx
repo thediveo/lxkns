@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { createMuiTheme } from '@material-ui/core'
 import { amber, blue, blueGrey, brown, green, grey, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
@@ -63,10 +62,6 @@ declare module '@material-ui/core/styles/createPalette' {
     }
 }
 
-// FIXME: remove and refactor CSS into components.
-const globalTheme = createMuiTheme()
-
-
 // The (basic) light theme parts specific to lxkns.
 export const lxknsLightTheme = {
     overrides: {
@@ -84,7 +79,7 @@ export const lxknsLightTheme = {
                     '& .namespace .controlledprocess .MuiTreeItem-content::before': {
                         content: '"····"',
                         marginRight: '0.35em',
-                        color: globalTheme.palette.text.disabled,
+                        color: grey[500],
                     },
                     '& .controlledprocess .controlledprocess': {
                         marginLeft: '1.1em',
@@ -116,6 +111,17 @@ export const lxknsLightTheme = {
 export const lxknsDarkTheme = mergeDeep(
     cloneDeep(lxknsLightTheme),
     {
+        overrides: {
+            MuiCssBaseline: {
+                '@global': {
+                    '.namespacetree': {
+                        '& .namespace .controlledprocess .MuiTreeItem-content::before': {
+                            color: grey[600],
+                        },
+                    },
+                },
+            },
+        },
         palette: {
             namespace: {
                 cgroup: red[900],

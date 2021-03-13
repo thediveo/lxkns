@@ -27,12 +27,13 @@ import (
 )
 
 var proc1 = &model.Process{
-	PID:        1,
-	PPID:       0,
-	Cmdline:    []string{"/sbin/domination", "--world"},
-	Name:       "(init)",
-	Starttime:  123,
-	Namespaces: namespaceset,
+	PID:          1,
+	PPID:         0,
+	Cmdline:      []string{"/sbin/domination", "--world"},
+	Name:         "(init)",
+	Starttime:    123,
+	Namespaces:   namespaceset,
+	FridgeFrozen: false,
 }
 
 const proc1JSON = `{
@@ -45,7 +46,9 @@ const proc1JSON = `{
 	  "--world"
 	],
 	"starttime": 123,
-	"cgroup": ""
+	"cpucgroup": "",
+	"fridgecgroup": "",
+	"fridgefrozen": false
 }`
 
 var proc2 = &model.Process{
@@ -55,7 +58,9 @@ var proc2 = &model.Process{
 	Name:         "fool",
 	Starttime:    666666,
 	Namespaces:   namespaceset,
-	Controlgroup: "süstem.sluice",
+	CpuCgroup:    "süstem.sluice",
+	FridgeCgroup: "süstem.sluice/lxkns",
+	FridgeFrozen: true,
 }
 
 const proc2JSON = `{
@@ -67,7 +72,9 @@ const proc2JSON = `{
 	  "/sbin/fool"
 	],
 	"starttime": 666666,
-	"cgroup": "süstem.sluice"
+	"cpucgroup": "süstem.sluice",
+	"fridgecgroup": "süstem.sluice/lxkns",
+	"fridgefrozen": true
 }`
 
 var namespaceset = model.NamespacesSet{
