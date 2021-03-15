@@ -36,6 +36,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Test WebUI units and end-to-end
       run: (cd web/lxkns && yarn install) && make citestapp
