@@ -3,17 +3,17 @@ on:
   push:
     branches:
     - master
+    - feature/test-webui
 
 jobs:
 
   buildandtest:
     name: Build and Test on Go ${{matrix.go}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        go: ['1.15', '1.14', '1.13']
+        go: ['1.16', '1.14']
     steps:
-
     - name: Set up Go ${{matrix.go}}
       uses: actions/setup-go@v1
       with:
@@ -26,8 +26,25 @@ jobs:
     - name: Get dependencies
       run: go get -v -t -d ./...
 
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
+    - name: Test Go packages
       run: sudo go test -v ./... && go test -v ./...
+
+  testwebapp:
+    name: Test web ui of lxkns service
+    runs-on: ubuntu-20.04
+    needs: buildandtest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Test WebUI units and end-to-end
+      run: (cd web/lxkns && yarn install) && make citestapp
+
+    - name: optionally upload test failure screenshots
+      uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cypress-screenshots
+        path: cypress/screenshots
