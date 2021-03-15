@@ -29,7 +29,7 @@ testcontaineropts := \
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp
 
 help:
-	@echo "available targets: clean, coverage, deploy, undeploy, install, test, report, buildapp, startapp"
+	@echo "available targets: clean, citestapp, coverage, deploy, undeploy, install, test, report, buildapp, startapp"
 
 clean:
 	rm -f $(tools)

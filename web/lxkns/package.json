@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@cypress/react": "^4.16.4",
     "@fontsource/roboto": "^4.2.0",
     "@fontsource/roboto-mono": "^4.2.0",
     "@material-ui/core": "^4.11.3",
@@ -20,6 +19,8 @@
     "babel-loader": "~8.1.0",
     "clsx": "^1.1.1",
     "color-rgba": "^2.2.3",
+    "cypress-react-router": "^1.0.1",
+    "cypress-react-selector": "^2.3.6",
     "elliptic": "^6.5.4",
     "glob": "^7.1.6",
     "http-proxy": "^1.18.1",
@@ -36,7 +37,6 @@
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
-    "react-styleguidist": "^11.1.0",
     "react-transition-group": "^4.4.1",
     "ts-loader": "^8.0.15",
     "ts-node": "^9.1.1",
@@ -87,8 +87,8 @@
   "homepage": "/",
   "devDependencies": {
     "cypress": "^6.6.0",
-    "cypress-react-router": "^1.0.1",
-    "cypress-react-selector": "^2.3.6",
+    "@cypress/react": "^4.16.4",
+    "react-styleguidist": "^11.1.0",
     "p-defer": "^3.0.0"
   }
 }
