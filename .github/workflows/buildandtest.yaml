@@ -43,7 +43,7 @@ jobs:
       run: (cd web/lxkns && yarn install) && make citestapp
 
     - name: upload test failure screenshots
-      uses: actions/upload-artefact@v2
+      uses: actions/upload-artifact@v2
       if: always()
       with:
         name: cypress-screenshots
