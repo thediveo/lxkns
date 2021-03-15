@@ -44,7 +44,7 @@ jobs:
 
     - name: upload test failure screenshots
       uses: actions/upload-artifact@v2
-      if: always()
+      if: ${{ always() }}
       with:
         name: cypress-screenshots
         path: cypress/screenshots
