@@ -76,7 +76,8 @@ citestapp:
 	rm $$TMPPIDFILE && \
 	echo "lxkns background service PID:" $$LXKNSPID && \
 	(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100,screenshotOnRunFailure=false); STATUS=$$? ; \
-	echo "stopping lxkns background service and waiting for it exit..." && \
+	sleep 1s && \
+	echo "stopping lxkns background service and waiting for it to exit..." && \
 	sudo kill $$LXKNSPID && \
 	timeout 10s tail --pid=$$LXKNSPID -f /dev/null && \
 	exit $$STATUS
@@ -91,4 +92,3 @@ buildapp:
 startapp:
 	@echo "starting version" $${GIT_VERSION}
 	@cd web/lxkns && yarn start
-	
