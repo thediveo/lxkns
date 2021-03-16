@@ -25,11 +25,6 @@ interface NamespaceJson extends Omit<Namespace, 'ealdorman' | 'leaders' | 'names
     namespaces: NamespaceSetJson
 }
 
-// Cap capitalizes the first letter only
-function Cap(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 /**
  * Post-processes a discovery response from the lxkns discovery service,
  * resolving namespace and process (cross) references into ordinary object

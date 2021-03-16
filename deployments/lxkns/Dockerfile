@@ -32,7 +32,10 @@ ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
 COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/tsconfig.json ./
-RUN yarn install --network-timeout 1000000000
+# While not being a true production install in the original sense, this avoids
+# installing cypress and the react styleguidist which we all don't need in
+# creating the production build.
+RUN yarn install --production --network-timeout 1000000000
 # Now build the production-optimized web app.
 COPY web/lxkns/public/ ./public/
 COPY web/lxkns/src/ ./src/

@@ -19,7 +19,7 @@ describe('lxkns app', () => {
     before(() => {
         cy.log('loads')
         cy.visit('/')
-        cy.waitForReact(1000, '#root')
+        cy.waitForReact(2000, '#root')
 
         cy.log('refreshes')
         cy.react('Refresher')
@@ -36,17 +36,12 @@ describe('lxkns app', () => {
 
     it('shows about', () => {
         cy.historyPush('/about')
-        cy.getReact('About')
-        // Make sure that the content actually loaded.
-        cy.contains('Version v')
+        cy.react('About').contains('Version')
     })
 
     it('lends a helping hand', () => {
         cy.historyPush('/help')
-        cy.getReact('Help')
-        cy.getReact('HelpViewer')
-        // Make sure that the first help chapter actually loaded.
-        cy.contains('Linux Kernel Namespaces Discovery')
+        cy.react('HelpViewer').contains('The information in this help')
     })
 
 })
