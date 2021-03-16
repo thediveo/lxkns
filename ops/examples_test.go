@@ -28,7 +28,7 @@ func Example_user() {
 	userns, _ := NamespacePath("/proc/self/ns/net").User()
 	id, _ := userns.ID()
 	// Release OS-level resources held by the returned user namespace reference.
-	userns.(io.Closer).Close()
+	_ = userns.(io.Closer).Close()
 	fmt.Println("user namespace id owning my network namespace:", id)
 }
 
@@ -42,7 +42,7 @@ func Example_parent() {
 	id, _ := parentuserns.ID()
 	// Release OS-level resources held by the returned parent user namespace
 	// reference.
-	parentuserns.(io.Closer).Close()
+	_ = parentuserns.(io.Closer).Close()
 	fmt.Println("parent user namespace id of my user namespace:", id)
 }
 

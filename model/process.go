@@ -21,11 +21,9 @@
 package model
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 
@@ -41,15 +39,20 @@ type PIDType int32
 // a specific Linux process. Well, the limitation comes from what we need for
 // namespace discovery to be useful.
 type Process struct {
-	PID          PIDType       `json:"pid"`       // this process' identifier.
-	PPID         PIDType       `json:"ppid"`      // parent's process identifier.
-	Parent       *Process      `json:"-"`         // our parent's process description.
-	Children     []*Process    `json:"-"`         // child processes.
-	Name         string        `json:"name"`      // synthesized name of process.
-	Cmdline      []string      `json:"cmdline"`   // command line of process.
-	Namespaces   NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
-	Starttime    uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
-	Controlgroup string        `json:"cgroup"`    // (relative) path of control group for this process.
+	PID        PIDType       `json:"pid"`       // this process' identifier.
+	PPID       PIDType       `json:"ppid"`      // parent's process identifier.
+	Parent     *Process      `json:"-"`         // our parent's process description.
+	Children   []*Process    `json:"-"`         // child processes.
+	Name       string        `json:"name"`      // synthesized name of process.
+	Cmdline    []string      `json:"cmdline"`   // command line of process.
+	Namespaces NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+	Starttime  uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
+	CpuCgroup  string        `json:"cpucgroup"` // (relative) path of CPU control group for this process.
+	// (relative) path of freezer control group for this process. Please note
+	// that for a cgroup v2 unified and non-hybrid hierarchy this path will
+	// always be the same as for CpuCgroup.
+	FridgeCgroup string `json:"fridgecgroup"`
+	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick
@@ -196,17 +199,20 @@ func (p *Process) String() string {
 }
 
 // NewProcessTable takes returns the currently available processes (as usual,
-// without tasks=threads). The process table is in fact a map, indexed by
-// PIDs.
-func NewProcessTable() (pt ProcessTable) {
-	pt = newProcessTable("/proc")
+// without tasks/threads). The process table is in fact a map, indexed by PIDs.
+// When the freezer parameter is true then additionally the cgroup freezer
+// states will also be discovered; as this might require switching into the
+// initial mount namespace and this is possible in Go only when re-executing as
+// a child, the caller must explicitly request this additional discovery.
+func NewProcessTable(freezer bool) (pt ProcessTable) {
+	pt = newProcessTable(freezer, "/proc")
 	log.Infof("discovered %d processes", len(pt))
 	return
 }
 
 // newProcessTable implements NewProcessTable and allows for testing on fake
 // /proc "filesystems".
-func newProcessTable(procroot string) (pt ProcessTable) {
+func newProcessTable(freezer bool, procroot string) (pt ProcessTable) {
 	procentries, err := ioutil.ReadDir(procroot)
 	if err != nil {
 		return nil
@@ -238,8 +244,18 @@ func newProcessTable(procroot string) (pt ProcessTable) {
 			parent.Children = append(parent.Children, proc)
 		}
 	}
-	// Scan for the control groups of the processes in the table.
-	_ = pt.scanCgroups()
+	// Scan for the control groups of the processes in the table. We always
+	// scan, as we can do so from our current mount and cgroup namespaces.
+	// However, in order to correctly discover the cgroup paths for all
+	// processes we need to run this while inside the initial cgroup namespace.
+	pt.scanCgroups()
+	// If requested, additionally scan for the freezer states; this is a more
+	// expensive operation in case we need to switch into the initial mount
+	// namespace, as otherwise we might not see the full cgroups freezer
+	// hierarchy.
+	if freezer {
+		pt.scanFridges()
+	}
 	// Phew: done.
 	return
 }
@@ -252,58 +268,4 @@ func (l ProcessListByPID) Len() int      { return len(l) }
 func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l ProcessListByPID) Less(i, j int) bool {
 	return l[i].PID < l[j].PID
-}
-
-// scanCgroups scans all processes for their control groups; it scans only on a
-// specific type of controller, the "cpu" v1 controller on the assumption that
-// this controller is widely used. In contrast, the "memory" controller has been
-// unfortunately been disabled on some architectures (ARM) for some time.
-func (p ProcessTable) scanCgroups() error {
-	for pid, proc := range p {
-		proc.Controlgroup = processCgroup("cpu", pid)
-	}
-	return nil
-}
-
-// processCgroup returns the name (hierarchy path) of the cpu cgroup a specific
-// process is in. If its the "/" cgroup hierarchy, then an empty string is
-// returned instead (to reduce clutter).
-//
-// Note: the cgroup path returned is relative to this process cgroup roots.
-func processCgroup(controller string, pid PIDType) string {
-	cgroup, err := os.Open(fmt.Sprintf("/proc/%d/cgroup", pid))
-	if err != nil {
-		return ""
-	}
-	defer cgroup.Close()
-	scanner := bufio.NewScanner(cgroup)
-	for scanner.Scan() {
-		if err == nil {
-			// See https://man7.org/linux/man-pages/man7/cgroups.7.html, section
-			// "NOTES", subsection "/proc files". For cgroups v1 controllers,
-			// the second field specifies the comma-separated list of the
-			// controllers bound to the hierarchy: here, we look for, say, the
-			// "cpu" controller. The third field specifies the path in the
-			// cgroups hierarchy; it is relative to the mount point of the
-			// hierarchy -- which in turn depends on the mount namespace of this
-			// process :)
-			if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
-				controllers := strings.Split(fields[1], ",")
-				for _, ctrl := range controllers {
-					if ctrl == controller {
-						// Return the full cgroup path based on the specified
-						// base path and the relative cgroup path of the
-						// process; don't forget to remove the leading "/" from
-						// the cgroup-originating path...
-						cg := fields[2]
-						if cg == "/" {
-							return ""
-						}
-						return cg
-					}
-				}
-			}
-		}
-	}
-	return ""
 }

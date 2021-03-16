@@ -39,3 +39,5 @@ export const SmartA = ({href, children, ...otherprops}: SmartAProps) => {
         return <Link to={href} {...otherprops}>{children}</Link>
     }
 }
+
+export default SmartA

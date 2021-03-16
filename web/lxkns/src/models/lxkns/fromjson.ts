@@ -40,7 +40,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         switch (ns.type) {
             case NamespaceType.user:
                 ns.tenants = []
-                // falls through
+            // falls through
             case NamespaceType.pid:
                 ns.children = []
         }
@@ -64,7 +64,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         ns.ealdorman = ((ns as NamespaceJson).ealdorman &&
             discovery.processes[(ns as NamespaceJson).ealdorman.toString()]) || null;
 
-        // resolve namspace hierarchy references, if present.
+        // resolve namespace hierarchy references, if present.
         switch (ns.type) {
             case NamespaceType.user:
             case NamespaceType.pid:
@@ -80,8 +80,8 @@ export const fromjson = (discoverydata: any): Discovery => {
         }
     });
 
-    // Process all, erm, processes and add object references for the hierarchy,
-    // making navigation quick and easy.
+    // Process all, erm, processes and convert and initialize reference fields
+    // correctly.
     Object.values(discovery.processes).forEach(proc => {
         proc.parent = null;
         proc.children = [];

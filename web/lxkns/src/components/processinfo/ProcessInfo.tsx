@@ -13,16 +13,15 @@
 // under the License.
 
 import React from 'react'
+import clsx from 'clsx'
 
-import Tooltip from '@material-ui/core/Tooltip'
+import { Pause, PlayArrow } from '@material-ui/icons'
+import { makeStyles, Tooltip } from '@material-ui/core'
 
-import RunFast from 'mdi-material-ui/RunFast'
-import CarCruiseControl from 'mdi-material-ui/CarCruiseControl'
+import CgroupNamespace from 'icons/namespaces/Cgroup'
+import ProcessIcon from 'icons/Process'
 
 import { Process } from 'models/lxkns'
-
-import { makeStyles } from '@material-ui/core'
-import clsx from 'clsx'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -59,6 +58,11 @@ const useStyles = makeStyles((theme) => ({
             color: theme.palette.cgroup,
         },
     },
+    cgroupIcon: {
+        '&.MuiSvgIcon-root + .MuiSvgIcon-root': {
+            marginLeft: '-0.2em',
+        }
+    },
     cgroupPath: {
         color: theme.palette.cgroup,
         '&::before': { content: '"«"' },
@@ -85,26 +89,32 @@ export interface ProcessInfoProps {
  *   or has been derived from the process' command line.
  * - PID.
  * - cgroup path, if path is not empty.
+ * - pause indication if process is freezing or has been frozen.
  *
  * On purpose, this component doesn't render more comprehensive information
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
 export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
+
     const classes = useStyles()
+
+    const fridge = process.fridgefrozen ?
+        <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
         <span className={clsx(classes.processInfo, className)}>
             <Tooltip title="process"><>
-                <RunFast fontSize="inherit" />
+                <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;({process.pid})
             </></Tooltip>
-            {process.cgroup && (
+            {process.cpucgroup && process.cpucgroup !== "/" && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
-                        <CarCruiseControl fontSize="inherit" />
-                        <span className={classes.cgroupPath}>{process.cgroup}</span>
+                        <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />
+                        {fridge}
+                        <span className={classes.cgroupPath}>{process.cpucgroup}</span>
                     </span>
                 </Tooltip>)}
         </span>

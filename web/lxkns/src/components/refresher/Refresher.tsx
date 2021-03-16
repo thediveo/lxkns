@@ -76,6 +76,9 @@ const intervalToLabel = (interval: number) => {
 
 // Progress indicator appearing around the refresh button.
 const useStyles = makeStyles((theme) => ({
+    refresher: {
+        display: 'inline-flex', // keep buttons in line; this is soo ugly
+    },
     wrapper: {
         margin: theme.spacing(1),
         position: 'relative',
@@ -164,7 +167,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         : "auto-refresh off"
 
     return (
-        <>
+        <div className={classes.refresher}>
             <Tooltip title="refresh">
                 <div className={classes.wrapper}>
                     <IconButton color="inherit"
@@ -211,7 +214,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                     </MenuItem>
                 ))}
             </Menu>
-        </>
+        </div>
     )
 }
 

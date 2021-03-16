@@ -152,10 +152,10 @@ func init() {
 	reexec.Register("discover-nsfs-bindmounts", discoverNsfsBindmounts)
 }
 
-// discoverNsfsBindmounts is the reexec action run in a separate mount to
-// gather information about bind-mounted namespaces in that other mount
-// namespace. The information gathered is then serialized as JSON as sent back
-// to the parent discovery process via stdout.
+// discoverNsfsBindmounts is the reexec action run in a separate mount namespace
+// in order to gather information about bind-mounted namespaces in that other
+// mount namespace. The information gathered is then serialized as JSON as sent
+// back to the parent discovery process via stdout.
 func discoverNsfsBindmounts() {
 	if err := json.NewEncoder(os.Stdout).Encode(ownedBindMounts()); err != nil {
 		panic(err.Error())
@@ -205,7 +205,7 @@ func ownedBindMounts() []BindmountedNamespaceInfo {
 		var ownernsid species.NamespaceID
 		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
-			usernsref.(io.Closer).Close() // do not leak.
+			_ = usernsref.(io.Closer).Close() // do not leak.
 		} else {
 			ownedbindmounts[idx].Log = append(ownedbindmounts[idx].Log, err.Error())
 		}

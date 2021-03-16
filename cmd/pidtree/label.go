@@ -53,8 +53,8 @@ func ProcessLabel(proc *model.Process, pidmap lxkns.PIDMap, rootpidns model.Name
 			s = fmt.Sprintf("%q (%d)",
 				style.ProcessStyle.V(style.ProcessName(proc)), proc.PID)
 		}
-		if proc.Controlgroup != "" {
-			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(output.ControlgroupDisplayName(proc.Controlgroup)))
+		if proc.CpuCgroup != "" {
+			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(output.ControlgroupDisplayName(proc.CpuCgroup)))
 		}
 		return s
 	}

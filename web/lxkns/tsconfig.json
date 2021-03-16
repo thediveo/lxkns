@@ -20,7 +20,12 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "baseUrl": "src",
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": [
+      "cypress",
+      "cypress-react-selector",
+      "cypress-react-router"
+    ],
   },
   "include": [
     "src",

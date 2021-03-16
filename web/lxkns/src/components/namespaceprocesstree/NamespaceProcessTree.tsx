@@ -34,9 +34,10 @@ import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 const showProcess = (process: Process, showSystemProcs: boolean) =>
     showSystemProcs ||
     (process.pid > 2 &&
-        !process.cgroup.startsWith('/system.slice/') &&
-        !process.cgroup.startsWith('/init.scope/') &&
-        process.cgroup !== '/user.slice')
+        !(process.cpucgroup.startsWith('/system.slice/') &&
+            !process.cpucgroup.startsWith('/system.slice/docker-')) &&
+        !process.cpucgroup.startsWith('/init.scope/') &&
+        process.cpucgroup !== '/user.slice')
 
 /**
  * Searches for sub-processes of a given process which are still in the same
@@ -55,14 +56,14 @@ const findSubProcesses = (proc: Process, nstype: NamespaceType): Process[] => {
     // controller as our process, because a change in the controller might be
     // further down the process tree.
     const subprocs = children
-        .filter(child => child.cgroup === proc.cgroup)
+        .filter(child => child.cpucgroup === proc.cpucgroup)
         .map(child => findSubProcesses(child, nstype))
         .flat()
     // Finally return the concatenation of all immediate child processes as
     // well as processes further down the hierarchy with controllers differing
     // to our controller.
     return children
-        .filter(child => child.cgroup !== proc.cgroup)
+        .filter(child => child.cpucgroup !== proc.cpucgroup)
         .concat(subprocs)
 }
 
