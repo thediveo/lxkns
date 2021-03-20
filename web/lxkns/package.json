@@ -19,6 +19,7 @@
     "babel-loader": "~8.1.0",
     "clsx": "^1.1.1",
     "color-rgba": "^2.2.3",
+    "core-js": "^3.9.1",
     "cypress-react-router": "^1.0.1",
     "cypress-react-selector": "^2.3.6",
     "elliptic": "^6.5.4",
