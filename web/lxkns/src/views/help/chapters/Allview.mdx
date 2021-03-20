@@ -1,12 +1,11 @@
 import { UserNamespaceTree } from "components/usernamespacetree";
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
 import { discovery } from "../fakehelpdata";
+import { Pause, PlayArrow } from '@material-ui/icons';
 
-# Views
+# All View
 
-## Home View
-
-The "home" display shows all discovered [namespaces](/help/namespaces),
+This "home" display shows all discovered [namespaces](/help/namespaces),
 organized along the hierarchy of the so-called user namespaces. For example:
 
 <Example>
@@ -15,11 +14,15 @@ organized along the hierarchy of the so-called user namespaces. For example:
 
 ### Initial Namespaces
 
-As the Linux kernel initializes it creates a set of so-called "initial"
+As the Linux kernel initializes, it creates a set of so-called "initial"
 namespaces: these are indicated by dashed borders around their namespace
-"badges".
+"badges". For instance:
 
-### Number of Child User/PID Namespaces
+<Example maxWidth="16em">
+  <NamespaceExample type="user" initial={true} />
+</Example>
+
+### Number of Child User
 
 When user namespaces have child user namespaces, then the total number of child
 and grandchild user namespaces is shown right after a user namespace "badge".
@@ -33,9 +36,13 @@ Grouping is done based on the process tree: a leader process is the topmost
 process in the process tree still attached to the same namespace as its
 children.
 
-If processes attached to the same namespace are controlled by different cgroups
-(using different cgroup paths), then lxkns divides them into separate groups,
-based on the cgroup paths found.
+If processes attached to the same namespace are controlled by different CPU
+cgroups (using different cpu cgroup paths), then lxkns divides them into
+separate groups, based on the cgroup paths found.
+
+Additionally, the "freezer" cgroup state is also shown: a <Pause
+className="icon"/> paused process is said to be "frozen" in Linux, while a
+&#32;<PlayArrow className="icon"/> running process is also said to be "thawed".
 
 ### Owned Namespaces
 
@@ -56,32 +63,3 @@ quickly understanding how namespaces relate to leader processes.
   that are the same as the most senior leader process. For lack of a better
   word, we term such namespaces "shared", but this is our user-land terminology,
   but not Linux-kernel terminology.
-
-## Type-Specific Views
-
-The type-specific namespace views are slightly different: first, they show only
-namespaces of a specific type. Then, they are mostly _flat_ views, except for
-PID and user namespace views. For instance, this is a view into only _user_
-namespaces, now _without_ the owned namespaces:
-
-<Example>
-  <NamespaceProcessTree type="user" discovery={discovery} action={{ action: "" }} />
-</Example>
-
-And this is an example view into only _PID_ namespaces:
-
-<Example>
-  <NamespaceProcessTree type="mnt" discovery={discovery} action={{ action: "" }} />
-</Example>
-
-In case the processes attached to a namespace belong to different cgroup
-controllers, then additionally all the leader (topmost) processes in the process
-tree with differing cgroup paths are shown. This is especially usefull in such
-cases, where containers share namespaces (either with other containers or the
-host). Such as in case of our "lxkns" service container that needs its processes
-to run attached to the host's initial PID namespace for correct namespace
-discovery:
-
-<Example>
-  <NamespaceProcessTree type="pid" discovery={discovery} action={{ action: "" }} />
-</Example>
