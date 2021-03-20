@@ -34,7 +34,14 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
     try {
         let json = localStorage.getItem(storageKey)
         if (json !== null) {
-            let value = JSON.parse(json)
+            var value
+            try {
+                value = JSON.parse(json)
+            } catch (e) {
+                // The stored setting isn't valid a JSON value, so take it as a
+                // verbatim string.
+                value = json
+            }
             // If the setting is a boolean, then we additionally accept a stored
             // string which we then map onto boolean.
             if (typeof(defaultValue) === 'boolean') {
@@ -61,7 +68,9 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
  *
  * @param storageKey name of local storage item.
  * @param defaultValue default value in case no local storage data could be
- * found for this setting.
+ * found for this setting. Please note that when the default value is taken,
+ * then it won't be written back to the local storage item, but instead the
+ * non-existing storage item will be left non-existing.
  */
 export const localStorageAtom = <T>(storageKey: string, defaultValue: T) => {
     const storageAtom = atom(

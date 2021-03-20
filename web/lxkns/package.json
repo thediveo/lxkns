@@ -86,9 +86,9 @@
   },
   "homepage": "/",
   "devDependencies": {
-    "cypress": "^6.6.0",
     "@cypress/react": "^4.16.4",
-    "react-styleguidist": "^11.1.0",
-    "p-defer": "^3.0.0"
+    "cypress": "^6.6.0",
+    "p-defer": "^3.0.0",
+    "react-styleguidist": "^11.1.0"
   }
 }
