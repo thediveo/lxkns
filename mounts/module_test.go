@@ -21,7 +21,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	rxtst "github.com/thediveo/gons/reexec/testing"
+	//"github.com/thediveo/lxkns/log"
+	//_ "github.com/thediveo/lxkns/log/logrus"
 )
+
+/*
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
+*/
 
 func TestMain(m *testing.M) {
 	// Ensure that the registered handler is run in the re-executed child.

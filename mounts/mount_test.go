@@ -21,32 +21,31 @@ import (
 	"github.com/thediveo/go-mntinfo"
 )
 
-var sillyMounts = []mntinfo.Mountinfo{
-	{MountPoint: "/sys", MountID: 3, ParentID: 2},
-	{MountPoint: "/", MountID: 2, ParentID: 1},
-	{MountPoint: "/sys/kernel/debug", MountID: 4, ParentID: 3},
-	// mount over /sys, hiding previous /sys...
-	{MountPoint: "/sys", MountID: 666, ParentID: 3},
-}
-
 var _ = Describe("MountPath", func() {
 
 	It("builds a tree", func() {
-		root := mountPathTree(sillyMounts)
+		mp := NewMountPathMap([]mntinfo.Mountinfo{
+			{MountPoint: "/a", MountID: 3, ParentID: 2},
+			{MountPoint: "/", MountID: 2, ParentID: 1},
+			{MountPoint: "/a/b/c", MountID: 4, ParentID: 3},
+			{MountPoint: "/a", MountID: 666, ParentID: 3},
+		})
+		root := mp["/"]
+
 		Expect(root).NotTo(BeNil())
 		Expect(root.Path()).To(Equal("/"))
 		Expect(root.Parent).To(BeNil())
-		Expect(root.Children).To(HaveLen(1)) // only "/sys" (ID:3)
+		Expect(root.Children).To(HaveLen(1)) // only "/a" (ID:3)
 		Expect(root.Mounts).To(HaveLen(1))
 
 		sys := root.Children[0]
-		Expect(sys.Path()).To(Equal("/sys"))
+		Expect(sys.Path()).To(Equal("/a"))
 		Expect(sys.Parent).To(Equal(root))
 		Expect(sys.Children).To(HaveLen(1))
 		Expect(sys.Mounts).To(HaveLen(2)) // ID:3 and ID:666
 
 		syskerneldebug := sys.Children[0]
-		Expect(syskerneldebug.Path()).To(Equal("/sys/kernel/debug"))
+		Expect(syskerneldebug.Path()).To(Equal("/a/b/c"))
 		Expect(syskerneldebug.Parent).To(Equal(sys))
 
 		rootmount := root.Mounts[0]
@@ -65,6 +64,74 @@ var _ = Describe("MountPath", func() {
 				"Mountinfo": MatchFields(IgnoreExtras, Fields{
 					"MountID": Equal(666),
 				}),
+			})),
+		))
+	})
+
+	It("detects overmounts", func() {
+		mp := NewMountPathMap([]mntinfo.Mountinfo{
+			{MountPoint: "/", MountID: 2, ParentID: 1},
+			{MountPoint: "/a", MountID: 3, ParentID: 2},
+			{MountPoint: "/a/b", MountID: 30, ParentID: 3},
+			{MountPoint: "/a", MountID: 4, ParentID: 3},
+		})
+
+		Expect(mp["/a/b"].Mounts).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Mountinfo": MatchFields(IgnoreExtras, Fields{
+					"MountID": Equal(30),
+				}),
+				"Hidden": BeTrue(),
+			})),
+		))
+		Expect(mp["/a"].Mounts).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Mountinfo": MatchFields(IgnoreExtras, Fields{
+					"MountID": Equal(4),
+				}),
+				"Hidden": BeFalse(),
+			})),
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Mountinfo": MatchFields(IgnoreExtras, Fields{
+					"MountID": Equal(3),
+				}),
+				"Hidden": BeTrue(),
+			})),
+		))
+
+		Expect(mp["/a"].VisibleMount().MountID).To(Equal(4))
+		Expect(mp["/a/b"].VisibleMount()).To(BeNil())
+	})
+
+	It("finds prefix overmounts including in-place overmounts", func() {
+		mp := NewMountPathMap([]mntinfo.Mountinfo{
+			{MountPoint: "/", MountID: 2, ParentID: 1},
+			{MountPoint: "/a/b", MountID: 3, ParentID: 2},
+			{MountPoint: "/a/b/c", MountID: 4, ParentID: 3},
+			{MountPoint: "/a/b/c", MountID: 40, ParentID: 4},
+			{MountPoint: "/a/b/c/e/f", MountID: 41, ParentID: 40},
+			{MountPoint: "/a", MountID: 5, ParentID: 2},
+			{MountPoint: "/a/b/c/e/f", MountID: 50, ParentID: 5},
+		})
+
+		Expect(mp["/a/b/c/e/f"].Mounts).To(HaveLen(2))
+
+		Expect(mp["/a"].Mounts[0].Hidden).To(BeFalse())
+		Expect(mp["/a/b"].Mounts[0].Hidden).To(BeTrue())
+		Expect(mp["/a/b/c"].Mounts[0].Hidden).To(BeTrue())
+		Expect(mp["/a/b/c"].Mounts[1].Hidden).To(BeTrue())
+		Expect(mp["/a/b/c/e/f"].Mounts).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Mountinfo": MatchFields(IgnoreExtras, Fields{
+					"MountID": Equal(41),
+				}),
+				"Hidden": BeTrue(),
+			})),
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Mountinfo": MatchFields(IgnoreExtras, Fields{
+					"MountID": Equal(50),
+				}),
+				"Hidden": BeFalse(),
 			})),
 		))
 	})
