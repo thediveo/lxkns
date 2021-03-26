@@ -42,10 +42,10 @@ func (m M) get(path string) interface{} {
 var _ = Describe("NamespacedMountMap JSON", func() {
 
 	It("marshals mount paths from a single namespace", func() {
-		j, err := json.Marshal(MountPathMap(mountpathmap))
+		jtext, err := json.Marshal(MountPathMap(mountpathmap))
 		Expect(err).NotTo(HaveOccurred())
 		var m M
-		Expect(json.Unmarshal([]byte(j), &m)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal([]byte(jtext), &m)).NotTo(HaveOccurred())
 
 		rootid := m.get(`$["/"].pathid`).(float64)
 		Expect(rootid).NotTo(BeZero())
@@ -59,7 +59,57 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		Expect(bid).NotTo(BeZero())
 		Expect(m.get(`$["/b"].parentid`)).To(Equal(rootid))
 
-		Expect(m.get(`$["/"].childrenids`)).To(ConsistOf(bid, aid))
+		Expect(m.get(`$["/"].childids`)).To(ConsistOf(bid, aid))
+	})
+
+	It("unmarshals its own marshalling", func() {
+		mpm := MountPathMap(mountpathmap)
+		jtext, err := json.Marshal(mpm)
+		Expect(err).NotTo(HaveOccurred())
+		var m MountPathMap
+		Expect(json.Unmarshal(jtext, &m)).NotTo(HaveOccurred())
+		for path, mountpath := range m {
+			// Checks mount path hierarchy...
+			if mpm[path].Parent != nil {
+				Expect(mountpath.Parent.Path()).To(Equal(mpm[path].Parent.Path()))
+			} else {
+				Expect(mountpath.Parent).To(BeNil())
+			}
+			children := []string{}
+			for _, child := range mountpath.Children {
+				children = append(children, child.Path())
+			}
+			ochildren := []string{}
+			for _, ochild := range mpm[path].Children {
+				ochildren = append(ochildren, ochild.Path())
+			}
+			Expect(children).To(ConsistOf(ochildren))
+			// Checks mount point hierarchy...
+			for _, mount := range mountpath.Mounts {
+				var omount *mounts.MountPoint
+				for _, om := range mpm[path].Mounts {
+					if om.MountID == mount.MountID {
+						omount = om
+						break
+					}
+				}
+				Expect(omount).NotTo(BeNil())
+				if omount.Parent != nil {
+					Expect(mount.Parent.MountID).To(Equal(omount.Parent.MountID))
+				} else {
+					Expect(mount.Parent).To(BeNil())
+				}
+				children := []int{}
+				for _, child := range mount.Children {
+					children = append(children, child.MountID)
+				}
+				ochildren := []int{}
+				for _, ochild := range omount.Children {
+					ochildren = append(ochildren, ochild.MountID)
+				}
+				Expect(children).To(ConsistOf(ochildren))
+			}
+		}
 	})
 
 })
