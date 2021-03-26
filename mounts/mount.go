@@ -44,9 +44,9 @@ type MountPathMap map[string]*MountPath
 //
 // Use MountPath.Path() to get the mount path of a MountPath object.
 type MountPath struct {
-	Mounts   []*MountPoint // one or several mount points at this same (VFS) path.
-	Parent   *MountPath    // Parent mount path, except for root mount path.
-	Children []*MountPath  // Children mount paths.
+	Mounts   []*MountPoint `json:"mounts"` // one or several mount points at this same (VFS) path.
+	Parent   *MountPath    `json:"-"`      // Parent mount path, except for root mount path.
+	Children []*MountPath  `json:"-"`      // Children mount paths.
 }
 
 // MountPoint contains information about a single mount point with additional
@@ -57,9 +57,9 @@ type MountPath struct {
 // /proc/$PID/mountinfo), instead of mount paths.
 type MountPoint struct {
 	mntinfo.Mountinfo               // mount (point) information.
-	Hidden            bool          // mount point hidden or "overmounted".
-	Parent            *MountPoint   // parent mount point, if its ID could be resolved.
-	Children          []*MountPoint // child mount points, derived from mount and parent IDs.
+	Hidden            bool          `json:"hidden"` // mount point hidden or "overmounted".
+	Parent            *MountPoint   `json:"-"`      // parent mount point, if its ID could be resolved.
+	Children          []*MountPoint `json:"-"`      // child mount points, derived from mount and parent IDs.
 }
 
 // Path returns the path name of a MountPath object.
