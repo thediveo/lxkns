@@ -20,12 +20,14 @@ import (
 	"github.com/thediveo/lxkns/mounts"
 )
 
-type NamespacedMountMap struct {
-	*mounts.NamespacedMountPathMap
-}
+type NamespacedMountMap mounts.NamespacedMountPathMap
 
-func (m *NamespacedMountMap) MarshalJSON() ([]byte, error) {
-	return nil, nil
+func (m NamespacedMountMap) MarshalJSON() ([]byte, error) {
+	wrapper := map[uint64]MountPathMap{}
+	for mntnsid, mountpathmap := range m {
+		wrapper[mntnsid.Ino] = MountPathMap(mountpathmap)
+	}
+	return json.Marshal(wrapper)
 }
 
 func (m *NamespacedMountMap) UnmarshalJSON(data []byte) error {

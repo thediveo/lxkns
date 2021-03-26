@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/mounts"
+	"github.com/thediveo/lxkns/species"
 )
 
 var mountpathmap = mounts.NewMountPathMap([]mntinfo.Mountinfo{
@@ -110,6 +111,18 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 				Expect(children).To(ConsistOf(ochildren))
 			}
 		}
+	})
+
+	It("marshals mount path maps from multiple mount namespaces", func() {
+		allm := mounts.NamespacedMountPathMap{
+			species.NamespaceIDfromInode(123): mounts.MountPathMap(mountpathmap),
+		}
+		jtext, err := json.Marshal(NamespacedMountMap(allm))
+		Expect(err).NotTo(HaveOccurred())
+		var m M
+		Expect(json.Unmarshal([]byte(jtext), &m)).NotTo(HaveOccurred())
+		Expect(m.get(`$["123"]`)).NotTo(BeNil())
+		Expect(m.get(`$["123"]["/"]`)).NotTo(BeNil())
 	})
 
 })
