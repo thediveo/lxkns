@@ -1,6 +1,6 @@
 # Please note that the Alpine version also controls the Golang version for the
 # golang images.
-ARG ALPINE_VERSION=3.12
+ARG ALPINE_VERSION=3.13
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
