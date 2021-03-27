@@ -25,8 +25,11 @@ import (
 )
 
 // GetNamespacesHandler returns the results of a namespace discovery, as JSON.
+// Additionally, we opt in to mount path+point discovery.
 func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
-	allns := lxkns.Discover(lxkns.FullDiscovery)
+	opts := lxkns.FullDiscovery
+	opts.WithMounts = true
+	allns := lxkns.Discover(opts)
 	// Note bene: set header before writing the header with the status code;
 	// actually makes sense, innit?
 	w.Header().Set("Content-Type", "application/json")

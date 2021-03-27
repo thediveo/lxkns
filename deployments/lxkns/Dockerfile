@@ -20,6 +20,7 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY log/ ./log/
 COPY model/ ./model/
+COPY mounts/ ./mounts/
 COPY ops/ ./ops/
 COPY species/ ./species/
 COPY *.go ./

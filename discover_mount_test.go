@@ -12,15 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package mounts
+package lxkns
 
 import (
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
@@ -51,12 +49,14 @@ rmdir $bm || /bin/true
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		netnsid := nstest.CmdDecodeNSId(cmd)
-		opts := lxkns.NoDiscovery
+		opts := NoDiscovery
 		opts.SkipProcs = false
 		opts.NamespaceTypes = species.CLONE_NEWNS
-		allns := lxkns.Discover(opts)
+		opts.WithMounts = true
+		allns := Discover(opts)
 
-		namespacedmmap := Discover(allns.Namespaces[model.MountNS])
+		namespacedmmap := allns.Mounts
+		Expect(namespacedmmap).NotTo(BeNil())
 		Expect(namespacedmmap).To(HaveKey(netnsid))
 		mpmap := namespacedmmap[netnsid]
 		Expect(mpmap).To(HaveKey(bm))

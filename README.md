@@ -7,7 +7,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces. In every
-nook and cranny of your Linux hosts.
+nook and cranny of your Linux hosts. For mount namespaces, lxkns finds and
+determines the visibility of mount points (such as when hidden by "overmounts").
 
 - discovery web frontend and containerized backend discovery service.
 
@@ -21,7 +22,7 @@ nook and cranny of your Linux hosts.
 
 - tested with Go 1.13-1.16.
 
-- supports even the new(er) "time" Linux-kernel namespaces.
+- also supports "time" Linux-kernel namespaces (where available).
 
 Watch the short overview video how to find your way around discovery web
 frontend:
@@ -64,7 +65,6 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > possible in their `main()` function. For this, you need to `import
 > "github.com/thediveo/gons/reexec"`.
 
-
 ## 🎛 Cgroup v1, v1+v2, v2 Support
 
 In addition to namespaces and their related processes, lxkns also discovers the
@@ -97,6 +97,22 @@ in Docker containers will show control group names in the form of `docker/<id>`
 Plain containerd container processes will show up with `<namespace>/<id>`
 control group names.
 
+## 🖴 Mount Points
+
+In mount namespaces, lxkns discovers the mount point hierarchy (from `mountinfo`
+in procfs) and then derives not only the mount path hierarchy from it, but also
+mount point **visibility**. Mount points can become hidden (invisible) when
+getting "overmounted":
+
+- in-place overmount: another mount point at the same mount path as a previous
+  mount point hides the former mount point. It is even possible to bind-mount a
+  mount point onto itself, changing mount options, such as mount point
+  propagation, et cetera.
+
+- overmount higher up the mount path: a mount point has a prefix path of another
+  mount path and mount point and thus is hidding the latter, including all mount
+  points with paths further down the hierarchy below the hidden mount point.
+
 ## 🧰 lxkns Tools
 
 But `lxkns` is more than "just" a Golang package. It also features...
@@ -113,9 +129,9 @@ with docker-compose to be installed) you can play around with our "Linux
 namespaces" react app:
 
 1. `make deploy`,
-2. and then navigate to http://localhost:5010. The lxkns web app should load
-   automatically and then display the discovery results. The app bar controls
-   show tooltips when hovering over them.
+2. and then navigate to [http://localhost:5010](http://localhost:5010). The
+   lxkns web app should load automatically and then display the discovery
+   results. The app bar controls show tooltips when hovering over them.
    - `☰` opens the drawer, where you can navigate to different namespace views.
      In particular, an "all" namespaces view along the user namespace hierarchy,
      as well as per-type views which focus on a specific type of namespace each,
@@ -215,12 +231,11 @@ The tools:
   [![GoDoc](https://godoc.org/github.com/thediveo/lxkns?status.svg)](http://godoc.org/github.com/thediveo/lxkns/cmd/dumpns):
   runs a namespace (and process) discovery and then dumps the results as JSON.
 
-
 ### lsuns
 
 In its simplest form, `lsuns` shows the hierarchy of user namespaces.
 
-```
+```text
 $ sudo lsuns
 user:[4026531837] process "systemd" (1) created by UID 0 ("root")
 ├─ user:[4026532454] process "unshare" (98171) controlled by "user.slice" created by UID 1000 ("harald")
@@ -249,7 +264,7 @@ namespace and the user namespace that was active at the time the new namespace
 was created. For convenience, `lsuns` sorts the owned namespaces first
 alphabetically by type, and second numerically by namespace IDs.
 
-```
+```text
 $ sudo lsuns -d
 user:[4026531837] process "systemd" (1) created by UID 0 ("root")
 │  ⋄─ cgroup:[4026531835] process "systemd" (1)
@@ -299,7 +314,7 @@ user:[4026531837] process "systemd" (1) created by UID 0 ("root")
 
 On its surface, `lspidns` might appear to be `lsuns` twin, but now for PID namespaces.
 
-```
+```text
 pid:[4026531836] process "systemd" (1)
 ├─ pid:[4026532333] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
 │  └─ pid:[4026532398] process "sleep" (6025) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a/default/sleepy"
@@ -321,7 +336,7 @@ namespaces, also PID namespaces are *owned* by user namespaces. `-u` now tells
 `lspidns` to show a "synthesized" hierarchy where owning user namespaces and
 owned PID namespaces are laid out in a single tree.
 
-```
+```text
 user:[4026531837] process "systemd" (1) created by UID 0 ("root")
 └─ pid:[4026531836] process "systemd" (1)
    ├─ pid:[4026532333] process "systemd" (5492) controlled by "docker/c8bf69d0651425244f472e89677177e3d488274f1d242c62a50a82f35feb8c4a"
@@ -345,7 +360,7 @@ which are valid only inside the PID namespace processes are joined to. Such as
 in `"containerd" (24446=78)`, where the PID namespace-local PID is 78, but
 inside the initial (root) PID namespace the PID is 24446 instead.
 
-```
+```text
 $ sudo pidtree
 pid:[4026531836], owned by UID 0 ("root")
 ├─ "systemd" (1)
@@ -369,7 +384,7 @@ pid:[4026531836], owned by UID 0 ("root")
 Alternatively, it can show just a single branch down to a PID inside a
 specific PID namespace.
 
-```
+```text
 $ sudo pidtree -n pid:[4026532398] -p 7
 pid:[4026531836], owned by UID 0 ("root")
 └─ "systemd" (1)
@@ -396,7 +411,7 @@ target namespace relate to each other.
 Examples like the one below will give unsuspecting security "experts" a series
 of fits -- despite this example being perfectly secure.
 
-```
+```text
 ⛛ user:[4026531837] process "systemd" (129419)
 ├─ process "nscaps" (210373)
 │     ⋄─ (no capabilities)
@@ -411,7 +426,7 @@ of fits -- despite this example being perfectly secure.
 ...it's secure, because our superpower process can't do anything outside its
 realm. But the horror on the faces of security experts will be priceless.
 
-```
+```text
 ⛔ user:[4026531837] process "systemd" (211474)
 ├─ ⛛ user:[4026532468] process "unshare" (219837)
 │  └─ process "unshare" (219837)
@@ -439,7 +454,7 @@ The lxkns namespace discovery information can also be easily made available to
 your own scripts, et cetera. Without having to integrate the Go package, simply
 run the `dumpns` CLI binary: it dumps fresh discovery results as JSON.
 
-```
+```text
 $ dumpns
 {
   "namespaces": {
@@ -544,7 +559,6 @@ func main() {
 - `install`: builds and installs the binaries into `${GOPATH}/bin`, then
   installs these binaries into `/usr/local/bin`.
 
-
 ### Automated Test Notes
 
 - all lxkns library tests (including the CLI tools) can be run in a test
@@ -563,6 +577,7 @@ func main() {
 - It's funny to see how people get happy when `--privileged` gets dropped, yet
   `CRAP_SYS_ADMIN` and `CAP_SYS_PTRACE` doesn't ring a bell – when they should
   ring for kingdom come.
+
 ## ⚖️ Copyright and License
 
 `lxkns` is Copyright 2020‒21 Harald Albrecht, and licensed under the Apache

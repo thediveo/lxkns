@@ -57,6 +57,7 @@ read # wait for test to proceed()
 	disco.SkipBindmounts = true
 	disco.SkipFds = true
 	disco.SkipTasks = true
+	disco.WithMounts = true
 	allns = lxkns.Discover(disco) // "nearly-all-ns"
 
 	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)

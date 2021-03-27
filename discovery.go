@@ -46,12 +46,17 @@ type DiscoverOpts struct {
 	SkipHierarchy  bool `json:"skipped-hierarchy"`  // Don't discover the hierarchy of PID and user namespaces.
 	SkipOwnership  bool `json:"skipped-ownership"`  // Don't discover the ownership of non-user namespaces.
 	SkipFreezer    bool `json:"skipped-freezer"`    // Don't discover the cgroup freezer state of processes.
+
+	// Explicit opt-ins.
+	WithMounts bool `json:"with-mounts"` // Discover mount paths with mount points.
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive
 // discovery process. This is the preferred option setup for most use cases,
 // unless you know exactly what you're doing and want to fine-tune the discovery
 // process by selectively switching off certain discovery elements.
+//
+// Please note that a full discovery does not include explicit opt-ins.
 var FullDiscovery = DiscoverOpts{}
 
 // NoDiscovery set the discovery options to not discover anything. This option
@@ -70,12 +75,13 @@ var NoDiscovery = DiscoverOpts{
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.
 type DiscoveryResult struct {
-	Options           DiscoverOpts        // options used during discovery.
-	Namespaces        model.AllNamespaces // all discovered namespaces, subject to filtering according to Options.
-	InitialNamespaces model.NamespacesSet // the 7 initial namespaces.
-	UserNSRoots       []model.Namespace   // the topmost user namespace(s) in the hierarchy
-	PIDNSRoots        []model.Namespace   // the topmost PID namespace(s) in the hierarchy
-	Processes         model.ProcessTable  // processes checked for namespaces.
+	Options           DiscoverOpts           // options used during discovery.
+	Namespaces        model.AllNamespaces    // all discovered namespaces, subject to filtering according to Options.
+	InitialNamespaces model.NamespacesSet    // the 7 initial namespaces.
+	UserNSRoots       []model.Namespace      // the topmost user namespace(s) in the hierarchy.
+	PIDNSRoots        []model.Namespace      // the topmost PID namespace(s) in the hierarchy.
+	Processes         model.ProcessTable     // processes checked for namespaces.
+	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
 }
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The
@@ -252,4 +258,5 @@ var discoverers = []discoverer{
 	{&discoveronce, discoverBindmounts},
 	{&[]model.NamespaceTypeIndex{model.UserNS, model.PIDNS}, discoverHierarchy},
 	{&discoverySequence, resolveOwnership},
+	{&discoveronce, discoverFromMountinfo},
 }

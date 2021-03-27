@@ -37,6 +37,7 @@ var _ = Describe("discovery result JSON", func() {
 			"skipped-hierarchy": false,
 			"skipped-ownership": false,
 			"skipped-freezer": false,
+			"with-mounts": true,
 			"scanned-namespace-types": [
 			  "time",
 			  "mnt",
@@ -101,6 +102,12 @@ var _ = Describe("discovery result JSON", func() {
 		inner = map[string]json.RawMessage{}
 		Expect(json.Unmarshal(toplevel["processes"], &inner)).To(Succeed())
 		Expect(inner).To(HaveKey(MatchRegexp(`[0-9]+`)))
+
+		// "mounts" must be an object, with keys consisting only of digits.
+		Expect(toplevel).To(HaveKey("mounts"))
+		inner = map[string]json.RawMessage{}
+		Expect(json.Unmarshal(toplevel["mounts"], &inner)).To(Succeed())
+		Expect(inner).To(HaveKey(MatchRegexp(`[0-9]+`)))
 	})
 
 	It("marshals and unmarshals a discovery results without hiccup", func() {
@@ -114,6 +121,11 @@ var _ = Describe("discovery result JSON", func() {
 			Expect(namespaces[idx]).To(HaveLen(len(allns.Namespaces[idx])))
 		}
 		Expect(dr.Processes()).To(BeSameProcessTable(allns.Processes))
+
+		Expect(len(dr.Mounts())).To(Equal(len(allns.Mounts)))
+		for mntnsid, m := range dr.Mounts() {
+			Expect(len(m)).To(Equal(len(allns.Mounts[mntnsid])))
+		}
 
 		Expect(dr.Result().Options).To(Equal(allns.Options))
 	})

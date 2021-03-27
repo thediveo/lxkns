@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-mntinfo"
-	//"github.com/thediveo/lxkns/log"
 )
 
 // For details about the mount point information provided by Linux via
@@ -148,10 +147,8 @@ func NewMountPathMap(mounts []mntinfo.Mountinfo) (mountpathmap MountPathMap) {
 // determineVisbility determines whether a mount point is visible. It
 // recursively checks child mount points.
 func (p *MountPoint) determineVisibility() {
-	//log.Tracef("is %s (ID:%d) visible?", p.MountPoint, p.MountID)
 	childcount := len(p.Children)
 	if childcount == 0 {
-		//log.Tracef("…is visible: no children, no overmount")
 		return
 	}
 	// Have we been "overmounted" in place so that there is a child mount point
@@ -160,7 +157,6 @@ func (p *MountPoint) determineVisibility() {
 	// overmount at all, it has to be the first child mount point. And there can
 	// only be at most one.
 	if p.Children[0].MountPoint == p.MountPoint {
-		//log.Tracef("…is overmounted in place")
 		p.Hidden = true
 		// Transitively, all other child mount points of ours – except for the
 		// overmount – will also be hidden.
@@ -170,7 +166,6 @@ func (p *MountPoint) determineVisibility() {
 		p.Children[0].determineVisibility()
 		return
 	}
-	//log.Tracef("…is NOT overmounted")
 	// No overmount, so we now check if the child mounts of ours are hiding
 	// other of our child mounts. Again, we rely on the children sorted by the
 	// length of their mount paths to half the combinations to search.
@@ -178,7 +173,6 @@ func (p *MountPoint) determineVisibility() {
 		prefix := childp.MountPoint + "/" // actually, the path, but 'tis is Linux terminology.
 		for idx := childidx + 1; idx < childcount; idx++ {
 			if strings.HasPrefix(p.Children[idx].MountPoint, prefix) {
-				//log.Tracef("…child %s (ID:%d) is hidden by child %s", p.Children[idx].MountPoint, p.Children[idx].MountID, prefix)
 				p.Children[idx].hideMountpointSubtree()
 			}
 		}
@@ -196,7 +190,6 @@ func (p *MountPoint) determineVisibility() {
 // as well as all its child mount points. Just to drive this point home: this
 // works on the mount point subtree, not the mount path subtree.
 func (p *MountPoint) hideMountpointSubtree() {
-	//log.Tracef("……%s (ID:%d) is hidden", p.MountPoint, p.MountID)
 	p.Hidden = true
 	for _, childmount := range p.Children {
 		if !childmount.Hidden {

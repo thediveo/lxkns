@@ -17,11 +17,18 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/mounts"
+	"github.com/thediveo/lxkns/species"
 )
 
-type NamespacedMountMap mounts.NamespacedMountPathMap
+// NamespacedMountMap is a JSON marshallable map from mount namespace
+// identifiers (inode numbers only) to their respective mount path maps. The
+// mount path maps further reference mount points.
+type NamespacedMountMap lxkns.NamespacedMountPathMap
 
+// MarshalJSON emits an object (map/dictionary) of mount namespace identifiers
+// (inode numbers only) with their corresponding mount path maps.
 func (m NamespacedMountMap) MarshalJSON() ([]byte, error) {
 	wrapper := map[uint64]MountPathMap{}
 	for mntnsid, mountpathmap := range m {
@@ -30,7 +37,19 @@ func (m NamespacedMountMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wrapper)
 }
 
+// UnmarshalJSON decodes an object (map/dictionary) of mount namespaced mount
+// path maps (with mount points).
 func (m *NamespacedMountMap) UnmarshalJSON(data []byte) error {
+	var wrapper map[uint64]MountPathMap
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return err
+	}
+	if *m == nil {
+		*m = NamespacedMountMap{}
+	}
+	for mntnsid, mountpathmap := range wrapper {
+		(*m)[species.NamespaceIDfromInode(mntnsid)] = mounts.MountPathMap(mountpathmap)
+	}
 	return nil
 }
 
@@ -41,9 +60,8 @@ type MountPathMap mounts.MountPathMap
 // identifiers in place of mount path object references.
 type MountPath struct {
 	*mounts.MountPath
-	ID       int   `json:"pathid"`   // unique mount path identifier, per mount namespace.
-	ParentID int   `json:"parentid"` // ID of parent mount path, if any, otherwise 0.
-	ChildIDs []int `json:"childids"` // IDs of child mount paths.
+	ID       int `json:"pathid"`   // unique mount path identifier, per mount namespace.
+	ParentID int `json:"parentid"` // ID of parent mount path, if any, otherwise 0.
 }
 
 // MarshalJSON emits an object (map/dictionary) of mount paths with their mount
@@ -58,7 +76,6 @@ func (m MountPathMap) MarshalJSON() ([]byte, error) {
 		mapwrapper[path] = &MountPath{
 			MountPath: mountpath,
 			ID:        id,
-			ChildIDs:  []int{}, // ensure empty array instead of null
 		}
 		id++
 	}
@@ -69,14 +86,11 @@ func (m MountPathMap) MarshalJSON() ([]byte, error) {
 		if mountpath.Parent != nil {
 			mountpath.ParentID = mapwrapper[mountpath.Parent.Path()].ID
 		}
-		for _, child := range mountpath.Children {
-			mountpath.ChildIDs = append(mountpath.ChildIDs, mapwrapper[child.Path()].ID)
-		}
 	}
 	return json.Marshal(mapwrapper)
 }
 
-// UnmarshalJSON unmarshals an object mapping mount paths to their mount
+// UnmarshalJSON decodes an object mapping mount paths to their mount
 // point(s). This restores not only the object hierarchy of the mount paths, but
 // also of the mount points corresponding with the mount paths.
 func (m *MountPathMap) UnmarshalJSON(data []byte) error {
@@ -99,11 +113,9 @@ func (m *MountPathMap) UnmarshalJSON(data []byte) error {
 	mountidmap := map[int]*mounts.MountPoint{}
 	for path, mountpath := range mapwrapper {
 		mmp := (*m)[path]
-		mmp.Parent = idmap[mountpath.ParentID]
-		for _, childid := range mountpath.ChildIDs {
-			if childmp := idmap[childid]; childmp != nil {
-				mmp.Children = append(mmp.Children, childmp)
-			}
+		if parent := idmap[mountpath.ParentID]; parent != nil {
+			mmp.Parent = parent
+			mmp.Parent.Children = append(mmp.Parent.Children, mmp)
 		}
 		// Remember the IDs of the mount points at this mount path in the map.
 		for _, mount := range mountpath.Mounts {

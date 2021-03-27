@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/go-mntinfo"
+	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/mounts"
 	"github.com/thediveo/lxkns/species"
 )
@@ -59,8 +60,6 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		bid := m.get(`$["/b"].pathid`).(float64)
 		Expect(bid).NotTo(BeZero())
 		Expect(m.get(`$["/b"].parentid`)).To(Equal(rootid))
-
-		Expect(m.get(`$["/"].childids`)).To(ConsistOf(bid, aid))
 	})
 
 	It("unmarshals its own marshalling", func() {
@@ -114,7 +113,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 	})
 
 	It("marshals mount path maps from multiple mount namespaces", func() {
-		allm := mounts.NamespacedMountPathMap{
+		allm := lxkns.NamespacedMountPathMap{
 			species.NamespaceIDfromInode(123): mounts.MountPathMap(mountpathmap),
 		}
 		jtext, err := json.Marshal(NamespacedMountMap(allm))
@@ -123,6 +122,19 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		Expect(json.Unmarshal([]byte(jtext), &m)).NotTo(HaveOccurred())
 		Expect(m.get(`$["123"]`)).NotTo(BeNil())
 		Expect(m.get(`$["123"]["/"]`)).NotTo(BeNil())
+	})
+
+	It("unmarshals its own JSON", func() {
+		allm := lxkns.NamespacedMountPathMap{
+			species.NamespaceIDfromInode(123): mounts.MountPathMap(mountpathmap),
+		}
+		jtext, err := json.Marshal(NamespacedMountMap(allm))
+		Expect(err).NotTo(HaveOccurred())
+		var m NamespacedMountMap
+		Expect(json.Unmarshal(jtext, &m)).To(Succeed())
+		Expect(m).To(HaveKey(species.NamespaceIDfromInode(123)))
+		Expect(m[species.NamespaceIDfromInode(123)]).To(HaveKey("/a"))
+		Expect(m[species.NamespaceIDfromInode(123)]["/a"].Mounts[0].MountID).To(Equal(3))
 	})
 
 })
