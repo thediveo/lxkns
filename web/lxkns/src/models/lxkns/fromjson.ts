@@ -126,10 +126,15 @@ export const fromjson = (discoverydata: any): Discovery => {
             mountpath.children = []
             // While we're at it, let's also map the mount point IDs to their
             // respective mount point objects; please note that mount point IDs
-            // are system-wide and thus across mount namespaces.
+            // are system-wide and thus across mount namespaces. Oh, and let's
+            // "fix" the mount paths when they contain escaped characters, such
+            // as \040 for space.
             mountpath.mounts.forEach(mountpoint => {
                 mountpointidmap[mountpoint.mountid.toString()] = mountpoint
                 mountpoint.children = []
+                mountpoint.mountpoint = mountpoint.mountpoint.replace(
+                    /\\(0[0-7][0-7])/g, 
+                    (match, octal) => String.fromCharCode(parseInt(octal, 8)))
             })
         })
         // With the map build we can now resolve the mount path hierarchy
@@ -155,6 +160,12 @@ export const fromjson = (discoverydata: any): Discovery => {
                 }
             })
         })
+    })
+
+    // Finally reference the corresponding map of mount points from its mount
+    // namespace object.
+    Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
+        discovery.namespaces[mntnsid].mountpaths = mountpathmap
     })
 
     // A small step for me, a huge misstep for type safety...

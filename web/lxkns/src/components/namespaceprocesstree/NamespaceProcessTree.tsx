@@ -113,7 +113,10 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
  *
  * @param namespace namespace information.
  */
-const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) => {
+const NamespaceTreeItem = (
+    namespace: Namespace, 
+    showSystemProcesses: boolean, 
+    DetailsFactory: NamespaceProcessTreeDetailFactory) => {
 
     // Get the leader processes and maybe some sub-processes (in different
     // cgroups), all inside this namespace. Please note that if there is only a
@@ -127,20 +130,36 @@ const NamespaceTreeItem = (namespace: Namespace, showSystemProcesses: boolean) =
 
     // In case of hierarchical namespaces also render the child namespaces.
     const childnamespaces = namespace.children ?
-        namespace.children.map(childns => NamespaceTreeItem(childns, showSystemProcesses)) : []
+        namespace.children.map(childns => NamespaceTreeItem(childns, showSystemProcesses, null)) : []
 
     return <TreeItem
         className="namespace"
         key={namespace.nsid}
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} />}
-    >{procs.concat(childnamespaces)}</TreeItem>
+    >{procs.concat(childnamespaces)}{DetailsFactory && <DetailsFactory namespace={namespace}/>}</TreeItem>
 }
+
+/**
+ * The properties passed to a component for rendering the details of a
+ * namespace.
+ */
+export interface NamespaceProcessTreeDetailComponentProps {
+    /** namespace to render more details of. */
+    namespace: Namespace
+}
+
+/**
+ * Factory for returning components to render the details of a particular
+ * namespace.
+ */
+export type NamespaceProcessTreeDetailFactory = React.FunctionComponentFactory<NamespaceProcessTreeDetailComponentProps>
 
 export interface NamespaceProcessTreeProps {
     type?: string
     action: Action
     discovery: Discovery
+    detailsFactory?: NamespaceProcessTreeDetailFactory
 }
 
 /**
@@ -152,7 +171,7 @@ export interface NamespaceProcessTreeProps {
  *
  * @param type type of namespace.
  */
-export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProcessTreeProps) => {
+export const NamespaceProcessTree = ({ type, action, discovery, detailsFactory }: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
@@ -248,8 +267,8 @@ export const NamespaceProcessTree = ({ type, action, discovery }: NamespaceProce
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === nstype && ns.parent == null)
             .sort(compareNamespaceById)
-            .map(ns => NamespaceTreeItem(ns, showSystemProcesses))
-    ), [discovery, showSystemProcesses, nstype])
+            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, detailsFactory))
+    ), [discovery, showSystemProcesses, nstype, detailsFactory])
 
     return (
         (treeItemsMemo.length &&
