@@ -12,6 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { MountPathMap, NamespacedMountPathMaps } from "./mount";
+
 /**
  * Namespace type identifier strings: these are de-facto definitions from the
  * Linux kernel and used, for instance, when reading namespace links or (bind)
@@ -67,6 +69,8 @@ export interface Namespace {
     tenants: Namespace[]
     /** calculated: initial namespace? */
     initial?: boolean
+    /** calculated: mount paths in this mount namespace */
+    mountpaths?: MountPathMap
 }
 
 /**
@@ -86,7 +90,8 @@ export interface NamespaceSet {
     time: Namespace | null
 }
 
-export interface NamespaceMap { [key: string]: Namespace }
+/** Map namespace IDs (inode numbers only) to Namespace objects. */
+export interface NamespaceMap { [nsid: string]: Namespace }
 
 /**
  * Information about a single OS-level process, within the process hierarchy.
@@ -116,4 +121,5 @@ export interface ProcessMap { [key: string]: Process }
 export interface Discovery {
     namespaces: NamespaceMap
     processes: ProcessMap
+    mounts: NamespacedMountPathMaps
 }

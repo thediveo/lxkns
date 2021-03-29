@@ -13,6 +13,7 @@
 // under the License.
 
 import { Namespace, NamespaceType, Process, Discovery } from './model'
+import { MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -110,6 +111,51 @@ export const fromjson = (discoverydata: any): Discovery => {
             ns => (discovery.namespaces[ns.nsid.toString()].initial = true)
         )
     }
+
+    // Resolve the references in the hierarchy of mount paths and also resolve
+    // the references in the hierarchy of mount points. For mount points,
+    // references are allowed to cross mount namespaces.
+    const mountpointidmap: {[mountpointid: string]: MountPoint} = {}
+    Object.values(discovery.mounts).forEach(mountpathmap => {
+        // In order to later resolve the hierarchical mount point references
+        // within a single mount namespace we need to first build a map from
+        // mount path identifiers to mount path objects.
+        const mountpathidmap: {[mountpathid: string]: MountPath} = {}
+        Object.values(mountpathmap).forEach(mountpath => {
+            mountpathidmap[mountpath.pathid.toString()] = mountpath
+            mountpath.children = []
+            // While we're at it, let's also map the mount point IDs to their
+            // respective mount point objects; please note that mount point IDs
+            // are system-wide and thus across mount namespaces.
+            mountpath.mounts.forEach(mountpoint => {
+                mountpointidmap[mountpoint.mountid.toString()] = mountpoint
+                mountpoint.children = []
+            })
+        })
+        // With the map build we can now resolve the mount path hierarchy
+        // references.
+        Object.values(mountpathmap).forEach(mountpath => {
+            const parent = mountpathidmap[mountpath.parentid.toString()]
+            if (parent) {
+                mountpath.parent = parent
+                parent.children.push(mountpath)
+            }
+        })
+    })
+
+    // With the map from mount point IDs to mount point objects finally complete
+    // we can now resolve the hierarchical references.
+    Object.values(discovery.mounts).forEach(mountpathmap => {
+        Object.values(mountpathmap).forEach(mountpath => {
+            mountpath.mounts.forEach(mountpoint => {
+                const parent = mountpointidmap[mountpoint.parentid.toString()]
+                if (parent) {
+                    mountpoint.parent = parent
+                    parent.children.push(mountpoint)
+                }
+            })
+        })
+    })
 
     // A small step for me, a huge misstep for type safety...
     return discovery
