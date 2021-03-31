@@ -16,7 +16,7 @@ import React from 'react'
 
 import { TreeItem } from '@material-ui/lab'
 import { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
-import { MountPath } from 'models/lxkns/mount'
+import { MountPath, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace } from 'models/lxkns'
 import { MountpointIcon } from 'icons/Mountpoint'
 import { makeStyles } from '@material-ui/core'
@@ -43,14 +43,14 @@ const MountPathTreeItem = (namespace: Namespace, mountpath: MountPath, parentpat
 
     const classes = useStyles()
 
-    const path = mountpath.mounts[0].mountpoint
+    const path = mountpath.path
     const tail = path.substr(parentpath.length)
     const prefix = path === '/' ? path : path + "/"
 
     const childmountcount = countMounts(-1, mountpath) // FIXME: incorrect sum
     const label = <>
-        <MountpointIcon fontSize="inherit" />{tail}
-        {childmountcount && <> [<MountpointchildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
+        {unescapeMountPath(tail)}
+        {childmountcount > 0 && <> [<MountpointchildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
     </>
 
     return <TreeItem
@@ -58,7 +58,7 @@ const MountPathTreeItem = (namespace: Namespace, mountpath: MountPath, parentpat
         nodeId={`${namespace.nsid}-${path}`}
         label={label}
     >{mountpath.children
-        .sort((childA, childB) => childA.mounts[0].mountpoint.localeCompare(childB.mounts[0].mountpoint))
+        .sort((childA, childB) => childA.path.localeCompare(childB.path))
         .map(child => MountPathTreeItem(namespace, child, prefix))}</TreeItem>
 }
 

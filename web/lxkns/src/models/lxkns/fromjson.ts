@@ -13,7 +13,7 @@
 // under the License.
 
 import { Namespace, NamespaceType, Process, Discovery } from './model'
-import { MountPath, MountPoint } from './mount'
+import { insertCommonChildPrefixMountPaths, MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -122,6 +122,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         // mount path identifiers to mount path objects.
         const mountpathidmap: {[mountpathid: string]: MountPath} = {}
         Object.values(mountpathmap).forEach(mountpath => {
+            mountpath.path = mountpath.mounts[0].mountpoint // convenience
             mountpathidmap[mountpath.pathid.toString()] = mountpath
             mountpath.children = []
             // While we're at it, let's also map the mount point IDs to their
@@ -132,9 +133,6 @@ export const fromjson = (discoverydata: any): Discovery => {
             mountpath.mounts.forEach(mountpoint => {
                 mountpointidmap[mountpoint.mountid.toString()] = mountpoint
                 mountpoint.children = []
-                mountpoint.mountpoint = mountpoint.mountpoint.replace(
-                    /\\(0[0-7][0-7])/g, 
-                    (match, octal) => String.fromCharCode(parseInt(octal, 8)))
             })
         })
         // With the map build we can now resolve the mount path hierarchy
@@ -160,6 +158,11 @@ export const fromjson = (discoverydata: any): Discovery => {
                 }
             })
         })
+    })
+
+    // Insert mount path nodes for common subpath prefixes...
+    Object.values(discovery.mounts).forEach(mountpathmap => {
+        insertCommonChildPrefixMountPaths(mountpathmap['/'])
     })
 
     // Finally reference the corresponding map of mount points from its mount
