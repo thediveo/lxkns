@@ -14,7 +14,7 @@
 
 import React from 'react'
 
-import { AccountTree, Person } from '@material-ui/icons'
+import { Person } from '@material-ui/icons'
 
 import Rude from 'icons/Root'
 
@@ -25,6 +25,7 @@ import { makeStyles } from '@material-ui/core'
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
 import clsx from 'clsx'
+import ChildrenIcon from 'icons/Children'
 
 
 // Component styling...
@@ -134,7 +135,7 @@ export const NamespaceInfo = ({
     const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
         namespace.children.length > 0 &&
         <span className={classes.userchildrenInfo}>
-            [<AccountTree fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
+            [<ChildrenIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
         </span>
 
     return (

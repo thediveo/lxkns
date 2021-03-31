@@ -50,13 +50,11 @@ describe('mount helpers', () => {
         insertCommonChildPrefixMountPaths(mproot)
 
         expect(mproot.children.map(mp => mp.path))
-            .to.have.members(['/12/a', '/12/b', '/12/c', '/12/d'])
-        const mpc = mproot.children.filter(mp => mp.path === '/12/c')
+            .to.have.members(['/12/a', '/12/b', '/12/c/a/b', '/12/d'])
+        const mpc = mproot.children.filter(mp => mp.path === '/12/c/a/b')
         expect(mpc).to.have.length(1)
         expect(mpc[0].children.map(mp => mp.path))
-            .to.have.members(['/12/c/a']) // exactly one, so we know the recursion works.
-        expect(mpc[0].children[0].children.map(mp => mp.path))
-            .to.have.members(['/12/c/a/b'])
+            .to.have.members(['/12/c/a/b/c', '/12/c/a/b/d'])
     })
 
 })

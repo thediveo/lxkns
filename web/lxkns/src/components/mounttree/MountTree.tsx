@@ -14,31 +14,46 @@
 
 import React from 'react'
 
+import clsx from 'clsx'
 import { TreeItem } from '@material-ui/lab'
 import { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
 import { MountPath, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace } from 'models/lxkns'
-import { MountpointIcon } from 'icons/Mountpoint'
-import { makeStyles } from '@material-ui/core'
-import MountpointchildrenIcon from 'icons/Mountpointchildren'
+import { makeStyles, Tooltip } from '@material-ui/core'
+import ChildrenIcon from 'icons/Children'
 
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     mounttreedetails: {
         '& .MuiSvgIcon-root': {
             verticalAlign: 'text-top',
             position: 'relative',
             top: '0.05ex',
         },
+    },
+    hiddenmountpoint: {
+        color: theme.palette.text.disabled,
+        textDecoration: 'line-through',
+    },
+    notamountpoint: {
+        fontStyle: 'italic',
     }
-})
+}))
 
-// Reduce function returning the (recursive) sum of children and grand-children
-// plus this namespace itself.
+// Reduce function returning the sum of all mount points in for this mount path
+// as well as for all its child mount paths.
 const countMounts = (sum: number, mp: MountPath) =>
-    sum + mp.children.reduce(countMounts, mp.mounts.length)
+    mp.mounts.length + mp.children.reduce(countMounts, sum)
+
+// Calculate the sum of all mount points in all child mount paths of this mount
+// path, excluding the mount points of this mount path itself.
+const countChildMounts = (mp: MountPath) =>
+    mp.children.reduce(countMounts, 0)
 
 
+/**
+ * Renders a single mount path with its child mount paths.
+ */
 const MountPathTreeItem = (namespace: Namespace, mountpath: MountPath, parentpath: string) => {
 
     const classes = useStyles()
@@ -47,19 +62,26 @@ const MountPathTreeItem = (namespace: Namespace, mountpath: MountPath, parentpat
     const tail = path.substr(parentpath.length)
     const prefix = path === '/' ? path : path + "/"
 
-    const childmountcount = countMounts(-1, mountpath) // FIXME: incorrect sum
+    const childmountcount = countChildMounts(mountpath)
     const label = <>
-        {unescapeMountPath(tail)}
-        {childmountcount > 0 && <> [<MountpointchildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
+        <Tooltip title={unescapeMountPath(path)}>
+            <span className={clsx(
+                mountpath.mounts.length === 0 && classes.notamountpoint)}>
+                {unescapeMountPath(tail)}
+            </span>
+        </Tooltip>
+        {childmountcount > 0 && <> [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
     </>
+
+    const childitems = mountpath.children
+        .sort((childA, childB) => childA.path.localeCompare(childB.path))
+        .map(child => MountPathTreeItem(namespace, child, prefix))
 
     return <TreeItem
         className={classes.mounttreedetails}
         nodeId={`${namespace.nsid}-${path}`}
         label={label}
-    >{mountpath.children
-        .sort((childA, childB) => childA.path.localeCompare(childB.path))
-        .map(child => MountPathTreeItem(namespace, child, prefix))}</TreeItem>
+    >{childitems}</TreeItem>
 }
 
 

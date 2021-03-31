@@ -148,6 +148,15 @@ export const insertCommonChildPrefixMountPaths = (mountpath: MountPath) => {
             // Recursively insert more common starter mount path nodes if
             // necessary.
             insertCommonChildPrefixMountPaths(newparent)
+            // Squash consecutive fake single child paths (that is, reparent
+            // again, but this time in the opposite direction).
+            const singlechild = newparent.children.length === 1 ? newparent.children[0] : null
+            if (singlechild && singlechild.mounts.length === 0) {
+                newparent.path = singlechild.path
+                console.log('-->', newparent.path)
+                newparent.children = singlechild.children
+                newparent.children.forEach(child => child.parent = newparent)
+            }
         } else {
             // Recursively check this child mount point for common paths of its
             // child mount paths.
