@@ -17,10 +17,12 @@ import React from 'react'
 import clsx from 'clsx'
 import { TreeItem } from '@material-ui/lab'
 import { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
-import { MountPath, unescapeMountPath } from 'models/lxkns/mount'
+import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace } from 'models/lxkns'
 import { makeStyles, Tooltip } from '@material-ui/core'
 import ChildrenIcon from 'icons/Children'
+import MountIcon from 'icons/namespaces/Mount'
+import FilesystemtypeIcon from 'icons/Filesystemtype'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -28,12 +30,17 @@ const useStyles = makeStyles((theme) => ({
         '& .MuiSvgIcon-root': {
             verticalAlign: 'text-top',
             position: 'relative',
-            top: '0.05ex',
+            top: '0.1ex',
         },
+    },
+    mountpointid: {
+        color: theme.palette.text.disabled,
     },
     hiddenmountpoint: {
         color: theme.palette.text.disabled,
-        textDecoration: 'line-through',
+        '& .mountpointpath': {
+            textDecoration: 'line-through solid',
+        },
     },
     notamountpoint: {
         fontStyle: 'italic',
@@ -51,6 +58,38 @@ const countChildMounts = (mp: MountPath) =>
     mp.children.reduce(countMounts, 0)
 
 
+// Renders mount point information.
+const MountPointItem = (
+    mountpoint: MountPoint,
+    tail: string,
+    childmountcount: number) => {
+
+    const classes = useStyles()
+
+    const tooltip = `${mountpoint.hidden ? 'overmounted ' : ''}${unescapeMountPath(mountpoint.mountpoint)}`
+
+    return (
+        <span
+            className={clsx(mountpoint.hidden && classes.hiddenmountpoint)}
+        >
+            <Tooltip title={tooltip}>
+                <span className="mountpointpath">
+                    {!mountpoint.hidden && <><MountIcon fontSize="inherit" color="disabled" />&#8239;</>}
+                    {unescapeMountPath(tail)} <span className={classes.mountpointid}>(ID:{mountpoint.mountid})</span>
+                </span>
+            </Tooltip>
+            {!mountpoint.hidden && childmountcount > 0 &&
+                <> [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
+            <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
+                <span>
+                    {' '}
+                    <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
+                </span>
+            </Tooltip>
+        </span>
+    )
+}
+
 /**
  * Renders a single mount path with its child mount paths.
  */
@@ -63,25 +102,21 @@ const MountPathTreeItem = (namespace: Namespace, mountpath: MountPath, parentpat
     const prefix = path === '/' ? path : path + "/"
 
     const childmountcount = countChildMounts(mountpath)
-    const label = <>
-        <Tooltip title={unescapeMountPath(path)}>
-            <span className={clsx(
-                mountpath.mounts.length === 0 && classes.notamountpoint)}>
-                {unescapeMountPath(tail)}
-            </span>
-        </Tooltip>
-        {childmountcount > 0 && <> [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
-    </>
 
     const childitems = mountpath.children
-        .sort((childA, childB) => childA.path.localeCompare(childB.path))
+        .sort(compareMountPaths)
         .map(child => MountPathTreeItem(namespace, child, prefix))
 
-    return <TreeItem
-        className={classes.mounttreedetails}
-        nodeId={`${namespace.nsid}-${path}`}
-        label={label}
-    >{childitems}</TreeItem>
+    return <>{mountpath.mounts.sort(compareMounts)
+        .map((mountpoint, idx) =>
+            <TreeItem
+                className={classes.mounttreedetails}
+                nodeId={`${namespace.nsid}-${path}-${mountpoint.mountid}`}
+                label={MountPointItem(mountpoint, tail, childmountcount)}
+            >
+                {idx === mountpath.mounts.length - 1 && childitems}
+            </TreeItem>)
+    }</>
 }
 
 

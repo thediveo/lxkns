@@ -31,7 +31,12 @@ export interface MountPathMap {
  * Mount path with corresponding mount point(s); the same mount path can be used
  * by multiple mount points, but in the end only at most one of these mount
  * points can be visible. However, no mount point(s) might be visible at all if
- * this mount path has been completely overmounted. 
+ * this mount path has been completely overmounted.
+ *
+ * Important note: in contrast to the Linux kernel's mount point(!) hierarchy,
+ * our mount path(!) hierarchy references an in-place overmounted mount point
+ * with its overmounting (child) mount point into the mounts list of the same
+ * mount path.
  */
 export interface MountPath {
     /** (calculated in client) */
@@ -94,7 +99,7 @@ export interface MountPoint {
 }
 
 /**
- * Dictionary of mount tags with values (or "" values).
+ * Dictionary of mount tags with values (where the tag values can be empty).
  */
 export interface MountTags {
     [tag: string]: string
@@ -148,12 +153,15 @@ export const insertCommonChildPrefixMountPaths = (mountpath: MountPath) => {
             // Recursively insert more common starter mount path nodes if
             // necessary.
             insertCommonChildPrefixMountPaths(newparent)
-            // Squash consecutive fake single child paths (that is, reparent
-            // again, but this time in the opposite direction).
+            // Squash consecutive fake single child path nodes into a single
+            // node (that is, reparent again, but this time in the opposite
+            // direction). We simply make use of recursion here in that the the
+            // child path node will already have been checked by the time we end
+            // up here, so we just need to drop the single child node if
+            // necessary, taking over all its children, et voila!
             const singlechild = newparent.children.length === 1 ? newparent.children[0] : null
             if (singlechild && singlechild.mounts.length === 0) {
                 newparent.path = singlechild.path
-                console.log('-->', newparent.path)
                 newparent.children = singlechild.children
                 newparent.children.forEach(child => child.parent = newparent)
             }
@@ -192,3 +200,23 @@ export const starterDir = (path: string) => {
 export const unescapeMountPath = (path: string) =>
     path.replace(/\\([0-1][0-7][0-7])/g,
         (match, octal) => String.fromCharCode(parseInt(octal, 8)))
+
+/**
+ * Returns a number indicating whether a first mount path comes before a second
+ * mount point (<0), is the same (0), or comes after (>0). Order is defined on
+ * the lexicographic order of the mount paths.
+ * 
+ * Note: use this compare function on the children of a mount path.
+ * 
+ * @param mp1 one mount path object
+ * @param mp2 another mount path object
+ */
+export const compareMountPaths = (mp1: MountPath, mp2: MountPath) =>
+    mp1.path.localeCompare(mp2.path)
+
+export const compareMounts = (mp1: MountPoint, mp2: MountPoint) => {
+    if (mp1.hidden !== mp2.hidden) {
+        return mp1.hidden ? -1 : 1
+    }
+    return mp1.mountpoint.localeCompare(mp2.mountpoint)
+}
