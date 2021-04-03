@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
             marginRight: '0.15em',
             verticalAlign: 'text-top',
             position: 'relative',
-            top: '0.1ex',
+            top: '0.2ex',
             color: theme.palette.process,
         },
         '&$shortInfo *': {

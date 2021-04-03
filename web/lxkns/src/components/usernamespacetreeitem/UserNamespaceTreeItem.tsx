@@ -16,20 +16,18 @@ import React from 'react'
 import { useAtom } from 'jotai'
 
 import TreeItem from '@material-ui/lab/TreeItem'
+import Crown from 'mdi-material-ui/Crown'
 
 import { ProcessInfo } from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
 import { showSharedNamespacesAtom } from 'views/settings'
+import { makeStyles } from '@material-ui/core'
+import { NamespaceBadge } from 'components/namespacebadge'
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.
 export const uniqueProcsOfTenants = (usernamespace: Namespace, showSharedNamespaces?: boolean) => {
-    // If it's a hidden user namespace then we short circuit, as there's simply
-    // no process attached to this user namespace.
-    if (!usernamespace.ealdorman) {
-        return []
-    }
     const uniqueprocs: ProcessMap = {}
     // When users want to see shared namespaces, then we need to add the
     // ealdorman of this user namespace to its list as a (pseudo) tenant for
@@ -46,6 +44,19 @@ export const uniqueProcsOfTenants = (usernamespace: Namespace, showSharedNamespa
     return Object.values(uniqueprocs)
 }
 
+const useStyle = makeStyles((theme) => ({
+    owninguserns: {
+        paddingLeft: '0.5em',
+        color: theme.palette.text.disabled,
+
+        '& .MuiSvgIcon-root': {
+            fontSize: 'inherit',
+            verticalAlign: 'middle',
+            marginRight: '0.1em',
+        },
+    }
+}))
+
 export interface UserNamespaceTreeItemProps {
     /** user namespace object */
     namespace: Namespace
@@ -53,7 +64,9 @@ export interface UserNamespaceTreeItemProps {
 
 // Component UserNamespaceTreeItem renders a user namespace tree item, as well
 // as the owned non-user namespaces and child user namespaces.
-export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps) => {
+export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespaceTreeItemProps) => {
+
+    const classes = useStyle()
 
     const [showSharedNamespaces] = useAtom(showSharedNamespacesAtom)
 
@@ -62,7 +75,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
 
     // Bind-mounted namespaces can be found by checking that a namespace has no
     // ealdorman process.
-    const bindmounts = Object.values(namespace.tenants)
+    const bindmounts = Object.values(usernamespace.tenants)
         .filter(tenant => tenant.ealdorman === null)
         .sort(compareNamespaceById)
         .map(tenant => <TreeItem
@@ -77,13 +90,13 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
     // navigating the discovery information. So, we collect all ealdorman
     // processes and then sort them by their names and PIDs, and then we start
     // rendering the process nodes.
-    const procs = uniqueProcsOfTenants(namespace, showSharedNamespaces)
+    const procs = uniqueProcsOfTenants(usernamespace, showSharedNamespaces)
         .sort(compareProcessByNameId)
         .map(proc =>
             <TreeItem
                 className="controlledprocess"
                 key={proc.pid}
-                nodeId={`${namespace.nsid}-${proc.pid}`}
+                nodeId={`${usernamespace.nsid}-${proc.pid}`}
                 label={<ProcessInfo process={proc} />}
             >
                 {Object.values(proc.namespaces)
@@ -92,26 +105,37 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
                     // namespaces that are specific to this process and not
                     // "shared" with other leaders in the same user namespace. 
                     .filter(showSharedNamespaces
-                        ? (tenant: Namespace) => tenant.type !== NamespaceType.user
-                        : (tenant: Namespace) => tenant.owner === namespace && tenant.ealdorman === proc)
-                    .sort((tenant1, tenant2) => tenant1.type.localeCompare(tenant2.type))
-                    .map(tenant =>
-                        <TreeItem
-                            className="tenant"
-                            key={tenant.nsid}
-                            nodeId={`${namespace.nsid}-${proc.pid}-${tenant.nsid}`}
-                            label={<NamespaceInfo
-                                shared={tenant.owner !== namespace || tenant.ealdorman !== proc}
+                        ? (procns: Namespace) => (procns.type !== NamespaceType.user || procns !== usernamespace)
+                        : (procns: Namespace) => procns.owner === usernamespace && procns.ealdorman === proc)
+                    .sort((procns1, procns2) => procns1.type.localeCompare(procns2.type))
+                    .map((procns: Namespace) => <TreeItem
+                        className="tenant"
+                        key={procns.nsid}
+                        nodeId={`${usernamespace.nsid}-${proc.pid}-${procns.nsid}`}
+                        label={<>
+                            <NamespaceInfo
+                                shared={procns.owner !== usernamespace || procns.ealdorman !== proc}
                                 noprocess={true}
-                                shortprocess={tenant.ealdorman !== proc}
-                                namespace={tenant}
-                            />}
-                        />)
+                                shortprocess={procns.ealdorman !== proc}
+                                namespace={procns}
+                            />
+                            {procns.ealdorman === proc
+                                && procns.owner && procns.type !== NamespaceType.user
+                                && procns.owner !== usernamespace
+                                && <span className={classes.owninguserns}>
+                                    <Crown fontSize="inherit" />&nbsp;
+                                    <NamespaceBadge
+                                        namespace={procns.owner}
+                                        tooltipprefix="different owning"
+                                    />
+                                </span>}
+                        </>}
+                    />)
                 }
             </TreeItem>
         )
 
-    const children = Object.values(namespace.children)
+    const children = Object.values(usernamespace.children)
         .sort(compareNamespaceById)
         .map(childns => <UserNamespaceTreeItem key={childns.nsid} namespace={childns} />)
 
@@ -122,9 +146,9 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
     return (
         <TreeItem
             className="namespace"
-            key={namespace.nsid}
-            nodeId={`${namespace.nsid}`}
-            label={<NamespaceInfo namespace={namespace} />}
+            key={usernamespace.nsid}
+            nodeId={`${usernamespace.nsid}`}
+            label={<NamespaceInfo namespace={usernamespace} />}
         >
             {[...procs, ...bindmounts, ...children]}
         </TreeItem>

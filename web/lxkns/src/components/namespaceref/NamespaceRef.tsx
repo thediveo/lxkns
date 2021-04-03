@@ -44,16 +44,16 @@ const useStyles = makeStyles((theme) => ({
         position: 'relative',
         verticalAlign: 'middle',
         width: '1.1em',
-        height: '1em',
+        height: '100%',
         animationPlayState: 'paused',
         '& .normal': {
             position: 'absolute',
-            top: 0,
+            top: '.2ex',
             left: 0,
         },
         '& .angry': {
             position: 'absolute',
-            top: 0,
+            top: '.2ex',
             left: 0,
             opacity: 0,
         },
@@ -137,6 +137,7 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
         (!namespace.reference &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.intermediate, classes.blinky, className)}>
+                    &nbsp;
                     <Ghost className="normal" fontSize="inherit" />
                     <AngryghostIcon className="angry" fontSize="inherit" />
                 </span>
