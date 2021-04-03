@@ -17,6 +17,7 @@ import React from 'react'
 import clsx from 'clsx'
 import { makeStyles, Tooltip } from '@material-ui/core'
 import { FileLinkOutline, Ghost } from 'mdi-material-ui'
+import { AngryghostIcon } from 'icons/Angryghost'
 
 import { Namespace } from 'models/lxkns'
 
@@ -26,6 +27,7 @@ const useStyles = makeStyles((theme) => ({
         display: 'inline-block',
         whiteSpace: 'nowrap',
         fontStyle: 'italic',
+        fontWeight: theme.typography.fontWeightLight,
         color: theme.palette.nsref,
         '& .MuiSvgIcon-root': {
             marginRight: '0.15em',
@@ -38,6 +40,57 @@ const useStyles = makeStyles((theme) => ({
     },
     bindmounted: {
     },
+    blinky: {
+        position: 'relative',
+        verticalAlign: 'middle',
+        width: '1.1em',
+        height: '100%',
+        animationPlayState: 'paused',
+        '& .normal': {
+            position: 'absolute',
+            top: '.2ex',
+            left: 0,
+        },
+        '& .angry': {
+            position: 'absolute',
+            top: '.2ex',
+            left: 0,
+            opacity: 0,
+        },
+        '&:hover': {
+            animationPlayState: 'running',
+            animation: '$blinkymoves 2s ease infinite',
+        },
+        '&:hover .normal': {
+            opacity: 0,
+        },
+        '&:hover .angry': {
+            opacity: 1,
+        },
+    },
+    '@keyframes blinkymoves': [
+        { transform: 'translate(0, 0)' },
+        { transform: 'translate(0, -.75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(-.75ex, -.75ex) skew(10deg)' },
+        { transform: 'translate(0, -.75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, -.75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, 0) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(.75ex, .75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(0, .75ex) skew(10deg)' },
+        { transform: 'translate(0, 0ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(-.75ex, 0ex) skew(10deg)' },
+        { transform: 'translate(-.75ex, .75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(0, .75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, .75ex) skew(-10deg)' },
+        { transform: 'transform: translate(0, .75ex) skew(10deg)' },
+        { transform: 'transform: translate(0, 0) rotate3d(1, 0, 0, 30deg)' },
+    ].reduce((keyframes, keyframe, keyframeno, keyframeslist) => ({
+        ...keyframes,
+        [`${Math.round(keyframeno * 1000 / (keyframeslist.length - 1)) / 10}%`]: {
+            ...keyframe,
+            color: !((keyframeno / 3) & 1) ? '#2121de' : theme.palette.nsref,
+        },
+    }), {})
 }))
 
 
@@ -83,8 +136,10 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
     return (
         (!namespace.reference &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
-                <span className={clsx(classes.namespaceReference, classes.intermediate, className)}>
-                    <Ghost fontSize="inherit" />
+                <span className={clsx(classes.namespaceReference, classes.intermediate, classes.blinky, className)}>
+                    &nbsp;
+                    <Ghost className="normal" fontSize="inherit" />
+                    <AngryghostIcon className="angry" fontSize="inherit" />
                 </span>
             </Tooltip>
         ) || (isProcfdPath &&

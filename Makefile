@@ -1,7 +1,8 @@
 # Where to install the CLI tool binaries to
 PREFIX ?= /usr/local
 GOPATH = $(shell go env GOPATH)
-GIT_VERSION = $(shell git describe --tags 2>/dev/null || echo "v0.0.0")
+GIT_VERSION = $(shell git describe 2>/dev/null || echo "v0.0.0")
+GOGEN = go generate .
 
 # Go version to use when building the test containers; start with a version
 # 1.14+ first to get better testbasher diagnosis in case a test script runs
@@ -41,6 +42,7 @@ coverage:
 
 deploy:
 	@echo "deploying version" $${GIT_VERSION}
+	$(GOGEN)
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build --build-arg GIT_VERSION=$(GIT_VERSION)
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
@@ -48,11 +50,13 @@ undeploy:
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
 
 install:
+	$(GOGEN)
 	go install -v ./cmd/... ./examples/lsallns
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
 # runs all tests in a container
 test:
+	$(GOGEN)
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
 		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
@@ -65,6 +69,7 @@ test:
 # the tests have run.
 citestapp:
 	@sudo /bin/true
+	@$(GOGEN)
 	@cd web/lxkns && yarn build:dev
 	@go build -v ./cmd/lxkns
 	@TMPPIDFILE=$$(mktemp -p /tmp lxkns.service.pid.XXXXXXXXXX) && \

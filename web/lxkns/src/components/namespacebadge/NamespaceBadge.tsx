@@ -73,6 +73,7 @@ const useStyles = makeStyles((theme) => ({
     },
     shared: {
         color: theme.palette.text.disabled,
+        fontWeight: theme.typography.fontWeightLight,
     },
     // ...and now for the namespace-type specific styling.
     cgroup: {
@@ -137,6 +138,8 @@ export interface NamespaceBadgeProps {
     namespace: Namespace
     /** is this a namespace shared with other leader processes? */
     shared?: boolean,
+    /** optional tooltip prefix text. */
+    tooltipprefix?: string,
     /** optional CSS class name(s). */
     className?: string
 }
@@ -150,7 +153,7 @@ export interface NamespaceBadgeProps {
  * namespace is an initial namespace then it gets visually marked using a dashed
  * border.
  */
-export const NamespaceBadge = ({ namespace, shared, className }: NamespaceBadgeProps) => {
+export const NamespaceBadge = ({ namespace, tooltipprefix, shared, className }: NamespaceBadgeProps) => {
 
     const classes = useStyles()
 
@@ -162,7 +165,7 @@ export const NamespaceBadge = ({ namespace, shared, className }: NamespaceBadgeP
     // https://github.com/facebook/create-react-app/issues/8687 ... which still
     // is open.
     return (
-        <Tooltip title={`${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial': ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
+        <Tooltip title={`${tooltipprefix ? tooltipprefix + ' ': ''}${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial': ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
             <span className={clsx(
                 classes.namespaceBadge,
                 classes[namespace.type],

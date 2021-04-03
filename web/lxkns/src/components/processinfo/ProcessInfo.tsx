@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 import clsx from 'clsx'
 
 import { Pause, PlayArrow } from '@material-ui/icons'
@@ -27,15 +26,21 @@ import { Process } from 'models/lxkns'
 const useStyles = makeStyles((theme) => ({
     // The whole component as such...
     processInfo: {
+        fontWeight: theme.typography.fontWeightLight,
         display: 'inline-block',
         whiteSpace: 'nowrap',
         '& .MuiSvgIcon-root': {
             marginRight: '0.15em',
             verticalAlign: 'text-top',
             position: 'relative',
-            top: '0.1ex',
+            top: '0.2ex',
             color: theme.palette.process,
         },
+        '&$shortInfo *': {
+            color: theme.palette.text.disabled,
+        }
+    },
+    shortInfo: {
     },
     processName: {
         fontStyle: 'italic',
@@ -48,6 +53,8 @@ const useStyles = makeStyles((theme) => ({
             content: '"»"',
             fontStyle: 'normal',
         },
+    },
+    pid: {
     },
     cgroupInfo: {
         marginLeft: '0.5em',
@@ -77,16 +84,18 @@ const useStyles = makeStyles((theme) => ({
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
+    /** render only process name with PID and nothing else */
+    short?: boolean
     /** optional CSS class name(s). */
     className?: string
 }
 
 /** 
- * The `ProcessInfo` component renders only minimal information about a single
- * Linux OS process to make it easily identifyable:
+ * The `ProcessInfo` component renders only (almost) minimal information about a
+ * single Linux OS process to make it easily identifyable:
  *
- * - name of the process, which is has been either set by the process itself,
- *   or has been derived from the process' command line.
+ * - name of the process, which is has been either set by the process itself, or
+ *   has been derived from the process' command line.
  * - PID.
  * - cgroup path, if path is not empty.
  * - pause indication if process is freezing or has been frozen.
@@ -95,7 +104,7 @@ export interface ProcessInfoProps {
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
-export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
+export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
 
     const classes = useStyles()
 
@@ -103,13 +112,13 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
         <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
-        <span className={clsx(classes.processInfo, className)}>
+        <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
             <Tooltip title="process"><>
                 <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
-                &nbsp;({process.pid})
+                &nbsp;<span className={classes.pid}>({process.pid})</span>
             </></Tooltip>
-            {process.cpucgroup && process.cpucgroup !== "/" && (
+            {!short && process.cpucgroup && process.cpucgroup !== "/" && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
                         <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />

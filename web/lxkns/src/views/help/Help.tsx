@@ -19,7 +19,7 @@ import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
-import { Box } from '@material-ui/core'
+import { Box, makeStyles } from '@material-ui/core'
 import { Card } from '@material-ui/core'
 
 
@@ -34,21 +34,49 @@ const ch = (name: string) => React.lazy(() => import(`!babel-loader!mdx-loader!.
 const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
-    { title: 'Views', chapter: ch('Views'), slug: 'views' },
+    { title: 'All View', chapter: ch('Allview'), slug: 'allview' },
+    { title: 'Type-Specific Views', chapter: ch('Typedviews'), slug: 'typedviews' },
     { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
     { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
 ]
 
-const Example = ({ children }: { children: React.ReactNode }) => (
+interface ExampleProps {
+    maxWidth?: string
+    children: React.ReactNode
+}
+
+const Example = ({ children, maxWidth }: ExampleProps) => (
     <Box m={2}>
-        <Card>
+        <Card style={{maxWidth: maxWidth || '100%'}}>
             <Box m={1}>
                 {children}
             </Box>
         </Card>
     </Box>
 )
+
+const useStyles = makeStyles((theme) => ({
+    iconbox: {
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        fontSize: '70%', // why, CSS, oh why???
+        border: `1px solid ${theme.palette.text.disabled}`,
+        padding: 1,
+        borderRadius: theme.spacing(1) / 2,
+
+        '& > .MuiSvgIcon-root': {
+            verticalAlign: 'middle',
+            fontSize: 'calc(100% + 2px)',
+        },
+    }
+}))
+
+const BoxedIcons = ({ children }: { children: React.ReactNode }) => {
+    const classes = useStyles()
+
+    return <span className={classes.iconbox}>{children}</span>
+}
 
 const NamespaceExample = ({ type, initial }) =>
     <NamespaceBadge namespace={{
@@ -65,6 +93,6 @@ export const Help = () => (
         chapters={chapters}
         baseroute="/help"
         markdowner={MuiMarkdown}
-        shortcodes={{ a: SmartA, Example, NamespaceBadge, NamespaceExample }}
+        shortcodes={{ a: SmartA, BoxedIcons, Example, NamespaceBadge, NamespaceExample }}
     />
 )

@@ -15,14 +15,15 @@
 import colorRgba from 'color-rgba'
 
 /**
- * Returns a CSS "rgba(...)" color string given a CSS color string and an alpha
+ * Returns a CSS "rgba(...)" color string given a CSS color string (which
+ * optionally might include an alpha value itself) and a separate alpha
  * (transparency) value.
  *
  * @param color color string, such as "#rgb", "#rrggbb", "rgb(r,g,b)", et
- * cetera.
+ * cetera. Even "rgba(r,g,b,a)" is acceptable.
  * @param alpha alpha value in the range of [0..1].
  */
 export const rgba = (color: string, alpha: number) => {
-    const [r, g, b,] = colorRgba(color)
-    return `rgba(${r},${g},${b},${alpha})`
+    const [r, g, b, a] = colorRgba(color)
+    return `rgba(${r},${g},${b},${a*alpha})`
 }
