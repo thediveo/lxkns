@@ -17,6 +17,7 @@ import React from 'react'
 import clsx from 'clsx'
 import { makeStyles, Tooltip } from '@material-ui/core'
 import { FileLinkOutline, Ghost } from 'mdi-material-ui'
+import { AngryghostIcon } from 'icons/Angryghost'
 
 import { Namespace } from 'models/lxkns'
 
@@ -41,10 +42,30 @@ const useStyles = makeStyles((theme) => ({
     },
     blinky: {
         position: 'relative',
+        verticalAlign: 'middle',
+        width: '1.1em',
+        height: '1em',
         animationPlayState: 'paused',
+        '& .normal': {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+        },
+        '& .angry': {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            opacity: 0,
+        },
         '&:hover': {
             animationPlayState: 'running',
             animation: '$blinkymoves 2s ease infinite',
+        },
+        '&:hover .normal': {
+            opacity: 0,
+        },
+        '&:hover .angry': {
+            opacity: 1,
         },
     },
     '@keyframes blinkymoves': [
@@ -115,8 +136,9 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
     return (
         (!namespace.reference &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
-                <span className={clsx(classes.namespaceReference, classes.intermediate, className)}>
-                    <Ghost className={classes.blinky} fontSize="inherit" />
+                <span className={clsx(classes.namespaceReference, classes.intermediate, classes.blinky, className)}>
+                    <Ghost className="normal" fontSize="inherit" />
+                    <AngryghostIcon className="angry" fontSize="inherit" />
                 </span>
             </Tooltip>
         ) || (isProcfdPath &&
