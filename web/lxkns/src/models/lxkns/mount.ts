@@ -212,11 +212,11 @@ export const unescapeMountPath = (path: string) =>
  * @param mp2 another mount path object
  */
 export const compareMountPaths = (mp1: MountPath, mp2: MountPath) =>
-    mp1.path.localeCompare(mp2.path)
+    mp1.path.localeCompare(mp2.path, undefined, {numeric: true})
 
 export const compareMounts = (mp1: MountPoint, mp2: MountPoint) => {
     if (mp1.hidden !== mp2.hidden) {
         return mp1.hidden ? -1 : 1
     }
-    return mp1.mountpoint.localeCompare(mp2.mountpoint)
+    return mp1.mountpoint.localeCompare(mp2.mountpoint, undefined, {numeric: true})
 }
