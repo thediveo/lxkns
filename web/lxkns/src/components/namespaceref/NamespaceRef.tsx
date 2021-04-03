@@ -39,6 +39,37 @@ const useStyles = makeStyles((theme) => ({
     },
     bindmounted: {
     },
+    blinky: {
+        position: 'relative',
+        animationPlayState: 'paused',
+        '&:hover': {
+            animationPlayState: 'running',
+            animation: '$blinkymoves 2s ease infinite',
+        },
+    },
+    '@keyframes blinkymoves': [
+        { transform: 'translate(0, 0)' },
+        { transform: 'translate(0, -.75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(-.75ex, -.75ex) skew(10deg)' },
+        { transform: 'translate(0, -.75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, -.75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, 0) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(.75ex, .75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(0, .75ex) skew(10deg)' },
+        { transform: 'translate(0, 0ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(-.75ex, 0ex) skew(10deg)' },
+        { transform: 'translate(-.75ex, .75ex) rotate3d(1, 0, 0, 30deg)' },
+        { transform: 'translate(0, .75ex) skew(-10deg)' },
+        { transform: 'translate(.75ex, .75ex) skew(-10deg)' },
+        { transform: 'transform: translate(0, .75ex) skew(10deg)' },
+        { transform: 'transform: translate(0, 0) rotate3d(1, 0, 0, 30deg)' },
+    ].reduce((keyframes, keyframe, keyframeno, keyframeslist) => ({
+        ...keyframes,
+        [`${Math.round(keyframeno * 1000 / (keyframeslist.length - 1)) / 10}%`]: {
+            ...keyframe,
+            color: (keyframeno / 3) & 1 ? '#2121de' : theme.palette.nsref,
+        },
+    }), {})
 }))
 
 
@@ -85,7 +116,7 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
         (!namespace.reference &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.intermediate, className)}>
-                    <Ghost fontSize="inherit" />
+                    <Ghost className={classes.blinky} fontSize="inherit" />
                 </span>
             </Tooltip>
         ) || (isProcfdPath &&

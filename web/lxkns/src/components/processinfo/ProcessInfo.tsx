@@ -79,16 +79,18 @@ const useStyles = makeStyles((theme) => ({
 export interface ProcessInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
+    /** render only process name with PID and nothing else */
+    short?: boolean
     /** optional CSS class name(s). */
     className?: string
 }
 
 /** 
- * The `ProcessInfo` component renders only minimal information about a single
- * Linux OS process to make it easily identifyable:
+ * The `ProcessInfo` component renders only (almost) minimal information about a
+ * single Linux OS process to make it easily identifyable:
  *
- * - name of the process, which is has been either set by the process itself,
- *   or has been derived from the process' command line.
+ * - name of the process, which is has been either set by the process itself, or
+ *   has been derived from the process' command line.
  * - PID.
  * - cgroup path, if path is not empty.
  * - pause indication if process is freezing or has been frozen.
@@ -97,7 +99,7 @@ export interface ProcessInfoProps {
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  */
-export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
+export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
 
     const classes = useStyles()
 
