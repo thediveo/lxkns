@@ -21,7 +21,7 @@ import Typography from '@material-ui/core/Typography'
 import TreeView from '@material-ui/lab/TreeView'
 
 import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
-import { UserNamespaceTreeItem, uniqueProcsOfTenants } from './UserNamespaceTreeItem'
+import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { expandInitiallyAtom } from 'views/settings'
 import { useAtom } from 'jotai'

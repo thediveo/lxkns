@@ -20,6 +20,7 @@ import App from './app'
 
 // Import only the necessary Roboto fonts, so they are available "offline"
 // without CDN.
+import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'

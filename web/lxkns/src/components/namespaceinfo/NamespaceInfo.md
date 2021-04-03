@@ -1,7 +1,7 @@
 ### Hierarchical Namespaces
 
-Render user namespace information, which consists of the following pieces of
-data:
+Without further customization, this component renders user namespace information
+consisting of the following pieces of data:
 
 - namespace type and ID,
 - number of child namespaces (since this is a hierarchical namespace type),
@@ -25,10 +25,10 @@ import { initProc } from "models/lxkns/mock";
 </ComponentCard>;
 ```
 
-Render PID namespace information, which is similar to user namespace
-information, except that it doesn't show any owner information (please do not
-confuse here the owner information with information about the owning user
-namespace).
+The following example renders PID namespace information, which is similar to
+user namespace information, except that it doesn't show any owner information
+(please do not confuse here the owner information with information about the
+owning user namespace).
 
 ```tsx
 import { ComponentCard } from "styleguidist/ComponentCard";
