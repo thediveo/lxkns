@@ -26,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
         display: 'inline-block',
         whiteSpace: 'nowrap',
         fontStyle: 'italic',
+        fontWeight: theme.typography.fontWeightLight,
         color: theme.palette.nsref,
         '& .MuiSvgIcon-root': {
             marginRight: '0.15em',

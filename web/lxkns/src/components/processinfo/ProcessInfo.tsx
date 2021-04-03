@@ -26,6 +26,7 @@ import { Process } from 'models/lxkns'
 const useStyles = makeStyles((theme) => ({
     // The whole component as such...
     processInfo: {
+        fontWeight: theme.typography.fontWeightLight,
         display: 'inline-block',
         whiteSpace: 'nowrap',
         '& .MuiSvgIcon-root': {
@@ -47,6 +48,8 @@ const useStyles = makeStyles((theme) => ({
             content: '"»"',
             fontStyle: 'normal',
         },
+    },
+    pid: {
     },
     cgroupInfo: {
         marginLeft: '0.5em',
@@ -106,7 +109,7 @@ export const ProcessInfo = ({ process, className }: ProcessInfoProps) => {
             <Tooltip title="process"><>
                 <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
-                &nbsp;({process.pid})
+                &nbsp;<span className={classes.pid}>({process.pid})</span>
             </></Tooltip>
             {process.cpucgroup && process.cpucgroup !== "/" && (
                 <Tooltip title="control-group path" className="cgroupinfo">

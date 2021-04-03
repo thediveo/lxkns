@@ -73,6 +73,7 @@ const useStyles = makeStyles((theme) => ({
     },
     shared: {
         color: theme.palette.text.disabled,
+        fontWeight: theme.typography.fontWeightLight,
     },
     // ...and now for the namespace-type specific styling.
     cgroup: {
