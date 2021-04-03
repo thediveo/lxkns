@@ -21,9 +21,9 @@ import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountP
 import { Namespace } from 'models/lxkns'
 import { makeStyles, Tooltip } from '@material-ui/core'
 import ChildrenIcon from 'icons/Children'
-import MountIcon from 'icons/namespaces/Mount'
+//import MountIcon from 'icons/namespaces/Mount'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
-import HiddenmountIcon from 'icons/Hiddenmount'
+//import HiddenmountIcon from 'icons/Hiddenmount'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -35,16 +35,35 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     mountpointid: {
-        color: theme.palette.text.disabled,
+        fontWeight: theme.typography.fontWeightLight,
+        color: theme.palette.text.hint,
+    },
+    mountpointpath: {
+        fontWeight: theme.typography.fontWeightLight,
+        border: `1px solid ${theme.palette.text.hint}`,
+        borderRadius: '0.3ex',
+        padding: '0 0.2em',
+    },
+    rootpath: {
+        border: `1px solid ${theme.palette.text.hint}`,
+        borderRadius: '0.3ex',
+        padding: '0 0.2em',
+        fontWeight: theme.typography.fontWeightBold,
     },
     hiddenmountpoint: {
+        fontWeight: theme.typography.fontWeightLight,
         color: theme.palette.text.disabled,
-        '& .mountpointpath': {
+        '& $mountpointpath': {
             textDecoration: 'line-through solid',
+            borderStyle: 'dotted',
         },
     },
     notamountpoint: {
+        fontWeight: theme.typography.fontWeightLight,
         fontStyle: 'italic',
+        '&$mountpointpath': {
+            border: 'none',
+        }
     }
 }))
 
@@ -75,10 +94,12 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
     return (
         <span className={clsx(mountpoint.hidden && classes.hiddenmountpoint)}>
             <Tooltip title={tooltip}>
-                <span className="mountpointpath">
-                    {mountpoint.hidden ? <HiddenmountIcon fontSize="inherit" color="disabled" /> : <MountIcon fontSize="inherit" color="disabled" />}
-                    &#8239;
-                    {unescapeMountPath(tail)} <span className={classes.mountpointid}>(ID:{mountpoint.mountid})</span>
+                <span>
+                    {/*mountpoint.hidden ? <HiddenmountIcon fontSize="inherit" color="disabled" /> : <MountIcon fontSize="inherit" color="disabled" />*/}
+                    {/*&#8239;*/}
+                    <span className={clsx(classes.mountpointpath, tail === '/' && classes.rootpath)}>{unescapeMountPath(tail)}</span>
+                    {' '}
+                    <span className={classes.mountpointid}>({mountpoint.mountid})</span>
                 </span>
             </Tooltip>
             {!mountpoint.hidden && childmountcount > 0 &&
@@ -106,7 +127,7 @@ const MountPathLabel = ({ tail, childmountcount }: MountPathLabelProps) => {
 
     return (
         <span>
-            <span className={classes.notamountpoint}>{tail}</span>
+            <span className={clsx(classes.notamountpoint, classes.mountpointpath)}>{tail}</span>
             {' '}[<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]
         </span>
     )
