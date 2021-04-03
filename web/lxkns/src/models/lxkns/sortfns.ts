@@ -73,5 +73,5 @@ export const compareProcessByNameId = (proc1: Process, proc2: Process) => {
     if (proc1.pid === 1 || proc2.pid === 1) {
         return proc1.pid === 1 ? -1 : 1
     }
-    return proc1.name.localeCompare(proc2.name) || proc2.pid - proc1.pid
+    return proc1.name.localeCompare(proc2.name) || proc1.pid - proc2.pid
 }

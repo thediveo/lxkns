@@ -55,11 +55,13 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     ownerInfo: {
+        fontWeight: theme.typography.fontWeightLight,
         '& .MuiSvgIcon-root': {
             verticalAlign: 'text-top',
             position: 'relative',
             top: '0.1ex',
         },
+        '&.root .MuiSvgIcon-root': { color: theme.palette.ownerroot },
     },
     ownerName: {
         color: theme.palette.ownername,
@@ -80,6 +82,8 @@ export interface NamespaceInfoProps {
     namespace: Namespace,
     /** suppress rendering leader process information.  */
     noprocess?: boolean,
+    /** show short process information. */
+    shortprocess?: boolean,
     /** is this a namespace shared with other leader processes? */
     shared?: boolean,
     /** optional CSS class name(s). */
@@ -95,7 +99,7 @@ export interface NamespaceInfoProps {
  * given namespace is either a PID or user namespace).
  */
 export const NamespaceInfo = ({
-    namespace, noprocess, shared, className
+    namespace, noprocess, shortprocess, shared, className
 }: NamespaceInfoProps) => {
 
     const classes = useStyles()
@@ -103,8 +107,13 @@ export const NamespaceInfo = ({
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID. Unless the process information is to be suppressed.
-    const procinfo = !noprocess && namespace.ealdorman &&
-        <ProcessInfo process={namespace.ealdorman} className={classes.procInfo} />
+    const procinfo = namespace.ealdorman
+        && (!noprocess || shortprocess)
+        && <ProcessInfo
+            process={namespace.ealdorman}
+            short={shortprocess}
+            className={classes.procInfo}
+        />
 
     // If there isn't any process attached to this namespace, prepare
     // information about bind mounts and fd references, if possible. This also
@@ -116,15 +125,16 @@ export const NamespaceInfo = ({
 
     // For user namespaces also prepare ownership information: the user name as
     // well as the UID of the Linux user "owning" the user namespace.
+    const ownedbyroot = namespace['user-name'] === 'root' && 'root'
     const ownerinfo = namespace.type === NamespaceType.user &&
         'user-id' in namespace &&
-        <span className={classes.ownerInfo}>
+        <span className={clsx(classes.ownerInfo, ownedbyroot)}>
             owned by {
                 namespace['user-id'] ? <Person fontSize="inherit" /> : <Rude fontSize="inherit" />
             } UID {namespace['user-id']}
             {namespace['user-name'] && <>
                 {' '}
-                <span className={clsx(classes.ownerName, namespace['user-name'] === 'root' && 'root')}>
+                <span className={clsx(classes.ownerName, ownedbyroot)}>
                     {namespace['user-name']}
                 </span>
             </>}
