@@ -24,12 +24,23 @@ import { showSharedNamespacesAtom } from 'views/settings'
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.
-export const uniqueProcsOfTenants = (usernamespace: Namespace) => {
+export const uniqueProcsOfTenants = (usernamespace: Namespace, showSharedNamespaces?: boolean) => {
+    // If it's a hidden user namespace then we short circuit, as there's simply
+    // no process attached to this user namespace.
+    if (!usernamespace.ealdorman) {
+        return []
+    }
     const uniqueprocs: ProcessMap = {}
+    // When users want to see shared namespaces, then we need to add the
+    // ealdorman of this user namespace to its list as a (pseudo) tenant for
+    // convenience.
+    if (showSharedNamespaces && usernamespace.ealdorman) {
+        uniqueprocs[usernamespace.ealdorman.pid] = usernamespace.ealdorman
+    }
     Object.values(usernamespace.tenants)
-        .forEach(tenant => {
-            if (tenant.ealdorman) {
-                uniqueprocs[tenant.ealdorman.pid] = tenant.ealdorman
+        .forEach(tenantnamespace => {
+            if (tenantnamespace.ealdorman) {
+                uniqueprocs[tenantnamespace.ealdorman.pid] = tenantnamespace.ealdorman
             }
         })
     return Object.values(uniqueprocs)
@@ -66,7 +77,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
     // navigating the discovery information. So, we collect all ealdorman
     // processes and then sort them by their names and PIDs, and then we start
     // rendering the process nodes.
-    const procs = uniqueProcsOfTenants(namespace)
+    const procs = uniqueProcsOfTenants(namespace, showSharedNamespaces)
         .sort(compareProcessByNameId)
         .map(proc =>
             <TreeItem
@@ -92,6 +103,7 @@ export const UserNamespaceTreeItem = ({ namespace }: UserNamespaceTreeItemProps)
                             label={<NamespaceInfo
                                 shared={tenant.owner !== namespace || tenant.ealdorman !== proc}
                                 noprocess={true}
+                                shortprocess={tenant.ealdorman !== proc}
                                 namespace={tenant}
                             />}
                         />)

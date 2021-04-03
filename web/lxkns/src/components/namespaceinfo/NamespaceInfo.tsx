@@ -81,6 +81,8 @@ export interface NamespaceInfoProps {
     namespace: Namespace,
     /** suppress rendering leader process information.  */
     noprocess?: boolean,
+    /** show short process information. */
+    shortprocess?: boolean,
     /** is this a namespace shared with other leader processes? */
     shared?: boolean,
     /** optional CSS class name(s). */
@@ -96,7 +98,7 @@ export interface NamespaceInfoProps {
  * given namespace is either a PID or user namespace).
  */
 export const NamespaceInfo = ({
-    namespace, noprocess, shared, className
+    namespace, noprocess, shortprocess, shared, className
 }: NamespaceInfoProps) => {
 
     const classes = useStyles()
@@ -104,8 +106,13 @@ export const NamespaceInfo = ({
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID. Unless the process information is to be suppressed.
-    const procinfo = !noprocess && namespace.ealdorman &&
-        <ProcessInfo process={namespace.ealdorman} className={classes.procInfo} />
+    const procinfo = namespace.ealdorman
+        && (!noprocess || shortprocess)
+        && <ProcessInfo
+            process={namespace.ealdorman}
+            short={shortprocess}
+            className={classes.procInfo}
+        />
 
     // If there isn't any process attached to this namespace, prepare
     // information about bind mounts and fd references, if possible. This also

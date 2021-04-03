@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
         ...keyframes,
         [`${Math.round(keyframeno * 1000 / (keyframeslist.length - 1)) / 10}%`]: {
             ...keyframe,
-            color: (keyframeno / 3) & 1 ? '#2121de' : theme.palette.nsref,
+            color: !((keyframeno / 3) & 1) ? '#2121de' : theme.palette.nsref,
         },
     }), {})
 }))
