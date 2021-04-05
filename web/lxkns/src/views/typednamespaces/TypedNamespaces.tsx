@@ -18,6 +18,7 @@ import { useLocation } from 'react-router-dom'
 import { Discovery, NamespaceType } from 'models/lxkns'
 import { Action } from 'app/treeaction'
 import { NamespaceProcessTree } from 'components/namespaceprocesstree'
+import { Box } from '@material-ui/core'
 
 
 export interface TypedNamespacesProps {
@@ -40,12 +41,14 @@ export const TypedNamespaces = ({ discovery, action }: TypedNamespacesProps) => 
         // unmounting the existing tree component and remounting a fresh one in
         // order to clear the namespace tree's internal state completely. Yes,
         // this is slightly (w)hacky.
-        nstype && <NamespaceProcessTree
-            key={nstype}
-            type={nstype}
-            discovery={discovery}
-            action={action}
-        />
+        nstype && <Box pl={1}>
+            <NamespaceProcessTree
+                key={nstype}
+                type={nstype}
+                discovery={discovery}
+                action={action}
+            />
+        </Box>
     )
 
 }

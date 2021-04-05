@@ -87,7 +87,9 @@ export interface AppBarDrawerProps {
      */
     drawerwidth?: number
     /** CSS style class name(s) for drawer. */
-    drawerClassName?: string,
+    drawerClassName?: string
+    /** touch area width for swiping the drawer open. */
+    swipeAreaWidth?: number
 }
 
 /**
@@ -116,7 +118,13 @@ export interface AppBarDrawerProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 const AppBarDrawer = ({
-    title, tools, drawertitle, drawer, drawerwidth: drawerWidth, drawerClassName,
+    title, 
+    tools, 
+    drawertitle, 
+    drawer, 
+    drawerwidth: drawerWidth, 
+    drawerClassName,
+    swipeAreaWidth,
 }: AppBarDrawerProps) => {
 
     // Not much state here in ... Denmark?!
@@ -154,6 +162,7 @@ const AppBarDrawer = ({
         <SwipeableDrawer
             className={clsx(classes.drawer, drawerClassName)}
             classes={{ paper: classes.drawerPaper }}
+            swipeAreaWidth={swipeAreaWidth}
             open={drawerOpen}
             onOpen={openDrawer}
             onClose={closeDrawer}
