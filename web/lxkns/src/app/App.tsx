@@ -28,7 +28,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
 import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery, useTheme } from '@material-ui/core'
 
-import SettingsIcon from '@material-ui/icons/Settings'
+import TuneIcon from '@material-ui/icons/Tune'
 import HelpIcon from '@material-ui/icons/Help'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -97,7 +97,7 @@ const views: viewItem[][] = [
             label: "time namespaces", path: "/time", type: NamespaceType.time
         },
     ], [
-        { icon: <SettingsIcon />, label: "settings", path: "/settings" },
+        { icon: <TuneIcon />, label: "settings", path: "/settings" },
         { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
         { icon: <InfoIcon />, label: "about", path: "/about" },
     ]
