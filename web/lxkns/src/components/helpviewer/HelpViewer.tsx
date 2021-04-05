@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
         // for everything, including the border (times 2) and icons are:
         // - 24px high
         // - small buttons have a 3px padding (*2)
-        height: `calc(24px + ${(navigatorBorder+2)*2}px + 2 * 3px)`,
+        height: `calc(24px + ${(navigatorBorder + 2) * 2}px + 2 * 3px)`,
         // icons are:
         // - 24px wide, 
         // - small icon buttons have a 3px padding (*2),
@@ -51,10 +51,8 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: '42em',
         borderTopRightRadius: 0,
         borderBottomRightRadius: 0,
-
-        '& .MuiTouchRipple-root': {
-            left: '-1px',
-        },
+        '& .MuiSvgIcon-root': { position: 'relative', left: '-2px' },
+        '& .MuiTouchRipple-root': { left: '-1px' },
 
         // Material UI's icon button on hover slightly darkens the background
         // using an alpha of 0.04; now, that would make any text under the toc
