@@ -13,6 +13,7 @@
 // under the License.
 
 export const filesystemTypeLinks: { [fstype: string]: string } = {
+    'autofs': 'https://man7.org/linux/man-pages/man5/autofs.5.html',
     'ext2': 'https://man7.org/linux/man-pages/man5/ext2.5.html',
     'ext3': 'https://man7.org/linux/man-pages/man5/ext3.5.html',
     'ext4': 'https://man7.org/linux/man-pages/man5/ext4.5.html',
