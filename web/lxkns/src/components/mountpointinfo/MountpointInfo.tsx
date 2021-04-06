@@ -19,6 +19,8 @@ import { makeStyles } from '@material-ui/core'
 import MountIcon from 'icons/namespaces/Mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
+import { filesystemTypeLink } from './fslinks'
+import { ExtLink } from 'components/extlink'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -119,7 +121,10 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         </div>
         <div className={classes.props}>
             <NameValueRow name={"device"} value={`${mountpoint.major}:${mountpoint.minor}`} />
-            <NameValueRow name={"filesystem type"} value={<><FilesystemtypeIcon fontSize="inherit" />&nbsp;{mountpoint.fstype}</>} />
+            <NameValueRow name={"filesystem type"} value={<>
+                <FilesystemtypeIcon fontSize="inherit" />
+                &nbsp;<ExtLink href={filesystemTypeLink(mountpoint.fstype)} iconposition="after">{mountpoint.fstype}</ExtLink>
+            </>} />
             <NameValueRow name={"root"} value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
             <NameValueRow name={"options"} value={options} />
             <NameValueRow name={"superblock options"} value={<Options options={mountpoint.superoptions.split(',')} />} />
