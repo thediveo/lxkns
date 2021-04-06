@@ -187,6 +187,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                     aria-controls={menuId}
                     onClick={handleIntervalButtonClick}
                     color="inherit"
+                    centerRipple={true}
                 >
                     {refreshInterval !== null ? <SyncIcon /> : <SyncDisabledIcon />}
                     <ExpandMoreIcon />

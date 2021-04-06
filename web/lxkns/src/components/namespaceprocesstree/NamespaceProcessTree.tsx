@@ -253,9 +253,9 @@ export const NamespaceProcessTree = ({ type, action, discovery, detailsFactory }
     }, [nstype, discovery, expandInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
-    // update the tree's expand state accordingly. This allows us to
-    // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
-    // state of the tree.
+    // update the tree's expand state accordingly. This allows us to explicitly
+    // "take back control" (ha ... hah ... HAHAHAHA!!!) of the expansion state
+    // of the tree.
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds)
     }

@@ -69,7 +69,7 @@ const T = () => {
 
 <>
   {themes.map((theme, idx) => (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider key={idx} theme={theme}>
       {idx > 0 && <br/>}
       with {theme.palette.type} theme:
       <ComponentCard>

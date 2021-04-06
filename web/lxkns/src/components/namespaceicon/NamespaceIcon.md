@@ -5,11 +5,15 @@ we then adorn using the following icons:
 import { ComponentCard } from "styleguidist/ComponentCard";
 import { NamespaceType } from "models/lxkns";
 
-<>
-  {Object.values(NamespaceType).sort().map((nstype, idx) => [
-    idx > 0 && <br/>,
-    <div>{nstype} namespace icon:</div>,
-    <ComponentCard><NamespaceIcon type={nstype} /></ComponentCard>
-  ])}
-</>;
+<div>
+  {Object.values(NamespaceType)
+    .sort()
+    .map((nstype, idx) => (
+      <div key={idx}>
+        {idx > 0 && <br />}
+        <div>{nstype} namespace icon:</div>
+        <ComponentCard><NamespaceIcon type={nstype} /></ComponentCard>
+      </div>
+    ))}
+</div>;
 ```
