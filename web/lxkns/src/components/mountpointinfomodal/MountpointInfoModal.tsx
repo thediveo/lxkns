@@ -28,6 +28,9 @@ const useStyles = makeStyles((theme) => ({
     },
     content: {
         fontFamily: theme.typography.fontFamily,
+        fontSize: theme.typography.body1.fontSize,
+        paddingLeft: 0,
+        margin: `0 ${theme.spacing(2)}px`,
     },
 }))
 
@@ -62,6 +65,8 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
             {children}
             {mountpoint &&
                 <Dialog
+                    fullWidth
+                    maxWidth={false}
                     scroll="paper"
                     open={!!mountpoint}
                     onClose={handleClose}

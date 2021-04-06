@@ -28,6 +28,7 @@ import { NamespaceInfo } from 'components/namespaceinfo'
 import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
+import { MountpointInfoModalProvider } from 'components/mountpointinfomodal'
 
 
 /** Internal helper to filter "system(d)" processes. */
@@ -114,8 +115,8 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
  * @param namespace namespace information.
  */
 const NamespaceTreeItem = (
-    namespace: Namespace, 
-    showSystemProcesses: boolean, 
+    namespace: Namespace,
+    showSystemProcesses: boolean,
     DetailsFactory: NamespaceProcessTreeDetailFactory) => {
 
     // Get the leader processes and maybe some sub-processes (in different
@@ -137,7 +138,7 @@ const NamespaceTreeItem = (
         key={namespace.nsid}
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} />}
-    >{procs.concat(childnamespaces)}{DetailsFactory && <DetailsFactory namespace={namespace}/>}</TreeItem>
+    >{procs.concat(childnamespaces)}{DetailsFactory && <DetailsFactory namespace={namespace} />}</TreeItem>
 }
 
 /**
@@ -272,14 +273,16 @@ export const NamespaceProcessTree = ({ type, action, discovery, detailsFactory }
 
     return (
         (treeItemsMemo.length &&
-            <TreeView
-                className="namespacetree"
-                disableSelection={true}
-                onNodeToggle={handleToggle}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                expanded={expanded}
-            >{treeItemsMemo}</TreeView>
+            <MountpointInfoModalProvider>
+                <TreeView
+                    className="namespacetree"
+                    disableSelection={true}
+                    onNodeToggle={handleToggle}
+                    defaultCollapseIcon={<ExpandMoreIcon />}
+                    defaultExpandIcon={<ChevronRightIcon />}
+                    expanded={expanded}
+                >{treeItemsMemo}</TreeView>
+            </MountpointInfoModalProvider>
         ) || (Object.keys(discovery.namespaces).length &&
             <Typography variant="body1" color="textSecondary">
                 this Linux system doesn't have any "{nstype}" namespaces

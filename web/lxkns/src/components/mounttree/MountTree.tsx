@@ -22,6 +22,7 @@ import { Namespace } from 'models/lxkns'
 import { Button, makeStyles, Tooltip } from '@material-ui/core'
 import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
+import { useMountpointInfoModal } from 'components/mountpointinfomodal'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -61,6 +62,8 @@ const useStyles = makeStyles((theme) => ({
     },
     more: {
         marginLeft: '0.5em',
+        paddingTop: 0,
+        paddingBottom: 0,
         '&.MuiButton-root': {
             minWidth: 0,
         },
@@ -91,8 +94,11 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 
     const tooltip = `${mountpoint.hidden ? 'overmounted ' : ''}${unescapeMountPath(mountpoint.mountpoint)}`
 
-    const handleMore = () => {
-        
+    const setMountpoint = useMountpointInfoModal()
+
+    const handleMore = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation()
+        setMountpoint(mountpoint)
     }
 
     return (
@@ -110,10 +116,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
                 </span>
             </Tooltip>
-            <Button
-                className={classes.more}
-                onClick={handleMore}
-            >···</Button>
+            <Button className={classes.more} onClick={handleMore}>···</Button>
         </span>
     )
 }

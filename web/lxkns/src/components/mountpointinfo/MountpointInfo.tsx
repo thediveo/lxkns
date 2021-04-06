@@ -14,7 +14,6 @@
 
 import React from 'react'
 
-import clsx from 'clsx'
 import { MountPoint } from 'models/lxkns/mount'
 import { makeStyles } from '@material-ui/core'
 import MountIcon from 'icons/namespaces/Mount'
@@ -36,6 +35,7 @@ const useStyle = makeStyles((theme) => ({
     },
     propname: {
         gridColumn: '1/2',
+        whiteSpace: 'nowrap',
     },
     propvalue: {
         gridColumn: '2/3',
@@ -77,6 +77,15 @@ const NameValueRow = ({ name, value }: NameValueRowProps) => {
 }
 
 
+const Options = ({ options }: { options: string[] }) =>
+    <>{options
+        .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
+        .map((opt, idx) => [
+            idx > 0 && <>,<br /></>,
+            <>{opt}</>
+        ])
+    }</>
+
 export interface MountpointInfoProps {
     /** mount point information object. */
     mountpoint: MountPoint
@@ -110,8 +119,11 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         </div>
         <div className={classes.props}>
             <NameValueRow name={"device"} value={`${mountpoint.major}:${mountpoint.minor}`} />
-            <NameValueRow name={"filesystem type"} value={<><FilesystemtypeIcon fontSize="inherit"/>&nbsp;{mountpoint.fstype}</>} />
+            <NameValueRow name={"filesystem type"} value={<><FilesystemtypeIcon fontSize="inherit" />&nbsp;{mountpoint.fstype}</>} />
+            <NameValueRow name={"root"} value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
             <NameValueRow name={"options"} value={options} />
+            <NameValueRow name={"superblock options"} value={<Options options={mountpoint.superoptions.split(',')} />} />
+            <NameValueRow name={"source"} value={mountpoint.source} />
             <NameValueRow name={"ID"} value={mountpoint.mountid} />
             <NameValueRow name={"parent ID"} value={mountpoint.parentid} />
             <NameValueRow name={"tags"} value={tags} />
