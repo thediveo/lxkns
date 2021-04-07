@@ -28,15 +28,15 @@ import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined'
 
 const useStyles = makeStyles((theme) => ({
     mounttreedetails: {
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.1ex',
-        },
     },
     label: {
         display: 'inline-flex',
         fontWeight: theme.typography.fontWeightLight,
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.5ex',
+        },
     },
     mountpointpath: {
         fontWeight: theme.typography.fontWeightLight,
@@ -67,9 +67,17 @@ const useStyles = makeStyles((theme) => ({
     },
     childcount: {
         marginRight: '0.5em',
+        '& .MuiSvgIcon-root': {
+            top: '0.2ex',
+        },
     },
     fstype: {
         display: 'inline-flex',
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'text-top',
+            position: 'relative',
+            top: '0.3ex',
+        },
     },
     more: {
         marginLeft: '0.5em',
