@@ -14,7 +14,7 @@
 
 import React from 'react'
 
-import { compareMountPeers, MountPoint, MountPropagationGroup } from 'models/lxkns/mount'
+import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
 import { IconButton, makeStyles } from '@material-ui/core'
 import MountIcon from 'icons/namespaces/Mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
@@ -106,13 +106,27 @@ const Options = ({ options }: { options: string[] }) =>
     }</>
 
 
+/**
+ * Renders a list of (peer/master/slave) mount points, grouping them by mount
+ * namespace and then sorting and listing them by path per mount namespace. The
+ * grouping mount namespaces are sorted by their identifiers, that is, by their
+ * inode numbers.
+ */
 const GroupedPropagationMembers = (members: MountPoint[]) => {
+    // We use an object as our map (or dictionary): indexed by mount namespace
+    // identifier we then map to the list of mount points belonging to that
+    // particular mount namespace. As for the code: reduce() to the rescue,
+    // which gives us a nice and compact way to iterate over all mount points
+    // and building the index at the same time.
     const grouped = members.reduce((m, mountpoint) => ({
         ...m,
         [mountpoint.mountnamespace.nsid]: m[mountpoint.mountnamespace.nsid]
             ? m[mountpoint.mountnamespace.nsid].concat(mountpoint)
             : [mountpoint]
     }), {} as { [nsid: string]: MountPoint[] })
+    // Given the map we can now render the grouping mount namespace badges with
+    // short process info, as well as the per-mount namespace sorted list of
+    // (peer/master/slave) mount points.
     return Object.values(grouped)
         .sort((group1, group2) => group1[0].mountnamespace.nsid - group2[0].mountnamespace.nsid)
         .map(group => {
@@ -120,13 +134,16 @@ const GroupedPropagationMembers = (members: MountPoint[]) => {
             return <div key={mountns.nsid}>
                 <NamespaceBadge namespace={mountns} />
                 &nbsp;<ProcessInfo short process={mountns.ealdorman} />
-                <ul>{group
-                    .sort(compareMountPeers)
-                    .map(peermountpoint => <li key={peermountpoint.mountpoint}>
-                        {peermountpoint.hidden ? '(hidden) ' : ''}
-                        {peermountpoint.mountpoint}
-                        </li>)
-                }</ul>
+                <ul style={{ margin: 0 }}>{/* FIXME: proper styling */}
+                    {group
+                        .sort(compareMountPeers)
+                        .map(peermountpoint =>
+                            <li key={peermountpoint.mountpoint}>{/* FIXME: proper styling */}
+                                {peermountpoint.hidden ? '(hidden) ' : ''}
+                                {peermountpoint.mountpoint}
+                            </li>)
+                    }
+                </ul>
             </div>
         })
 }
@@ -162,14 +179,22 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         {mountpoint.parent && <> ~ {mountpoint.parent.mountpoint}</>}
     </>
 
+    // The mount point propagation peergroup actually does not only contain
+    // peers but also slaves. Here, we want to only see true peers that aren't
+    // slaves. And especially we don't want to see ourself.
     const peers = mountpoint.peergroup && mountpoint.peergroup.members
-        .filter(peer => peer !== mountpoint && peer.peergroup === mountpoint.peergroup)
+        .filter(member => member !== mountpoint && member.peergroup === mountpoint.peergroup)
 
+    // The peergroup acting as our master(s) again not only contains masters
+    // (=true peers), but also us and other slaves. So we need to filter us and
+    // the other slaves out, keeping only the master (peers).
     const masters = mountpoint.mastergroup && mountpoint.mastergroup.members
-        .filter(master => master !== mountpoint && master.peergroup === mountpoint.mastergroup)
+        .filter(member => member !== mountpoint && member.peergroup === mountpoint.mastergroup)
 
+    // And finally for the slaves: these are those members of our peergroup
+    // which are not true peers.
     const slaves = mountpoint.peergroup && mountpoint.peergroup.members
-        .filter(slave => slave !== mountpoint && slave.mastergroup === mountpoint.peergroup)
+        .filter(member => member !== mountpoint && member.mastergroup === mountpoint.peergroup)
 
     return <>
         <div className={classes.mountpath}>
@@ -177,8 +202,14 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             &nbsp;{mountpoint.mountpoint}
         </div>
         <div className={classes.props}>
-            <NameValueRow name={"device"} value={`${mountpoint.major}:${mountpoint.minor}`} />
-            <NameValueRow name={"filesystem type"} value={<>
+            <NameValueRow
+                name={'mount namespace'}
+                value={<>
+                    <NamespaceBadge namespace={mountpoint.mountnamespace} /> <ProcessInfo short process={mountpoint.mountnamespace.ealdorman} />
+                </>}
+            />
+            <NameValueRow name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
+            <NameValueRow name="filesystem type" value={<>
                 {mountpoint.fstype}
                 &nbsp;<span className={classes.extdoc}>
                     <IconButton
@@ -193,25 +224,26 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
                 </span>
             </>}
             />
-            <NameValueRow name={"root"} value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
-            <NameValueRow name={"options"} value={options} />
-            <NameValueRow name={"superblock options"} value={<Options options={mountpoint.superoptions.split(',')} />} />
-            <NameValueRow name={"source"} value={mountpoint.source} />
+            <NameValueRow name="root" value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
+            <NameValueRow name="options" value={options} />
+            <NameValueRow name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
+            <NameValueRow name="source" value={mountpoint.source} />
+            {mountpoint.tags['unbindable'] && <NameValueRow name="propagation type" value="unbindable" />}
             {peers && peers.length > 0 && <NameValueRow
-                name={"peers"}
+                name="peer mounts"
                 value={GroupedPropagationMembers(peers)}
             />}
             {masters && masters.length > 0 && <NameValueRow
-                name={"masters"}
+                name="master peer mounts"
                 value={GroupedPropagationMembers(masters)}
             />}
             {slaves && slaves.length > 0 && <NameValueRow
-                name={"slaves"}
+                name="slave mounts"
                 value={GroupedPropagationMembers(slaves)}
             />}
-            <NameValueRow name={"ID"} value={mountpoint.mountid} />
-            <NameValueRow name={"parent ID"} value={parent} />
-            <NameValueRow name={"tags"} value={tags} />
+            <NameValueRow name="ID" value={mountpoint.mountid} />
+            <NameValueRow name="parent ID" value={parent} />
+            <NameValueRow name="tags" value={tags} />
         </div>
     </>
 }

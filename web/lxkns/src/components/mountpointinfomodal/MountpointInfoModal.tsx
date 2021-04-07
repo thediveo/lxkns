@@ -81,7 +81,7 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
                     onClose={handleClose}
                 >
                     <DialogTitle className={classes.title}>
-                        {mountpoint.hidden && 'Hidden '}
+                        {mountpoint.hidden && 'Hidden '}{/* FIXME: */}
                         Mount Point
                         <IconButton
                             aria-label="close"

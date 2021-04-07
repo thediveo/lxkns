@@ -155,11 +155,14 @@ export const fromjson = (discoverydata: any): Discovery => {
     Object.values(discovery.mounts).forEach(mountpathmap => {
         Object.values(mountpathmap).forEach(mountpath => {
             mountpath.mounts.forEach(mountpoint => {
+                // set up the parent-child relation object references.
                 const parent = mountpointidmap[mountpoint.parentid.toString()]
                 if (parent) {
                     mountpoint.parent = parent
                     parent.children.push(mountpoint)
                 }
+                // create the peer group if necessary and then set up the peer
+                // group membership.
                 const peergroupid = mountpoint.tags['shared']
                 if (peergroupid) {
                     var peergroup = mountgroups[peergroupid]
@@ -170,6 +173,10 @@ export const fromjson = (discoverydata: any): Discovery => {
                     peergroup.members.push(mountpoint)
                     mountpoint.peergroup = peergroup
                 }
+                // create the peer group with our master(s) if necessary and
+                // then set up our slave membership in the peer group. This
+                // means that the peer group will contain both our masters
+                // (which are peers to themselves) as well as their slaves.
                 const mastergroupid = mountpoint.tags['master']
                 if (mastergroupid) {
                     var mastergroup = mountgroups[mastergroupid]
