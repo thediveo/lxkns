@@ -35,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     label: {
+        display: 'inline-flex',
         fontWeight: theme.typography.fontWeightLight,
     },
     mountpointpath: {
@@ -66,6 +67,9 @@ const useStyles = makeStyles((theme) => ({
     },
     childcount: {
         marginRight: '0.5em',
+    },
+    fstype: {
+        display: 'inline-flex',
     },
     more: {
         marginLeft: '0.5em',
@@ -118,7 +122,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
             {!mountpoint.hidden && childmountcount > 0 &&
                 <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />{childmountcount}]</span>}
             <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
-                <span>
+                <span className={classes.fstype}>
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
                 </span>
             </Tooltip>
