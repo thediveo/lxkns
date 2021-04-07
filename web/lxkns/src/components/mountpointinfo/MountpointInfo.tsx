@@ -14,12 +14,14 @@
 
 import React from 'react'
 
-import { MountPoint } from 'models/lxkns/mount'
+import { compareMountPeers, MountPoint, MountPropagationGroup } from 'models/lxkns/mount'
 import { IconButton, makeStyles } from '@material-ui/core'
 import MountIcon from 'icons/namespaces/Mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
 import { filesystemTypeLink } from './fslinks'
 import MenuBookIcon from '@material-ui/icons/MenuBook'
+import { NamespaceBadge } from 'components/namespacebadge'
+import ProcessInfo from 'components/processinfo'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -97,11 +99,37 @@ const NameValueRow = ({ name, value }: NameValueRowProps) => {
 const Options = ({ options }: { options: string[] }) =>
     <>{options
         .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
-        .map((opt, idx) => [
-            idx > 0 && <>,<br /></>,
-            <>{opt}</>
-        ])
+        .map((opt, idx) => <>
+            {idx > 0 && <>,<br /></>}
+            {opt}
+        </>)
     }</>
+
+
+const GroupedPropagationMembers = (members: MountPoint[]) => {
+    const grouped = members.reduce((m, mountpoint) => ({
+        ...m,
+        [mountpoint.mountnamespace.nsid]: m[mountpoint.mountnamespace.nsid]
+            ? m[mountpoint.mountnamespace.nsid].concat(mountpoint)
+            : [mountpoint]
+    }), {} as { [nsid: string]: MountPoint[] })
+    return Object.values(grouped)
+        .sort((group1, group2) => group1[0].mountnamespace.nsid - group2[0].mountnamespace.nsid)
+        .map(group => {
+            const mountns = group[0].mountnamespace
+            return <div key={mountns.nsid}>
+                <NamespaceBadge namespace={mountns} />
+                &nbsp;<ProcessInfo short process={mountns.ealdorman} />
+                <ul>{group
+                    .sort(compareMountPeers)
+                    .map(peermountpoint => <li key={peermountpoint.mountpoint}>
+                        {peermountpoint.hidden ? '(hidden) ' : ''}
+                        {peermountpoint.mountpoint}
+                        </li>)
+                }</ul>
+            </div>
+        })
+}
 
 export interface MountpointInfoProps {
     /** mount point information object. */
@@ -129,6 +157,20 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             <>{tagname}: {tagvalue}</>
         ])
 
+    const parent = <>
+        {mountpoint.parentid}
+        {mountpoint.parent && <> ~ {mountpoint.parent.mountpoint}</>}
+    </>
+
+    const peers = mountpoint.peergroup && mountpoint.peergroup.members
+        .filter(peer => peer !== mountpoint && peer.peergroup === mountpoint.peergroup)
+
+    const masters = mountpoint.mastergroup && mountpoint.mastergroup.members
+        .filter(master => master !== mountpoint && master.peergroup === mountpoint.mastergroup)
+
+    const slaves = mountpoint.peergroup && mountpoint.peergroup.members
+        .filter(slave => slave !== mountpoint && slave.mastergroup === mountpoint.peergroup)
+
     return <>
         <div className={classes.mountpath}>
             {mountpoint.hidden ? <HiddenmountIcon fontSize="inherit" /> : <MountIcon fontSize="inherit" />}
@@ -155,8 +197,20 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             <NameValueRow name={"options"} value={options} />
             <NameValueRow name={"superblock options"} value={<Options options={mountpoint.superoptions.split(',')} />} />
             <NameValueRow name={"source"} value={mountpoint.source} />
+            {peers && peers.length > 0 && <NameValueRow
+                name={"peers"}
+                value={GroupedPropagationMembers(peers)}
+            />}
+            {masters && masters.length > 0 && <NameValueRow
+                name={"masters"}
+                value={GroupedPropagationMembers(masters)}
+            />}
+            {slaves && slaves.length > 0 && <NameValueRow
+                name={"slaves"}
+                value={GroupedPropagationMembers(slaves)}
+            />}
             <NameValueRow name={"ID"} value={mountpoint.mountid} />
-            <NameValueRow name={"parent ID"} value={mountpoint.parentid} />
+            <NameValueRow name={"parent ID"} value={parent} />
             <NameValueRow name={"tags"} value={tags} />
         </div>
     </>

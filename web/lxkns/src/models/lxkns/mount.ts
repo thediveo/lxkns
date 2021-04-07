@@ -12,8 +12,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { Namespace } from "./model"
+
 /**
- * map of mount namespace identifiers (inode numbers only) mapping to the
+ * Map of mount namespace identifiers (inode numbers only) mapping to the
  * individual per-mount namespace mount path maps.
  */
 export interface NamespacedMountPathMaps {
@@ -21,7 +23,7 @@ export interface NamespacedMountPathMaps {
 }
 
 /**
- * map of mount paths mapping to one or more mount points each.
+ * Map of mount paths mapping to one or more mount points each.
  */
 export interface MountPathMap {
     [path: string]: MountPath
@@ -54,11 +56,37 @@ export interface MountPath {
 }
 
 /**
+ * The members of a mount propagation group, regardless of their hierarchical
+ * role. As a mount point can take on multiple roles simultaneously, the role
+ * with respect to a specific group can be determined from the mount point
+ * itself, not from the group (this might be slightly unexpected, but this way
+ * we don't need to store roles with the group items themselves).
+ */
+export interface MountPropagationGroup {
+    /** unique ID of mount propagation group. */
+    id: number
+    /** 
+     * the members of the mount propagation group, regardless of their roles.
+     */
+    members: MountPoint[]
+}
+
+/**
+ * Map of mount point propagation groups (list of mount points in group),
+ * indexed by their unique group IDs.
+ */
+export interface MountGroupMap {
+    [id: string]: MountPropagationGroup
+}
+
+/**
  * Linux-kernel supplied information about an individual mount point.
  * Additionally features lxkns-determined visibility and mount point object
  * hierarchy references.
  */
 export interface MountPoint {
+    /** the mount namespace we belong to. */
+    mountnamespace: Namespace
     /** visibility of this mount point in the VFS. (lxkns supplied) */
     hidden: boolean
     /** unambiguous ID of this mount; IDs can be reused after unmounting. */
@@ -96,6 +124,11 @@ export interface MountPoint {
     source: string
     /** per-superblock options, see mount(2). */
     superoptions: string
+
+    /** peer group (identified by "peer:#" tag). */
+    peergroup?: MountPropagationGroup
+    /** our master group (identified by "master:#" tag), if any. */
+    mastergroup?: MountPropagationGroup
 }
 
 /**
@@ -212,11 +245,18 @@ export const unescapeMountPath = (path: string) =>
  * @param mp2 another mount path object
  */
 export const compareMountPaths = (mp1: MountPath, mp2: MountPath) =>
-    mp1.path.localeCompare(mp2.path, undefined, {numeric: true})
+    mp1.path.localeCompare(mp2.path, undefined, { numeric: true })
 
 export const compareMounts = (mp1: MountPoint, mp2: MountPoint) => {
     if (mp1.hidden !== mp2.hidden) {
         return mp1.hidden ? -1 : 1
     }
-    return mp1.mountpoint.localeCompare(mp2.mountpoint, undefined, {numeric: true})
+    return mp1.mountpoint.localeCompare(mp2.mountpoint, undefined, { numeric: true })
+}
+
+export const compareMountPeers = (mp1: MountPoint, mp2: MountPoint) => {
+    const order = mp1.mountnamespace.nsid - mp2.mountnamespace.nsid
+    return order !== 0
+        ? order
+        : mp1.mountpoint.localeCompare(mp2.mountpoint)
 }

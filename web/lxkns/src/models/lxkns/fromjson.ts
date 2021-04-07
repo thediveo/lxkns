@@ -13,7 +13,7 @@
 // under the License.
 
 import { Namespace, NamespaceType, Process, Discovery } from './model'
-import { insertCommonChildPrefixMountPaths, MountPath, MountPoint } from './mount'
+import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -116,7 +116,9 @@ export const fromjson = (discoverydata: any): Discovery => {
     // the references in the hierarchy of mount points. For mount points,
     // references are allowed to cross mount namespaces.
     const mountpointidmap: {[mountpointid: string]: MountPoint} = {}
-    Object.values(discovery.mounts).forEach(mountpathmap => {
+    const mountgroups: MountGroupMap = {}
+    Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
+        const mountns = discovery.namespaces[mntnsid]
         // In order to later resolve the hierarchical mount point references
         // within a single mount namespace we need to first build a map from
         // mount path identifiers to mount path objects.
@@ -131,6 +133,7 @@ export const fromjson = (discoverydata: any): Discovery => {
             // "fix" the mount paths when they contain escaped characters, such
             // as \040 for space.
             mountpath.mounts.forEach(mountpoint => {
+                mountpoint.mountnamespace = mountns
                 mountpointidmap[mountpoint.mountid.toString()] = mountpoint
                 mountpoint.children = []
             })
@@ -147,7 +150,8 @@ export const fromjson = (discoverydata: any): Discovery => {
     })
 
     // With the map from mount point IDs to mount point objects finally complete
-    // we can now resolve the hierarchical references.
+    // we can now resolve the hierarchical references. And while we're at it, we
+    // also build our map of mount point propagation groups.
     Object.values(discovery.mounts).forEach(mountpathmap => {
         Object.values(mountpathmap).forEach(mountpath => {
             mountpath.mounts.forEach(mountpoint => {
@@ -155,6 +159,26 @@ export const fromjson = (discoverydata: any): Discovery => {
                 if (parent) {
                     mountpoint.parent = parent
                     parent.children.push(mountpoint)
+                }
+                const peergroupid = mountpoint.tags['shared']
+                if (peergroupid) {
+                    var peergroup = mountgroups[peergroupid]
+                    if (!peergroup) {
+                        peergroup = {id: parseInt(peergroupid), members: []}
+                        mountgroups[peergroupid] = peergroup
+                    }
+                    peergroup.members.push(mountpoint)
+                    mountpoint.peergroup = peergroup
+                }
+                const mastergroupid = mountpoint.tags['master']
+                if (mastergroupid) {
+                    var mastergroup = mountgroups[mastergroupid]
+                    if (!mastergroup) {
+                        mastergroup = {id: parseInt(mastergroupid), members: []}
+                        mountgroups[mastergroupid] = mastergroup
+                    }
+                    mastergroup.members.push(mountpoint)
+                    mountpoint.mastergroup = mastergroup
                 }
             })
         })

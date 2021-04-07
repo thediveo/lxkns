@@ -15,4 +15,5 @@ export const mountpoint: MountPoint = {
     tags: {'shared': '123', 'master': '42'},
     children: [],
     parent: null,
+    mountnamespace: null,
 }
