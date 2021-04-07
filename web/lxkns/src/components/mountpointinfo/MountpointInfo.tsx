@@ -15,12 +15,11 @@
 import React from 'react'
 
 import { MountPoint } from 'models/lxkns/mount'
-import { makeStyles } from '@material-ui/core'
+import { IconButton, makeStyles } from '@material-ui/core'
 import MountIcon from 'icons/namespaces/Mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
-import FilesystemtypeIcon from 'icons/Filesystemtype'
 import { filesystemTypeLink } from './fslinks'
-import { ExtLink } from 'components/extlink'
+import MenuBookIcon from '@material-ui/icons/MenuBook'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -38,10 +37,17 @@ const useStyle = makeStyles((theme) => ({
     propname: {
         gridColumn: '1/2',
         whiteSpace: 'nowrap',
+        alignSelf: 'baseline',
+        lineHeight: theme.typography.body1.lineHeight,
     },
     propvalue: {
         gridColumn: '2/3',
         fontWeight: theme.typography.fontWeightLight,
+        alignSelf: 'baseline',
+        lineHeight: theme.typography.body1.lineHeight,
+        '& .MuiIconButton-root': {
+            verticalAlign: 'bottom',
+        },
     },
     fullwidthpropvalue: {
         gridColumn: '1/3',
@@ -56,7 +62,16 @@ const useStyle = makeStyles((theme) => ({
             position: 'relative',
             top: '0.2ex',
         },
-    }
+    },
+    extdoc: {
+        position: 'relative',
+        width: 0,
+        height: 0,
+        '& > *': {
+            position: 'absolute',
+            top: 'calc(-50% + 0.2ex)',
+        }
+    },
 }))
 
 
@@ -122,9 +137,20 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         <div className={classes.props}>
             <NameValueRow name={"device"} value={`${mountpoint.major}:${mountpoint.minor}`} />
             <NameValueRow name={"filesystem type"} value={<>
-                <FilesystemtypeIcon fontSize="inherit" />
-                &nbsp;<ExtLink href={filesystemTypeLink(mountpoint.fstype)} iconposition="after">{mountpoint.fstype}</ExtLink>
-            </>} />
+                {mountpoint.fstype}
+                &nbsp;<span className={classes.extdoc}>
+                    <IconButton
+                        size="small"
+                        aria-label="external documentation"
+                        href={filesystemTypeLink(mountpoint.fstype)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <MenuBookIcon />
+                    </IconButton>
+                </span>
+            </>}
+            />
             <NameValueRow name={"root"} value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
             <NameValueRow name={"options"} value={options} />
             <NameValueRow name={"superblock options"} value={<Options options={mountpoint.superoptions.split(',')} />} />

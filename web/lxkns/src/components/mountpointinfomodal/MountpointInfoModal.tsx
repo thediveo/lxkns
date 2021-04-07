@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, makeStyles } from '@material-ui/core'
+import { Dialog, DialogContent, DialogTitle, IconButton, makeStyles } from '@material-ui/core'
 import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
 import { MountPoint } from 'models/lxkns/mount'
 import React, { useContext, useState } from 'react'
@@ -20,17 +20,25 @@ import CloseIcon from '@material-ui/icons/Close'
 
 
 const useStyles = makeStyles((theme) => ({
+    dialog: {
+        marginLeft: 0,
+        marginRight: 0,
+    },
     close: {
         position: 'absolute',
         right: theme.spacing(1),
         top: theme.spacing(1),
         color: theme.palette.grey[500],
     },
+    title: {
+        paddingLeft: theme.spacing(2),
+        paddingRight: theme.spacing(2),
+    },
     content: {
+        margin: 0,
+        paddingLeft: theme.spacing(2),
         fontFamily: theme.typography.fontFamily,
         fontSize: theme.typography.body1.fontSize,
-        paddingLeft: 0,
-        margin: `0 ${theme.spacing(2)}px`,
     },
 }))
 
@@ -65,13 +73,14 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
             {children}
             {mountpoint &&
                 <Dialog
+                    className={classes.dialog}
                     fullWidth
                     maxWidth={false}
                     scroll="paper"
                     open={!!mountpoint}
                     onClose={handleClose}
                 >
-                    <DialogTitle>
+                    <DialogTitle className={classes.title}>
                         {mountpoint.hidden && 'Hidden '}
                         Mount Point
                         <IconButton
@@ -85,11 +94,6 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
                     <DialogContent dividers className={classes.content}>
                         <MountpointInfo mountpoint={mountpoint} />
                     </DialogContent>
-                    <DialogActions>
-                        <Button autoFocus onClick={handleClose} color="primary">
-                            Close
-                        </Button>
-                    </DialogActions>
                 </Dialog>
             }
         </MountpointInfoModalContext.Provider>

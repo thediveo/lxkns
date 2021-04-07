@@ -19,10 +19,11 @@ import { TreeItem } from '@material-ui/lab'
 import { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
 import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace } from 'models/lxkns'
-import { Button, makeStyles, Tooltip } from '@material-ui/core'
+import { Button, lighten, makeStyles, Tooltip } from '@material-ui/core'
 import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
 import { useMountpointInfoModal } from 'components/mountpointinfomodal'
+import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -33,32 +34,38 @@ const useStyles = makeStyles((theme) => ({
             top: '0.1ex',
         },
     },
+    label: {
+        fontWeight: theme.typography.fontWeightLight,
+    },
     mountpointpath: {
         fontWeight: theme.typography.fontWeightLight,
-        border: `1px solid ${theme.palette.text.hint}`,
         borderRadius: '0.3ex',
-        padding: '0 0.2em',
+        marginRight: '0.5em',
     },
     rootpath: {
-        border: `1px solid ${theme.palette.text.hint}`,
-        borderRadius: '0.3ex',
-        padding: '0 0.2em',
         fontWeight: theme.typography.fontWeightBold,
+        padding: '0 0.2em',
+        background: lighten(theme.palette.namespace.mnt, 0.2),
     },
     hiddenmountpoint: {
         fontWeight: theme.typography.fontWeightLight,
         color: theme.palette.text.disabled,
         '& $mountpointpath': {
             textDecoration: 'line-through solid',
-            borderStyle: 'dotted',
         },
     },
     notamountpoint: {
         fontWeight: theme.typography.fontWeightLight,
         fontStyle: 'italic',
+        marginLeft: '0.2em',
+        marginRight: '0.7em',
         '&$mountpointpath': {
             border: 'none',
+            background: 'none',
         }
+    },
+    childcount: {
+        marginRight: '0.5em',
     },
     more: {
         marginLeft: '0.5em',
@@ -102,17 +109,16 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
     }
 
     return (
-        <span className={clsx(mountpoint.hidden && classes.hiddenmountpoint)}>
+        <span className={clsx(classes.label, mountpoint.hidden && classes.hiddenmountpoint)}>
             <Tooltip title={tooltip}>
                 <span>
                     <span className={clsx(classes.mountpointpath, tail === '/' && classes.rootpath)}>{unescapeMountPath(tail)}</span>
                 </span>
             </Tooltip>
             {!mountpoint.hidden && childmountcount > 0 &&
-                <> [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]</>}
+                <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />{childmountcount}]</span>}
             <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
                 <span>
-                    {' '}
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
                 </span>
             </Tooltip>
@@ -133,9 +139,10 @@ const MountPathLabel = ({ tail, childmountcount }: MountPathLabelProps) => {
     const classes = useStyles()
 
     return (
-        <span>
+        <span className={classes.label}>
+            <FolderOutlinedIcon fontSize="inherit" color="disabled" />
             <span className={clsx(classes.notamountpoint, classes.mountpointpath)}>{tail}</span>
-            {' '}[<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]
+            [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]
         </span>
     )
 }
