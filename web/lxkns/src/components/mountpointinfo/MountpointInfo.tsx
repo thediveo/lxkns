@@ -14,14 +14,14 @@
 
 import React from 'react'
 
-import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
-import { IconButton, makeStyles } from '@material-ui/core'
-import MountIcon from 'icons/namespaces/Mount'
-import HiddenmountIcon from 'icons/Hiddenmount'
+import { MountPoint } from 'models/lxkns/mount'
+import { IconButton, makeStyles, Tooltip } from '@material-ui/core'
 import { filesystemTypeLink } from './fslinks'
 import MenuBookIcon from '@material-ui/icons/MenuBook'
 import { NamespaceBadge } from 'components/namespacebadge'
 import ProcessInfo from 'components/processinfo'
+import { MountpointPath } from 'components/mountpointpath'
+import { GroupedPropagationMembers } from 'components/groupedpropagationmembers/GroupedPropagationMembers'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -30,11 +30,6 @@ const useStyle = makeStyles((theme) => ({
         gridTemplateColumns: 'auto 1fr',
         columnGap: theme.spacing(2),
         rowGap: theme.spacing(1) / 2,
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'baseline',
-            position: 'relative',
-            top: '0.1ex',
-        },
     },
     propname: {
         gridColumn: '1/2',
@@ -47,23 +42,14 @@ const useStyle = makeStyles((theme) => ({
         fontWeight: theme.typography.fontWeightLight,
         alignSelf: 'baseline',
         lineHeight: theme.typography.body1.lineHeight,
-        '& .MuiIconButton-root': {
-            verticalAlign: 'bottom',
-        },
     },
     fullwidthpropvalue: {
         gridColumn: '1/3',
     },
-    mountpath: {
+    mountpathtitle: {
         fontSize: '120%',
         fontWeight: theme.typography.fontWeightLight,
         marginBottom: theme.spacing(1),
-
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'baseline',
-            position: 'relative',
-            top: '0.2ex',
-        },
     },
     extdoc: {
         position: 'relative',
@@ -105,48 +91,6 @@ const Options = ({ options }: { options: string[] }) =>
         </>)
     }</>
 
-
-/**
- * Renders a list of (peer/master/slave) mount points, grouping them by mount
- * namespace and then sorting and listing them by path per mount namespace. The
- * grouping mount namespaces are sorted by their identifiers, that is, by their
- * inode numbers.
- */
-const GroupedPropagationMembers = (members: MountPoint[]) => {
-    // We use an object as our map (or dictionary): indexed by mount namespace
-    // identifier we then map to the list of mount points belonging to that
-    // particular mount namespace. As for the code: reduce() to the rescue,
-    // which gives us a nice and compact way to iterate over all mount points
-    // and building the index at the same time.
-    const grouped = members.reduce((m, mountpoint) => ({
-        ...m,
-        [mountpoint.mountnamespace.nsid]: m[mountpoint.mountnamespace.nsid]
-            ? m[mountpoint.mountnamespace.nsid].concat(mountpoint)
-            : [mountpoint]
-    }), {} as { [nsid: string]: MountPoint[] })
-    // Given the map we can now render the grouping mount namespace badges with
-    // short process info, as well as the per-mount namespace sorted list of
-    // (peer/master/slave) mount points.
-    return Object.values(grouped)
-        .sort((group1, group2) => group1[0].mountnamespace.nsid - group2[0].mountnamespace.nsid)
-        .map(group => {
-            const mountns = group[0].mountnamespace
-            return <div key={mountns.nsid}>
-                <NamespaceBadge namespace={mountns} />
-                &nbsp;<ProcessInfo short process={mountns.ealdorman} />
-                <ul style={{ margin: 0 }}>{/* FIXME: proper styling */}
-                    {group
-                        .sort(compareMountPeers)
-                        .map(peermountpoint =>
-                            <li key={peermountpoint.mountpoint}>{/* FIXME: proper styling */}
-                                {peermountpoint.hidden ? '(hidden) ' : ''}
-                                {peermountpoint.mountpoint}
-                            </li>)
-                    }
-                </ul>
-            </div>
-        })
-}
 
 export interface MountpointInfoProps {
     /** mount point information object. */
@@ -197,9 +141,8 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         .filter(member => member !== mountpoint && member.mastergroup === mountpoint.peergroup)
 
     return <>
-        <div className={classes.mountpath}>
-            {mountpoint.hidden ? <HiddenmountIcon fontSize="inherit" /> : <MountIcon fontSize="inherit" />}
-            &nbsp;{mountpoint.mountpoint}
+        <div className={classes.mountpathtitle}>
+            <MountpointPath drum="always" plainpath={true} mountpoint={mountpoint} />
         </div>
         <div className={classes.props}>
             <NameValueRow
@@ -212,15 +155,18 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             <NameValueRow name="filesystem type" value={<>
                 {mountpoint.fstype}
                 &nbsp;<span className={classes.extdoc}>
-                    <IconButton
-                        size="small"
-                        aria-label="external documentation"
-                        href={filesystemTypeLink(mountpoint.fstype)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <MenuBookIcon />
-                    </IconButton>
+                    <Tooltip title="open external filesystem documentation">
+                        <IconButton
+                            color="primary"
+                            size="small"
+                            aria-label="external documentation"
+                            href={filesystemTypeLink(mountpoint.fstype)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <MenuBookIcon />
+                        </IconButton>
+                    </Tooltip>
                 </span>
             </>}
             />
@@ -231,15 +177,15 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             {mountpoint.tags['unbindable'] && <NameValueRow name="propagation type" value="unbindable" />}
             {peers && peers.length > 0 && <NameValueRow
                 name="peer mounts"
-                value={GroupedPropagationMembers(peers)}
+                value={<GroupedPropagationMembers members={peers} />}
             />}
             {masters && masters.length > 0 && <NameValueRow
                 name="master peer mounts"
-                value={GroupedPropagationMembers(masters)}
+                value={<GroupedPropagationMembers members={masters} />}
             />}
             {slaves && slaves.length > 0 && <NameValueRow
                 name="slave mounts"
-                value={GroupedPropagationMembers(slaves)}
+                value={<GroupedPropagationMembers members={slaves} />}
             />}
             <NameValueRow name="ID" value={mountpoint.mountid} />
             <NameValueRow name="parent ID" value={parent} />
