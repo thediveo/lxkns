@@ -138,7 +138,10 @@ const NamespaceTreeItem = (
         key={namespace.nsid}
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} />}
-    >{procs.concat(childnamespaces)}{DetailsFactory && <DetailsFactory namespace={namespace} />}</TreeItem>
+    >{[
+        ...procs.concat(childnamespaces), 
+        ...(DetailsFactory ? [<DetailsFactory namespace={namespace} />] : [])
+    ]}</TreeItem>
 }
 
 /**
