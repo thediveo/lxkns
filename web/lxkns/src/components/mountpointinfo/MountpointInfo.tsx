@@ -138,7 +138,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
         mountpoint.tags['shared'] && 'shared',
         mountpoint.tags['master'] && 'slave',
         mountpoint.tags['unbindable'] && 'unbindable',
-        !(mountpoint.tags['shared'] || mountpoint.tags['naster'] || mountpoint.tags['unbindable']) && 'private',
+        !(mountpoint.tags['shared'] || mountpoint.tags['master'] || mountpoint.tags['unbindable']) && 'private',
     ].filter(propmode => propmode)
 
     // The mount point propagation peergroup actually does not only contain

@@ -24,6 +24,9 @@ import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
 import { useMountpointInfoModal } from 'components/mountpointinfomodal'
 import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined'
+import PeerIcon from 'icons/propagation/Peer'
+import SlaveIcon from 'icons/propagation/Slave'
+import UnbindableIcon from 'icons/propagation/Unbindable'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -79,6 +82,14 @@ const useStyles = makeStyles((theme) => ({
             top: '0.3ex',
         },
     },
+    propmode: {
+        marginLeft: '0.5em',
+        '& .MuiSvgIcon-root': {
+            verticalAlign: 'baseline',
+            position: 'relative',
+            top: '0.3ex',
+        },
+    },
     more: {
         marginLeft: '0.5em',
         paddingTop: 0,
@@ -115,6 +126,21 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 
     const setMountpoint = useMountpointInfoModal()
 
+    const propagationmodes = [
+        mountpoint.tags['shared'] &&
+        <Tooltip title="propagation between peers and to slaves">
+            <span className={classes.propmode} ><PeerIcon fontSize="inherit" /></span>
+        </Tooltip>,
+        mountpoint.tags['master'] &&
+        <Tooltip title="propagation from master(s)">
+            <span className={classes.propmode} ><SlaveIcon fontSize="inherit" /></span>
+        </Tooltip>,
+        mountpoint.tags['unbindable'] &&
+        <Tooltip title="unbindable mount point">
+            <span className={classes.propmode} ><UnbindableIcon fontSize="inherit" /></span>
+        </Tooltip>,
+    ].filter(propmode => propmode)
+
     const handleMore = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation()
         setMountpoint(mountpoint)
@@ -134,6 +160,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
                 </span>
             </Tooltip>
+            {propagationmodes}
             <Button className={classes.more} onClick={handleMore}>···</Button>
         </span>
     )
