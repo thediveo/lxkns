@@ -161,7 +161,9 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
                 </span>
             </Tooltip>
             {propagationmodes}
-            <Button className={classes.more} onClick={handleMore}>···</Button>
+            <Tooltip title="mountpoint details">
+                <Button className={classes.more} onClick={handleMore}>···</Button>
+            </Tooltip>
         </span>
     )
 }
