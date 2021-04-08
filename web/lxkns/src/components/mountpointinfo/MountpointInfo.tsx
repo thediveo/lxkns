@@ -18,10 +18,11 @@ import { MountPoint } from 'models/lxkns/mount'
 import { IconButton, makeStyles, Tooltip } from '@material-ui/core'
 import { filesystemTypeLink } from './fslinks'
 import MenuBookIcon from '@material-ui/icons/MenuBook'
-import { NamespaceBadge } from 'components/namespacebadge'
-import ProcessInfo from 'components/processinfo'
 import { MountpointPath } from 'components/mountpointpath'
 import { GroupedPropagationMembers } from 'components/groupedpropagationmembers/GroupedPropagationMembers'
+import { NamespaceMap } from 'models/lxkns/model'
+import { MountpointRoot } from 'components/mountpointroot'
+import { NamespaceInfo } from 'components/namespaceinfo'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -95,12 +96,17 @@ const Options = ({ options }: { options: string[] }) =>
 export interface MountpointInfoProps {
     /** mount point information object. */
     mountpoint: MountPoint
+    /** 
+     * map of all discovered namespaces for mountpoint namespace root path
+     * lookups.
+     */
+    namespaces: NamespaceMap
 }
 
 /**
  * Renders detail information about a specific mount point.
  */
-export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
+export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) => {
 
     const classes = useStyle()
 
@@ -111,11 +117,14 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
             <>{opt}</>
         ])
 
+    // Please note: mount point tags cannot contain spaces in their names or
+    // values, as spaces are used as separators between tags. Values are
+    // optional.
     const tags = Object.entries(mountpoint.tags)
         .sort(([tagname1,], [tagname2,]) => tagname1.localeCompare(tagname2, undefined, { numeric: true }))
         .map(([tagname, tagvalue], idx) => [
             idx > 0 && <br />,
-            <>{tagname}: {tagvalue}</>
+            <>{tagname}{tagvalue ? `:${tagvalue}` : ''}</>
         ])
 
     const parent = <>
@@ -147,9 +156,7 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
         <div className={classes.props}>
             <NameValueRow
                 name={'mount namespace'}
-                value={<>
-                    <NamespaceBadge namespace={mountpoint.mountnamespace} /> <ProcessInfo short process={mountpoint.mountnamespace.ealdorman} />
-                </>}
+                value={<NamespaceInfo shortprocess={true} namespace={mountpoint.mountnamespace} />}
             />
             <NameValueRow name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
             <NameValueRow name="filesystem type" value={<>
@@ -170,7 +177,7 @@ export const MountpointInfo = ({ mountpoint }: MountpointInfoProps) => {
                 </span>
             </>}
             />
-            <NameValueRow name="root" value={mountpoint.root} />{/* TODO: detect namespaces, render using badge */}
+            <NameValueRow name="root" value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />} />
             <NameValueRow name="options" value={options} />
             <NameValueRow name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
             <NameValueRow name="source" value={mountpoint.source} />

@@ -172,7 +172,12 @@ export interface NamespaceProcessTreeProps {
  *
  * @param type type of namespace.
  */
-export const NamespaceProcessTree = ({ type, action, discovery, detailsFactory }: NamespaceProcessTreeProps) => {
+export const NamespaceProcessTree = ({ 
+    type, 
+    action, 
+    discovery, 
+    detailsFactory 
+}: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
 
@@ -273,7 +278,7 @@ export const NamespaceProcessTree = ({ type, action, discovery, detailsFactory }
 
     return (
         (treeItemsMemo.length &&
-            <MountpointInfoModalProvider>
+            <MountpointInfoModalProvider namespaces={discovery.namespaces}>
                 <TreeView
                     className="namespacetree"
                     disableSelection={true}

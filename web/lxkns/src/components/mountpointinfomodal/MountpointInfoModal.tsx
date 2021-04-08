@@ -17,6 +17,7 @@ import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
 import { MountPoint } from 'models/lxkns/mount'
 import React, { useContext, useState } from 'react'
 import CloseIcon from '@material-ui/icons/Close'
+import { NamespaceMap } from 'models/lxkns/model'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -50,6 +51,11 @@ const MountpointInfoModalContext = React.createContext<
 export interface MountpointInfoModalProviderProps {
     /** children to render. */
     children: React.ReactNode
+    /** 
+     * map of all discovered namespaces for mountpoint namespace root path
+     * lookups.
+     */
+    namespaces: NamespaceMap
 }
 
 /**
@@ -58,7 +64,10 @@ export interface MountpointInfoModalProviderProps {
  * to open the modal details dialog at the same time. Not there is too much
  * "dialog" but rather monologue.
  */
-export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalProviderProps) => {
+export const MountpointInfoModalProvider = ({ 
+    children, 
+    namespaces 
+}: MountpointInfoModalProviderProps) => {
 
     const classes = useStyles()
 
@@ -81,7 +90,7 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
                     onClose={handleClose}
                 >
                     <DialogTitle className={classes.title}>
-                        {mountpoint.hidden && 'Hidden '}{/* FIXME: */}
+                        {mountpoint.hidden && 'Hidden '}
                         Mount Point
                         <IconButton
                             aria-label="close"
@@ -92,7 +101,7 @@ export const MountpointInfoModalProvider = ({ children }: MountpointInfoModalPro
                         </IconButton>
                     </DialogTitle>
                     <DialogContent dividers className={classes.content}>
-                        <MountpointInfo mountpoint={mountpoint} />
+                        <MountpointInfo mountpoint={mountpoint} namespaces={namespaces} />
                     </DialogContent>
                 </Dialog>
             }

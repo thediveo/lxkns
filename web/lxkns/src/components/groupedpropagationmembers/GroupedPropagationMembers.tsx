@@ -16,9 +16,8 @@ import React from 'react'
 
 import { makeStyles } from '@material-ui/core'
 import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
-import { NamespaceBadge } from 'components/namespacebadge'
-import ProcessInfo from 'components/processinfo'
 import { MountpointPath } from 'components/mountpointpath'
+import { NamespaceInfo } from 'components/namespaceinfo'
 
 
 const useStyle = makeStyles((theme) => ({
@@ -71,8 +70,7 @@ export const GroupedPropagationMembers = ({ members }: GroupedPropagationMembers
         .map(group => {
             const mountns = group[0].mountnamespace
             return <div key={mountns.nsid} className={classes.mountpathgroup}>
-                <NamespaceBadge namespace={mountns} />
-                &nbsp;<ProcessInfo short process={mountns.ealdorman} />
+                <NamespaceInfo shortprocess={true} namespace={mountns} />
                 <ul className={classes.namespacedmountpaths}>
                     {group
                         .sort(compareMountPeers)
