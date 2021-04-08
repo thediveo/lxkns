@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { amber, blue, blueGrey, brown, green, grey, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
+import { amber, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
@@ -123,6 +123,11 @@ export const lxknsDarkTheme = mergeDeep(
             },
         },
         palette: {
+            primary: {
+                main: indigo[400],
+                light: indigo[300],
+                dark: indigo[700],
+            },
             namespace: {
                 cgroup: red[900],
                 ipc: lime[900],

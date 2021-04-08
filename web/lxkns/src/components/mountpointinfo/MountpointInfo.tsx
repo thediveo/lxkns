@@ -132,6 +132,15 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
         {mountpoint.parent && <> ~ {mountpoint.parent.mountpoint}</>}
     </>
 
+    // Determine the mount point's propagation mode from the tags the Linux
+    // kernel is showing us ...or not.
+    const propagationmodes = [
+        mountpoint.tags['shared'] && 'shared',
+        mountpoint.tags['master'] && 'slave',
+        mountpoint.tags['unbindable'] && 'unbindable',
+        !(mountpoint.tags['shared'] || mountpoint.tags['naster'] || mountpoint.tags['unbindable']) && 'private',
+    ].filter(propmode => propmode)
+
     // The mount point propagation peergroup actually does not only contain
     // peers but also slaves. Here, we want to only see true peers that aren't
     // slaves. And especially we don't want to see ourself.
@@ -181,7 +190,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
             <NameValueRow name="options" value={options} />
             <NameValueRow name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
             <NameValueRow name="source" value={mountpoint.source} />
-            {mountpoint.tags['unbindable'] && <NameValueRow name="propagation type" value="unbindable" />}
+            <NameValueRow name="propagation mode" value={propagationmodes.join(', ')} />
             {peers && peers.length > 0 && <NameValueRow
                 name="peer mounts"
                 value={<GroupedPropagationMembers members={peers} />}
