@@ -27,6 +27,7 @@ import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined'
 import PeerIcon from 'icons/propagation/Peer'
 import SlaveIcon from 'icons/propagation/Slave'
 import UnbindableIcon from 'icons/propagation/Unbindable'
+import ReadonlyIcon from 'icons/Readonly'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -70,6 +71,10 @@ const useStyles = makeStyles((theme) => ({
     },
     childcount: {
         marginRight: '0.5em',
+    },
+    ro: {
+        color: theme.palette.fstype,
+        marginRight: '0.3em',
     },
     fstype: {
         color: theme.palette.fstype,
@@ -146,6 +151,10 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
             </Tooltip>
             {!mountpoint.hidden && childmountcount > 0 &&
                 <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />&nbsp;{childmountcount}]</span>}
+            {mountpoint.mountoptions.includes('ro') &&
+                <Tooltip title="read-only">
+                    <span className={classes.ro}><ReadonlyIcon fontSize="inherit" />&nbsp;</span>
+                </Tooltip>}
             <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
                 <span className={classes.fstype}>
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}

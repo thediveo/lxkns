@@ -17,6 +17,7 @@ import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
 import { MountPoint } from 'models/lxkns/mount'
 import React, { useContext, useState } from 'react'
 import CloseIcon from '@material-ui/icons/Close'
+import { ReadonlyIcon } from 'icons/Readonly'
 import { NamespaceMap } from 'models/lxkns/model'
 
 
@@ -34,10 +35,16 @@ const useStyles = makeStyles((theme) => ({
     title: {
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(2),
+        '& .MuiSvgIcon-root': {
+            position: 'relative',
+            verticalAlign: 'baseline',
+            top: '0.3ex',
+        },
     },
     content: {
         margin: 0,
         paddingLeft: theme.spacing(2),
+        paddingRight: theme.spacing(2),
         fontFamily: theme.typography.fontFamily,
         fontSize: theme.typography.body1.fontSize,
     },
@@ -64,9 +71,9 @@ export interface MountpointInfoModalProviderProps {
  * to open the modal details dialog at the same time. Not there is too much
  * "dialog" but rather monologue.
  */
-export const MountpointInfoModalProvider = ({ 
-    children, 
-    namespaces 
+export const MountpointInfoModalProvider = ({
+    children,
+    namespaces
 }: MountpointInfoModalProviderProps) => {
 
     const classes = useStyles()
@@ -90,6 +97,7 @@ export const MountpointInfoModalProvider = ({
                     onClose={handleClose}
                 >
                     <DialogTitle className={classes.title}>
+                        {mountpoint.mountoptions.includes('ro') && <><ReadonlyIcon fontSize="inherit" />&nbsp;</>}
                         {mountpoint.hidden && 'Hidden '}
                         Mount Point
                         <IconButton
