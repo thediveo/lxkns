@@ -41,6 +41,7 @@ declare module '@material-ui/core/styles/createPalette' {
         cgroup: string, // process cgroup path
         ownername: string, // owner user name
         ownerroot: string, // owner user root
+        fstype: string, // filesystem type
     }
     // allow configuration using `createMuiTheme`
     interface PaletteOptions {
@@ -59,6 +60,7 @@ declare module '@material-ui/core/styles/createPalette' {
         cgroup?: string,
         ownername?: string,
         ownerroot?: string,
+        fstype?: string,
     }
 }
 
@@ -104,6 +106,7 @@ export const lxknsLightTheme = {
         cgroup: grey[600],
         ownername: lime[800],
         ownerroot: pink[700],
+        fstype: grey[600],
     },
 }
 
@@ -142,6 +145,7 @@ export const lxknsDarkTheme = mergeDeep(
             cgroup: grey[500],
             ownername: lime[500],
             ownerroot: pink[500],
+            fstype: grey[500],
         },
     }
 )

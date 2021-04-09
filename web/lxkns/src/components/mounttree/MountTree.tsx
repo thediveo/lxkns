@@ -33,12 +33,12 @@ const useStyles = makeStyles((theme) => ({
     mounttreedetails: {
     },
     label: {
-        display: 'inline-flex',
+        whiteSpace: 'nowrap',
         fontWeight: theme.typography.fontWeightLight,
         '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
+            verticalAlign: 'baseline',
             position: 'relative',
-            top: '0.5ex',
+            top: '0.3ex',
         },
     },
     mountpointpath: {
@@ -70,25 +70,13 @@ const useStyles = makeStyles((theme) => ({
     },
     childcount: {
         marginRight: '0.5em',
-        '& .MuiSvgIcon-root': {
-            top: '0.2ex',
-        },
     },
     fstype: {
-        display: 'inline-flex',
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.3ex',
-        },
+        color: theme.palette.fstype,
     },
     propmode: {
         marginLeft: '0.5em',
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'baseline',
-            position: 'relative',
-            top: '0.3ex',
-        },
+        color: theme.palette.fstype,
     },
     more: {
         marginLeft: '0.5em',
@@ -112,8 +100,11 @@ const countChildMounts = (mp: MountPath) =>
 
 
 interface MountPointLabelProps {
+    /** mount point object with lots of details. */
     mountpoint: MountPoint
+    /** mount point tail path to render instead of full mount path. */
     tail: string
+    /** number of mount points in all child mount paths */
     childmountcount: number
 }
 
@@ -129,11 +120,11 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
     const propagationmodes = [
         mountpoint.tags['shared'] &&
         <Tooltip title="propagation between peers and to slaves">
-            <span className={classes.propmode} ><PeerIcon fontSize="inherit" /></span>
+            <span className={classes.propmode} ><PeerIcon fontSize="inherit" />&nbsp;({mountpoint.tags['shared']})</span>
         </Tooltip>,
         mountpoint.tags['master'] &&
         <Tooltip title="propagation from master(s)">
-            <span className={classes.propmode} ><SlaveIcon fontSize="inherit" /></span>
+            <span className={classes.propmode} ><SlaveIcon fontSize="inherit" />&nbsp;({mountpoint.tags['master']})</span>
         </Tooltip>,
         mountpoint.tags['unbindable'] &&
         <Tooltip title="unbindable mount point">
@@ -154,7 +145,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
                 </span>
             </Tooltip>
             {!mountpoint.hidden && childmountcount > 0 &&
-                <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />{childmountcount}]</span>}
+                <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />&nbsp;{childmountcount}]</span>}
             <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
                 <span className={classes.fstype}>
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
@@ -169,12 +160,16 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 }
 
 interface MountPathLabelProps {
+    /** mount point tail path to render instead of full mount path. */
     tail: string
+    /** number of mount points in all child mount paths */
     childmountcount: number
 }
 
-// Renders a mount path tree label with a few pieces of information, namely the
-// path (tail) and the number of mount points(!) below this (fake) mount path.
+/**
+ * Renders a mount path tree label with a few pieces of information, namely the
+ * path (tail) and the number of mount points(!) below this (fake) mount path.
+ */
 const MountPathLabel = ({ tail, childmountcount }: MountPathLabelProps) => {
 
     const classes = useStyles()
@@ -189,13 +184,23 @@ const MountPathLabel = ({ tail, childmountcount }: MountPathLabelProps) => {
 }
 
 interface MountPathTreeItemProps {
+    /** namespace the mount path belongs to. */
     namespace: Namespace
+    /** mount path object with zero or more mount points. */
     mountpath: MountPath
+    /** 
+     * parent mount path, used to render only the mount path tail after the
+     * parent mount "base" path. 
+     */
     parentpath: string
 }
 
 /**
- * Renders a single mount path with its child mount paths.
+ * Renders a single mount path – which may consist of multiple mount points –
+ * with all the child mount paths. In case of multiple mount points for the same
+ * mount path, multiple tree items are rendered and the mount points get sorted
+ * by visibility (hidden/overmounted mount points first). Any child mount paths
+ * are always rendered only under the last mount point item.
  */
 const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeItemProps) => {
 
@@ -207,6 +212,9 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
 
     const childmountcount = countChildMounts(mountpath)
 
+    // Regardless whether this is a mount path with mount points or just a
+    // "fake" intermediate mount path node without any mount points, we always
+    // need to recursively render any mount points for the child mount paths.
     const childitems = mountpath.children
         .sort(compareMountPaths)
         .map(child => <MountPathTreeItem
@@ -217,6 +225,9 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         />)
 
     if (!mountpath.mounts.length) {
+        // This is a "fake" mount path node that has no mount points and instead
+        // acts as a folder node. It represents the longest common prefix path
+        // of all child mount path nodes.
         return (
             <TreeItem
                 className={classes.mounttreedetails}
@@ -226,7 +237,9 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
                 {childitems}
             </TreeItem>)
     }
-    return <>{mountpath.mounts.sort(compareMounts)
+    // A mount path with one or more mount points on the same mount path.
+    return <>{mountpath.mounts
+        .sort(compareMounts)
         .map((mountpoint, idx) =>
             <TreeItem
                 className={classes.mounttreedetails}
@@ -242,9 +255,15 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
 
 export interface MountTreeProps extends NamespaceProcessTreeDetailComponentProps { }
 
+/**
+ * Renders the tree of all mount paths with its mount points from the specified
+ * mount namespace.
+ */
 export const MountTree = ({ namespace }: MountTreeProps) => {
-
     return namespace.mountpaths
-        ? <MountPathTreeItem namespace={namespace} mountpath={namespace.mountpaths['/']} parentpath="" />
-        : <></>
+        ? <MountPathTreeItem
+            namespace={namespace}
+            mountpath={namespace.mountpaths['/']}
+            parentpath="" />
+        : null
 }

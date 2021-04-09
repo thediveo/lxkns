@@ -117,7 +117,8 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
 const NamespaceTreeItem = (
     namespace: Namespace,
     showSystemProcesses: boolean,
-    DetailsFactory: NamespaceProcessTreeDetailFactory) => {
+    DetailsFactory: NamespaceProcessTreeDetailFactory
+) => {
 
     // Get the leader processes and maybe some sub-processes (in different
     // cgroups), all inside this namespace. Please note that if there is only a
@@ -139,7 +140,7 @@ const NamespaceTreeItem = (
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} />}
     >{[
-        ...procs.concat(childnamespaces), 
+        ...procs.concat(childnamespaces),
         ...(DetailsFactory ? [<DetailsFactory namespace={namespace} />] : [])
     ]}</TreeItem>
 }
@@ -175,11 +176,11 @@ export interface NamespaceProcessTreeProps {
  *
  * @param type type of namespace.
  */
-export const NamespaceProcessTree = ({ 
-    type, 
-    action, 
-    discovery, 
-    detailsFactory 
+export const NamespaceProcessTree = ({
+    type,
+    action,
+    discovery,
+    detailsFactory
 }: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
