@@ -6,11 +6,15 @@
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-`lxkns` is a Golang package for discovering Linux kernel namespaces. In every
-nook and cranny of your Linux hosts. For mount namespaces, lxkns finds and
-determines the visibility of mount points (such as when hidden by "overmounts").
+`lxkns` is a Golang package for discovering Linux kernel namespaces (and mount
+points). In every nook and cranny of your Linux hosts. For mount namespaces,
+lxkns finds mount points even in process-less mount namespaces (for instance, as
+utilized in ["snap" technology](https://snapcraft.io/docs)). Our discovery
+engine even determines the visibility of mount points, taking different forms of
+"overmounting" into consideration.
 
-- discovery web frontend and containerized backend discovery service.
+- discovery web frontend and containerized backend discovery service (with REST
+  API).
 
 - CLI namespace discovery tools.
 
@@ -40,7 +44,7 @@ Linux system other tools typically do not consider. In particular:
    tools do.
 2. bind-mounted namespaces, via `/proc/[PID]/mountinfo`. Our discovery method
    even finds bind-mounted namespaces in _other_ mount namespaces than the
-   current one in which the discovery starts.
+   current one in which the discovery starts (as long as other mount namespaces have at least one process attached).
 3. file descriptor-referenced namespaces, via `/proc/[PID]/fd/*`.
 4. intermediate hierarchical user and PID namespaces, via `NS_GET_PARENT`
    ([man 2 ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
@@ -112,6 +116,10 @@ getting "overmounted":
 - overmount higher up the mount path: a mount point has a prefix path of another
   mount path and mount point and thus is hidding the latter, including all mount
   points with paths further down the hierarchy below the hidden mount point.
+
+Lxkns also discovers mount points in mount namespaces that currently are
+process-less, but that have been bind-mounted into the VFS – one example is the
+["snap" technology](https://snapcraft.io/docs) by Canonical.
 
 ## 🧰 lxkns Tools
 
@@ -191,6 +199,24 @@ Some deployment notes about the lxkns service container:
     docker-compose yet does not support).
   - `CAP_DAC_READ_SEARCH` allows us to discover bind-mounted namespaces without
     interference by the indescretionary excess control.
+
+The convertainerized service correctly handles these pitfalls:
+
+- **reading from other mount namespaces**: in order to discover mount points
+  from a process-less bind-mounted mount namespace, lxkns forks itself and then
+  re-executes the child in the mount namespace to read its procfs `mountinfo`
+  from. The child here acts as the required procfs entry to be able to read the
+  correct `mountinfo` at all. However, when containerized, lxkns runs in its own
+  mount namespace, whereas the bindmount of the mount namespace will be in some
+  other mount namespace, such as the host's initial mount namespace. In order to
+  successfully reference the bindmount in the VFS, lxkns uses the Linux kernel's
+  procfs wormholes: `/proc/[PID]/root/...`, see also
+  [proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html).
+
+- **cgroup namespaced container**: during startup, lxkns detects when it has
+  been placed into its own cgroup namespace ... as, for example, it is the case
+  in newer Docker default installations on Linux base OS configurations
+  especially with a cgroups v2 unified hierarchy. Without further measures, lxkns would be unable to discover the correct freezer states of processes. Thus, lxkns then switches itself out of its own cgroup namespace and back into the host's initial namespace, if possible. Please note that running lxkns in a non-initial namespace blocks correct discovery, not least process freezer state discovery.
 
 ### 🖥️ CLI Tools
 
@@ -483,7 +509,7 @@ $ dumpns
 ## Package Usage
 
 For the really gory stuff, take a look at the `examples/` and `cmd/`
-directories. 😁
+directories. 😇
 
 ### 🔎 Discovery
 
