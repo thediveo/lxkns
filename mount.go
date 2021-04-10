@@ -35,7 +35,7 @@ func MountEnterNamespaces(
 	// switching into the user namespace for the mount namespace we're the
 	// owner (creator) of, and then can successfully enter the mount
 	// namespaces. And yes, this is how Linux namespaces, and especially the
-	// user namespaces and setns() are supposed to work.
+	// user namespaces and setns(), are supposed to work.
 	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 	enterns := []model.Namespace{mntns}
 	if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {

@@ -87,9 +87,10 @@ const (
 	FieldDiscoveryOptions = "discovery-options"
 	FieldNamespaces       = "namespaces"
 	FieldProcesses        = "processes"
+	FieldMounts           = "mounts"
 )
 
-// NewDiscoveryResult returns a discovery result object ready for marshalling
+// NewDiscoveryResult returns a discovery result object ready for unmarshalling
 // JSON into it or marshalling an existing lxkns discovery result.
 func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	// A very limited initialization only before immediately applying any
@@ -106,6 +107,7 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 		dr.DiscoveryResult = &lxkns.DiscoveryResult{
 			Namespaces: *model.NewAllNamespaces(),
 			Processes:  model.ProcessTable{},
+			Mounts:     lxkns.NamespacedMountPathMap{},
 		}
 	}
 	// Wrap the discovery result options, so that they can be properly
@@ -121,6 +123,12 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 		WithProcessTable(dr.DiscoveryResult.Processes),
 		WithNamespacesDict(nsdict))
 	dr.Fields[FieldProcesses] = &pt
+	// Don't forget about the (optional) mounts, if present or might be
+	// expected.
+	if dr.DiscoveryResult.Mounts != nil {
+		m := NamespacedMountMap(dr.DiscoveryResult.Mounts)
+		dr.Fields[FieldMounts] = &m
+	}
 	return dr
 }
 
@@ -169,6 +177,12 @@ func (dr DiscoveryResult) Result() *lxkns.DiscoveryResult {
 // Processes returns the process table from the wrapped lxkns.DiscoveryResult.
 func (dr DiscoveryResult) Processes() model.ProcessTable {
 	return dr.DiscoveryResult.Processes
+}
+
+// Mounts returns the namespace'd mount paths and points from the wrapped
+// lxkns.DiscoveryResult.
+func (dr DiscoveryResult) Mounts() lxkns.NamespacedMountPathMap {
+	return dr.DiscoveryResult.Mounts
 }
 
 // Get returns the use-specified result extension object for the specified

@@ -16,7 +16,7 @@ import React, { useState } from 'react'
 
 import { useAtom } from 'jotai'
 
-import { CircularProgress, Fade, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
+import { Button, CircularProgress, Fade, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import SyncIcon from '@material-ui/icons/Sync'
 import SyncDisabledIcon from '@material-ui/icons/SyncDisabled'
@@ -91,12 +91,8 @@ const useStyles = makeStyles((theme) => ({
         zIndex: 1,
     },
     interval: {
-        // Unfortunately, Material-UI's 50% border radius results in an ugly
-        // oblong oval-like shape, but we want proper 50% of height radii. See
-        // https://stackoverflow.com/a/29966500 for the rescue by setting an
-        // incredibly large border radius in pixels which then triggers a
-        // dedicated "50% of the smaller axis" rule. Something we want! 
-        borderRadius: '999px',
+        margin: '8px 0',
+        borderRadius: '42em',
     }
 }))
 
@@ -185,16 +181,17 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                 </div>
             </Tooltip>
             <Tooltip title={intervalTitle}>
-                <IconButton
+                <Button
                     className={classes.interval}
                     aria-haspopup="true"
                     aria-controls={menuId}
                     onClick={handleIntervalButtonClick}
                     color="inherit"
+                    centerRipple={true}
                 >
                     {refreshInterval !== null ? <SyncIcon /> : <SyncDisabledIcon />}
                     <ExpandMoreIcon />
-                </IconButton>
+                </Button>
             </Tooltip>
             <Menu
                 id={menuId}

@@ -9,18 +9,20 @@ import { initProc } from "models/lxkns/mock";
 <>
   {Object.values(NamespaceType)
     .sort()
-    .map((nstype, idx) => [
-      idx > 0 && <br />,
-      <div>{nstype} namespace badge:</div>,
-      <ComponentCard>
-        <NamespaceBadge
-          namespace={{
-            ...initProc.namespaces.pid,
-            type: nstype,
-          }}
-        />
-      </ComponentCard>,
-    ])}
+    .map((nstype, idx) => (
+      <div key={idx}>
+        {idx > 0 && <br />}
+        <div> namespace badge:</div>
+        <ComponentCard>
+          <NamespaceBadge
+            namespace={{
+              ...initProc.namespaces.pid,
+              type: nstype,
+            }}
+          />
+        </ComponentCard>
+      </div>
+    ))}
 </>;
 ```
 

@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.16.0
+    version: 0.17.0
     description: 'Discover Linux-kernel namespaces, almost everywhere in a Linux host.'
     contact:
         url: 'https://github.com/thediveo/lxkns'
@@ -283,7 +283,11 @@ components:
                     $ref: '#/components/schemas/PIDMap'
                     description: Data for translating PIDs between different PID namespaces.
                 options:
+                    $ref: '#/components/schemas/DiscoveryOptions'
                     description: The options specified for discovery.
+                mounts:
+                    $ref: '#/components/schemas/NamespacedMountPaths'
+                    description: Map of mount namespace'd mount paths with mount points.
             example:
                 discovery-options:
                     skipped-procs: false
@@ -565,7 +569,7 @@ components:
             example: '"net"'
         NamespacesDict:
             description: |
-                "Map" of Linux-kernel namespaces, keyed by their namespace IDs in stringified
+                "Dictionary" or "map" of Linux-kernel namespaces, keyed by their namespace IDs in stringified
                 form. Contrary to what the term "namespace" might suggest, namespaces do not
                 have names but are identified by their (transient) inode numbers.
 
@@ -625,6 +629,9 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/NamespaceType'
+                with-mounts:
+                    description: true if mount namespace'd mount paths with mount points were discovered.
+                    type: boolean
             example:
                 skipped-procs: false
                 skipped-tasks: false
@@ -720,3 +727,112 @@ components:
                 user: 4026531837
                 pid: 4026531836
                 net: 4026531905
+        MountPoint:
+            description: |-
+                Information about a mount point as discovered from the proc filesystem. See also
+                [proc(5)](https://man7.org/linux/man-pages/man5/procfs.5.html), and details about
+                `/proc/[PID]/mountinfo` in particular.
+            required:
+                - mountid
+                - parentid
+                - major
+                - minor
+                - root
+                - mountpoint
+                - mountoptions
+                - tags
+                - source
+                - fstype
+                - superoptions
+                - hidden
+            type: object
+            properties:
+                parentid:
+                    description: |-
+                        ID of the parent mount. Please note that the parent mount might be outside a
+                        mount namespace.
+                    type: integer
+                mountid:
+                    description: 'unique ID for the mount, might be reused after umount(2).'
+                    type: integer
+                major:
+                    description: major ID for the st_dev for files on this filesystem.
+                    type: integer
+                minor:
+                    description: minor ID for the st_dev for filed on this filesystem.
+                    type: integer
+                root:
+                    description: pathname of the directory in the filesystem which forms the root of this mount.
+                    type: string
+                mountpoint:
+                    description: pathname of the mount point relative to root directory of the process.
+                    type: string
+                mountoptions:
+                    description: mount options specific to this mount.
+                    type: array
+                    items:
+                        type: string
+                tags:
+                    $ref: '#/components/schemas/MountTags'
+                    description: |-
+                        optional tags with even more optional values. Tags cannot be a single hyphen
+                        "-".
+                fstype:
+                    description: 'filesystem type in the form "type[.subtype]".'
+                    type: string
+                source:
+                    description: filesystem-specific information or "none".
+                    type: string
+                superoptions:
+                    description: per-superblock options.
+                    type: string
+                hidden:
+                    description: |-
+                        true if this mount point is hidden by an "overmount" either at the same mount
+                        path or higher up the path hierarchy.
+                    type: boolean
+        MountTags:
+            description: |-
+                dictionary of mount point tags with optional values. Tag names cannot be a single
+                hyphen "-".
+            type: object
+            additionalProperties:
+                type: string
+        MountPath:
+            description: |-
+                path of one or more mount points in the Virtual File System (VFS). In case of
+                multiple mount points at the same path, only at most one of them can be visible
+                and all others (or all in case of an overmount higher up the path) will be hidden.
+            required:
+                - mounts
+                - pathid
+                - parentid
+            type: object
+            properties:
+                mounts:
+                    description: one or more mount points at this path in the Virtual File System (VFS).
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MountPoint'
+                pathid:
+                    description: 'unique mount path identifier, per mount namespace.'
+                    type: integer
+                parentid:
+                    description: 'identifier of parent mount path, if any, otherwise 0.'
+                    type: integer
+        MountPathsDict:
+            description: |-
+                "Dictionary" or "map" of mount paths with their corresponding mount points, keyed
+                by the mount paths.
+
+                Please note that additionally the mount path entries are organized in a "sparse"
+                hierarchy with the help of mount path identifiers (these are user-space generated
+                by lxkns).
+            type: object
+            additionalProperties:
+                $ref: '#/components/schemas/MountPath'
+        NamespacedMountPaths:
+            description: 'the mount paths of each discovered mount namespace, separated by mount namespace.'
+            type: object
+            additionalProperties:
+                $ref: '#/components/schemas/MountPathsDict'

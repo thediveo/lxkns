@@ -17,6 +17,7 @@ import React from 'react'
 import { Discovery } from 'models/lxkns'
 import { Action } from 'app/treeaction'
 import { UserNamespaceTree } from 'components/usernamespacetree'
+import { Box } from '@material-ui/core'
 
 
 export interface AllNamespacesProps {
@@ -26,6 +27,8 @@ export interface AllNamespacesProps {
     action: Action
 }
 
-export const AllNamespaces = ({discovery, action}: AllNamespacesProps) => (
-    <UserNamespaceTree discovery={discovery} action={action} />
+export const AllNamespaces = ({ discovery, action }: AllNamespacesProps) => (
+    <Box pl={1}>
+        <UserNamespaceTree discovery={discovery} action={action} />
+    </Box>
 )

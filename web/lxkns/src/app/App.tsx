@@ -26,9 +26,9 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
 import List from '@material-ui/core/List'
-import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery } from '@material-ui/core'
+import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery, useTheme } from '@material-ui/core'
 
-import SettingsIcon from '@material-ui/icons/Settings'
+import TuneIcon from '@material-ui/icons/Tune'
 import HelpIcon from '@material-ui/icons/Help'
 import HomeIcon from '@material-ui/icons/Home'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -97,7 +97,7 @@ const views: viewItem[][] = [
             label: "time namespaces", path: "/time", type: NamespaceType.time
         },
     ], [
-        { icon: <SettingsIcon />, label: "settings", path: "/settings" },
+        { icon: <TuneIcon />, label: "settings", path: "/settings" },
         { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
         { icon: <InfoIcon />, label: "about", path: "/about" },
     ]
@@ -135,6 +135,7 @@ const useStyles = makeStyles((theme) => ({
 const LxknsApp = () => {
 
     const classes = useStyles()
+    const theme = useTheme()
 
     const [treeaction, setTreeAction] = useTreeAction()
 
@@ -159,6 +160,7 @@ const LxknsApp = () => {
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 drawerwidth={300}
+                swipeAreaWidth={theme.spacing(1)}
                 drawerClassName={classes.drawer}
                 title={<>
                     <Badge badgeContent={count} color="secondary">

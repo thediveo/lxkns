@@ -52,6 +52,7 @@ const useStyles = makeStyles((theme) => ({
         '&::after': {
             content: '"»"',
             fontStyle: 'normal',
+            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
         },
     },
     pid: {

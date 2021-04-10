@@ -34,6 +34,11 @@ const useStyles = makeStyles((theme) => ({
         position: 'sticky', // within the .view, not the viewport :)
         top: theme.spacing(2),
         left: 0,
+        // make the touch ripple fit in snuggly; we need to keep enough height
+        // for everything, including the border (times 2) and icons are:
+        // - 24px high
+        // - small buttons have a 3px padding (*2)
+        height: `calc(24px + ${(navigatorBorder + 2) * 2}px + 2 * 3px)`,
         // icons are:
         // - 24px wide, 
         // - small icon buttons have a 3px padding (*2),
@@ -43,9 +48,11 @@ const useStyles = makeStyles((theme) => ({
         background: theme.palette.background.paper,
         border: `${navigatorBorder}px solid ${theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
         borderRight: 0,
-        borderRadius: '24px',
+        borderRadius: '42em',
         borderTopRightRadius: 0,
         borderBottomRightRadius: 0,
+        '& .MuiSvgIcon-root': { position: 'relative', left: '-2px' },
+        '& .MuiTouchRipple-root': { left: '-1px' },
 
         // Material UI's icon button on hover slightly darkens the background
         // using an alpha of 0.04; now, that would make any text under the toc

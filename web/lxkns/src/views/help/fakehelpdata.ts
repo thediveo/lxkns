@@ -159,5 +159,6 @@ export const discovery: Discovery = {
         .reduce((procmap, proc) => ({
             ...procmap,
             [proc.pid.toString()]: proc,
-        }), {})
+        }), {}),
+    mounts: null,
 }

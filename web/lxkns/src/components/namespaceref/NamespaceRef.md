@@ -1,5 +1,6 @@
 A "hidden" namespace without any reference; as there is no filesystem path
-reference, we simply show a ghost:
+reference, we simply show a ghost. And finally with an easter egg, just hover
+your mouse over the ghost...
 
 ```tsx
 import { ComponentCard } from 'styleguidist/ComponentCard';

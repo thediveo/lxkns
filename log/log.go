@@ -93,6 +93,16 @@ func Debugfn(fn func() string) {
 	callforward(DebugLevel, fn)
 }
 
+// Tracef logs formatted trace information.
+func Tracef(format string, args ...interface{}) {
+	forward(TraceLevel, format, args...)
+}
+
+// Tracefn logs trace information from the specified fn producer function.
+func Tracefn(fn func() string) {
+	callforward(TraceLevel, fn)
+}
+
 // forward sends a logging message to an external logging module (if set), if
 // the set logging level is reached or surpassed. Otherwise, it silently drops
 // the message.

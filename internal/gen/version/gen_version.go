@@ -53,5 +53,7 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
-	defsVersionGoTemplate.Execute(f, version)
+	if err := defsVersionGoTemplate.Execute(f, version); err != nil {
+		panic(err)
+	}
 }
