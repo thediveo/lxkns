@@ -18,6 +18,7 @@ import { useLocation } from 'react-router-dom'
 import { Discovery, NamespaceType } from 'models/lxkns'
 import { Action } from 'app/treeaction'
 import { NamespaceProcessTree } from 'components/namespaceprocesstree'
+import { MountTreeDetailer } from 'components/mounttree'
 import { Box } from '@material-ui/core'
 
 
@@ -47,6 +48,7 @@ export const TypedNamespaces = ({ discovery, action }: TypedNamespacesProps) => 
                 type={nstype}
                 discovery={discovery}
                 action={action}
+                details={nstype === 'mnt' && MountTreeDetailer}
             />
         </Box>
     )

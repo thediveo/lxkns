@@ -13,6 +13,7 @@
 // under the License.
 
 import { Namespace, NamespaceType, Process, Discovery } from './model'
+import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly
@@ -110,6 +111,96 @@ export const fromjson = (discoverydata: any): Discovery => {
             ns => (discovery.namespaces[ns.nsid.toString()].initial = true)
         )
     }
+
+    // Resolve the references in the hierarchy of mount paths and also resolve
+    // the references in the hierarchy of mount points. For mount points,
+    // references are allowed to cross mount namespaces.
+    const mountpointidmap: {[mountpointid: string]: MountPoint} = {}
+    const mountgroups: MountGroupMap = {}
+    Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
+        const mountns = discovery.namespaces[mntnsid]
+        // In order to later resolve the hierarchical mount point references
+        // within a single mount namespace we need to first build a map from
+        // mount path identifiers to mount path objects.
+        const mountpathidmap: {[mountpathid: string]: MountPath} = {}
+        Object.values(mountpathmap).forEach(mountpath => {
+            mountpath.path = mountpath.mounts[0].mountpoint // convenience
+            mountpathidmap[mountpath.pathid.toString()] = mountpath
+            mountpath.children = []
+            // While we're at it, let's also map the mount point IDs to their
+            // respective mount point objects; please note that mount point IDs
+            // are system-wide and thus across mount namespaces. Oh, and let's
+            // "fix" the mount paths when they contain escaped characters, such
+            // as \040 for space.
+            mountpath.mounts.forEach(mountpoint => {
+                mountpoint.mountnamespace = mountns
+                mountpointidmap[mountpoint.mountid.toString()] = mountpoint
+                mountpoint.children = []
+            })
+        })
+        // With the map build we can now resolve the mount path hierarchy
+        // references.
+        Object.values(mountpathmap).forEach(mountpath => {
+            const parent = mountpathidmap[mountpath.parentid.toString()]
+            if (parent) {
+                mountpath.parent = parent
+                parent.children.push(mountpath)
+            }
+        })
+    })
+
+    // With the map from mount point IDs to mount point objects finally complete
+    // we can now resolve the hierarchical references. And while we're at it, we
+    // also build our map of mount point propagation groups.
+    Object.values(discovery.mounts).forEach(mountpathmap => {
+        Object.values(mountpathmap).forEach(mountpath => {
+            mountpath.mounts.forEach(mountpoint => {
+                // set up the parent-child relation object references.
+                const parent = mountpointidmap[mountpoint.parentid.toString()]
+                if (parent) {
+                    mountpoint.parent = parent
+                    parent.children.push(mountpoint)
+                }
+                // create the peer group if necessary and then set up the peer
+                // group membership.
+                const peergroupid = mountpoint.tags['shared']
+                if (peergroupid) {
+                    var peergroup = mountgroups[peergroupid]
+                    if (!peergroup) {
+                        peergroup = {id: parseInt(peergroupid), members: []}
+                        mountgroups[peergroupid] = peergroup
+                    }
+                    peergroup.members.push(mountpoint)
+                    mountpoint.peergroup = peergroup
+                }
+                // create the peer group with our master(s) if necessary and
+                // then set up our slave membership in the peer group. This
+                // means that the peer group will contain both our masters
+                // (which are peers to themselves) as well as their slaves.
+                const mastergroupid = mountpoint.tags['master']
+                if (mastergroupid) {
+                    var mastergroup = mountgroups[mastergroupid]
+                    if (!mastergroup) {
+                        mastergroup = {id: parseInt(mastergroupid), members: []}
+                        mountgroups[mastergroupid] = mastergroup
+                    }
+                    mastergroup.members.push(mountpoint)
+                    mountpoint.mastergroup = mastergroup
+                }
+            })
+        })
+    })
+
+    // Insert mount path nodes for common subpath prefixes...
+    Object.values(discovery.mounts).forEach(mountpathmap => {
+        insertCommonChildPrefixMountPaths(mountpathmap['/'])
+    })
+
+    // Finally reference the corresponding map of mount points from its mount
+    // namespace object.
+    Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
+        discovery.namespaces[mntnsid].mountpaths = mountpathmap
+    })
 
     // A small step for me, a huge misstep for type safety...
     return discovery

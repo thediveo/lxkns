@@ -32,14 +32,21 @@ const useStyles = makeStyles((theme) => ({
         '& .MuiSvgIcon-root': {
             fontSize: 'inherit',
             verticalAlign: 'middle',
+        },
+        '& .MuiSvgIcon-root.before': {
             marginRight: '0.1em',
+        },
+        '& .MuiSvgIcon-root.after': {
+            marginLeft: '0.1em',
         },
     },
 }))
 
 export interface ExtLinkProps {
-    /** href URL */
+    /** href URL. */
     href: string
+    /** external link icon placement. */
+    iconposition?: 'before' | 'after'
     /** children to render inside the hyperlink. */
     children: React.ReactNode
 }
@@ -54,17 +61,17 @@ export interface ExtLinkProps {
  * in order to avoid granting the new browsing context access to your single
  * page app and leaking referrer information.
  */
-export const ExtLink = ({ href, children }: ExtLinkProps) => {
+export const ExtLink = ({ href, iconposition, children }: ExtLinkProps) => {
 
     const classes = useStyles()
 
     return (
         <span className={classes.extlink}>
-            <LaunchIcon /><a
+            {iconposition !== 'after' && <LaunchIcon className="before" />}<a
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-            >{children}</a>
+            >{children}</a>{iconposition === 'after' && <LaunchIcon className="after" />}
         </span>
     )
 }

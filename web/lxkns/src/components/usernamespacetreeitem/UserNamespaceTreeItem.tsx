@@ -16,7 +16,7 @@ import React from 'react'
 import { useAtom } from 'jotai'
 
 import TreeItem from '@material-ui/lab/TreeItem'
-import Crown from 'mdi-material-ui/Crown'
+import { OwnerIcon } from 'icons/Owner'
 
 import { ProcessInfo } from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
@@ -123,7 +123,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
                                 && procns.owner && procns.type !== NamespaceType.user
                                 && procns.owner !== usernamespace
                                 && <span className={classes.owninguserns}>
-                                    <Crown fontSize="inherit" />&nbsp;
+                                    <OwnerIcon fontSize="inherit" />&nbsp;
                                     <NamespaceBadge
                                         namespace={procns.owner}
                                         tooltipprefix="different owning"

@@ -16,7 +16,8 @@ import React from 'react'
 
 import clsx from 'clsx'
 import { makeStyles, Tooltip } from '@material-ui/core'
-import { FileLinkOutline, Ghost } from 'mdi-material-ui'
+import { NamespaceIcon } from 'icons/Namespace'
+import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'
 
 import { Namespace } from 'models/lxkns'
@@ -138,21 +139,21 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.intermediate, classes.blinky, className)}>
                     &nbsp;
-                    <Ghost className="normal" fontSize="inherit" />
+                    <GhostIcon className="normal" fontSize="inherit" />
                     <AngryghostIcon className="angry" fontSize="inherit" />
                 </span>
             </Tooltip>
         ) || (isProcfdPath &&
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <span className={clsx(classes.namespaceReference, classes.fdref, className)}>
-                    <FileLinkOutline fontSize="inherit" />
+                    <NamespaceIcon fontSize="inherit" />
                     <span className="bindmount">"{namespace.reference}"</span>
                 </span>
             </Tooltip>
         ) || (
             <Tooltip title={`bind-mounted ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.bindmounted, className)}>
-                    <FileLinkOutline fontSize="inherit" />
+                    <NamespaceIcon fontSize="inherit" />
                     <span className="bindmount">"{namespace.reference}"</span>
                 </span>
             </Tooltip>

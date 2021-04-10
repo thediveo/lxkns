@@ -1,4 +1,6 @@
 {
+    "mounts": {
+    },
     "discovery-options": {
         "skipped-procs": false,
         "skipped-tasks": false,
