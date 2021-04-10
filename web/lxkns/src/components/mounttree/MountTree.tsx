@@ -16,9 +16,9 @@ import React from 'react'
 
 import clsx from 'clsx'
 import { TreeItem } from '@material-ui/lab'
-import { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
+import { NamespaceProcessTreeDetailComponentProps, NamespaceProcessTreeTreeDetails } from 'components/namespaceprocesstree'
 import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
-import { Namespace } from 'models/lxkns'
+import { Namespace, NamespaceMap } from 'models/lxkns'
 import { Button, lighten, makeStyles, Tooltip } from '@material-ui/core'
 import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
@@ -275,4 +275,32 @@ export const MountTree = ({ namespace }: MountTreeProps) => {
             mountpath={namespace.mountpaths['/']}
             parentpath="" />
         : null
+}
+
+/**
+ * Returns the list of all tree node ids to be expanded. However, mount points
+ * which cross a certain threshold of child mount points won't be expanded
+ * though. 
+ */
+const expandAll = (namespaces: NamespaceMap) => Object.values(namespaces)
+    .map(ns => ns.mountpaths
+        ? Object.values(ns.mountpaths)
+            .map(mountpath => mountpath.mounts
+                    .filter(mountpoint => mountpoint.children.length > 0 && mountpoint.children.length <= 50)
+                    .map(mountpoint => `${ns.nsid}-${mountpoint.mountpoint}-${mountpoint.mountid}`)
+                ).flat()
+        : [])
+    .flat()
+
+/**
+ * This detailer:
+ * - provides a factory to render the mount point details of mount namespaces,
+ * - supports expanding all detail nodes (well, at least if they don't contain
+ *   more than a certain maximum of child mount points).
+ * - supports collapsing all detail nodes.
+ */
+export const MountTreeDetailer: NamespaceProcessTreeTreeDetails = {
+    factory: MountTree,
+    expandAll: expandAll,
+    collapseAll: null,
 }

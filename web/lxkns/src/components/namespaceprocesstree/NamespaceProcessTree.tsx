@@ -160,11 +160,17 @@ export interface NamespaceProcessTreeDetailComponentProps {
  */
 export type NamespaceProcessTreeDetailFactory = React.FunctionComponentFactory<NamespaceProcessTreeDetailComponentProps>
 
+export interface NamespaceProcessTreeTreeDetails {
+    factory: NamespaceProcessTreeDetailFactory
+    collapseAll: (namespaces: NamespaceMap) => string[]
+    expandAll: (namespaces: NamespaceMap) => string[]
+}
+
 export interface NamespaceProcessTreeProps {
     type?: string
     action: Action
     discovery: Discovery
-    detailsFactory?: NamespaceProcessTreeDetailFactory
+    details?: NamespaceProcessTreeTreeDetails
 }
 
 /**
@@ -180,7 +186,7 @@ export const NamespaceProcessTree = ({
     type,
     action,
     discovery,
-    detailsFactory
+    details
 }: NamespaceProcessTreeProps) => {
 
     const nstype = type as NamespaceType || NamespaceType.pid
@@ -220,17 +226,20 @@ export const NamespaceProcessTree = ({
                 const allprocids = allns.map(ns => findNamespaceProcesses(ns))
                     .flat()
                     .map(proc => proc.pid.toString())
-                setExpanded(allnsids.concat(allprocids))
+                setExpanded(allnsids.concat(
+                    allprocids, 
+                    details.expandAll ? details.expandAll(discovery.namespaces) : []))
                 break
             case COLLAPSEALL:
                 // collapse everything except for the root namespaces.
                 const allrootnsids = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === nstype && ns.parent == null)
                     .map(ns => ns.nsid.toString())
-                setExpanded(allrootnsids)
+                setExpanded(allrootnsids.concat(
+                    details.collapseAll ? details.collapseAll(discovery.namespaces) : []))
                 break
         }
-    }, [action, nstype, discovery])
+    }, [action, nstype, discovery, details])
 
     // Whenever the discovery changes, we want to update the expansion state of
     // the newly arrived namespaces. We default to newly seen "root" namespaces
@@ -282,8 +291,8 @@ export const NamespaceProcessTree = ({
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === nstype && ns.parent == null)
             .sort(compareNamespaceById)
-            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, detailsFactory))
-    ), [discovery, showSystemProcesses, nstype, detailsFactory])
+            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, details.factory))
+    ), [discovery, showSystemProcesses, nstype, details])
 
     return (
         (treeItemsMemo.length &&
