@@ -44,7 +44,7 @@ export const MountpointRoot = ({ root, namespaces }: MountpointRootProps) => {
 
     return namespace
         ? <NamespaceInfo shortprocess={true} namespace={namespace} />
-        : <>root</>
+        : <>{root}</>
 }
 
 export default MountpointRoot
