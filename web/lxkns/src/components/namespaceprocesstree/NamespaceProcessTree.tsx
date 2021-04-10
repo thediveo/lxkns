@@ -247,12 +247,17 @@ export const NamespaceProcessTree = ({
             .filter(ns => ns.type === nstype)
             .map(ns => ns.nsid)
         // We want to expand only new namespaces and never touch their expansion
-        // state lateron.
-        const expandingNamespaces = (expandInitially
-            ? Object.values(discovery.namespaces)
-                .filter(ns => ns.type === nstype)
-            : Object.values(discovery.namespaces)
-                .filter(ns => ns.type === nstype && ns.initial))
+        // state lateron. First, we select a suitable filter depending on the
+        // type of namespaces to be rendered and the setting for expanding
+        // "top-level" namespace nodes.
+        const expansionCandidateFilter: (Namespace) => boolean
+            = expandInitially
+                ? (ns: Namespace) => ns.type === nstype
+                : ((nstype === 'user' || nstype === 'pid')
+                    ? (ns: Namespace) => (ns.type === nstype && ns.initial)
+                    : (ns: Namespace) => (ns.type === nstype))
+        const expandingNamespaces = Object.values(discovery.namespaces)
+            .filter(expansionCandidateFilter)
             .filter(ns => !oldNamespaceIds.includes(ns.nsid))
         // Finally update the expansion state of the tree; this must include the
         // already expanded nodes (state), so that already expanded nodes don't
