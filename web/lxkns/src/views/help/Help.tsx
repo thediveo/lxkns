@@ -21,6 +21,9 @@ import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
 import { Box, makeStyles } from '@material-ui/core'
 import { Card } from '@material-ui/core'
+import { Provider } from 'jotai'
+import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom } from 'views/settings'
+import { AnyAtom } from 'jotai/core/types'
 
 
 /**
@@ -42,18 +45,35 @@ const chapters: HelpViewerChapter[] = [
 ]
 
 interface ExampleProps {
+    /** optional CSS maximum width for the example card element. */
     maxWidth?: string
+    /** optional jōtai states. */
+    states?: [AnyAtom, unknown][]
+    /** the example rendering... */
     children: React.ReactNode
 }
 
-const Example = ({ children, maxWidth }: ExampleProps) => (
-    <Box m={2}>
-        <Card style={{maxWidth: maxWidth || '100%'}}>
-            <Box m={1}>
-                {children}
-            </Box>
-        </Card>
-    </Box>
+const initials: [AnyAtom, unknown][] = [
+    [showSystemProcessesAtom, false],
+    [showSharedNamespacesAtom, true],
+    [expandInitiallyAtom, true],
+]
+
+// Ensure consist example rendering by providing a dedicated, erm, state
+// provider which we prime to a known state, independent of any user
+// preferences.
+const Example = ({ children, maxWidth, states }: ExampleProps) => (
+    // Luckily, the jōtai provider initializes in order, so later settings
+    // override earlier ones, if necessary.
+    <Provider initialValues={[...initials, ...(states ? states : [])]}>
+        <Box m={2}>
+            <Card style={{ maxWidth: maxWidth || '100%' }}>
+                <Box m={1}>
+                    {children}
+                </Box>
+            </Card>
+        </Box>
+    </Provider>
 )
 
 const useStyles = makeStyles((theme) => ({
@@ -78,7 +98,7 @@ const BoxedIcons = ({ children }: { children: React.ReactNode }) => {
     return <span className={classes.iconbox}>{children}</span>
 }
 
-const NamespaceExample = ({ type, initial }) =>
+const NamespaceExample = ({ type, initial, shared }) =>
     <NamespaceBadge namespace={{
         nsid: 4026531837,
         type: type,
@@ -86,7 +106,7 @@ const NamespaceExample = ({ type, initial }) =>
         initial: initial,
         parent: null,
         children: [],
-    } as Namespace} />
+    } as Namespace} shared={shared} />
 
 export const Help = () => (
     <HelpViewer
