@@ -1,7 +1,12 @@
 import { UserNamespaceTree } from "components/usernamespacetree";
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
 import { discovery } from "../fakehelpdata";
-import { Pause, PlayArrow } from '@material-ui/icons';
+import { Pause, PlayArrow } from "@material-ui/icons";
+import {
+  expandInitiallyAtom,
+  showSharedNamespacesAtom,
+  showSystemProcessesAtom,
+} from "views/settings";
 
 # All View
 
@@ -11,6 +16,10 @@ organized along the hierarchy of the so-called user namespaces. For example:
 <Example>
   <UserNamespaceTree discovery={discovery} action={{ action: "" }} />
 </Example>
+
+> **Note:** this display is user-configurable in some aspects, such as
+> whether to automatically expand newly discovered namespaces.
+> See [settings](/help/settings) for more information.
 
 ### Initial Namespaces
 
@@ -22,7 +31,7 @@ namespaces: these are indicated by dashed borders around their namespace
   <NamespaceExample type="user" initial={true} />
 </Example>
 
-### Number of Child User
+### Number of Child User Namespaces
 
 When user namespaces have child user namespaces, then the total number of child
 and grandchild user namespaces is shown right after a user namespace "badge".
@@ -47,19 +56,27 @@ className="icon"/> paused process is said to be "frozen" in Linux, while a
 ### Owned Namespaces
 
 Non-user namespaces as well as child user namespaces are shown indented and
-beneath the particular user namespace which is owning them. "Owning a namespace"
-here means that a namespace was created by a process while the process was
-attached to that specific user namespace.
+beneath the particular user namespace that is owning them. "Owning a namespace"
+here means that when that namespace was created by a process, the process was
+attached to that particular *user* namespace.
 
 ### "Shared" Namespaces
 
-When the namespaces owned by a user namespace are attached to processes other
+When the namespaces owned by a user namespace are attached also to processes other
 than the most senior "leader" process of the user namespace, then lxkns will
-automatically be group owned namespaces by their leader processes. This helps in
-quickly understanding how namespaces relate to leader processes.
+automatically group the owned namespaces by their leader processes. This helps in
+quickly understanding how namespaces relate to leader processes. Now, not every
+leader process might use its own namespaces but instead multiple leader processes
+might "share" some namespaces between them.
 
-> **Note:** lxkns always shows all namespaces (except for the user namespace)
-  for the leader processes with different cgroup paths, but "fades" namespaces
-  that are the same as the most senior leader process. For lack of a better
-  word, we term such namespaces "shared", but this is our user-land terminology,
-  but not Linux-kernel terminology.
+<Example maxWidth="16em">
+  <NamespaceExample type="pid" shared={true} initial={true} />
+</Example>
+
+lxkns shows all namespaces (except for the user namespace)
+for the leader processes with different cgroup paths, but "fades" namespaces
+that are the same as the most senior leader process. The display of shared
+namespaces can be configured (switched on/off) in the [settings](/help/settings).
+
+> **Note:** For lack of a better word, we term such namespaces "shared", but
+> this is our user-land terminology, but not Linux-kernel terminology.
