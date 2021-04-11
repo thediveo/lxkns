@@ -124,15 +124,15 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 
     const propagationmodes = [
         mountpoint.tags['shared'] &&
-        <Tooltip title="propagation between peers and to slaves">
+        <Tooltip key="shared" title="propagation between peers and to slaves">
             <span className={classes.propmode} ><PeerIcon fontSize="inherit" />&nbsp;({mountpoint.tags['shared']})</span>
         </Tooltip>,
         mountpoint.tags['master'] &&
-        <Tooltip title="propagation from master(s)">
+        <Tooltip key="master" title="propagation from master(s)">
             <span className={classes.propmode} ><SlaveIcon fontSize="inherit" />&nbsp;({mountpoint.tags['master']})</span>
         </Tooltip>,
         mountpoint.tags['unbindable'] &&
-        <Tooltip title="unbindable mount point">
+        <Tooltip key="unbindable" title="unbindable mount point">
             <span className={classes.propmode} ><UnbindableIcon fontSize="inherit" /></span>
         </Tooltip>,
     ].filter(propmode => propmode)

@@ -117,7 +117,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
 const NamespaceTreeItem = (
     namespace: Namespace,
     showSystemProcesses: boolean,
-    DetailsFactory: NamespaceProcessTreeDetailFactory
+    DetailsFactory?: NamespaceProcessTreeDetailFactory
 ) => {
 
     // Get the leader processes and maybe some sub-processes (in different
@@ -291,7 +291,7 @@ export const NamespaceProcessTree = ({
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === nstype && ns.parent == null)
             .sort(compareNamespaceById)
-            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, details.factory))
+            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, details ? details.factory : null))
     ), [discovery, showSystemProcesses, nstype, details])
 
     return (
