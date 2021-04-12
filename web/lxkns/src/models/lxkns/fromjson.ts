@@ -19,7 +19,10 @@ import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint
 // being able to *omit* things from types. On the other hand, it's exactly
 // what we need here when doing bad things, anyway...
 interface NamespaceSetJson { [key: string]: Namespace | number }
-interface NamespaceJson extends Omit<Namespace, 'ealdorman' | 'leaders' | 'namespaces' | 'owner'> {
+interface NamespaceJson extends Omit<Namespace,
+    'ealdorman' | 'leaders' | 'namespaces' | 'owner' | 'parent'
+> {
+    parent: Namespace | number
     ealdorman: Process | number
     leaders: (Process | number)[]
     owner: Namespace | number
@@ -32,6 +35,9 @@ interface NamespaceJson extends Omit<Namespace, 'ealdorman' | 'leaders' | 'names
  * references which can be directly used.
  *
  * @param discoverydata JSON discovery response in form of plain JS objects.
+ * **IMPORTANT:** the discovery data gets modified in place, so there's no copy
+ * being made by fromjson(). If necessary, the caller is responsible for a deep
+ * clone!
  */
 export const fromjson = (discoverydata: any): Discovery => {
     const discovery = discoverydata as Discovery
@@ -53,30 +59,31 @@ export const fromjson = (discoverydata: any): Discovery => {
         // Replace leader PIDs with leader process object references ... if
         // there is a list of leader PIDs; otherwise, set an empty array.
         let leaders: Process[] = [];
-        (ns as NamespaceJson).leaders && (ns as NamespaceJson).leaders.forEach(leader => {
-            if (leader.toString() in discovery.processes) {
-                leaders.push(discovery.processes[leader.toString()]);
-            }
-        });
+        (ns as NamespaceJson).leaders
+            && (ns as NamespaceJson).leaders.forEach((leader: number) => {
+                if (leader in discovery.processes) {
+                    leaders.push(discovery.processes[leader]);
+                }
+            });
         ns.leaders = leaders;
 
         // Resolve ealdorman, if present; otherwise set it to null instead of
         // undefined.
         ns.ealdorman = ((ns as NamespaceJson).ealdorman &&
-            discovery.processes[(ns as NamespaceJson).ealdorman.toString()]) || null;
+            discovery.processes[(ns as NamespaceJson).ealdorman as number]) || null;
 
         // resolve namespace hierarchy references, if present.
         switch (ns.type) {
             case NamespaceType.user:
             case NamespaceType.pid:
                 ns.parent = ((ns as NamespaceJson).parent &&
-                    discovery.namespaces[(ns as NamespaceJson).parent.toString()]) || null;
+                    discovery.namespaces[(ns as NamespaceJson).parent as number]) || null;
                 ns.parent && ns.parent.children.push(ns); // ...billions of gothers crying
         }
 
         // resolve ownership, if applicable.
         if ((ns as NamespaceJson).owner) {
-            ns.owner = discovery.namespaces[(ns as NamespaceJson).owner.toString()];
+            ns.owner = discovery.namespaces[(ns as NamespaceJson).owner as number];
             ns.owner.tenants.push(ns);
         }
     });
@@ -93,13 +100,13 @@ export const fromjson = (discoverydata: any): Discovery => {
     Object.values(discovery.processes).forEach(proc => {
         // Resolve the parent-child relationships.
         if (proc.ppid.toString() in discovery.processes) {
-            proc.parent = discovery.processes[proc.ppid.toString()];
+            proc.parent = discovery.processes[proc.ppid];
             proc.parent.children.push(proc);
         }
 
         // Resolve the attached namespaces relationships.
         for (const [type, nsref] of Object.entries(proc.namespaces)) {
-            proc.namespaces[type] = discovery.namespaces[nsref.toString()]
+            proc.namespaces[type] = discovery.namespaces[nsref]
         }
     });
 
@@ -107,22 +114,25 @@ export const fromjson = (discoverydata: any): Discovery => {
     if (discovery.processes[1] && discovery.processes[2]) {
         // At least someone has put some effort into fooling us...
         Object.values(discovery.processes[1].namespaces).forEach(
-            // Make thousands of gophers cry in syntactic agony...
-            ns => (discovery.namespaces[ns.nsid.toString()].initial = true)
+            (ns: Namespace) => {
+                if (ns.nsid in discovery.namespaces) {
+                    discovery.namespaces[ns.nsid].initial = true
+                }
+            }
         )
     }
 
     // Resolve the references in the hierarchy of mount paths and also resolve
     // the references in the hierarchy of mount points. For mount points,
     // references are allowed to cross mount namespaces.
-    const mountpointidmap: {[mountpointid: string]: MountPoint} = {}
+    const mountpointidmap: { [mountpointid: string]: MountPoint } = {}
     const mountgroups: MountGroupMap = {}
     Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
         const mountns = discovery.namespaces[mntnsid]
         // In order to later resolve the hierarchical mount point references
         // within a single mount namespace we need to first build a map from
         // mount path identifiers to mount path objects.
-        const mountpathidmap: {[mountpathid: string]: MountPath} = {}
+        const mountpathidmap: { [mountpathid: string]: MountPath } = {}
         Object.values(mountpathmap).forEach(mountpath => {
             mountpath.path = mountpath.mounts[0].mountpoint // convenience
             mountpathidmap[mountpath.pathid.toString()] = mountpath
@@ -167,7 +177,7 @@ export const fromjson = (discoverydata: any): Discovery => {
                 if (peergroupid) {
                     var peergroup = mountgroups[peergroupid]
                     if (!peergroup) {
-                        peergroup = {id: parseInt(peergroupid), members: []}
+                        peergroup = { id: parseInt(peergroupid), members: [] }
                         mountgroups[peergroupid] = peergroup
                     }
                     peergroup.members.push(mountpoint)
@@ -181,7 +191,7 @@ export const fromjson = (discoverydata: any): Discovery => {
                 if (mastergroupid) {
                     var mastergroup = mountgroups[mastergroupid]
                     if (!mastergroup) {
-                        mastergroup = {id: parseInt(mastergroupid), members: []}
+                        mastergroup = { id: parseInt(mastergroupid), members: [] }
                         mountgroups[mastergroupid] = mastergroup
                     }
                     mastergroup.members.push(mountpoint)

@@ -68,7 +68,7 @@ const Example = ({ children, maxWidth, states }: ExampleProps) => (
     <Provider initialValues={[...initials, ...(states ? states : [])]}>
         <Box m={2}>
             <Card style={{ maxWidth: maxWidth || '100%' }}>
-                <Box m={1}>
+                <Box m={1} style={{overflowX: 'auto'}}>
                     {children}
                 </Box>
             </Card>

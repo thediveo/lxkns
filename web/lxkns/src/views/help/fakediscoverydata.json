@@ -1,0 +1,176 @@
+{
+    "processes": {
+        "1": {
+            "pid": 1,
+            "ppid": 0,
+            "name": "süstemdee",
+            "starttime": 0,
+            "cpucgroup": "/init.scope",
+            "fridgegroup": "/",
+            "fridgefrozen": false,
+            "cmdline": [
+                "/sbin/init",
+                "fixrtc"
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026531841,
+                "uts": 4026531842
+            }
+        },
+        "2": {
+            "pid": 2,
+            "ppid": 0,
+            "name": "kthreadd",
+            "starttime": 0,
+            "cpucgroup": "/",
+            "fridgegroup": "/",
+            "fridgefrozen": false,
+            "cmdline": [
+                ""
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026531841,
+                "uts": 4026531842
+            }
+        },
+        "666": {
+            "pid": 666,
+            "ppid": 1,
+            "name": "looser",
+            "starttime": 777666,
+            "cpucgroup": "/loosers.scope",
+            "fridgegroup": "/loosers",
+            "fridgefrozen": false,
+            "cmdline": [
+                "/bin/looser",
+                "--world-furcapination"
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026532666,
+                "uts": 4026531842
+            }
+        }
+    },
+    "namespaces": {
+        "4026531835": {
+            "nsid": 4026531835,
+            "type": "cgroup",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/cgroup",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531836": {
+            "nsid": 4026531836,
+            "type": "ipc",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/ipc",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531837": {
+            "nsid": 4026531837,
+            "type": "mnt",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/mnt",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531838": {
+            "nsid": 4026531838,
+            "type": "net",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/net",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531839": {
+            "nsid": 4026531839,
+            "type": "pid",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/pid",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531840": {
+            "nsid": 4026531840,
+            "type": "time",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/time",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531841": {
+            "nsid": 4026531841,
+            "type": "user",
+            "user-id": 0,
+            "user-name": "root",
+            "reference": "/proc/1/ns/user",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531842": {
+            "nsid": 4026531842,
+            "type": "uts",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/uts",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026532123": {
+            "nsid": 4026532123,
+            "type": "mnt",
+            "owner": 4026531841,
+            "reference": "/run/snackd/ns/calcium.mnt",
+            "leaders": []
+        },
+        "4026532666": {
+            "nsid": 4026532666,
+            "type": "user",
+            "user-id": 65534,
+            "user-name": "looser",
+            "reference": "/proc/666/ns/user",
+            "leaders": [
+                666
+            ],
+            "ealdorman": 666,
+            "parent": 4026531841
+        }
+    },
+    "mounts": {
+    }
+}
