@@ -115,5 +115,6 @@ export const Help = () => (
         baseroute="/help"
         markdowner={MuiMarkdown}
         shortcodes={{ a: SmartA, BoxedIcons, Example, NamespaceBadge, NamespaceExample }}
+        style={{overflow: 'visible'}}
     />
 )

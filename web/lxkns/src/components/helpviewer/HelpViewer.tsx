@@ -284,6 +284,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
             <Divider />
             <ChapterButton chapterIndex={currentChapterIndex - 1} />
             <ChapterButton chapterIndex={currentChapterIndex + 1} />
+            <div style={{clear: 'both'}}></div>
         </div>
     </div>
 }
