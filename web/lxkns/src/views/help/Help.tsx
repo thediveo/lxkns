@@ -39,6 +39,7 @@ const chapters: HelpViewerChapter[] = [
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'All View', chapter: ch('Allview'), slug: 'allview' },
     { title: 'Type-Specific Views', chapter: ch('Typedviews'), slug: 'typedviews' },
+    { title: 'Mount Namespaces', chapter: ch('Mounts'), slug: 'mounts' },
     { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
     { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
@@ -68,7 +69,7 @@ const Example = ({ children, maxWidth, states }: ExampleProps) => (
     <Provider initialValues={[...initials, ...(states ? states : [])]}>
         <Box m={2}>
             <Card style={{ maxWidth: maxWidth || '100%' }}>
-                <Box m={1}>
+                <Box m={1} style={{ overflowX: 'auto' }}>
                     {children}
                 </Box>
             </Card>
@@ -114,5 +115,6 @@ export const Help = () => (
         baseroute="/help"
         markdowner={MuiMarkdown}
         shortcodes={{ a: SmartA, BoxedIcons, Example, NamespaceBadge, NamespaceExample }}
+        style={{overflow: 'visible'}}
     />
 )

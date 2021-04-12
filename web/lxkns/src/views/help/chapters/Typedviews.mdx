@@ -1,11 +1,10 @@
-import { UserNamespaceTree } from "components/usernamespacetree";
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
 import { discovery } from "../fakehelpdata";
 import { Pause, PlayArrow } from '@material-ui/icons';
 
 # Type-Specific Views
 
-The type-specific namespace views show only namespaces of a single specific
+The type-specific namespace views show namespaces just of a single specific
 type. Then, they are mostly _flat_ views, except for PID and user namespace
 views. For instance, this is a view into only _user_ namespaces, now _without_
 the owned namespaces:
@@ -20,8 +19,13 @@ And this is an example view into only _mount_ namespaces:
   <NamespaceProcessTree type="mnt" discovery={discovery} action={{ action: "" }} />
 </Example>
 
+Please note that mount namespaces additionally show their mount points, see
+[mount namespaces](/help/mounts) for details.
+
+### Cgroup Grouping
+
 In case the processes attached to a namespace belong to different cgroup
-controllers, then additionally all the leader (topmost) processes in the process
+controller paths, then additionally all the leader (topmost) processes in the process
 tree with differing cgroup paths are shown. This is especially usefull in such
 cases, where containers share namespaces (either with other containers or the
 host). Such as in case of our "lxkns" service container that needs its processes

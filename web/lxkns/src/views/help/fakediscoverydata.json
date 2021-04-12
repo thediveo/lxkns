@@ -1,0 +1,333 @@
+{
+    "processes": {
+        "1": {
+            "pid": 1,
+            "ppid": 0,
+            "name": "süstemdee",
+            "starttime": 0,
+            "cpucgroup": "/init.scope",
+            "fridgegroup": "/",
+            "fridgefrozen": false,
+            "cmdline": [
+                "/sbin/init",
+                "fixrtc"
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026531841,
+                "uts": 4026531842
+            }
+        },
+        "2": {
+            "pid": 2,
+            "ppid": 0,
+            "name": "kthreadd",
+            "starttime": 0,
+            "cpucgroup": "/",
+            "fridgegroup": "/",
+            "fridgefrozen": false,
+            "cmdline": [
+                ""
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026531841,
+                "uts": 4026531842
+            }
+        },
+        "666": {
+            "pid": 666,
+            "ppid": 1,
+            "name": "looser",
+            "starttime": 777666,
+            "cpucgroup": "/loosers.scope",
+            "fridgegroup": "/loosers",
+            "fridgefrozen": false,
+            "cmdline": [
+                "/bin/looser",
+                "--world-furcapination"
+            ],
+            "namespaces": {
+                "cgroup": 4026531835,
+                "ipc": 4026531836,
+                "mnt": 4026531837,
+                "net": 4026531838,
+                "pid": 4026531839,
+                "time": 4026531840,
+                "user": 4026532666,
+                "uts": 4026531842
+            }
+        }
+    },
+    "namespaces": {
+        "4026531835": {
+            "nsid": 4026531835,
+            "type": "cgroup",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/cgroup",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531836": {
+            "nsid": 4026531836,
+            "type": "ipc",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/ipc",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531837": {
+            "nsid": 4026531837,
+            "type": "mnt",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/mnt",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531838": {
+            "nsid": 4026531838,
+            "type": "net",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/net",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531839": {
+            "nsid": 4026531839,
+            "type": "pid",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/pid",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531840": {
+            "nsid": 4026531840,
+            "type": "time",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/time",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531841": {
+            "nsid": 4026531841,
+            "type": "user",
+            "user-id": 0,
+            "user-name": "root",
+            "reference": "/proc/1/ns/user",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026531842": {
+            "nsid": 4026531842,
+            "type": "uts",
+            "owner": 4026531841,
+            "reference": "/proc/1/ns/uts",
+            "leaders": [
+                1
+            ],
+            "ealdorman": 1
+        },
+        "4026532123": {
+            "nsid": 4026532123,
+            "type": "mnt",
+            "owner": 4026531841,
+            "reference": "/run/snackd/ns/calcium.mnt",
+            "leaders": []
+        },
+        "4026532666": {
+            "nsid": 4026532666,
+            "type": "user",
+            "user-id": 65534,
+            "user-name": "looser",
+            "reference": "/proc/666/ns/user",
+            "leaders": [
+                666
+            ],
+            "ealdorman": 666,
+            "parent": 4026531841
+        }
+    },
+    "mounts": {
+        "4026531837": {
+            "/": {
+                "mounts": [
+                    {
+                        "mountid": 28,
+                        "parentid": 1,
+                        "major": 8,
+                        "minor": 2,
+                        "root": "/",
+                        "mountpoint": "/",
+                        "mountoptions": [
+                            "rw",
+                            "relatime"
+                        ],
+                        "tags": {
+                            "shared": "1"
+                        },
+                        "fstype": "ext4",
+                        "source": "/dev/sda2",
+                        "superoptions": "rw,stripe=256",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 46,
+                "parentid": 0
+            },
+            "/proc": {
+                "mounts": [
+                    {
+                        "mountid": 24,
+                        "parentid": 28,
+                        "major": 0,
+                        "minor": 5,
+                        "root": "/",
+                        "mountpoint": "/proc",
+                        "mountoptions": [
+                            "rw",
+                            "nosuid",
+                            "nodev",
+                            "noexec",
+                            "relatime"
+                        ],
+                        "tags": {
+                            "shared": "14"
+                        },
+                        "fstype": "proc",
+                        "source": "proc",
+                        "superoptions": "rw",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 10,
+                "parentid": 46
+            },
+            "/run": {
+                "mounts": [
+                    {
+                        "mountid": 27,
+                        "parentid": 28,
+                        "major": 0,
+                        "minor": 23,
+                        "root": "/",
+                        "mountpoint": "/run",
+                        "mountoptions": [
+                            "rw",
+                            "nosuid",
+                            "nodev",
+                            "noexec",
+                            "relatime"
+                        ],
+                        "tags": {
+                            "shared": "5"
+                        },
+                        "fstype": "tmpfs",
+                        "source": "tmpfs",
+                        "superoptions": "rw,size=799776k,mode=755",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 19,
+                "parentid": 46
+            },
+            "/run/snapd/ns/chromium.mnt": {
+                "mounts": [
+                    {
+                        "mountid": 1871,
+                        "parentid": 1063,
+                        "major": 0,
+                        "minor": 4,
+                        "root": "mnt:[4026532395]",
+                        "mountpoint": "/run/snapd/ns/chromium.mnt",
+                        "mountoptions": [
+                            "rw"
+                        ],
+                        "tags": {},
+                        "fstype": "nsfs",
+                        "source": "nsfs",
+                        "superoptions": "rw",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 48,
+                "parentid": 19
+            },
+            "/run/docker/netns/34fa5d9f4b6e": {
+                "mounts": [
+                    {
+                        "mountid": 1838,
+                        "parentid": 27,
+                        "major": 0,
+                        "minor": 4,
+                        "root": "net:[4026532465]",
+                        "mountpoint": "/run/ducker/netns/12fa5d9fab7e",
+                        "mountoptions": [
+                            "rw"
+                        ],
+                        "tags": {
+                            "shared": "608"
+                        },
+                        "fstype": "nsfs",
+                        "source": "nsfs",
+                        "superoptions": "rw",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 7,
+                "parentid": 19
+            }
+        },
+        "4026532123": {
+            "/": {
+                "mounts": [
+                    {
+                        "mountid": 84,
+                        "parentid": 46,
+                        "major": 8,
+                        "minor": 2,
+                        "root": "/",
+                        "mountpoint": "/",
+                        "mountoptions": [
+                            "rw",
+                            "relatime"
+                        ],
+                        "tags": {
+                            "master": "1",
+                            "shared": "31"
+                        },
+                        "fstype": "ext4",
+                        "source": "/dev/sda2",
+                        "superoptions": "rw,stripe=256",
+                        "hidden": false
+                    }
+                ],
+                "pathid": 4,
+                "parentid": 0
+            }
+        }
+    }
+}

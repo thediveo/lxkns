@@ -69,9 +69,10 @@ quickly understanding how namespaces relate to leader processes. Now, not every
 leader process might use its own namespaces but instead multiple leader processes
 might "share" some namespaces between them.
 
-<Example maxWidth="16em">
-  <NamespaceExample type="pid" shared={true} initial={true} />
-</Example>
+| Display | Notes |
+| --- | --- |
+| <NamespaceExample type="pid" shared={true} initial={true} /> | namespace created by a most senior leader process and shared with this process. |
+| <NamespaceExample type="pid" initial={true} /> | namespace created by most senior leader process and shared with other leader processes. |
 
 lxkns shows all namespaces (except for the user namespace)
 for the leader processes with different cgroup paths, but "fades" namespaces

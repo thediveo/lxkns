@@ -1,0 +1,73 @@
+import { NamespaceProcessTree } from "components/namespaceprocesstree";
+import { MountTreeDetailer } from "components/mounttree";
+import { expandInitiallyAtom } from "views/settings";
+import { EXPANDALL } from "app/treeaction";
+import { discovery } from "../fakehelpdata";
+import { PeerIcon } from "icons/propagation/Peer";
+import { SlaveIcon } from "icons/propagation/Slave";
+import { UnbindableIcon } from "icons/propagation/Unbindable";
+import MoreHorizIcon from "@material-ui/icons/MoreHoriz";
+
+# Mount Namespaces
+
+Linux [mount namespaces partition the mount points](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html)
+seen by the processes in a particular mount namespace. Lxkns shows these mount
+point views in its mount namespace view, such as in this example:
+
+<Example states={[[expandInitiallyAtom, true]]}>
+  <NamespaceProcessTree
+    type="mnt"
+    discovery={discovery}
+    details={MountTreeDetailer}
+    action={{action: EXPANDALL }}
+  />
+</Example>
+
+As a special feature, lxkns also shows the mount points inside bind-mounted namespaces to
+which no process has been attached (kind of [findmnt(8)](https://man7.org/linux/man-pages/man8/findmnt.8.html)
+on drugs).
+
+Each mount point is shown with its (shortened) path, type of filesystem, visibility
+state (grayed-out, crossed-out), and optional propagation state information (see below). 
+
+### Mount Point Visibility
+
+Multiple mount points can be mounted on the same mount path, but only at most one
+of them can be visible in the virtual filesystem view (VFS). The other mount points are
+also said to be "overmounted". Moreover, later mount points higher up the VFS path
+hierarchy can also hide (overmount) other mount points.
+
+lxkns automatically determines the visibility of mount points itself, as unfortunately
+the Linux kernel does not explicitly expose visibility information for mount points.
+Hidden (overmounted) mount points are grayed-out and their path crossed out.
+
+### Mount Point Propagation
+
+Simply spoken, mount and unmount events directly below a mount point can optionally
+propagate between mount namespaces, see also
+[mount namespaces(7)](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html#top_of_page)
+for the gory details.
+
+The general propagation is indicated after each mount point using one or more
+symbols, the number after each icons represents the so-called propagation group
+identifier.
+
+| Symbol | Meaning |
+| --- | --- |
+| <PeerIcon/> | mount events propagate between "peer" mounts and/or unidirectional to "slave" mounts. |
+| <SlaveIcon/> | mount events propagate from "master" mounts to this slave mount, but any mount events under this slave mount never propagate back. |
+| <UnbindableIcon/> | this mount point cannot be bind-mounted (used in other bind mounts). It can be overmounted, though. |
+
+### Mount Point Details
+
+Clicking on &#32;<MoreHorizIcon className="icon"/> shows more detailed information about a
+particular mount point, such as mount and superblock options, the root path, et cetera.
+
+The details additionally show the related "peer", "slave", and "master" mount points
+sharing mount events with the mount point, neatly organized by mount namespace.
+
+- peer mounts exchange mount events with each other,
+- master mounts send mount events to this mount, but this mount won't send any
+  mount events back.
+- slave mounts receive mount events from this mount, but won't send any mount
+  events back to it.
