@@ -177,6 +177,33 @@ the Linux kernel architecture, user namespaces own all other namespaces.
 
 ![lxkns app all namespaces](docs/lxkns-app.jpeg)
 
+#### Behind Reverse Proxies
+
+Serving single page applications using client-side HTML5 DOM routing behind
+rewriting reverse proxies always is a challenge. Of course, if you know the
+exact details where your containerized server is going to be deployed you might
+statically set the final base path and build your React SPA to exactly this
+configuration. However, if you want to make your server image more versatile and
+know the reverse proxy (proxies) in front of your server will cooperate by
+telling you the original URL as used by the client, then things get more
+flexible.
+
+For lxkns, we use this method: if there is a (rewriting) reverse proxy in front
+of our service, it must pass a `X-Forwarded-Uri` HTTP request header with either
+the full URL (URI) or at least the absolute path of the resource as originally
+requested by a client. This allows our service to determine the "base" path by
+comparing the path seen by our service versus the path seen by the first proxy.
+This information is then used to dynamically rewrite the `<base href=""/>` from
+`index.html` as needed.
+
+Please note that a typical `public/index.html` should set `<base
+href="%PUBLIC_URL%/"/>` – **please note the trailing slash!** The production
+version of your React app then should be build with PUBLIC_URL unset (default).
+
+Reference all your resources with relative paths, including your
+shortcut/favorite icon, et cetera. Remove any `%PUBLIC_URL%/` from any other
+place than the `<base />` element.
+
 #### lxkns Service Container Deployment
 
 Some deployment notes about the lxkns service container:
