@@ -198,7 +198,9 @@ This information is then used to dynamically rewrite the `<base href=""/>` from
 
 Please note that a typical `public/index.html` should set `<base
 href="%PUBLIC_URL%/"/>` – **please note the trailing slash!** The production
-version of your React app then should be build with PUBLIC_URL unset (default).
+version of your React app then should be build with PUBLIC_URL set to "."
+(sic!). This ensures that all webpack-generated resources are properly
+referenced relative to the (dynamic) base URL.
 
 Reference all your resources with relative paths, including your
 shortcut/favorite icon, et cetera. Remove any `%PUBLIC_URL%/` from any other

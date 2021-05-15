@@ -37,6 +37,9 @@ import (
 // determine the base path of our SPA as seen by the client. While
 // X-Forwarded-Uri is generally barely documented it seems to be kind of a (oh,
 // the irony) "well-known" header often used almost undetectedly.
+//
+// One place to spot it are Træfik's forward-request headers,
+// https://doc.traefik.io/traefik/middlewares/forwardauth/#forward-request-headers.
 const OriginalUrlHeader = "X-Forwarded-Uri"
 
 // baseRe matches the base element in index.html in order to allow us to
@@ -87,17 +90,21 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	uriPath := path.Clean("/" + r.URL.Path)
 	// Check whether a file exists at the given path; if it doesn't then serve
 	// index.html from the "root" location of our static file assets instead.
-	if _, err := os.Stat(path.Join(h.staticPath, uriPath)); err == nil {
+	// Please note that we also consider all directories themselves to trigger
+	// fallback to index.html.
+	if info, err := os.Stat(path.Join(h.staticPath, uriPath)); err == nil && !info.IsDir() {
 		// simply use http.FileServer to serve the existing static file; please
 		// note that http.FileServer.ServeHTTP correctly sanitizes r.URL.Path
 		// itself before trying to serve the filesystem resource, so it is kept
 		// inside h.staticPath.
+		log.Debugf("serving static resource %s", uriPath)
 		http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 		return
-	} else if !os.IsNotExist(err) {
+	} else if err != nil && !os.IsNotExist(err) {
 		// we got an error other than that the file doesn't exist when trying to
 		// stat the file, so return a (sanitized) 500 internal server error and
 		// be done with it.
+		log.Debugf("no such static resource %s", uriPath)
 		httpError(w, err)
 		return
 	}
@@ -108,7 +115,6 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// relying on proxy magic instead... :o
 	origUriPath := uriPath
 	if clientUri, ok := r.Header[OriginalUrlHeader]; ok {
-		log.Debugf("original URI set: %s", clientUri)
 		if len(clientUri) > 0 && clientUri[0] != "" {
 			// Again, sanitize whatever some self-acclaimed lobbxy, erm, proxy
 			// sent us. For instance, the proxy's posh spell checker might have
@@ -126,7 +132,10 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var base string
-	if strings.HasPrefix(origUriPath, uriPath) {
+	if !strings.HasSuffix(origUriPath, "/") {
+		origUriPath += "/"
+	}
+	if strings.HasSuffix(origUriPath, uriPath) {
 		base = origUriPath[:len(origUriPath)-len(uriPath)]
 	} else {
 		base = "" // fallback to root base in case the proxy passed us (ex-)PM nonsense.
@@ -143,6 +152,7 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// eliminate any "$" in the path, as this definitely is not VMS (shudder)
 	// and we don't need no "$" in the SPA paths.
 	base = strings.ReplaceAll(base, "$", "")
+	log.Debugf("serving dynamic index.html with base %s at %s", base, uriPath)
 
 	// Grab the index.html's contents into a string as we need to modify it
 	// on-the-fly based on where we deem the base path to be. And finally serve

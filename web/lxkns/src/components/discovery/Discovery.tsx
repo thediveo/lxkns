@@ -89,7 +89,7 @@ export const discoveryRefreshingAtom = atom(
 // information about all namespaces, adding information about the previous
 // discovery state.
 const fetchDiscoveryData = (set: Setter) => {
-    fetch('/api/namespaces')
+    fetch('api/namespaces') // relative to base href!
         .then(httpresult => {
             // Whatever the server replied, it did reply and we can reset
             // the refreshing indication. 

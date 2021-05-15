@@ -85,7 +85,7 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "/",
+  "homepage": ".",
   "devDependencies": {
     "@cypress/react": "^4.16.4",
     "cypress": "^6.6.0",
