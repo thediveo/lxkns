@@ -15,6 +15,9 @@ engine even determines the visibility of mount points, taking different forms of
 
 - discovery web frontend and containerized backend discovery service (with REST
   API).
+  - The web frontend can even be correctly deployed behind path-rewriting
+    reverse proxies without recompilation or image rebuild as long as the
+    reverse proxy supplies an `X-Forwarded-Uri` HTTP request header.
 
 - CLI namespace discovery tools.
 
@@ -176,6 +179,42 @@ organized along the hierarchy of user namespaces. The rationale here is that in
 the Linux kernel architecture, user namespaces own all other namespaces.
 
 ![lxkns app all namespaces](docs/lxkns-app.jpeg)
+
+#### ⛐ Behind Path-Rewriting Reverse Proxies
+
+Serving single page applications using client-side HTML5 DOM routing behind
+path-rewriting reverse proxies always is a challenge. Of course, if you know the
+exact details where your containerized server is going to be deployed you might
+statically set the final base path and build your React SPA to exactly this
+configuration. However, if you want to make your server image more versatile and
+know the reverse proxy (proxies) in front of your server will cooperate by
+telling you the original URL as used by the client, then things get more
+flexible.
+
+For lxkns, we use this method: if there is a (rewriting) reverse proxy in front
+of our service, it must pass a `X-Forwarded-Uri` HTTP request header with either
+the full URL (URI) or at least the absolute path of the resource as originally
+requested by a client. This allows our service to determine the "base" path by
+comparing the path seen by our service versus the path seen by the first proxy.
+This information is then used to dynamically rewrite the `<base href=""/>` from
+`index.html` as needed.
+
+Please note that a typical `public/index.html` should set `<base
+href="%PUBLIC_URL%/"/>` – **please note the trailing slash!** The production
+version of your React app then should be build with PUBLIC_URL set to "."
+(sic!). This ensures that all webpack-generated resources are properly
+referenced relative to the (dynamic) base URL.
+
+Reference all your resources with relative paths, including your
+shortcut/favorite icon, et cetera. Remove any `%PUBLIC_URL%/` from any other
+place than the `<base />` element.
+
+Don't forget the (REST) API calls: these need to be relative, too.
+
+In order to make HTML5 DOM routing properly work behind a path-rewriting reverse
+proxy the SPA needs to pick up its own `<base />` element path and then pass
+that on to its DOM router; see `web/lxkns/src/utils/basename.ts` and
+`web/lxkns/src/app/App.tsx` for how this is done in lxkns.
 
 #### lxkns Service Container Deployment
 
