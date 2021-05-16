@@ -111,8 +111,9 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// determine the base path to the SPA as seen by clients. Here, we don't
 	// want to rely on "magic" signatures in paths but instead rely on the first
-	// reverse proxy correctly setting some HTTP request header. So, we're
-	// relying on proxy magic instead... :o
+	// reverse proxy correctly setting some HTTP request header. So, we're in
+	// part relying on proxy magic instead that passes the original path to us
+	// :o
 	origUriPath := uriPath
 	if clientUri, ok := r.Header[OriginalUrlHeader]; ok {
 		if len(clientUri) > 0 && clientUri[0] != "" {
@@ -132,13 +133,19 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var base string
-	if !strings.HasSuffix(origUriPath, "/") {
+	if strings.HasSuffix(uriPath, "/") && !strings.HasSuffix(origUriPath, "/") {
+		// handle the corner case where the reverse proxy might redirect from,
+		// say, /lxkns to /lxkns/ so that the original URI path is /lxkns/ and
+		// then rewrites the path to just /. Please note that the reverse proxy
+		// shouldn't interfere with redirects anywhere below the root.
 		origUriPath += "/"
 	}
 	if strings.HasSuffix(origUriPath, uriPath) {
 		base = origUriPath[:len(origUriPath)-len(uriPath)]
 	} else {
-		base = "" // fallback to root base in case the proxy passed us (ex-)PM nonsense.
+		// fallback to root base in case the proxy passed us (ex-)PM nonsense,
+		// trying to shift blame onto the auto korrekter.
+		base = ""
 	}
 	if !strings.HasSuffix(base, "/") {
 		// Ensure that the base path always ends with a "/", as otherwise
@@ -177,6 +184,8 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, "index.html", fi.ModTime(), strings.NewReader(finalIndexhtml))
 }
 
+// requestLogger is a middleware that closes the specified HTTP handler so that
+// requests get logged at info level.
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		log.Infof("http %s %s", req.Method, req.RequestURI)

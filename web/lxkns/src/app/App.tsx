@@ -49,6 +49,8 @@ import { Help } from 'views/help'
 import { AllNamespaces } from 'views/allnamespaces'
 import { TypedNamespaces } from 'views/typednamespaces'
 
+import { basename } from 'utils/basename'
+
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
     label: string /** drawer item label */
@@ -257,7 +259,7 @@ const ThemedApp = () => {
 // history object in the ThemedApp for passing it to Cypress, if present.
 const App = () => (
     <StateProvider>
-        <Router>
+        <Router basename={basename}>
             <CypressHistorySupport />
             <ThemedApp />
         </Router>
