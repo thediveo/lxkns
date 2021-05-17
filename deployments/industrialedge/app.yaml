@@ -1,0 +1,7 @@
+name: "Linux-kernel Namespaces"
+repository: lxkns
+website: "https://github.com/thediveo/lxkns"
+description: >
+  Discover Linux-kernel namespaces in container hosts.
+category: Other
+icon: lxkns-logo-150x150.png
