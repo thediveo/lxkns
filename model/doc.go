@@ -1,7 +1,8 @@
 /*
 
 Package model defines the core of lxkns information model: Linux kernel
-namespaces and processes, and how they relate to each other.
+namespaces and processes, and how they relate to each other; with the additional
+missing link between processes and user-land containers.
 
 Linux namespaces partition certain OS resources and thus come in different
 types. At the moment, there are namespaces for partitioning cgroups, IPC,
