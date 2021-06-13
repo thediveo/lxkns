@@ -27,7 +27,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("watching ContainerEngine", func() {
+const sleepyname = "pompous_pm"
+
+var _ = Describe("ContainerEngine", func() {
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
@@ -39,17 +41,20 @@ var _ = Describe("watching ContainerEngine", func() {
 		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "busybox",
 			Tag:        "latest",
-			Name:       "pompous_pm",
+			Name:       sleepyname,
 			Cmd:        []string{"/bin/sleep", "30s"},
+			Labels:     map[string]string{"foo": "bar"},
 		})
 		Expect(err).NotTo(HaveOccurred())
+		Expect(pool.Client.PauseContainer(sleepyname)).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
+		Expect(pool.Client.UnpauseContainer(sleepyname)).NotTo(HaveOccurred())
 		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 	})
 
-	It("watches", func() {
+	It("discovers container", func() {
 		dockerw, err := moby.NewWatcher("")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -58,11 +63,40 @@ var _ = Describe("watching ContainerEngine", func() {
 		cew := New(ctx, []watcher.Watcher{dockerw})
 		Expect(cew).NotTo(BeNil())
 
+		// wait for the watcher to have completed its initial synchronization
+		// with its container engine...
 		<-dockerw.Ready()
+		// ...then wait for it to have also picked up the paused state of our
+		// test container (better safe than sorry in this case).
+		Eventually(func() bool {
+			return dockerw.Portfolio().Container(sleepyname).Paused
+		}).Should(BeTrue())
+
 		dr := lxkns.DiscoveryResult{}
 		cew.Containerize(ctx, &dr)
 		Expect(dr.Containers).To(ContainElement(
 			WithTransform(func(c model.Container) string { return c.Name() }, Equal("pompous_pm"))))
+
+		var c model.Container
+		for _, cntr := range dr.Containers {
+			if cntr.Name() == sleepyname {
+				c = cntr
+				break
+			}
+		}
+		// dockertest's resource does not properly reflect container state
+		// changes after creation, sigh. So we need to inspect to get the
+		// correct information.
+		csleepy, err := pool.Client.InspectContainer(sleepy.Container.ID)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(c.ID()).To(Equal(csleepy.ID))
+		Expect(c.PID()).To(Equal(model.PIDType(csleepy.State.Pid)))
+		Expect(c.Paused()).To(Equal(csleepy.State.Paused))
+		Expect(c.Labels()).To(HaveKeyWithValue("foo", "bar"))
+		Expect(c.Type()).To(Equal(moby.Type))
+		Expect(c.Engine()).NotTo(BeNil())
+		Expect(c.Engine().API()).NotTo(BeEmpty())
+		Expect(c.Engine().ID()).NotTo(BeEmpty())
 	})
 
 })

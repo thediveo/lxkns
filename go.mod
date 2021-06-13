@@ -20,7 +20,7 @@ require (
 	github.com/thediveo/gons v0.9.7
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/testbasher v1.0.3
-	github.com/thediveo/whalewatcher v0.3.0
+	github.com/thediveo/whalewatcher v0.3.1-0.20210613201511-0f22dabdb752
 	golang.org/x/sys v0.0.0-20210423082822-04245dca01da
 	gopkg.in/yaml.v2 v2.4.0
 )

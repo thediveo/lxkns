@@ -38,7 +38,7 @@ var _ model.Container = (*Container)(nil)
 
 func (c *Container) ID() string                    { return c.id }
 func (c *Container) Name() string                  { return c.name }
-func (c *Container) Type() string                  { return c.engine.typ }
+func (c *Container) Type() string                  { return c.engine.Type() }
 func (c *Container) Flavor() string                { return "" }
 func (c *Container) PID() model.PIDType            { return c.pid }
 func (c *Container) Paused() bool                  { return c.paused }

@@ -27,7 +27,6 @@ import (
 // engine information.
 type ContainerEngine struct {
 	id      string          // container engine instance ID
-	typ     string          // container engine type ID
 	watcher watcher.Watcher // container engine watcher
 }
 
@@ -39,7 +38,6 @@ func NewContainerEngine(ctx context.Context, watcher watcher.Watcher) *Container
 	ce := &ContainerEngine{
 		watcher: watcher,
 		id:      watcher.ID(ctx),
-		typ:     "", // FIXME:
 	}
 	go watcher.Watch(ctx) // ...fire up the watch engine
 	return ce
@@ -47,7 +45,7 @@ func NewContainerEngine(ctx context.Context, watcher watcher.Watcher) *Container
 
 func (e *ContainerEngine) ID() string { return e.id }
 
-func (e *ContainerEngine) Type() string { return e.typ }
+func (e *ContainerEngine) Type() string { return e.watcher.Type() }
 
 // Containers returns the list of currently alive containers managed by this
 // container engine.
@@ -73,4 +71,4 @@ func (e *ContainerEngine) Containers() []model.Container {
 	return cntrs
 }
 
-func (e *ContainerEngine) API() string { return "" } // FIXME:
+func (e *ContainerEngine) API() string { return e.watcher.API() }
