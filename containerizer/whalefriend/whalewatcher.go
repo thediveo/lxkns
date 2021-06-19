@@ -14,59 +14,52 @@
 
 // +build linux
 
-package whalewatcher
+package whalefriend
 
 import (
 	"context"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 )
 
-// WhaleWatcher is a containerizer internally backed by one or more
+// WhaleFriend is a containerizer internally backed by one or more
 // Whalewatchers, that is, container watchers.
-type WhaleWatcher struct {
+type WhaleFriend struct {
 	engines []*ContainerEngine
 }
 
-var _ lxkns.Containerizer = (*WhaleWatcher)(nil)
+var _ containerizer.Containerizer = (*WhaleFriend)(nil)
 
 // New returns a new containerizer using the specified set of container
 // watchers. This also spins up the watchers to constantly watch in the
 // background for any signs of container life and death.
-func New(ctx context.Context, watchers []watcher.Watcher) lxkns.Containerizer {
-	c := &WhaleWatcher{
+func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containerizer {
+	c := &WhaleFriend{
 		engines: make([]*ContainerEngine, len(watchers)),
 	}
 	for idx, watcher := range watchers {
-		c.engines[idx] = NewContainerEngine(ctx, watcher)
+		c.engines[idx] = NewContainerEngine(ctx, watcher, 0)
 	}
 	return c
 }
 
-// Containerizer gets the current container state of (alive) containers from all
-// assigned whale watchers and updates the discovery result data accordingly.
-func (c *WhaleWatcher) Containerize(ctx context.Context, dr *lxkns.DiscoveryResult) {
+// Containers returns the current container state of (alive) containers from all
+// assigned whale watchers.
+func (c *WhaleFriend) Containers(
+	ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper,
+) []model.Container {
 	// Gather all alive containers known at this time to our whale watchers.
 	containers := []model.Container{}
 	for _, watcher := range c.engines {
-		containers = append(containers, watcher.Containers()...)
+		containers = append(containers, watcher.Containers(ctx, procs, pidmap)...)
 	}
-	// Update the discovery information with the container found and establish
-	// the links between container and process information model objects.
-	dr.Containers = containers
-	for idx := range containers {
-		// TODO: translate PID to initial PID namespace, if necessary.
-		if proc, ok := dr.Processes[containers[idx].PID()]; ok {
-			proc.Container = containers[idx]
-			containers[idx].(*Container).process = proc
-		}
-	}
+	return containers
 }
 
-func (c *WhaleWatcher) Close() {
+func (c *WhaleFriend) Close() {
 	for _, watcher := range c.engines {
-		watcher.watcher.Close()
+		watcher.Close()
 	}
 }

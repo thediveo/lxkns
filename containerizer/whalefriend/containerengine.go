@@ -14,11 +14,12 @@
 
 // +build linux
 
-package whalewatcher
+package whalefriend
 
 import (
 	"context"
 
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 )
@@ -26,30 +27,44 @@ import (
 // ContainerEngine implements the model.ContainerEngine perspective on container
 // engine information.
 type ContainerEngine struct {
-	id      string          // container engine instance ID
-	watcher watcher.Watcher // container engine watcher
+	id      string          // container engine instance ID.
+	watcher watcher.Watcher // container engine watcher.
+	pid     model.PIDType   // engine PID, if known; otherwise, zero.
 }
 
 var _ (model.ContainerEngine) = (*ContainerEngine)(nil)
+var _ (containerizer.Containerizer) = (*ContainerEngine)(nil)
 
 // NewContainerEngine returns a new ContainerEngine connected to the specified
 // container engine watcher, already up and running.
-func NewContainerEngine(ctx context.Context, watcher watcher.Watcher) *ContainerEngine {
-	ce := &ContainerEngine{
+func NewContainerEngine(ctx context.Context, watcher watcher.Watcher, enginepid model.PIDType) *ContainerEngine {
+	e := &ContainerEngine{
 		watcher: watcher,
 		id:      watcher.ID(ctx),
+		pid:     enginepid,
 	}
 	go watcher.Watch(ctx) // ...fire up the watch engine
-	return ce
+	return e
 }
 
+// Container engine instance identifier/data, such as a UUID, et cetera.
 func (e *ContainerEngine) ID() string { return e.id }
 
+// Identifier of the type of container engine, such as "docker.com",
+// "containerd.io", et cetera.
 func (e *ContainerEngine) Type() string { return e.watcher.Type() }
+
+// Container engine API path (in initial mount namespace).
+func (e *ContainerEngine) API() string { return e.watcher.API() }
+
+// Container engine PID, if known. Otherwise, zero.
+func (e *ContainerEngine) PID() model.PIDType { return e.pid }
 
 // Containers returns the list of currently alive containers managed by this
 // container engine.
-func (e *ContainerEngine) Containers() []model.Container {
+func (e *ContainerEngine) Containers(
+	ctx context.Context, _ model.ProcessTable, _ model.PIDMapper,
+) []model.Container {
 	cntrs := []model.Container{}
 	for _, projname := range append(e.watcher.Portfolio().Names(), "") {
 		project := e.watcher.Portfolio().Project(projname)
@@ -57,18 +72,21 @@ func (e *ContainerEngine) Containers() []model.Container {
 			continue
 		}
 		for _, container := range project.Containers() {
-			cntr := &Container{
-				id:     container.ID,
-				name:   container.Name,
-				pid:    model.PIDType(container.PID),
-				paused: container.Paused,
-				labels: container.Labels,
-				engine: e,
-			}
+			cntr := containerizer.NewContainer(
+				container.ID,
+				container.Name,
+				"", // default to Type derived from container engine.
+				model.PIDType(container.PID),
+				container.Paused,
+				container.Labels,
+				e)
 			cntrs = append(cntrs, cntr)
 		}
 	}
 	return cntrs
 }
 
-func (e *ContainerEngine) API() string { return e.watcher.API() }
+// Close releases the watcher and its resources.
+func (e *ContainerEngine) Close() {
+	e.watcher.Close()
+}

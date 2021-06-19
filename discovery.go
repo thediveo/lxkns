@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -50,7 +51,7 @@ type DiscoverOpts struct {
 	// Explicit opt-ins.
 	WithMounts bool `json:"with-mounts"` // Discover mount paths with mount points.
 
-	Containerizer Containerizer `json:"-"`
+	Containerizer containerizer.Containerizer `json:"-"`
 }
 
 // FullDiscovery sets the discovery options to a full and thus extensive
@@ -226,6 +227,9 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		}
 		return fmt.Sprintf("discovered %s namespaces", strings.Join(perns, ", "))
 	})
+
+	// Optionally discover alive containers and relate the.
+	discoverContainers(result)
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)

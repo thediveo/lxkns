@@ -14,23 +14,24 @@
 
 // +build linux
 
-package lxkns
+package containerizer
 
-import "context"
+import (
+	"context"
+
+	"github.com/thediveo/lxkns/model"
+)
 
 // Containerizer discovers containers and relates them to processes (and thus
 // also to Linux-kernel namespaces). A Containerizer can optionally be passed to
 // a namespace discovery via the discovery options; the containerizer then will
-// be called in order to discover any "alive" containers and to relate them to
-// the already discovered processes. Before consulting the containerizer,
-// namespaces and processes will already have been related by the discovery core
-// functions.
+// be called in order to discover any "alive" containers.
 type Containerizer interface {
-	// Discover user-level "alive" containers and relate them to the processes
-	// already discovered. Please note that depending on the particular
-	// containerizer implementation the context might be used or not used at
-	// all.
-	Containerize(ctx context.Context, dr *DiscoveryResult)
+	// Discover user-level "alive" containers.
+	//
+	// Please note that depending on the particular containerizer implementation
+	// the context might be used or not used at all.
+	Containers(ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper) []model.Container
 	// Close and release all resources allocated by this Containerizer.
 	Close()
 }

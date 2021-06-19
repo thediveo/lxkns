@@ -12,13 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package whalewatcher
+package whalefriend
 
 import (
 	"context"
 
 	"github.com/ory/dockertest"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
@@ -72,13 +71,12 @@ var _ = Describe("ContainerEngine", func() {
 			return dockerw.Portfolio().Container(sleepyname).Paused
 		}).Should(BeTrue())
 
-		dr := lxkns.DiscoveryResult{}
-		cew.Containerize(ctx, &dr)
-		Expect(dr.Containers).To(ContainElement(
-			WithTransform(func(c model.Container) string { return c.Name() }, Equal("pompous_pm"))))
+		cntrs := cew.Containers(ctx, nil, nil)
+		Expect(cntrs).To(ContainElement(
+			WithTransform(func(c model.Container) string { return c.Name() }, Equal(sleepyname))))
 
 		var c model.Container
-		for _, cntr := range dr.Containers {
+		for _, cntr := range cntrs {
 			if cntr.Name() == sleepyname {
 				c = cntr
 				break

@@ -76,4 +76,6 @@ type ContainerEngine interface {
 	Type() string
 	// Container engine API path (in initial mount namespace).
 	API() string
+	// Container engine PID, if known. Otherwise, zero.
+	PID() PIDType
 }
