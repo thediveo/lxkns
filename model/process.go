@@ -90,12 +90,12 @@ func (p *Process) Basename() (basename string) {
 // Linux process with the specified PID. In particular, the parent PID and the
 // name of the process, as well as the command line.
 func NewProcess(PID PIDType) (proc *Process) {
-	return newProcess(PID, "/proc")
+	return NewProcessInProcfs(PID, "/proc")
 }
 
-// newProcess implements NewProcess and additionally allows for testing on
+// NewProcessInProcfs implements NewProcess and additionally allows for testing on
 // fake /proc "filesystems".
-func newProcess(PID PIDType, procroot string) (proc *Process) {
+func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 	procbase := procroot + "/" + strconv.Itoa(int(PID))
 	line, err := ioutil.ReadFile(procbase + "/stat")
 	if err != nil {
@@ -207,14 +207,14 @@ func (p *Process) String() string {
 // initial mount namespace and this is possible in Go only when re-executing as
 // a child, the caller must explicitly request this additional discovery.
 func NewProcessTable(freezer bool) (pt ProcessTable) {
-	pt = newProcessTable(freezer, "/proc")
+	pt = NewProcessTableFromProcfs(freezer, "/proc")
 	log.Infof("discovered %d processes", len(pt))
 	return
 }
 
-// newProcessTable implements NewProcessTable and allows for testing on fake
+// NewProcessTableFromProcfs implements NewProcessTable and allows for testing on fake
 // /proc "filesystems".
-func newProcessTable(freezer bool, procroot string) (pt ProcessTable) {
+func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) {
 	procentries, err := ioutil.ReadDir(procroot)
 	if err != nil {
 		return nil
@@ -229,7 +229,7 @@ func newProcessTable(freezer bool, procroot string) (pt ProcessTable) {
 		if err != nil || pid == 0 {
 			continue
 		}
-		proc := newProcess(PIDType(pid), procroot)
+		proc := NewProcessInProcfs(PIDType(pid), procroot)
 		if proc == nil {
 			continue
 		}

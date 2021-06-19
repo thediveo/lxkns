@@ -17,15 +17,16 @@
 package model
 
 // Container is a deliberately limited and simplified view on "alive" containers
-// (which are containers with processes but not without). This is all we need in
-// the context of Linux-kernel namespaces.
+// (where alive containers always have at least an initial process, so are never
+// process-less). This is all we need in the context of Linux-kernel namespaces.
 type Container interface {
 	// Identifier of this container; depending on the particular container
 	// engine this might be a unique container instance ID (for instance,
-	// Docker).
+	// as in the case of a Docker-managed container).
 	ID() string
-	// Container name, which might be the same as the ID (for instance,
-	// in case of containerd containers).
+	// Container name, which might be the same as the ID (for instance, in case
+	// of containerd-managed containers), but might also be different (such as
+	// in the case of Docker-managed containers).
 	Name() string
 	// Type of container in form of a unique identifier, such as "docker.com",
 	// "containerd.io", et cetera.
@@ -34,10 +35,12 @@ type Container interface {
 	Flavor() string
 	// PID of the initial (or "ealdorman") container process. This is always
 	// non-zero, as a Containerizer must never return any dead (non-alive)
-	// containers.
+	// containers. After finishing the discovery process this is the container's
+	// PID in the initial PID namespace, even for containerized container
+	// engines.
 	PID() PIDType
-	// true, if the process(e)s inside this container have been either paused
-	// and are in the process of pausing; otherwise false.
+	// true, if the process(es) inside this container has (have) been either
+	// paused and are in the process of pausing; otherwise false.
 	Paused() bool
 	// Meta data in form of labels assigned to this container.
 	Labels() ContainerLabels
@@ -46,6 +49,18 @@ type Container interface {
 	Engine() ContainerEngine
 	// Initial container process (ealdorman) details object.
 	Process() *Process
+}
+
+// ContainerFixer allows the lxkns discovery to "fix" or correctly update some
+// container properties, such as PID or the process proxy object corresponding
+// representing the container's initial process.
+type ContainerFixer interface {
+	// SetTranslatedPID sets a container's initial process PID as seen from the
+	// initial PID namespace.
+	SetTranslatedPID(pid PIDType)
+	// SetProcess sets the process (proxy) object corresponding with the
+	// containe3r's initial process PID.
+	SetProcess(proc *Process)
 }
 
 // ContainerLabels are labels as key=value pairs assigned to a container. Both
@@ -59,8 +74,6 @@ type ContainerEngine interface {
 	// Identifier of the type of container engine, such as "docker.com",
 	// "containerd.io", et cetera.
 	Type() string
-	// List of alive containers managed by this container engine.
-	Containers() []Container
 	// Container engine API path (in initial mount namespace).
 	API() string
 }

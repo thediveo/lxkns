@@ -19,8 +19,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/internal/namespaces"
+	pm "github.com/thediveo/lxkns/internal/pidmap"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -49,7 +49,7 @@ import (
 // different PID namespaces.
 type PIDMap struct {
 	// The real PID map we wrap for the purpose of un/marshalling.
-	lxkns.PIDMap
+	PIDMap model.PIDMapper
 	// An optional PID namespace map to reuse for resolving PID namespace
 	// references; this avoids PIDMaps having to create their own "minimalist"
 	// PID namespace objects during unmarshalling.
@@ -66,7 +66,7 @@ func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 	// Initialize wrapped PID map and PID namespaces map if not having been
 	// set by an option by now.
 	if pidmap.PIDMap == nil {
-		pidmap.PIDMap = lxkns.PIDMap{}
+		pidmap.PIDMap = pm.PIDMap{}
 	}
 	if pidmap.PIDns == nil {
 		pidmap.PIDns = model.NamespaceMap{}
@@ -81,7 +81,7 @@ type NewPIDMapOption func(newpidmap *PIDMap)
 // WithPIDMap configures a new PIDMap to wrap an existing lxkns.PIDMap; either
 // for marshalling an existing PIDMap or to unmarshal into a pre-allocated
 // PIDMap.
-func WithPIDMap(pidmap lxkns.PIDMap) NewPIDMapOption {
+func WithPIDMap(pidmap model.PIDMapper) NewPIDMapOption {
 	return func(npm *PIDMap) {
 		npm.PIDMap = pidmap
 	}
@@ -108,13 +108,14 @@ type namespacedPIDs []namespacedPID
 // method only emits enough table data for UnmarshalJSON() later being able to
 // regenerate the full table.
 func (pidmap PIDMap) MarshalJSON() ([]byte, error) {
+	pidmapper := pidmap.PIDMap.(pm.PIDMap)
 	b := bytes.Buffer{}
 	b.WriteRune('[')
 	// Remember the processes for which we've already emitted their namespaced
 	// PIDs.
 	pidsdone := map[model.PIDType]bool{}
 	first := true
-	for _, pids := range pidmap.PIDMap {
+	for _, pids := range pidmapper {
 		// Did we already handle this process? If yes, we can skip its
 		// potentially multiple keys (namespaced PIDs of the process).
 		if _, ok := pidsdone[pids[len(pids)-1].PID]; ok {
@@ -144,6 +145,7 @@ func (pidmap PIDMap) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON converts the textual JSON representation of a PID map back into
 // the binary object state.
 func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
+	pidmapper := pidmap.PIDMap.(pm.PIDMap)
 	// We begin with reading in the PID (translation) map as an array
 	// containing arrays of namespaced PIDs; the namespaces are PID namespaces
 	// simply referenced by their namespace IDs (inode numbers).
@@ -156,7 +158,7 @@ func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 			return errors.New("PIDMap: invalid empty list of namespaced PIDs")
 		}
 		//
-		nspids := make(lxkns.NamespacedPIDs, len(pids))
+		nspids := make(model.NamespacedPIDs, len(pids))
 		for idx, nspid := range pids {
 			pidnsid := species.NamespaceIDfromInode(nspid.NamespaceID)
 			pidns, ok := pidmap.PIDns[pidnsid]
@@ -164,7 +166,7 @@ func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 				pidns = namespaces.New(species.CLONE_NEWPID, pidnsid, "")
 				pidmap.PIDns[pidnsid] = pidns
 			}
-			nspids[idx] = lxkns.NamespacedPID{
+			nspids[idx] = model.NamespacedPID{
 				PID:   pids[idx].PID,
 				PIDNS: pidns,
 			}
@@ -173,7 +175,7 @@ func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 		// PIDs, so we can later quickly look up the list of namespaced PIDs
 		// for this process using (PID, PID-namespace).
 		for _, namespacedpid := range nspids {
-			pidmap.PIDMap[namespacedpid] = nspids
+			pidmapper[namespacedpid] = nspids
 		}
 	}
 	return nil

@@ -30,7 +30,7 @@ import (
 
 var lxknsapispec *openapi3.T
 var allns *lxkns.DiscoveryResult
-var pidmap lxkns.PIDMap
+var pidmap model.PIDMapper
 
 var _ = BeforeSuite(func() {
 	var err error

@@ -24,10 +24,6 @@ import (
 
 var _ = Describe("maps PIDs", func() {
 
-	It("returns empty PID slice for non-existing PID", func() {
-		Expect(NSpid(&model.Process{})).To(BeEmpty())
-	})
-
 	It("doesn't translates non-existing PID/namespace", func() {
 		opts := NoDiscovery
 		opts.SkipProcs = false

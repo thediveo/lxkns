@@ -1,4 +1,4 @@
-// Copyright 2020 Harald Albrecht.
+// Copyright 2021 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,17 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// +build linux
-
-package lxkns
+package pidmap
 
 import (
-	"github.com/thediveo/lxkns/internal/pidmap"
-	"github.com/thediveo/lxkns/model"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-// NewPIDMap returns a new PID map (PIDMapper) based on the specified discovery
-// results and further information gathered from the /proc filesystem.
-func NewPIDMap(result *DiscoveryResult) model.PIDMapper {
-	return pidmap.NewPIDMap(result.Processes)
+func TestPidmap(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "lxkns/internal/pidmap package")
 }

@@ -20,7 +20,6 @@ package main
 import (
 	"reflect"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -30,7 +29,7 @@ import (
 // until the branch ends.
 type BranchVisitor struct {
 	Details   bool
-	PIDMap    lxkns.PIDMap
+	PIDMap    model.PIDMapper
 	RootPIDNS model.Namespace
 }
 

@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/internal/pidmap"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -37,12 +38,12 @@ var _ = Describe("PIDMap twin", func() {
 		]`
 		rootpidns   = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(1), "")
 		pidns2      = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(2), "")
-		proc666pids = lxkns.NamespacedPIDs{
-			lxkns.NamespacedPID{PID: 666, PIDNS: rootpidns},
-			lxkns.NamespacedPID{PID: 1, PIDNS: pidns2},
+		proc666pids = model.NamespacedPIDs{
+			model.NamespacedPID{PID: 666, PIDNS: rootpidns},
+			model.NamespacedPID{PID: 1, PIDNS: pidns2},
 		}
-		proc777pids = lxkns.NamespacedPIDs{lxkns.NamespacedPID{PID: 777, PIDNS: rootpidns}}
-		pmap        = lxkns.PIDMap{
+		proc777pids = model.NamespacedPIDs{model.NamespacedPID{PID: 777, PIDNS: rootpidns}}
+		pmap        = pidmap.PIDMap{
 			proc666pids[0]: proc666pids,
 			proc666pids[1]: proc666pids,
 			proc777pids[0]: proc777pids,
@@ -51,7 +52,7 @@ var _ = Describe("PIDMap twin", func() {
 
 	var (
 		allns     *lxkns.DiscoveryResult
-		allpidmap lxkns.PIDMap
+		allpidmap model.PIDMapper
 	)
 
 	BeforeEach(func() {
@@ -98,7 +99,7 @@ var _ = Describe("PIDMap twin", func() {
 
 			Expect(json.Unmarshal([]byte(pidmapjson), &pmt)).To(Succeed())
 			Expect(pmt.PIDMap).To(HaveLen(len(pmap)))
-			for _, nspids := range pmt.PIDMap {
+			for _, nspids := range pmt.PIDMap.(pidmap.PIDMap) {
 				for _, nspid := range nspids {
 					Expect(pmap).To(HaveKeyWithValue(nspid, nspids))
 				}
@@ -114,12 +115,12 @@ var _ = Describe("PIDMap twin", func() {
 			pmt2 := NewPIDMap(WithPIDNamespaces(allns.Namespaces[model.PIDNS]))
 			dumponerror := func() string {
 				s := "un/marshalling PID map size error\n"
-				s += fmt.Sprintf("expected/unmarshalled: len %d\n%s\n", len(pmt2.PIDMap), sortedpidmap(pmt2.PIDMap))
-				s += fmt.Sprintf("actual/marshalled: len %d\n%s", len(allpidmap), sortedpidmap(allpidmap))
+				s += fmt.Sprintf("expected/unmarshalled: len %d\n%s\n", len(pmt2.PIDMap.(pidmap.PIDMap)), sortedpidmap(pmt2.PIDMap.(pidmap.PIDMap)))
+				s += fmt.Sprintf("actual/marshalled: len %d\n%s", len(allpidmap.(pidmap.PIDMap)), sortedpidmap(allpidmap.(pidmap.PIDMap)))
 				return s
 			}
 			Expect(json.Unmarshal(j, &pmt2)).To(Succeed())
-			Expect(len(pmt2.PIDMap)).To(Equal(len(allpidmap)), dumponerror)
+			Expect(len(pmt2.PIDMap.(pidmap.PIDMap))).To(Equal(len(allpidmap.(pidmap.PIDMap))), dumponerror)
 			Expect(pmt2.PIDMap).To(Equal(allpidmap), dumponerror)
 		})
 
@@ -127,7 +128,7 @@ var _ = Describe("PIDMap twin", func() {
 
 })
 
-func sortedpidmap(pm lxkns.PIDMap) string {
+func sortedpidmap(pm pidmap.PIDMap) string {
 	s := []string{}
 	for nspid, nspids := range pm {
 		l := []string{}
