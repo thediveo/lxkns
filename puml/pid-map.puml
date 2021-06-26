@@ -1,4 +1,4 @@
-```plantuml
+@startuml pid-map
 hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
@@ -50,4 +50,4 @@ pidmap -[hidden]- pid4567
 pidmap --- pid4567 : "{PID: 4567, PIDNS: 1} >"
 pidmap --- pid4567 : "{PID: 1, PIDNS: 2} >"
 
-```
+@enduml

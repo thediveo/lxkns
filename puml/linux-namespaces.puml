@@ -1,4 +1,4 @@
-```plantuml
+@startuml linux-namespaces
 hide empty fields
 hide empty methods
 
@@ -39,4 +39,5 @@ hns <|-- user
 ns <-- pid : owns
 
 user -[hidden] pid
-```
+
+@enduml
