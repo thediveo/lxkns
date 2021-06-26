@@ -9,6 +9,10 @@
 	],
 	"settings": {
 		"go.lintTool": "golangci-lint",
-		"liveServer.settings.multiRootWorkspaceName": "lxkns"
+		"liveServer.settings.multiRootWorkspaceName": "lxkns",
+		"plantuml.diagramsRoot": "puml",
+		"plantuml.exportFormat": "png",
+		"plantuml.exportOutDir": "docs/_images",
+		"plantuml.exportSubFolder": false
 	}
 }

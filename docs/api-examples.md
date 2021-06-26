@@ -1,4 +1,4 @@
-# API
+# API Examples
 
 These are simple examples to give you a first impression. For the real-world
 gory stuff, please take a look at the `examples/` and `cmd/` directories in the

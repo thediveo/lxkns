@@ -18,9 +18,16 @@ consideration.
 
 In a nutshell, lxkns is:
 
-- a Golang module for discovering and switching namespaces,
+- a Go module for discovering namespaces and mount points,
+- a Go package for switching namespaces (including safely returning),
 - a REST API service with an additional web-based user interface,
 - a set of CLI tools.
 
+And now for the obligatory eye candy, click or tap to enlarge:
+
+![lxkns teaser](_images/teaser.png ':class=teaser')
+![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
+
 > [!NOTE] The name **lxkns** derives from **L**inu**x** **k**ernel
-> **n**ame**sp**aces.
+> **n**ame**sp**aces. Simply naming it "namespaces" instead would have been a
+> sure receipe for desaster.

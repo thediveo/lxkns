@@ -4,7 +4,10 @@
 * [Namespace Discovery](discovery)
 * [Getting Started](getting-started)
 * [Getting Around](getting-around)
-* [API](api)
+* API
+  * [Examples](api-examples)
+  * [Information Model](model)
+  * [Notes](api-notes)
 * [CLI Tools](cli)
 * [Tinkering](tinkering)
 * [Copyright+License](copylicense)
