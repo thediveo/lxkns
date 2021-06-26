@@ -5,6 +5,10 @@
 
 - gives namespaces names (sic!).
 
+- discovers mount points in mount namespaces and derives the mount point
+  visibility and VFS path hierarchy. The visibility identifies overmounts, which
+  can either appear higher up the VFS patch hierarchy but also in place.
+
 - the Go API supports not only discovery, but also switching namespaces (both OS
   thread switching as well as forked child re-execution).
 
