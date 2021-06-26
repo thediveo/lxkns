@@ -1,4 +1,4 @@
-```plantuml
+@startuml lxkns-namespaces
 hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
@@ -40,5 +40,4 @@ interface NamespaceStringer {
 }
 Namespace <|- NamespaceStringer
 
-}
-```
+@enduml
