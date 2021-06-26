@@ -8,10 +8,12 @@
 ![lxkns logo](_images/lxkns-gophers.jpeg ':size=150')
 
 **lxkns** discovers Linux-kernel namespaces as well as mount points in mount
-namespaces. In every nook and cranny of your Linux hosts.
+namespaces. In every nook and cranny of your Linux hosts. It can be operated as
+a stand-alone REST service or integrated into system diagnosis tools that need
+an unobstructed view on Linux-kernel namespaces.
 
-For mount namespaces, lxkns finds mount points even in process-less mount
-namespaces (for instance, as utilized in ["snap"
+When it comes to mount namespaces, lxkns finds mount points even in process-less
+mount namespaces (for instance, as utilized in ["snap"
 technology](https://snapcraft.io/docs)). Our discovery engine even determines
 the visibility of mount points, taking different forms of "overmounting" into
 consideration.
@@ -30,4 +32,4 @@ And now for the obligatory eye candy, click or tap to enlarge:
 
 > [!NOTE] The name **lxkns** derives from **L**inu**x** **k**ernel
 > **n**ame**sp**aces. Simply naming it "namespaces" instead would have been a
-> sure receipe for desaster.
+> too generic name.

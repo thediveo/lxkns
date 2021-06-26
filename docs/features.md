@@ -1,9 +1,17 @@
 # Features
 
 - finds all 8 types of currently defined Linux-kernel
-  [namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html).
+  [namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) even [in
+  arcane places](discovery), such as bind mounts and open file descriptors.
 
 - gives namespaces names (sic!).
+
+- [discovers the the freezer state](cgroup) and (freezer) cgroup controller path
+  information for the processes attached to namespaces (transparently supports
+  both [v1
+  freezers](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/freezer-subsystem.html#cgroup-freezer)
+  als well as [v2
+  core](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files)).
 
 - discovers mount points in mount namespaces and derives the mount point
   visibility and VFS path hierarchy. The visibility identifies overmounts, which

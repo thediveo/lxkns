@@ -46,7 +46,7 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > their `main()` function. For this, you need to `import
 > "github.com/thediveo/gons/reexec"`.
 
-## Capabilities
+## Required Capabilities
 
 **lxkns** discoveries require the following capabilities:
 

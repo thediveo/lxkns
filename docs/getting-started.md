@@ -1,11 +1,11 @@
 # Getting Started
 
 To quickly start discovering Linux-kernel namespaces and nosing around, we
-recommend to deploy the containerized **lxkns** service, because it features a
+recommend to deploy the **containerized lxkns service**, because it features a
 nice web-based UI.
 
-> **Prerequisite:** make sure you have Docker and `docker-compose` installed, as
-> well as the go tools.
+> [!NOTE] Make sure you have Docker and `docker-compose` installed, as well as
+> the Go tools.
 
 1. do `make deploy` in the top-level of the repository.
 2. navigate your web browser to [http://localhost:5010](http://localhost:5010),
