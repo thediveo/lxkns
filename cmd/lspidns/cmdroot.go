@@ -36,7 +36,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			user, _ := cmd.PersistentFlags().GetBool("user")
 			// Run a full namespace discovery.
-			allns := lxkns.Discover(lxkns.FullDiscovery)
+			allns := lxkns.Discover(lxkns.WithFullDiscovery())
 			fmt.Print(
 				asciitree.Render(
 					allns.PIDNSRoots,

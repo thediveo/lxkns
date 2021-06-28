@@ -26,7 +26,7 @@ import (
 var _ = Describe("Discover", func() {
 
 	It("discovers nothing unless told so", func() {
-		allns := Discover(NoDiscovery)
+		allns := Discover()
 		for _, nsmap := range allns.Namespaces {
 			Expect(nsmap).To(HaveLen(0))
 		}
@@ -64,15 +64,12 @@ var _ = Describe("Discover", func() {
 	It("rejects finding roots for plain namespaces", func() {
 		// We only need to run a simplified discovery on processes, but
 		// nothing else.
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		opts.NamespaceTypes = species.CLONE_NEWNET
-		allns := Discover(opts)
+		allns := Discover(FromProcs(), WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(func() { rootNamespaces(allns.Namespaces[model.NetNS]) }).To(Panic())
 	})
 
 	It("returns namespaces in correct slots, implementing correct interfaces", func() {
-		allns := Discover(FullDiscovery)
+		allns := Discover(WithFullDiscovery())
 		for _, nstype := range model.TypeIndexLexicalOrder {
 			for _, ns := range allns.Namespaces[nstype] {
 				Expect(model.TypesByIndex[nstype]).To(Equal(ns.Type()))

@@ -39,7 +39,7 @@ import (
 // it sufficies to only iterate the process fd entries, leaving out the copies
 // in the task fd entries.
 func discoverFromFd(t species.NamespaceType, procfs string, result *DiscoveryResult) {
-	if result.Options.SkipFds {
+	if !result.Options.ScanFds() {
 		log.Infof("skipping discovery of fd-referenced namespaces")
 		return
 	}

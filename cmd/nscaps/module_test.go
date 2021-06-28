@@ -74,7 +74,7 @@ read
 	tuserid = nstest.CmdDecodeNSId(targetcmd)
 	tnsid = nstest.CmdDecodeNSId(targetcmd)
 
-	allns = lxkns.Discover(lxkns.FullDiscovery)
+	allns = lxkns.Discover(lxkns.WithFullDiscovery())
 })
 
 var _ = AfterSuite(func() {

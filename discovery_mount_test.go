@@ -49,11 +49,7 @@ rmdir $bm || /bin/true
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		netnsid := nstest.CmdDecodeNSId(cmd)
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		opts.NamespaceTypes = species.CLONE_NEWNS
-		opts.WithMounts = true
-		allns := Discover(opts)
+		allns := Discover(WithNamespaceTypes(species.CLONE_NEWNS), FromProcs(), FromBindmounts())
 
 		namespacedmmap := allns.Mounts
 		Expect(namespacedmmap).NotTo(BeNil())

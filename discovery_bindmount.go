@@ -51,7 +51,7 @@ type BindmountedNamespaceInfo struct {
 // mount namespace, but also in other mount namespaces (subject to having
 // capabilities in them).
 func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipBindmounts {
+	if !result.Options.ScanBindmounts() {
 		log.Infof("skipping discovery of bind-mounted namespaces")
 		return
 	}

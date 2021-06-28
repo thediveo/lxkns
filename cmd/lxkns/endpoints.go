@@ -27,9 +27,7 @@ import (
 // GetNamespacesHandler returns the results of a namespace discovery, as JSON.
 // Additionally, we opt in to mount path+point discovery.
 func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.FullDiscovery
-	opts.WithMounts = true
-	allns := lxkns.Discover(opts)
+	allns := lxkns.Discover(lxkns.WithFullDiscovery())
 	// Note bene: set header before writing the header with the status code;
 	// actually makes sense, innit?
 	w.Header().Set("Content-Type", "application/json")
@@ -44,9 +42,7 @@ func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
 // GetProcessesHandler returns the process table with namespace references, as
 // JSON.
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.NoDiscovery
-	opts.SkipProcs = false
-	disco := lxkns.Discover(opts)
+	disco := lxkns.Discover(lxkns.FromProcs())
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -61,9 +57,7 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 // GetPIDMapHandler returns data for translating PIDs between hierarchical PID
 // namespaces, as JSON.
 func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.FullDiscovery
-	opts.NamespaceTypes = species.CLONE_NEWPID
-	pidmap := lxkns.NewPIDMap(lxkns.Discover(opts))
+	pidmap := lxkns.NewPIDMap(lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.WithNamespaceTypes(species.CLONE_NEWPID)))
 
 	w.Header().Set("Content-Type", "application/json")
 

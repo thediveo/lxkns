@@ -31,8 +31,8 @@ import (
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
 func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipOwnership || nstype == species.CLONE_NEWUSER {
-		if result.Options.SkipOwnership {
+	if !result.Options.DiscoverOwnership() || nstype == species.CLONE_NEWUSER {
+		if !result.Options.DiscoverOwnership() {
 			log.Infof("skipping discovery of namespaces ownership")
 		}
 		return

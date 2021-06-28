@@ -107,7 +107,7 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		result = dr.Result()
 	} else {
 		// Run a full namespace discovery.
-		result = lxkns.Discover(lxkns.FullDiscovery)
+		result = lxkns.Discover(lxkns.WithFullDiscovery())
 	}
 	return dumpresult(result)
 }

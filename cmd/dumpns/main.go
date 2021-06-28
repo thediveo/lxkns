@@ -30,7 +30,7 @@ import (
 // formatting options into account, such as not indenting output, or using
 // tabs or a specific number of spaces for indentation.
 func dumpns(cmd *cobra.Command, _ []string) error {
-	allns := lxkns.Discover(lxkns.FullDiscovery)
+	allns := lxkns.Discover(lxkns.WithFullDiscovery())
 	var j []byte
 	var err error
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {

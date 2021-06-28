@@ -46,7 +46,7 @@ import (
 // It does not check any other places, as these are covered by separate
 // discovery functions.
 func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipProcs {
+	if !result.Options.ScanProcs() {
 		log.Infof("skipping discovery of %s namespaces used by processes", nstype.Name())
 		return
 	}
@@ -105,7 +105,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		// things too awkward in the model, because then we would need to
 		// treat ownership differently for non-user namespaces versus user
 		// namespaces all the time. Thus, sorry, no user namespaces here.
-		if !result.Options.SkipOwnership && nstype != species.CLONE_NEWUSER {
+		if result.Options.DiscoverOwnership() && nstype != species.CLONE_NEWUSER {
 			ns.(namespaces.NamespaceConfigurer).DetectOwner(nsf)
 		}
 		// Don't leak... And no, defer won't help us here.

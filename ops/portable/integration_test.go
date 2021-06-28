@@ -113,21 +113,16 @@ read # wait for test to proceed()
 		// in process references. Second, it must still be present in open file
 		// descriptor references.
 		time.Sleep(time.Second)
-		opts := lxkns.NoDiscovery
-		opts.SkipProcs = false
-		opts.NamespaceTypes = species.CLONE_NEWNET
-		netns := lxkns.Discover(opts)
+		netns := lxkns.Discover(lxkns.FromProcs(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(netns.Namespaces[model.NetNS]).NotTo(HaveKey(netnsid),
 			"temporary network namespace still found in processes")
-		opts.SkipProcs = true
-		opts.SkipFds = false
-		netns = lxkns.Discover(opts)
+		netns = lxkns.Discover(lxkns.FromFds(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(netns.Namespaces[model.NetNS]).To(HaveKey(netnsid),
 			"temporary network namespace missing from open fd references")
 		// Unlock temporary network namespace and wait a short time for things
 		// to settle. Then check.
 		netnsunlocker()
-		netns = lxkns.Discover(opts)
+		netns = lxkns.Discover(lxkns.FromFds(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(netns.Namespaces[model.NetNS]).NotTo(HaveKey(netnsid),
 			"this *#@!& temporary network namespace won't get away!")
 		// The wrapping namespace reference can from now on be garbage

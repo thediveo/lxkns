@@ -55,9 +55,7 @@ mount --bind /proc/self/ns/net $bm
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		netnsid := nstest.CmdDecodeNSId(cmd)
-		opts := NoDiscovery
-		opts.SkipBindmounts = false
-		allns := Discover(FullDiscovery)
+		allns := Discover(WithFullDiscovery())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 	})
 

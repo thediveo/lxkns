@@ -25,11 +25,7 @@ import (
 var _ = Describe("Discover owning user namespaces", func() {
 
 	It("finds owners", func() {
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		opts.SkipHierarchy = false
-		opts.SkipOwnership = false
-		allns := Discover(opts)
+		allns := Discover(FromProcs(), WithHierarchy(), WithOwnership())
 
 		myusernsid, err := ops.NamespacePath("/proc/self/ns/user").ID()
 		Expect(err).To(Succeed())
