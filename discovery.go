@@ -32,45 +32,22 @@ import (
 
 // DiscoveryOpts provides information about the extent of a Linux-kernel
 // namespace discovery.
-type DiscoverOpts interface {
+type DiscoverOpts struct {
 	// The types of namespaces discovered: this is an OR'ed combination of Linux
 	// kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et cetera.
 	// If zero, defaults to discovering all namespaces.
-	NamespaceTypes() species.NamespaceType
+	NamespaceTypes species.NamespaceType `json:"-"`
 
-	ScanProcs() bool            // Scan processes for attached namespaces.
-	ScanFds() bool              // Scan open file descriptors for namespaces.
-	ScanBindmounts() bool       // Scan bind-mounts for namespaces.
-	DiscoverHierarchy() bool    // Discover the hierarchy of PID and user namespaces.
-	DiscoverOwnership() bool    // Discover the ownership of non-user namespaces.
-	DiscoverFreezerState() bool // Discover the cgroup freezer state of processes.
-	DiscoverMounts() bool       // Discover mount point hierarchy with mount paths and visibility.
+	ScanProcs            bool `json:"from-procs"`      // Scan processes for attached namespaces.
+	ScanFds              bool `json:"from-fds"`        // Scan open file descriptors for namespaces.
+	ScanBindmounts       bool `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
+	DiscoverHierarchy    bool `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
+	DiscoverOwnership    bool `json:"with-ownership"`  // Discover the ownership of non-user namespaces.
+	DiscoverFreezerState bool `json:"with-freezer"`    // Discover the cgroup freezer state of processes.
+	DiscoverMounts       bool `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
 
-	Containerizer() containerizer.Containerizer // Discover containers using containerizer.
+	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
 }
-
-// discoverOpts implements the DiscoveryOpts interface.
-type discoverOpts struct {
-	namespaceTypes       species.NamespaceType       `json:"-"`                  // types of namespaces to discover (OR'ed).
-	scanProcs            bool                        `json:"skipped-procs"`      // scan processes.
-	scanFds              bool                        `json:"skipped-fds"`        // scan process file descriptors for references to namespaces.
-	scanBindmounts       bool                        `json:"skipped-bindmounts"` // scan for bind-mounted namespaces.
-	discoverHierarchy    bool                        `json:"skipped-hierarchy"`  // discover the hierarchy of PID and user namespaces.
-	discoverOwnership    bool                        `json:"skipped-ownership"`  // discover the ownership of non-user namespaces.
-	discoverFreezerState bool                        `json:"skipped-freezer"`    // discover the cgroup freezer state of processes.
-	discoverMounts       bool                        `json:"with-mounts"`        // discover mount paths with mount points.
-	containerizer        containerizer.Containerizer `json:"-"`                  // containerizer for discovering containers.
-}
-
-func (o *discoverOpts) NamespaceTypes() species.NamespaceType      { return o.namespaceTypes }
-func (o *discoverOpts) ScanProcs() bool                            { return o.scanProcs }
-func (o *discoverOpts) ScanFds() bool                              { return o.scanFds }
-func (o *discoverOpts) ScanBindmounts() bool                       { return o.scanBindmounts }
-func (o *discoverOpts) DiscoverHierarchy() bool                    { return o.discoverHierarchy }
-func (o *discoverOpts) DiscoverOwnership() bool                    { return o.discoverOwnership }
-func (o *discoverOpts) DiscoverFreezerState() bool                 { return o.discoverFreezerState }
-func (o *discoverOpts) DiscoverMounts() bool                       { return o.discoverMounts }
-func (o *discoverOpts) Containerizer() containerizer.Containerizer { return o.containerizer }
 
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.
@@ -86,58 +63,66 @@ type DiscoveryResult struct {
 }
 
 // discoveryOption ... TODO:
-type discoveryOption func(*discoverOpts)
+type discoveryOption func(*DiscoverOpts)
 
 // WithFullDiscovery opts for a full discovery, scanning not only processes, but
 // also open file descriptors and bind-mounts, as well as the namespace
 // hierarchy and ownership, freezer states, and mount points with their
 // visibility.
 func WithFullDiscovery() discoveryOption {
-	return func(o *discoverOpts) {
-		o.namespaceTypes = species.AllNS
-		o.scanProcs = true
-		o.scanFds = true
-		o.scanBindmounts = true
-		o.discoverHierarchy = true
-		o.discoverOwnership = true
-		o.discoverFreezerState = true
-		o.discoverMounts = true
+	return func(o *DiscoverOpts) {
+		o.NamespaceTypes = species.AllNS
+		o.ScanProcs = true
+		o.ScanFds = true
+		o.ScanBindmounts = true
+		o.DiscoverHierarchy = true
+		o.DiscoverOwnership = true
+		o.DiscoverFreezerState = true
+		o.DiscoverMounts = true
 	}
 }
 
 func WithNamespaceTypes(t species.NamespaceType) discoveryOption {
-	return func(o *discoverOpts) { o.namespaceTypes = t }
+	return func(o *DiscoverOpts) { o.NamespaceTypes = t }
 }
 
 func FromProcs() discoveryOption {
-	return func(o *discoverOpts) { o.scanProcs = true }
+	return func(o *DiscoverOpts) { o.ScanProcs = true }
 }
 
 func FromFds() discoveryOption {
-	return func(o *discoverOpts) { o.scanFds = true }
+	return func(o *DiscoverOpts) { o.ScanFds = true }
+}
+
+func NotFromFds() discoveryOption {
+	return func(o *DiscoverOpts) { o.ScanFds = false }
 }
 
 func FromBindmounts() discoveryOption {
-	return func(o *discoverOpts) { o.scanBindmounts = true }
+	return func(o *DiscoverOpts) { o.ScanBindmounts = true }
+}
+
+func NotFromBindmounts() discoveryOption {
+	return func(o *DiscoverOpts) { o.ScanBindmounts = false }
 }
 
 func WithHierarchy() discoveryOption {
-	return func(o *discoverOpts) { o.discoverHierarchy = true }
+	return func(o *DiscoverOpts) { o.DiscoverHierarchy = true }
 }
 
 func WithOwnership() discoveryOption {
-	return func(o *discoverOpts) { o.discoverOwnership = true }
+	return func(o *DiscoverOpts) { o.DiscoverOwnership = true }
 }
 
 func WithMounts() discoveryOption {
-	return func(o *discoverOpts) { o.discoverMounts = true }
+	return func(o *DiscoverOpts) { o.DiscoverMounts = true }
 }
 
 // WithContainerizer opts for discovery of containers related to namespaces,
 // using the specified Containerizer.
 func WithContainerizer(c containerizer.Containerizer) discoveryOption {
-	return func(o *discoverOpts) {
-		o.containerizer = c
+	return func(o *DiscoverOpts) {
+		o.Containerizer = c
 	}
 }
 
@@ -234,18 +219,18 @@ func init() {
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
 func Discover(options ...discoveryOption) *DiscoveryResult {
-	opts := &discoverOpts{}
+	opts := DiscoverOpts{}
 	for _, opt := range options {
-		opt(opts)
+		opt(&opts)
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
-	if opts.namespaceTypes == 0 {
-		opts.namespaceTypes = species.AllNS
+	if opts.NamespaceTypes == 0 {
+		opts.NamespaceTypes = species.AllNS
 	}
 	result := &DiscoveryResult{
 		Options:   opts,
-		Processes: model.NewProcessTable(opts.discoverFreezerState),
+		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
@@ -259,20 +244,20 @@ func Discover(options ...discoveryOption) *DiscoveryResult {
 	//     sequence.
 	for _, disco := range discoverers {
 		if len(*disco.When) == 0 {
-			disco.Discover(opts.namespaceTypes, "/proc", result)
+			disco.Discover(opts.NamespaceTypes, "/proc", result)
 		} else {
 			for _, nstypeidx := range *disco.When {
-				if nstype := model.TypesByIndex[nstypeidx]; opts.namespaceTypes&nstype != 0 {
+				if nstype := model.TypesByIndex[nstypeidx]; opts.NamespaceTypes&nstype != 0 {
 					disco.Discover(nstype, "/proc", result)
 				}
 			}
 		}
 	}
 	// Fill in some additional convenience fields in the result.
-	if opts.namespaceTypes&species.CLONE_NEWUSER != 0 {
+	if opts.NamespaceTypes&species.CLONE_NEWUSER != 0 {
 		result.UserNSRoots = rootNamespaces(result.Namespaces[model.UserNS])
 	}
-	if opts.namespaceTypes&species.CLONE_NEWPID != 0 {
+	if opts.NamespaceTypes&species.CLONE_NEWPID != 0 {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[model.PIDNS])
 	}
 	// TODO: Find the initial namespaces...

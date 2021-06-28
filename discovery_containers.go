@@ -26,10 +26,10 @@ import (
 // Containerizer and then resolves the relationships between containers and
 // processes (and thus also namespaces).
 func discoverContainers(result *DiscoveryResult) {
-	if result.Options.Containerizer() == nil {
+	if result.Options.Containerizer == nil {
 		return
 	}
-	containers := result.Options.Containerizer().Containers(context.Background(), result.Processes, nil) // TODO:
+	containers := result.Options.Containerizer.Containers(context.Background(), result.Processes, nil) // TODO:
 	// Update the discovery information with the container found and establish
 	// the links between container and process information model objects.
 	result.Containers = containers

@@ -604,19 +604,19 @@ components:
                 - scanned-namespace-types
             type: object
             properties:
-                skipped-procs:
+                from-procs:
                     type: boolean
-                skipped-tasks:
+                from-tasks:
                     type: boolean
-                skipped-fds:
+                from-fds:
                     type: boolean
-                skipped-bindmounts:
+                from-bindmounts:
                     type: boolean
-                skipped-hierarchy:
+                with-hierarchy:
                     type: boolean
-                skipped-ownership:
+                with-ownership:
                     type: boolean
-                skipped-freezer:
+                with-freezer:
                     description: |-
                         true if the discovery of the (effective) freezer states of processes has been
                         skipped, so that all processes always appear to be "thawed" (running).

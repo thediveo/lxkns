@@ -61,8 +61,8 @@ read # wait for test to proceed()
 		Expect(unix.Stat("./test/fdscan/proc", &stat)).ToNot(HaveOccurred())
 		Expect(stat.Dev).NotTo(BeZero())
 		r := DiscoveryResult{
-			Options: &discoverOpts{
-				scanFds: true,
+			Options: DiscoverOpts{
+				ScanFds: true,
 			},
 			Processes: model.ProcessTable{
 				1234: &model.Process{PID: 1234},

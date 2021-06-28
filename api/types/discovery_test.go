@@ -30,13 +30,12 @@ var _ = Describe("discovery result JSON", func() {
 		j, err := json.Marshal(doh)
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(`{
-			"skipped-procs": false,
-			"skipped-tasks": true,
-			"skipped-fds": true,
-			"skipped-bindmounts": true,
-			"skipped-hierarchy": false,
-			"skipped-ownership": false,
-			"skipped-freezer": false,
+			"from-procs": true,
+			"from-fds": false,
+			"from-bindmounts": false,
+			"with-hierarchy": true,
+			"with-ownership": true,
+			"with-freezer": true,
 			"with-mounts": true,
 			"scanned-namespace-types": [
 			  "time",

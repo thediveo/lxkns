@@ -42,7 +42,7 @@ var _ = BeforeSuite(func() {
 		return lxknsapispec.Validate(ctx)
 	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
 
-	allns = lxkns.Discover(lxkns.FullDiscovery)
+	allns = lxkns.Discover(lxkns.WithFullDiscovery())
 	pidmap = lxkns.NewPIDMap(allns)
 })
 

@@ -39,15 +39,15 @@ import (
 type NamespacedMountPathMap map[species.NamespaceID]mounts.MountPathMap
 
 // discoverFromMountinfo discovers the mount paths with their mount points in
-// mount namespaces. API users need to explicitly opt into this discovery step
-// and must have also enabled discovery of mount namespaces. Otherwise, this
-// step will be skipped.
+// mount namespaces. API users must have opted in not only to this discovery
+// step but must have also enabled discovery of mount namespaces. Otherwise,
+// this step will be skipped.
 func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryResult) {
-	if !result.Options.ScanBindmounts() {
+	if !result.Options.DiscoverMounts {
 		log.Infof("skipping discovery of mount paths and mount points")
 		return
 	}
-	if result.Options.NamespaceTypes()&species.CLONE_NEWNS == 0 {
+	if result.Options.NamespaceTypes&species.CLONE_NEWNS == 0 {
 		log.Warnf("mount namespace discovery skipped, so skipping mount path and points discovery")
 	}
 	log.Debugf("discovering namespaced mount paths and mount points...")

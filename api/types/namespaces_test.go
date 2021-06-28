@@ -53,12 +53,7 @@ read # wait for test to proceed()
 	scriptscmd = scripts.Start("main")
 	usernsid := nstest.CmdDecodeNSId(scriptscmd)
 
-	disco := lxkns.FullDiscovery
-	disco.SkipBindmounts = true
-	disco.SkipFds = true
-	disco.SkipTasks = true
-	disco.WithMounts = true
-	allns = lxkns.Discover(disco) // "nearly-all-ns"
+	allns = lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.NotFromFds(), lxkns.NotFromBindmounts()) // "nearly-all-ns"
 
 	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)
 	Expect(userns).NotTo(BeNil())
