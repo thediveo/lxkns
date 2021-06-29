@@ -41,7 +41,7 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("serves API endpoints", func() {
 
-	It("discovers namespaces", func() {
+	It("cannot find non-existing API", func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
 		resp, err := clnt.Get(baseurl + "foobar")
 		Expect(err).To(Succeed())

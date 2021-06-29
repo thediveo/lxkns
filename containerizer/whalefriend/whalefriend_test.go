@@ -16,6 +16,8 @@ package whalefriend
 
 import (
 	"context"
+	"os"
+	"regexp"
 
 	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns/model"
@@ -28,14 +30,24 @@ import (
 
 const sleepyname = "pompous_pm"
 
+var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+
 var _ = Describe("ContainerEngine", func() {
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
+	var docksock string
 
 	BeforeEach(func() {
+		// In case we're run as root we use a procfs wormhole so we can access
+		// the Docker socket even from a test container without mounting it
+		// explicitly into the test container.
+		if os.Geteuid() == 0 {
+			docksock = "unix:///proc/1/root/run/docker.sock"
+		}
+
 		var err error
-		pool, err = dockertest.NewPool("")
+		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
 		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "busybox",
@@ -44,6 +56,10 @@ var _ = Describe("ContainerEngine", func() {
 			Cmd:        []string{"/bin/sleep", "30s"},
 			Labels:     map[string]string{"foo": "bar"},
 		})
+		// Skip test in case Docker is not accessible.
+		if err != nil && nodockerre.MatchString(err.Error()) {
+			Skip("Docker not available")
+		}
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pool.Client.PauseContainer(sleepyname)).NotTo(HaveOccurred())
 	})
@@ -54,7 +70,7 @@ var _ = Describe("ContainerEngine", func() {
 	})
 
 	It("discovers container", func() {
-		dockerw, err := moby.NewWatcher("")
+		dockerw, err := moby.NewWatcher(docksock)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -92,9 +108,12 @@ var _ = Describe("ContainerEngine", func() {
 		Expect(c.Paused()).To(Equal(csleepy.State.Paused))
 		Expect(c.Labels()).To(HaveKeyWithValue("foo", "bar"))
 		Expect(c.Type()).To(Equal(moby.Type))
-		Expect(c.Engine()).NotTo(BeNil())
-		Expect(c.Engine().API()).NotTo(BeEmpty())
-		Expect(c.Engine().ID()).NotTo(BeEmpty())
+
+		e := c.Engine()
+		Expect(e).NotTo(BeNil())
+		Expect(e.Type()).To(Equal(moby.Type))
+		Expect(e.API()).NotTo(BeEmpty())
+		Expect(e.ID()).NotTo(BeEmpty())
 	})
 
 })

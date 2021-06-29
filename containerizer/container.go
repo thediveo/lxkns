@@ -24,19 +24,19 @@ import (
 // Please note that this implementation does not store the container Type, but
 // instead returns the Type of the managing container engine.
 type Container struct {
-	id      string // container identifier.
-	name    string // container name, might or might not differ from identifier.
-	flavor  string // either sub-type or engine-independent container type.
-	pid     model.PIDType
-	paused  bool
-	labels  model.ContainerLabels
+	id      string                // container identifier.
+	name    string                // container name, might or might not differ from identifier.
+	flavor  string                // either sub-type or engine-independent container type.
+	pid     model.PIDType         // PID of container's initial process.
+	process *model.Process        // corresponding (initial) process object with attached namespaces.
+	paused  bool                  // container is paused (or in the process of pausing).
+	labels  model.ContainerLabels // label meta-data assigned to container.
 	engine  model.ContainerEngine // references the managing container engine instance
-	process *model.Process
 }
 
 // NewContainer returns a properly initialized container object implementing the
 // model.Container interface. Please note that the associated process will only
-// later be resolved and thus does not get specified here.
+// later be resolved and thus initially does not get specified.
 func NewContainer(id string, name string, flavor string, pid model.PIDType, paused bool, labels model.ContainerLabels, engine model.ContainerEngine) *Container {
 	return &Container{
 		id:     id,
@@ -54,13 +54,13 @@ func NewContainer(id string, name string, flavor string, pid model.PIDType, paus
 var _ model.Container = (*Container)(nil)
 var _ model.ContainerFixer = (*Container)(nil)
 
-// Identifier of this container; depending on the particular container
-// engine this might be a unique container instance ID (for instance,
+// ID returns the identifier of this container; depending on the particular
+// container engine this might be a unique container instance ID (for instance,
 // as in the case of a Docker-managed container).
 func (c *Container) ID() string { return c.id }
 
-// Container name, which might be the same as the ID (for instance, in case
-// of containerd-managed containers), but might also be different (such as
+// Name of this container, which might be the same as the ID (for instance, in
+// case of containerd-managed containers), but might also be different (such as
 // in the case of Docker-managed containers).
 func (c *Container) Name() string { return c.name }
 
@@ -69,7 +69,8 @@ func (c *Container) Name() string { return c.name }
 // container Type from the managing container engine Type.
 func (c *Container) Type() string { return c.engine.Type() }
 
-// Optional flavor of container, or the same as the Type.
+// Flavor of container, can be the same as the container's Type or differ from
+// it for further differentiations.
 func (c *Container) Flavor() string {
 	if c.flavor != "" {
 		return c.flavor
@@ -84,17 +85,17 @@ func (c *Container) Flavor() string {
 // engines.
 func (c *Container) PID() model.PIDType { return c.pid }
 
-// true, if the process(es) inside this container has (have) been either
-// paused and are in the process of pausing; otherwise false.
+// Paused returns true, if the process(es) inside this container has (have) been
+// either paused and are in the process of pausing; otherwise false.
 func (c *Container) Paused() bool { return c.paused }
 
-// Meta data in form of labels assigned to this container.
+// Labels assigned to this container.
 func (c *Container) Labels() model.ContainerLabels { return c.labels }
 
-// Managing container engine instance.
+// Engine returns the managing container engine instance for this Container.
 func (c *Container) Engine() model.ContainerEngine { return c.engine }
 
-// Initial container process (ealdorman) details object.
+// Process returns the container's initial process details.
 func (c *Container) Process() *model.Process { return c.process }
 
 // SetTranslatedPID sets a container's initial process PID as seen from the
@@ -102,5 +103,5 @@ func (c *Container) Process() *model.Process { return c.process }
 func (c *Container) SetTranslatedPID(pid model.PIDType) { c.pid = pid }
 
 // SetProcess sets the process (proxy) object corresponding with the
-// containe3r's initial process PID.
+// container's initial process PID.
 func (c *Container) SetProcess(proc *model.Process) { c.process = proc }

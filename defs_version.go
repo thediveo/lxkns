@@ -3,4 +3,4 @@
 package lxkns
 
 // SemVersion is the semantic version string of the lxkns module.
-const SemVersion = "0.17.3-16-g4faefc8"
+const SemVersion = "0.17.3-18-g0185ab7"

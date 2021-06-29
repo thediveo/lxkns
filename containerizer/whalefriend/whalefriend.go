@@ -27,7 +27,7 @@ import (
 // WhaleFriend is a containerizer internally backed by one or more
 // Whalewatchers, that is, container watchers.
 type WhaleFriend struct {
-	engines []*ContainerEngine
+	watchers []watcher.Watcher
 }
 
 var _ containerizer.Containerizer = (*WhaleFriend)(nil)
@@ -37,12 +37,41 @@ var _ containerizer.Containerizer = (*WhaleFriend)(nil)
 // background for any signs of container life and death.
 func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containerizer {
 	c := &WhaleFriend{
-		engines: make([]*ContainerEngine, len(watchers)),
+		watchers: watchers,
 	}
-	for idx, watcher := range watchers {
-		c.engines[idx] = NewContainerEngine(ctx, watcher, 0)
+	for _, watcher := range watchers {
+		go watcher.Watch(ctx) // ...go on watch
 	}
 	return c
+}
+
+// watchersContainers returns the alive containers managed by the specified
+// engine/watcher.
+func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []model.Container {
+	eng := containerizer.NewContainerEngine(
+		engine.ID(ctx),
+		engine.Type(),
+		engine.API(),
+		0 /* FIXME: unknown */)
+	cntrs := []model.Container{}
+	for _, projname := range append(engine.Portfolio().Names(), "") {
+		project := engine.Portfolio().Project(projname)
+		if project == nil {
+			continue
+		}
+		for _, container := range project.Containers() {
+			cntr := containerizer.NewContainer(
+				container.ID,
+				container.Name,
+				"", // default to Type derived from container engine.
+				model.PIDType(container.PID),
+				container.Paused,
+				container.Labels,
+				eng)
+			cntrs = append(cntrs, cntr)
+		}
+	}
+	return cntrs
 }
 
 // Containers returns the current container state of (alive) containers from all
@@ -52,14 +81,15 @@ func (c *WhaleFriend) Containers(
 ) []model.Container {
 	// Gather all alive containers known at this time to our whale watchers.
 	containers := []model.Container{}
-	for _, watcher := range c.engines {
-		containers = append(containers, watcher.Containers(ctx, procs, pidmap)...)
+	for _, watcher := range c.watchers {
+		containers = append(containers, c.watchersContainers(ctx, watcher)...)
 	}
 	return containers
 }
 
+// Close closes all watcher resources associated with this WhaleFriend.
 func (c *WhaleFriend) Close() {
-	for _, watcher := range c.engines {
+	for _, watcher := range c.watchers {
 		watcher.Close()
 	}
 }

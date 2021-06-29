@@ -19,6 +19,7 @@ package lxkns
 import (
 	"context"
 	"os"
+	"regexp"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,14 +32,24 @@ import (
 
 const sleepyname = "dumb_doormat"
 
+var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+
 var _ = Describe("Discover containers", func() {
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
+	var docksock string
 
 	BeforeEach(func() {
+		// In case we're run as root we use a procfs wormhole so we can access
+		// the Docker socket even from a test container without mounting it
+		// explicitly into the test container.
+		if os.Geteuid() == 0 {
+			docksock = "unix:///proc/1/root/run/docker.sock"
+		}
+
 		var err error
-		pool, err = dockertest.NewPool("")
+		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
 		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "busybox",
@@ -47,6 +58,10 @@ var _ = Describe("Discover containers", func() {
 			Cmd:        []string{"/bin/sleep", "30s"},
 			Labels:     map[string]string{"foo": "bar"},
 		})
+		// Skip test in case Docker is not accessible.
+		if err != nil && nodockerre.MatchString(err.Error()) {
+			Skip("Docker not available")
+		}
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -61,7 +76,7 @@ var _ = Describe("Discover containers", func() {
 			Skip("needs root")
 		}
 
-		mw, err := moby.NewWatcher("")
+		mw, err := moby.NewWatcher(docksock)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

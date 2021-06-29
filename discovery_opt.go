@@ -21,7 +21,7 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// DiscoveryOpts provides information about the extent of a Linux-kernel
+// DiscoverOpts provides information about the extent of a Linux-kernel
 // namespace discovery.
 //
 // This information is JSON-marshallable, with the exception of the
