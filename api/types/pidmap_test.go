@@ -56,7 +56,7 @@ var _ = Describe("PIDMap twin", func() {
 	)
 
 	BeforeEach(func() {
-		allns = lxkns.Discover(lxkns.WithFullDiscovery())
+		allns = lxkns.Discover(lxkns.WithStandardDiscovery())
 		allpidmap = lxkns.NewPIDMap(allns)
 	})
 

@@ -20,8 +20,8 @@ import (
 )
 
 func main() {
-    reexec.CheckAction() // must be called before a full discovery
-    result := lxkns.Discover(lxkns.FullDiscovery)
+    reexec.CheckAction() // must be called before a standard discovery
+    result := lxkns.Discover(lxkns.StandardDiscovery())
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
             fmt.Println(ns.String())
@@ -62,7 +62,9 @@ import (
 
 func main() {
     reexec.CheckAction() // only for discovery, not for unmarshalling
-    b, _ := json.Marshal(apitypes.NewDiscoveryResult(lxkns.Discover(lxkns.FullDiscovery)))
+    b, _ := json.Marshal(
+        apitypes.NewDiscoveryResult(
+            lxkns.Discover(lxkns.StandardDiscovery())))
 
     dr := apitypes.NewDiscoveryResult(nil)
     _ = json.Unmarshal(b, &dr)

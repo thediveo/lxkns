@@ -24,30 +24,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
-
-// DiscoveryOpts provides information about the extent of a Linux-kernel
-// namespace discovery.
-type DiscoverOpts struct {
-	// The types of namespaces discovered: this is an OR'ed combination of Linux
-	// kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et cetera.
-	// If zero, defaults to discovering all namespaces.
-	NamespaceTypes species.NamespaceType `json:"-"`
-
-	ScanProcs            bool `json:"from-procs"`      // Scan processes for attached namespaces.
-	ScanFds              bool `json:"from-fds"`        // Scan open file descriptors for namespaces.
-	ScanBindmounts       bool `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
-	DiscoverHierarchy    bool `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
-	DiscoverOwnership    bool `json:"with-ownership"`  // Discover the ownership of non-user namespaces.
-	DiscoverFreezerState bool `json:"with-freezer"`    // Discover the cgroup freezer state of processes.
-	DiscoverMounts       bool `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
-
-	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
-}
 
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.
@@ -60,70 +40,6 @@ type DiscoveryResult struct {
 	Processes         model.ProcessTable     // processes checked for namespaces.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
 	Containers        []model.Container      // all alive containers found
-}
-
-// discoveryOption ... TODO:
-type discoveryOption func(*DiscoverOpts)
-
-// WithFullDiscovery opts for a full discovery, scanning not only processes, but
-// also open file descriptors and bind-mounts, as well as the namespace
-// hierarchy and ownership, freezer states, and mount points with their
-// visibility.
-func WithFullDiscovery() discoveryOption {
-	return func(o *DiscoverOpts) {
-		o.NamespaceTypes = species.AllNS
-		o.ScanProcs = true
-		o.ScanFds = true
-		o.ScanBindmounts = true
-		o.DiscoverHierarchy = true
-		o.DiscoverOwnership = true
-		o.DiscoverFreezerState = true
-		o.DiscoverMounts = true
-	}
-}
-
-func WithNamespaceTypes(t species.NamespaceType) discoveryOption {
-	return func(o *DiscoverOpts) { o.NamespaceTypes = t }
-}
-
-func FromProcs() discoveryOption {
-	return func(o *DiscoverOpts) { o.ScanProcs = true }
-}
-
-func FromFds() discoveryOption {
-	return func(o *DiscoverOpts) { o.ScanFds = true }
-}
-
-func NotFromFds() discoveryOption {
-	return func(o *DiscoverOpts) { o.ScanFds = false }
-}
-
-func FromBindmounts() discoveryOption {
-	return func(o *DiscoverOpts) { o.ScanBindmounts = true }
-}
-
-func NotFromBindmounts() discoveryOption {
-	return func(o *DiscoverOpts) { o.ScanBindmounts = false }
-}
-
-func WithHierarchy() discoveryOption {
-	return func(o *DiscoverOpts) { o.DiscoverHierarchy = true }
-}
-
-func WithOwnership() discoveryOption {
-	return func(o *DiscoverOpts) { o.DiscoverOwnership = true }
-}
-
-func WithMounts() discoveryOption {
-	return func(o *DiscoverOpts) { o.DiscoverMounts = true }
-}
-
-// WithContainerizer opts for discovery of containers related to namespaces,
-// using the specified Containerizer.
-func WithContainerizer(c containerizer.Containerizer) discoveryOption {
-	return func(o *DiscoverOpts) {
-		o.Containerizer = c
-	}
 }
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The
@@ -218,7 +134,7 @@ func init() {
 // options specified in the call. The discovery results also specify the
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
-func Discover(options ...discoveryOption) *DiscoveryResult {
+func Discover(options ...DiscoveryOption) *DiscoveryResult {
 	opts := DiscoverOpts{}
 	for _, opt := range options {
 		opt(&opts)

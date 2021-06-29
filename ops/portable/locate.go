@@ -27,7 +27,11 @@ func LocateNamespace(nsid species.NamespaceID, nstype species.NamespaceType) mod
 	} else {
 		nst |= nstype
 	}
-	discovery := lxkns.Discover(lxkns.FromProcs(), lxkns.FromFds(), lxkns.FromBindmounts(), lxkns.WithNamespaceTypes(nst))
+	discovery := lxkns.Discover(
+		lxkns.FromProcs(),
+		lxkns.FromFds(),
+		lxkns.FromBindmounts(),
+		lxkns.WithNamespaceTypes(nst))
 	return LocateNamespaceInNamespaces(nsid, nstype, discovery.Namespaces)
 }
 

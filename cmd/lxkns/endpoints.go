@@ -57,7 +57,7 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 // GetPIDMapHandler returns data for translating PIDs between hierarchical PID
 // namespaces, as JSON.
 func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
-	pidmap := lxkns.NewPIDMap(lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.WithNamespaceTypes(species.CLONE_NEWPID)))
+	pidmap := lxkns.NewPIDMap(lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithNamespaceTypes(species.CLONE_NEWPID)))
 
 	w.Header().Set("Content-Type", "application/json")
 

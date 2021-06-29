@@ -122,7 +122,7 @@ read # wait for test to proceed()
 		// Unlock temporary network namespace and wait a short time for things
 		// to settle. Then check.
 		netnsunlocker()
-		netns = lxkns.Discover(lxkns.FromFds(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
+		netns = lxkns.Discover(lxkns.SameAs(netns))
 		Expect(netns.Namespaces[model.NetNS]).NotTo(HaveKey(netnsid),
 			"this *#@!& temporary network namespace won't get away!")
 		// The wrapping namespace reference can from now on be garbage

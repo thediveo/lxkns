@@ -39,7 +39,7 @@ read # wait for test to proceed()
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		usernsid := nstest.CmdDecodeNSId(cmd)
-		allns := Discover(WithFullDiscovery())
+		allns := Discover(WithStandardDiscovery())
 		userns := allns.Namespaces[model.UserNS][usernsid].(model.Hierarchy)
 		Expect(userns).NotTo(BeNil())
 		ppusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
@@ -61,7 +61,7 @@ read
 		defer cmd.Close()
 		var ready string
 		cmd.Decode(&ready)
-		allns := Discover(WithFullDiscovery())
+		allns := Discover(WithStandardDiscovery())
 		for _, uns := range allns.Namespaces[model.UserNS] {
 			if parent := uns.(model.Hierarchy).Parent(); parent != nil {
 				// Make sure to trigger Golang's embedding fubar in case we made

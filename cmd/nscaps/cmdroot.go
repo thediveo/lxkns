@@ -111,7 +111,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
-	allns := lxkns.Discover(lxkns.WithFullDiscovery())
+	allns := lxkns.Discover(lxkns.WithStandardDiscovery())
 	pidmap := lxkns.NewPIDMap(allns)
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the

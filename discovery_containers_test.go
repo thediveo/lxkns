@@ -71,7 +71,7 @@ var _ = Describe("Discover containers", func() {
 
 		<-mw.Ready() // TODO: should be in whalefriend containerizer
 
-		allns := Discover(WithFullDiscovery(), WithContainerizer(cizer))
+		allns := Discover(WithStandardDiscovery(), WithContainerizer(cizer))
 
 		Expect(allns.Containers).To(ContainElement(
 			WithTransform(func(c model.Container) string { return c.Name() }, Equal(sleepyname))))

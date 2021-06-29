@@ -69,7 +69,7 @@ var _ = Describe("Discover", func() {
 	})
 
 	It("returns namespaces in correct slots, implementing correct interfaces", func() {
-		allns := Discover(WithFullDiscovery())
+		allns := Discover(WithStandardDiscovery())
 		for _, nstype := range model.TypeIndexLexicalOrder {
 			for _, ns := range allns.Namespaces[nstype] {
 				Expect(model.TypesByIndex[nstype]).To(Equal(ns.Type()))

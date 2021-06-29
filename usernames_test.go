@@ -63,7 +63,7 @@ var _ = Describe("maps UIDs", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
-		allns := Discover(WithFullDiscovery())
+		allns := Discover(WithStandardDiscovery())
 		if _, ok := allns.Processes[1]; !ok {
 			Skip("needs root capabilities and PID=host")
 		}
