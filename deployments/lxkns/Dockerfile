@@ -23,11 +23,12 @@ COPY model/ ./model/
 COPY mounts/ ./mounts/
 COPY ops/ ./ops/
 COPY species/ ./species/
+COPY containerizer/ ./containerizer/
 COPY *.go ./
 RUN go build -v -o /lxkns ./cmd/lxkns
 
 # 2nd stage: builds the lxkns web client react application.
-FROM node:14-alpine AS reactor
+FROM node:16-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
