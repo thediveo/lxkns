@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package composer
+package dockershim
 
 import (
 	"context"
@@ -23,16 +23,24 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var names = map[string]struct{}{"dumb_doormat": {}, "pompous_pm": {}}
+var names = map[string]bool{
+	"k8s_foo_foopod_foons_123_1": true,
+	"k8s_bar_foopod_foons_123_1": true,
+	"k8s_123":                    false,
+	"k8s_abc-_def_ghi_123_1":     false,
+	"k8s_abc_def-_ghi_123_1":     false,
+	"k8s_abc_def_ghi-_123_1":     false,
+}
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
-var _ = Describe("Decorates composer projects", func() {
+var _ = Describe("Decorates k8s docker shim containers", func() {
 
 	var pool *dockertest.Pool
 	var sleepies []*dockertest.Resource
@@ -55,9 +63,7 @@ var _ = Describe("Decorates composer projects", func() {
 				Tag:        "latest",
 				Name:       name,
 				Cmd:        []string{"/bin/sleep", "30s"},
-				Labels: map[string]string{
-					ComposerProjectLabel: name + "-project",
-				},
+				Labels:     map[string]string{},
 			})
 			// Skip test in case Docker is not accessible.
 			if err != nil && nodockerre.MatchString(err.Error()) {
@@ -74,7 +80,7 @@ var _ = Describe("Decorates composer projects", func() {
 		}
 	})
 
-	It("finds containers, relates with processes", func() {
+	It("decorates k8s pods", func() {
 		mw, err := moby.NewWatcher(docksock)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -98,10 +104,14 @@ var _ = Describe("Decorates composer projects", func() {
 		Expect(containers).To(HaveLen(len(names)))
 
 		for _, container := range containers {
-			g := container.Group(ComposerGroupType)
+			g := container.Group(kuhbernetes.PodGroupType)
+			if !names[container.Name] {
+				Expect(g).To(BeNil())
+				continue
+			}
 			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(ComposerGroupType))
-			Expect(g.Containers).To(ConsistOf(container))
+			Expect(g.Type).To(Equal(kuhbernetes.PodGroupType))
+			Expect(g.Containers).To(ContainElement(container))
 		}
 	})
 
