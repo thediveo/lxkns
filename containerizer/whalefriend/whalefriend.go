@@ -45,42 +45,45 @@ func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containe
 	return c
 }
 
-// watchersContainers returns the alive containers managed by the specified
-// engine/watcher.
-func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []model.Container {
-	eng := containerizer.NewContainerEngine(
-		engine.ID(ctx),
-		engine.Type(),
-		engine.API(),
-		0 /* FIXME: unknown */)
-	cntrs := []model.Container{}
+// watchersContainers returns the alive Containers managed by the specified
+// engine/watcher. The containers returned are additionally linked to a unique
+// ContainerEngine and the ContainerEngine also aware of its Containers.
+func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []*model.Container {
+	eng := &model.ContainerEngine{
+		ID:   engine.ID(ctx),
+		Type: engine.Type(),
+		API:  engine.API(),
+		PID:  0, // FIXME: need to know ;)
+	}
 	for _, projname := range append(engine.Portfolio().Names(), "") {
 		project := engine.Portfolio().Project(projname)
 		if project == nil {
 			continue
 		}
 		for _, container := range project.Containers() {
-			cntr := containerizer.NewContainer(
-				container.ID,
-				container.Name,
-				"", // default to Type derived from container engine.
-				model.PIDType(container.PID),
-				container.Paused,
-				container.Labels,
-				eng)
-			cntrs = append(cntrs, cntr)
+			cntr := &model.Container{
+				ID:     container.ID,
+				Name:   container.Name,
+				Type:   eng.Type,
+				Flavor: eng.Type,
+				PID:    model.PIDType(container.PID),
+				Paused: container.Paused,
+				Labels: container.Labels,
+				Engine: eng,
+			}
+			eng.AddContainer(cntr)
 		}
 	}
-	return cntrs
+	return eng.Containers
 }
 
 // Containers returns the current container state of (alive) containers from all
 // assigned whale watchers.
 func (c *WhaleFriend) Containers(
 	ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper,
-) []model.Container {
+) []*model.Container {
 	// Gather all alive containers known at this time to our whale watchers.
-	containers := []model.Container{}
+	containers := []*model.Container{}
 	for _, watcher := range c.watchers {
 		containers = append(containers, c.watchersContainers(ctx, watcher)...)
 	}

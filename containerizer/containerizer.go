@@ -31,7 +31,7 @@ type Containerizer interface {
 	//
 	// Please note that depending on the particular containerizer implementation
 	// the context might be used or not used at all.
-	Containers(ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper) []model.Container
+	Containers(ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper) []*model.Container
 	// Close and release all resources allocated by this Containerizer.
 	Close()
 }

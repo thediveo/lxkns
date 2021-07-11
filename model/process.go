@@ -54,7 +54,7 @@ type Process struct {
 	FridgeCgroup string `json:"fridgecgroup"`
 	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
 
-	Container Container `json:"-"` // TODO:
+	Container *Container `json:"-"` // associated container.
 }
 
 // ProcessTable maps PIDs to their Process descriptions, allowing for quick

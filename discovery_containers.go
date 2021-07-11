@@ -18,8 +18,13 @@ package lxkns
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/model"
+
+	_ "github.com/thediveo/lxkns/decorator/all" // register all decorator plugins
 )
 
 // discoverContainers discovers alive containers using the optionally specified
@@ -33,12 +38,25 @@ func discoverContainers(result *DiscoveryResult) {
 	// Update the discovery information with the container found and establish
 	// the links between container and process information model objects.
 	result.Containers = containers
-	for idx := range containers {
+	enginesmap := map[*model.ContainerEngine]struct{}{}
+	for _, container := range containers {
+		if container.Engine == nil {
+			panic(fmt.Sprintf("containerizer returned container without engine: %+v", container))
+		}
+		enginesmap[container.Engine] = struct{}{}
 		// TODO: translate PID to initial PID namespace, if necessary.
-		if proc, ok := result.Processes[containers[idx].PID()]; ok {
-			proc.Container = containers[idx]
-			containers[idx].(model.ContainerFixer).SetProcess(proc)
+		if proc, ok := result.Processes[container.PID]; ok {
+			proc.Container = container
+			container.Process = proc
 		}
 	}
-
+	engines := make([]*model.ContainerEngine, 0, len(enginesmap))
+	for engine := range enginesmap {
+		engines = append(engines, engine)
+	}
+	// Run registered Decorators on discovered containers.
+	decorators := plugger.New(decorator.PluginGroup)
+	for _, decorateur := range decorators.Func("Decorate") {
+		decorateur.(decorator.Decorate)(engines)
+	}
 }

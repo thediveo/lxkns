@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build linux
-
-package lxkns
+package composer
 
 import (
 	"context"
@@ -25,20 +23,19 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-const sleepyname = "dumb_doormat"
+var names = map[string]struct{}{"dumb_doormat": {}, "pompous_pm": {}}
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
-var _ = Describe("Discover containers", func() {
+var _ = Describe("Decorates composer projects", func() {
 
 	var pool *dockertest.Pool
-	var sleepy *dockertest.Resource
+	var sleepies []*dockertest.Resource
 	var docksock string
 
 	BeforeEach(func() {
@@ -52,33 +49,32 @@ var _ = Describe("Discover containers", func() {
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
-		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "30s"},
-			Labels: map[string]string{
-				composer.ComposerProjectLabel: "lxkns-project",
-			},
-		})
-		// Skip test in case Docker is not accessible.
-		if err != nil && nodockerre.MatchString(err.Error()) {
-			Skip("Docker not available")
+		for name := range names {
+			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
+				Repository: "busybox",
+				Tag:        "latest",
+				Name:       name,
+				Cmd:        []string{"/bin/sleep", "30s"},
+				Labels: map[string]string{
+					ComposerProjectLabel: name + "-project",
+				},
+			})
+			// Skip test in case Docker is not accessible.
+			if err != nil && nodockerre.MatchString(err.Error()) {
+				Skip("Docker not available")
+			}
+			Expect(err).NotTo(HaveOccurred())
+			sleepies = append(sleepies, sleepy)
 		}
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		for _, sleepy := range sleepies {
+			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		}
 	})
 
 	It("finds containers, relates with processes", func() {
-		// We cannot discover the initial container process running as root when
-		// we're not root too.
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-
 		mw, err := moby.NewWatcher(docksock)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -89,29 +85,24 @@ var _ = Describe("Discover containers", func() {
 
 		<-mw.Ready()
 
-		allns := Discover(WithStandardDiscovery(), WithContainerizer(cizer))
+		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
+		Expect(allcontainers).NotTo(BeEmpty())
+		Decorate([]*model.ContainerEngine{allcontainers[0].Engine})
 
-		Expect(allns.Containers).To(ContainElement(
-			WithTransform(func(c *model.Container) string { return c.Name }, Equal(sleepyname))))
-		var sleepy *model.Container
-		for _, cntr := range allns.Containers {
-			if cntr.Name == sleepyname {
-				sleepy = cntr
-				break
+		containers := make([]*model.Container, 0, len(names))
+		for _, container := range allcontainers {
+			if _, ok := names[container.Name]; ok {
+				containers = append(containers, container)
 			}
 		}
-		Expect(sleepy).NotTo(BeNil())
-		Expect(sleepy.PID).NotTo(BeZero())
-		Expect(allns.Processes).To(HaveKey(sleepy.PID))
-		Expect(sleepy.Process).NotTo(BeNil())
-		Expect(sleepy.Process.Container).To(Equal(sleepy))
+		Expect(containers).To(HaveLen(len(names)))
 
-		g := sleepy.Group(composer.ComposerGroupType)
-		Expect(g).NotTo(BeNil())
-		Expect(g.Type).To(Equal(composer.ComposerGroupType))
-		Expect(g.Name).To(Equal("lxkns-project"))
-		Expect(g.Containers).To(HaveLen(1))
-		Expect(g.Containers).To(ConsistOf(sleepy))
+		for _, container := range containers {
+			g := container.Group(ComposerGroupType)
+			Expect(g).NotTo(BeNil())
+			Expect(g.Type).To(Equal(ComposerGroupType))
+			Expect(g.Containers).To(ConsistOf(container))
+		}
 	})
 
 })

@@ -89,11 +89,11 @@ var _ = Describe("ContainerEngine", func() {
 
 		cntrs := cew.Containers(ctx, nil, nil)
 		Expect(cntrs).To(ContainElement(
-			WithTransform(func(c model.Container) string { return c.Name() }, Equal(sleepyname))))
+			WithTransform(func(c *model.Container) string { return c.Name }, Equal(sleepyname))))
 
-		var c model.Container
+		var c *model.Container
 		for _, cntr := range cntrs {
-			if cntr.Name() == sleepyname {
+			if cntr.Name == sleepyname {
 				c = cntr
 				break
 			}
@@ -103,17 +103,17 @@ var _ = Describe("ContainerEngine", func() {
 		// correct information.
 		csleepy, err := pool.Client.InspectContainer(sleepy.Container.ID)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(c.ID()).To(Equal(csleepy.ID))
-		Expect(c.PID()).To(Equal(model.PIDType(csleepy.State.Pid)))
-		Expect(c.Paused()).To(Equal(csleepy.State.Paused))
-		Expect(c.Labels()).To(HaveKeyWithValue("foo", "bar"))
-		Expect(c.Type()).To(Equal(moby.Type))
+		Expect(c.ID).To(Equal(csleepy.ID))
+		Expect(c.PID).To(Equal(model.PIDType(csleepy.State.Pid)))
+		Expect(c.Paused).To(Equal(csleepy.State.Paused))
+		Expect(c.Labels).To(HaveKeyWithValue("foo", "bar"))
+		Expect(c.Type).To(Equal(moby.Type))
 
-		e := c.Engine()
+		e := c.Engine
 		Expect(e).NotTo(BeNil())
-		Expect(e.Type()).To(Equal(moby.Type))
-		Expect(e.API()).NotTo(BeEmpty())
-		Expect(e.ID()).NotTo(BeEmpty())
+		Expect(e.Type).To(Equal(moby.Type))
+		Expect(e.API).NotTo(BeEmpty())
+		Expect(e.ID).NotTo(BeEmpty())
 	})
 
 })

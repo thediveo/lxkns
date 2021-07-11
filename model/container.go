@@ -19,63 +19,51 @@ package model
 // Container is a deliberately limited and simplified view on "alive" containers
 // (where alive containers always have at least an initial process, so are never
 // process-less). This is all we need in the context of Linux-kernel namespaces.
-type Container interface {
+type Container struct {
 	// Identifier of this container; depending on the particular container
 	// engine this might be a unique container instance ID (for instance,
 	// as in the case of a Docker-managed container).
-	ID() string
+	ID string `json:"id"`
 	// Container name, which might be the same as the ID (for instance, in case
 	// of containerd-managed containers), but might also be different (such as
 	// in the case of Docker-managed containers).
-	Name() string
+	Name string `json:"name"`
 	// Type of container in form of a unique identifier, such as "docker.com",
 	// "containerd.io", et cetera.
-	Type() string
+	Type string `json:"type"`
 	// Optional flavor of container, or the same as the Type.
-	Flavor() string
+	Flavor string `json:"flavor"`
 	// PID of the initial (or "ealdorman") container process. This is always
-	// non-zero, as a Containerizer must never return any dead (non-alive)
+	// non-zero, as Containerizers must never return any dead (non-alive)
 	// containers. After finishing the discovery process this is the container's
 	// PID in the initial PID namespace, even for containerized container
 	// engines.
-	PID() PIDType
+	PID PIDType `json:"pid"`
 	// true, if the process(es) inside this container has (have) been either
 	// paused and are in the process of pausing; otherwise false.
-	Paused() bool
+	Paused bool `json:"paused"`
 	// Meta data in form of labels assigned to this container.
-	Labels() ContainerLabels
+	Labels Labels `json:"labels"`
+
+	// Group(s) this container belongs to.
+	Groups []*Group `json:"-"`
 
 	// Managing container engine instance.
-	Engine() ContainerEngine
+	Engine *ContainerEngine `json:"-"`
 	// Initial container process (ealdorman) details object.
-	Process() *Process
+	Process *Process `json:"-"`
 }
 
-// ContainerFixer allows the lxkns discovery to "fix" or correctly update some
-// container properties, such as PID or the process proxy object corresponding
-// representing the container's initial process.
-type ContainerFixer interface {
-	// SetTranslatedPID sets a container's initial process PID as seen from the
-	// initial PID namespace.
-	SetTranslatedPID(pid PIDType)
-	// SetProcess sets the process (proxy) object corresponding with the
-	// containe3r's initial process PID.
-	SetProcess(proc *Process)
-}
-
-// ContainerLabels are labels as key=value pairs assigned to a container. Both
+// Labels are labels as key=value pairs assigned to a container. Both
 // keys and values are strings.
-type ContainerLabels map[string]string
+type Labels map[string]string
 
-// ContainerEngine represents a single specific instance of a container engine.
-type ContainerEngine interface {
-	// Container engine instance identifier/data, such as a UUID, et cetera.
-	ID() string
-	// Identifier of the type of container engine, such as "docker.com",
-	// "containerd.io", et cetera.
-	Type() string
-	// Container engine API path (in initial mount namespace).
-	API() string
-	// Container engine PID, if known. Otherwise, zero.
-	PID() PIDType
+// Group returns the group with specified Type, or nil.
+func (c *Container) Group(Type string) *Group {
+	for _, group := range c.Groups {
+		if group.Type == Type {
+			return group
+		}
+	}
+	return nil
 }
