@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,12 +31,13 @@ import (
 )
 
 var names = map[string]bool{
-	"k8s_foo_foopod_foons_123_1": true,
-	"k8s_bar_foopod_foons_123_1": true,
-	"k8s_123":                    false,
-	"k8s_abc-_def_ghi_123_1":     false,
-	"k8s_abc_def-_ghi_123_1":     false,
-	"k8s_abc_def_ghi-_123_1":     false,
+	"k8s_foo_foopod_foons_123uid_1": true,
+	"k8s_bar_foopod_foons_123uid_1": true,
+	"k8s_POD_foopod_foons_123uid_1": true,
+	"k8s_123":                       false,
+	"k8s_abc-_def_ghi_123_1":        false,
+	"k8s_abc_def-_ghi_123_1":        false,
+	"k8s_abc_def_ghi-_123_1":        false,
 }
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
@@ -58,6 +60,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
 		for name := range names {
+			_ = pool.RemoveContainerByName(name)
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
 				Tag:        "latest",
@@ -106,12 +109,18 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		for _, container := range containers {
 			g := container.Group(kuhbernetes.PodGroupType)
 			if !names[container.Name] {
-				Expect(g).To(BeNil())
+				Expect(g).To(BeNil(), "non-pod container %s", container.Name)
 				continue
 			}
-			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(kuhbernetes.PodGroupType))
-			Expect(g.Containers).To(ContainElement(container))
+			Expect(g).NotTo(BeNil(), "pod container %s", container.Name)
+			Expect(g.Type).To(Equal(kuhbernetes.PodGroupType), container.Name)
+			Expect(g.Containers).To(ContainElement(container), container.Name)
+			Expect(container.Labels[kuhbernetes.PodUidLabel]).To(Equal("123uid"), container.Name)
+			if strings.Contains(container.Name, "_POD_") {
+				Expect(container.Labels).To(HaveKey(kuhbernetes.PodSandboxLabel), container.Name)
+			} else {
+				Expect(container.Labels).NotTo(HaveKey(kuhbernetes.PodSandboxLabel), container.Name)
+			}
 		}
 	})
 

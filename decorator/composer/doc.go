@@ -1,7 +1,15 @@
 /*
 
-Package composer provides a Decorator for adding (Docker) Composer project
-groups to an lxkns information model.
+Package composer decorates lxkns information models with (Docker) Composer
+project groups.
+
+Group Decoration
+
+Composer groups are typed as "com.docker.compose.project".
+
+Container Decoration
+
+None.
 
 */
 package composer

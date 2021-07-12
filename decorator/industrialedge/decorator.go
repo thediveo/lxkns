@@ -27,12 +27,20 @@ import (
 // Edge apps.
 const IndustrialEdgeAppFlavor = "com.siemens.industrialedge.app"
 
-// EdgeRuntimeName is the name of the container housing the Siemens Industrial Edge
-// runtime.
-const EdgeRuntimeName = "edge-iot-core"
+// IndustrialEdgeRuntimeFlavor identifiers the container housing the Industrial
+// Edge runtime.
+const IndustrialEdgeRuntimeFlavor = "com.siemens.industrialedge.runtime"
 
-// FIXME:
-const EdgeAppPrefix = "com_mwp_"
+// edgeRuntimeContainerName is the name of the container housing the Siemens
+// Industrial Edge runtime. We use this container name to detect the runtime in
+// order to decorate its container with the IED runtime flavor.
+const edgeRuntimeContainerName = "edge-iot-core"
+
+// edgeAppConfigLabelPrefix defines the label name prefix used by the Industrial
+// Edge device runtime to attach certain configuration information to containers
+// of Industrial Edge apps. We use the presence of these labels to decorate
+// composer-project containers as Industrial Edge app containers.
+const edgeAppConfigLabelPrefix = "com_mwp_config_"
 
 // Register this Decorator plugin.
 func init() {
@@ -50,22 +58,28 @@ func init() {
 // project flavor, where applicable.
 func Decorate(engines []*model.ContainerEngine) {
 	for _, engine := range engines {
+		// If there's an IE runtime container, then decorate it with its special
+		// flavor, so UI tools might choose to display a dedicated icon for easy
+		// visual identification.
 		isEdge := false
 		for _, container := range engine.Containers {
-			if container.Name == EdgeRuntimeName {
+			if container.Name == edgeRuntimeContainerName {
 				isEdge = true
-				// FIXME: decorate
+				container.Flavor = IndustrialEdgeRuntimeFlavor
+				break
 			}
-			break
 		}
 		if !isEdge {
 			continue
 		}
-		// Decorate the IE app flavor for composer projects, where applicable.
+		// Decorate the IE app flavor for composer projects as well as their
+		// containers, where applicable. As there is no explicit indication of
+		// IE apps, we use the presence of labels with certain name prefixes to
+		// deduce that such containers are part of an Industrial Edge app.
 		for _, container := range engine.Containers {
 			isEdgeApp := false
 			for labelkey := range container.Labels {
-				if strings.HasPrefix(labelkey, EdgeAppPrefix) {
+				if strings.HasPrefix(labelkey, edgeAppConfigLabelPrefix) {
 					isEdgeApp = true
 					break
 				}
@@ -73,9 +87,9 @@ func Decorate(engines []*model.ContainerEngine) {
 			if !isEdgeApp {
 				continue
 			}
-			// FIXME: decorate
 			if project := container.Group(composer.ComposerGroupType); project != nil {
 				project.Flavor = IndustrialEdgeAppFlavor
+				container.Flavor = IndustrialEdgeAppFlavor
 			}
 		}
 	}

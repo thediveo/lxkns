@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
+	github.com/containerd/containerd v1.5.2
 	github.com/getkin/kin-openapi v0.63.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.8.1

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package dockershim
+package cricontainerd
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestK8sDockershimDecorator(t *testing.T) {
+func TestK8sContainerdDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/dockershim package")
+	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
 }

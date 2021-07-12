@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package composer
+package industrialedge
 
 import (
 	"context"
@@ -21,14 +21,23 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+
 	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var names = map[string]struct{}{"dumb_doormat": {}, "pompous_pm": {}}
+var names = map[string]struct {
+	projectname string
+}{
+	"dumb_doormat":           {projectname: "foobar_project"},
+	"pompous_pm":             {projectname: "foobar_project"},
+	edgeRuntimeContainerName: {},
+}
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
@@ -49,16 +58,20 @@ var _ = Describe("Decorates composer projects", func() {
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
-		for name := range names {
-			_ = pool.RemoveContainerByName(name)
+		for name, config := range names {
+			var labels map[string]string
+			if config.projectname != "" {
+				labels = map[string]string{
+					composer.ComposerProjectLabel:    config.projectname,
+					edgeAppConfigLabelPrefix + "foo": "bar",
+				}
+			}
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
 				Tag:        "latest",
 				Name:       name,
 				Cmd:        []string{"/bin/sleep", "30s"},
-				Labels: map[string]string{
-					ComposerProjectLabel: name + "-project",
-				},
+				Labels:     labels,
 			})
 			// Skip test in case Docker is not accessible.
 			if err != nil && nodockerre.MatchString(err.Error()) {
@@ -75,7 +88,7 @@ var _ = Describe("Decorates composer projects", func() {
 		}
 	})
 
-	It("decorates composer projects", func() {
+	It("decorates IE apps and IED runtime", func() {
 		mw, err := moby.NewWatcher(docksock)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -88,6 +101,7 @@ var _ = Describe("Decorates composer projects", func() {
 
 		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
 		Expect(allcontainers).NotTo(BeEmpty())
+		composer.Decorate([]*model.ContainerEngine{allcontainers[0].Engine})
 		Decorate([]*model.ContainerEngine{allcontainers[0].Engine})
 
 		containers := make([]*model.Container, 0, len(names))
@@ -98,11 +112,19 @@ var _ = Describe("Decorates composer projects", func() {
 		}
 		Expect(containers).To(HaveLen(len(names)))
 
+		Expect(containers).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
+			"Name":   Equal(edgeRuntimeContainerName),
+			"Flavor": Equal(IndustrialEdgeRuntimeFlavor),
+		}))))
+
 		for _, container := range containers {
-			g := container.Group(ComposerGroupType)
+			if names[container.Name].projectname == "" {
+				continue
+			}
+			g := container.Group(composer.ComposerGroupType)
 			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(ComposerGroupType))
-			Expect(g.Containers).To(ConsistOf(container))
+			Expect(g.Type).To(Equal(composer.ComposerGroupType))
+			Expect(g.Flavor).To(Equal(IndustrialEdgeAppFlavor))
 		}
 	})
 

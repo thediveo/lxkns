@@ -12,44 +12,29 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package dockershim
-
-// TODO: sandbox container indication
-// TODO: UID labelling
+package cricontainerd
 
 import (
-	"regexp"
-	"strings"
-
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 )
 
+// containerKind specifies the kind of container at the engine level, in order
+// to differentiate between user containers and infrastructure "sandbox"
+// containers that haven't been specified by users (deployments).
+const containerKindLabel = "io.cri-containerd.kind"
+
 // Register this Decorator plugin.
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "dockershim",
+		Name:  "cri-containerd",
 		Group: decorator.PluginGroup,
 		Symbols: []plugger.Symbol{
 			decorator.Decorate(Decorate),
 		},
 	})
-}
-
-const sandboxName = "POD"
-
-const dnsLabelMaxLen = 63
-
-var dnsLabelRe = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
-var uidRe = regexp.MustCompile(`^[-a-z0-9]+$`)
-
-// validate tests a non-zero identifier string against a maximum length and
-// regular expression, returning true if the identifier validates. Returns false
-// otherwise.
-func validate(s string, re *regexp.Regexp, maxlen int) bool {
-	return (s != "") && (len(s) <= maxlen) && re.MatchString(s)
 }
 
 // Decorate decorates the discovered Docker containers with pod groups, where
@@ -59,26 +44,8 @@ func Decorate(engines []*model.ContainerEngine) {
 		// Pods cannot span container engines ;)
 		podgroups := map[string]*model.Group{}
 		for _, container := range engine.Containers {
-			// Is this a container that is managed by the k8s Docker shim?
-			if !strings.HasPrefix(container.Name, "k8s_") {
-				continue
-			}
-			fields := strings.Split(container.Name, "_")
-			if len(fields) != 6 && len(fields) != 7 {
-				continue
-			}
-			containerName := fields[1]
-			podName := fields[2]
-			podNamespace := fields[3]
-			podUid := fields[4]
-			if (containerName != sandboxName && !validate(containerName, dnsLabelRe, dnsLabelMaxLen)) ||
-				!validate(podName, dnsLabelRe, dnsLabelMaxLen) ||
-				!validate(podNamespace, dnsLabelRe, dnsLabelMaxLen) ||
-				!validate(podUid, uidRe, int((^uint(0))>>1)) {
-				continue
-			}
-			// Add the container name as set by user as additional label.
-			container.Labels[kuhbernetes.PodContainerNameLabel] = containerName
+			podNamespace := container.Labels[kuhbernetes.PodNamespaceLabel]
+			podName := container.Labels[kuhbernetes.PodNameLabel]
 			// Create a new pod group, if it doesn't exist yet. Add the
 			// container to its pod group.
 			namespacedpodname := podNamespace + "/" + podName
@@ -92,12 +59,10 @@ func Decorate(engines []*model.ContainerEngine) {
 				podgroups[namespacedpodname] = podgroup
 			}
 			podgroup.AddContainer(container)
-			// Is this container a sandbox? Then mark (label) it.
-			if containerName == sandboxName {
+			// Sandbox? Then tag (label) the container.
+			if container.Labels[containerKindLabel] == "sandbox" {
 				container.Labels[kuhbernetes.PodSandboxLabel] = ""
 			}
-			// Also label the UID we found in the dockershim container name.
-			container.Labels[kuhbernetes.PodUidLabel] = podUid
 		}
 	}
 }

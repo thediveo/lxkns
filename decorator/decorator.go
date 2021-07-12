@@ -16,9 +16,12 @@ package decorator
 
 import "github.com/thediveo/lxkns/model"
 
-// PluginGroup specifies the name of the plugger group for decorator plugins.
+// PluginGroup specifies the name of the plugger group (simple plugin manager)
+// for decorator plugins.
 const PluginGroup = "lxkns/plugingroup/decorator"
 
-// Decorate processes the discovered containers from container engines,
-// decorating containers with groups, et cetera.
+// Decorate the discovered containers with groups, group-related container
+// labels, et cetera. Instead of passing in all containers as a flat list, the
+// containers are implicitly specified through their responsible container
+// engines in order to allow Decorators to apply engine-specific optimizations.
 type Decorate func(engines []*model.ContainerEngine)
