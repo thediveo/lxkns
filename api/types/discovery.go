@@ -73,11 +73,13 @@ func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 }
 
 // DiscoveryResult is basically the (digital) twin of an lxkns DiscoveryResult,
-// which adds marshalling and unmarshalling to and from JSON. Additionally,
-// DiscoveryResult acts as an extensible discovery result wrapper, which allows
-// API users to freely add their own fields (with objects) to un/marshal
+// adding marshalling and unmarshalling to and from JSON. Besides,
+// DiscoveryResult acts also as an extensible discovery result wrapper that
+// allows API users to freely add their own fields (with objects) to un/marshal
 // additional result fields, as they see fit.
 type DiscoveryResult struct {
+	// Maps discovery result top-level JSON elements to their (un)marshalling
+	// types (the ones that then must do the real work).
 	Fields          map[string]interface{}
 	DiscoveryResult *lxkns.DiscoveryResult `json:"-"`
 }
@@ -88,6 +90,9 @@ const (
 	FieldNamespaces       = "namespaces"
 	FieldProcesses        = "processes"
 	FieldMounts           = "mounts"
+	FieldContainers       = "containers"
+	FieldContainerEngines = "container-engines"
+	FieldContainerGroups  = "container-groups"
 )
 
 // NewDiscoveryResult returns a discovery result object ready for unmarshalling
@@ -129,6 +134,9 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 		m := NamespacedMountMap(dr.DiscoveryResult.Mounts)
 		dr.Fields[FieldMounts] = &m
 	}
+	// And now for the user-space container-related things, comprising not only
+	// containers, but also container groups and container engines.
+
 	return dr
 }
 
@@ -185,7 +193,7 @@ func (dr DiscoveryResult) Mounts() lxkns.NamespacedMountPathMap {
 	return dr.DiscoveryResult.Mounts
 }
 
-// Get returns the use-specified result extension object for the specified
+// Get returns the user-specified result extension object for the specified
 // extension field. The field must have been added first with the WithElement
 // option when creating the un/marshalling wrapper object for discovery results.
 func (dr DiscoveryResult) Get(name string) interface{} {

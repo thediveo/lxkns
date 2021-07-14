@@ -59,7 +59,7 @@ read # wait for test to proceed()
 		lxkns.NotFromFds(), lxkns.NotFromBindmounts(),
 		lxkns.WithMounts())
 
-	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)
+	userns = allns.Namespaces[model.UserNS][usernsid]
 	Expect(userns).NotTo(BeNil())
 
 	// For some JSON tests we need the names of the users owning user
