@@ -22,13 +22,18 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-// ContainerModel wraps containers & co.
+// ContainerModel wraps the discovery information model part consisting of
+// containers, their container engines and groups for (un)marshalling from/to
+// JSON.
 type ContainerModel struct {
 	Containers       ContainerMap
 	ContainerEngines EngineMap
 	Groups           GroupMap
 }
 
+// NewContainerModel returns a new ContainerModel for (un)marshalling,
+// optionally preparing it from a list of discovered containers (with managing
+// container engines and groups).
 func NewContainerModel(containers []*model.Container) *ContainerModel {
 	cm := &ContainerModel{}
 	cm.Containers = NewContainerMap(cm, containers)
@@ -37,17 +42,19 @@ func NewContainerModel(containers []*model.Container) *ContainerModel {
 	return cm
 }
 
-// ----
-
+// ContainerMap wraps a set of discovered model.Container for JSON
+// (un)marshalling.
 type ContainerMap struct {
 	Containers map[uint]*model.Container
 	cm         *ContainerModel
 }
 
-func NewContainerMap(cosco *ContainerModel, containers []*model.Container) ContainerMap {
+// NewContainerMap returns a ContainerMap optionally initialized from a set of
+// model.Containers.
+func NewContainerMap(cm *ContainerModel, containers []*model.Container) ContainerMap {
 	m := ContainerMap{
 		Containers: map[uint]*model.Container{},
-		cm:         cosco,
+		cm:         cm,
 	}
 	for _, container := range containers {
 		m.Containers[uint(container.PID)] = container
@@ -62,6 +69,12 @@ func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {
 		m.Containers[refid] = container
 	}
 	return container
+}
+
+type ContainerMarshal struct {
+	Engine uint   `json:"engine"`
+	Groups []uint `json:"groups"`
+	*model.Container
 }
 
 func (m *ContainerMap) MarshalJSON() ([]byte, error) {
@@ -81,11 +94,7 @@ func (m *ContainerMap) MarshalJSON() ([]byte, error) {
 		for idx, group := range container.Groups {
 			gids[idx] = m.cm.Groups.GroupRefID(group)
 		}
-		cntrjson, err := json.Marshal(&struct {
-			Engine uint   `json:"engine"`
-			Groups []uint `json:"groups"`
-			*model.Container
-		}{
+		cntrjson, err := json.Marshal(&ContainerMarshal{
 			Engine:    m.cm.ContainerEngines.EngineRefID(container.Engine),
 			Groups:    gids,
 			Container: container,
@@ -97,6 +106,29 @@ func (m *ContainerMap) MarshalJSON() ([]byte, error) {
 	}
 	b.WriteRune('}')
 	return b.Bytes(), nil
+}
+
+func (m *ContainerMap) UnmarshalJSON(data []byte) error {
+	aux := map[uint]json.RawMessage{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	for refid, rawc := range aux {
+		container := m.ContainerByRefID(refid)
+		caux := ContainerMarshal{
+			Container: container,
+		}
+		if err := json.Unmarshal(rawc, &caux); err != nil {
+			return err
+		}
+		container.Engine = m.cm.ContainerEngines.EngineByRefID(caux.Engine)
+		groups := make([]*model.Group, len(caux.Groups))
+		for idx, gid := range caux.Groups {
+			groups[idx] = m.cm.Groups.GroupByRefID(gid)
+		}
+		container.Groups = groups
+	}
+	return nil
 }
 
 // ----
@@ -145,6 +177,11 @@ func (m EngineMap) EngineRefID(engine *model.ContainerEngine) uint {
 	return m.engineRefIDs[engine]
 }
 
+type EngineMarshal struct {
+	Containers []uint `json:"containers"`
+	*model.ContainerEngine
+}
+
 func (l *EngineMap) MarshalJSON() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteRune('{')
@@ -162,11 +199,8 @@ func (l *EngineMap) MarshalJSON() ([]byte, error) {
 		for idx, container := range engine.Containers {
 			cids[idx] = uint(container.PID)
 		}
-		engjson, err := json.Marshal(&struct {
-			CIDs []uint `json:"containers"`
-			*model.ContainerEngine
-		}{
-			CIDs:            cids,
+		engjson, err := json.Marshal(&EngineMarshal{
+			Containers:      cids,
 			ContainerEngine: (*model.ContainerEngine)(engine),
 		})
 		if err != nil {
@@ -176,6 +210,28 @@ func (l *EngineMap) MarshalJSON() ([]byte, error) {
 	}
 	b.WriteRune('}')
 	return b.Bytes(), nil
+}
+
+func (m *EngineMap) UnmarshalJSON(data []byte) error {
+	aux := map[uint]json.RawMessage{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	for refid, rawe := range aux {
+		engine := m.EngineByRefID(refid)
+		eaux := EngineMarshal{
+			ContainerEngine: engine,
+		}
+		if err := json.Unmarshal(rawe, &eaux); err != nil {
+			return err
+		}
+		containers := make([]*model.Container, len(eaux.Containers))
+		for idx, cid := range eaux.Containers {
+			containers[idx] = m.cm.Containers.ContainerByRefID(cid)
+		}
+		engine.Containers = containers
+	}
+	return nil
 }
 
 // -----

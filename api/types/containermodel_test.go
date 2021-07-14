@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	//. "github.com/onsi/gomega/gstruct"
+	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -111,6 +111,25 @@ var _ = Describe("container model JSON", func() {
 }`))
 	})
 
+	It("unmarshals containers", func() {
+		jtxt, err := json.Marshal(&cm.Containers)
+		Expect(err).NotTo(HaveOccurred())
+		cmu := NewContainerModel(nil)
+		Expect(json.Unmarshal(jtxt, &cmu.Containers)).NotTo(HaveOccurred())
+		Expect(cmu.Containers.Containers).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID":     Equal(c1.ID),
+				"Groups": HaveLen(1),
+			})),
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID":     Equal(c2.ID),
+				"Groups": HaveLen(1),
+			})),
+		))
+		Expect(cmu.Containers.Containers[uint(c1.PID)].Groups[0]).To(
+			BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)].Groups[0]))
+	})
+
 	It("marshals container engines", func() {
 		jtxt, err := json.Marshal(&cm.ContainerEngines)
 		Expect(err).NotTo(HaveOccurred())
@@ -124,17 +143,34 @@ var _ = Describe("container model JSON", func() {
 		"type": "typeA",
 		"api": "/foo",
 		"pid": 42
-	  },
-	  "2": {
+	},
+	"2": {
 		"containers": [
-		  456
+			456
 		],
 		"id": "ce2",
 		"type": "typeB",
 		"api": "/bar",
 		"pid": 666
-	  }
+	}
 }`))
+	})
+
+	It("unmarshals container engines", func() {
+		jtxt, err := json.Marshal(&cm.ContainerEngines)
+		Expect(err).NotTo(HaveOccurred())
+		cmu := NewContainerModel(nil)
+		Expect(json.Unmarshal(jtxt, &cmu.ContainerEngines)).NotTo(HaveOccurred())
+		Expect(cmu.ContainerEngines.enginesByRefID).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID":         Equal(ce1.ID),
+				"Containers": HaveLen(1),
+			})),
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID":         Equal(ce2.ID),
+				"Containers": HaveLen(1),
+			})),
+		))
 	})
 
 	It("marshals groups", func() {
