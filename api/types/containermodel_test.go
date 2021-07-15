@@ -193,4 +193,94 @@ var _ = Describe("container model JSON", func() {
 }`))
 	})
 
+	It("unmarshals groups", func() {
+		jtxt, err := json.Marshal(&cm.Groups)
+		Expect(err).NotTo(HaveOccurred())
+		cmu := NewContainerModel(nil)
+		Expect(json.Unmarshal(jtxt, &cmu.Groups)).NotTo(HaveOccurred())
+		Expect(cmu.Groups.groupsByRefID).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"Name":       Equal(g1.Name),
+				"Containers": HaveLen(2),
+				"Labels":     HaveKeyWithValue("foo", "bar"),
+			})),
+		))
+	})
+
+	It("survives a round-trip in all permutations", func() {
+		ctxt, err := json.Marshal(&cm.Containers)
+		Expect(err).NotTo(HaveOccurred())
+		etxt, err := json.Marshal(&cm.ContainerEngines)
+		Expect(err).NotTo(HaveOccurred())
+		gtxt, err := json.Marshal(&cm.Groups)
+		Expect(err).NotTo(HaveOccurred())
+
+		// permutation implementation idea from:
+		// https://yourbasic.org/golang/generate-permutation-slice-string/
+		type F func(cm *ContainerModel) // unmarshal some JSON into some model part.
+		var permute func(fs []F, idx int)
+		permutes := 0
+		permute = func(fs []F, idx int) {
+			if idx > len(fs) {
+				permutes++
+				cmu := NewContainerModel(nil)
+				for _, f := range fs {
+					f(cmu)
+				}
+				Expect(cmu.Containers.Containers).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"ID":     Equal(c1.ID),
+						"Groups": HaveLen(1),
+					})),
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"ID":     Equal(c2.ID),
+						"Groups": HaveLen(1),
+					})),
+				))
+				Expect(cmu.Containers.Containers[uint(c1.PID)].Groups[0]).To(
+					BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)].Groups[0]))
+				Expect(cmu.ContainerEngines.enginesByRefID).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"ID":         Equal(ce1.ID),
+						"Containers": ConsistOf(BeIdenticalTo(cmu.Containers.Containers[uint(c1.PID)])),
+					})),
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"ID":         Equal(ce2.ID),
+						"Containers": ConsistOf(BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)])),
+					})),
+				))
+				Expect(cmu.Groups.groupsByRefID).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Name": Equal(g1.Name),
+						"Containers": ConsistOf(
+							BeIdenticalTo(cmu.Containers.Containers[uint(c1.PID)]),
+							BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)]),
+						),
+						"Labels": HaveKeyWithValue("foo", "bar"),
+					})),
+				))
+				return
+			}
+			permute(fs, idx+1)
+			for j := idx + 1; j < len(fs); j++ {
+				fs[idx], fs[j] = fs[j], fs[idx]
+				permute(fs, idx+1)
+				fs[idx], fs[j] = fs[j], fs[idx]
+			}
+		}
+
+		permute([]F{
+			func(cm *ContainerModel) {
+				Expect(json.Unmarshal(ctxt, &cm.Containers)).NotTo(HaveOccurred())
+			},
+			func(cm *ContainerModel) {
+				Expect(json.Unmarshal(etxt, &cm.ContainerEngines)).NotTo(HaveOccurred())
+			},
+			func(cm *ContainerModel) {
+				Expect(json.Unmarshal(gtxt, &cm.Groups)).NotTo(HaveOccurred())
+			},
+		}, 0)
+		Expect(permutes).To(Equal(6)) // ...admittedly, I'm slightly overcautious here.
+	})
+
 })

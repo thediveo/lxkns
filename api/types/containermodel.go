@@ -42,10 +42,10 @@ func NewContainerModel(containers []*model.Container) *ContainerModel {
 	return cm
 }
 
-// ContainerMap wraps a set of discovered model.Container for JSON
+// ContainerMap wraps a set of discovered model.Containers for JSON
 // (un)marshalling.
 type ContainerMap struct {
-	Containers map[uint]*model.Container
+	Containers map[uint]*model.Container // map ref IDs to containers.
 	cm         *ContainerModel
 }
 
@@ -62,6 +62,8 @@ func NewContainerMap(cm *ContainerModel, containers []*model.Container) Containe
 	return m
 }
 
+// ContainerByRefID returns the Container object identified by the specified
+// (ref) ID. If the object isn't yet known, a new zero'd object is returned.
 func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {
 	container, ok := m.Containers[refid]
 	if !ok {
@@ -71,12 +73,18 @@ func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {
 	return container
 }
 
+// ContainerMarshal is a model.Container with additional fields for
+// (un)marshalling the engine and group references, as we cannot directly
+// serialize plain pointers in an information model with lots of cycles.
 type ContainerMarshal struct {
-	Engine uint   `json:"engine"`
-	Groups []uint `json:"groups"`
+	Engine uint   `json:"engine"` // engine ref IDs.
+	Groups []uint `json:"groups"` // group ref IDs.
 	*model.Container
 }
 
+// MarshalJSON emits a set of containers in JSON textual format, representing
+// the original object pointers to container engines and groups with ID
+// references (in form of numbers).
 func (m *ContainerMap) MarshalJSON() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteRune('{')
@@ -108,6 +116,11 @@ func (m *ContainerMap) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// UnmarshalJSON converts the JSON textual format back into a set of containers,
+// including resolving container engine and group IDs into object references.
+// Depending on a particular order of unmarshalling containers, engines, and
+// groups, preliminary zero'd container engine and group objects are created, to
+// be filled later as unmarshalling progresses.
 func (m *ContainerMap) UnmarshalJSON(data []byte) error {
 	aux := map[uint]json.RawMessage{}
 	if err := json.Unmarshal(data, &aux); err != nil {
@@ -131,21 +144,21 @@ func (m *ContainerMap) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ----
-
+// EngineMap wraps a set of discovered model.ContainerEngines for JSON
+// (un)marshalling.
 type EngineMap struct {
-	enginesByRefID map[uint]*model.ContainerEngine // associate (ref) IDs with the engines.
-	engineRefIDs   map[*model.ContainerEngine]uint // map ref IDs to engines.
+	enginesByRefID map[uint]*model.ContainerEngine // map ref IDs to engines.
+	engineRefIDs   map[*model.ContainerEngine]uint // associate (ref) IDs with the engines.
 	cm             *ContainerModel
 }
 
 // NewEngineMap creates a new map for ContainerEngines, optionally building
 // using a discovered list of containers (with their ContainerEngines).
-func NewEngineMap(cosco *ContainerModel, containers []*model.Container) EngineMap {
+func NewEngineMap(cm *ContainerModel, containers []*model.Container) EngineMap {
 	m := EngineMap{
 		enginesByRefID: map[uint]*model.ContainerEngine{},
 		engineRefIDs:   map[*model.ContainerEngine]uint{},
-		cm:             cosco,
+		cm:             cm,
 	}
 	// If containers were discovered, then associate (ref) IDs with the engines
 	// managing the containers.
@@ -177,16 +190,22 @@ func (m EngineMap) EngineRefID(engine *model.ContainerEngine) uint {
 	return m.engineRefIDs[engine]
 }
 
+// EngineMarshal is a model.ContainerEngine with additional fields for
+// (un)marshalling the container references, as we cannot directly serialize
+// plain pointers in an information model with lots of cycles.
 type EngineMarshal struct {
-	Containers []uint `json:"containers"`
+	Containers []uint `json:"containers"` // container ref IDs.
 	*model.ContainerEngine
 }
 
-func (l *EngineMap) MarshalJSON() ([]byte, error) {
+// MarshalJSON emits a set of container engines in JSON textual format,
+// representing the original object pointers to containers with ID references
+// (in form of numbers).
+func (m *EngineMap) MarshalJSON() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteRune('{')
 	first := true
-	for refid, engine := range l.enginesByRefID {
+	for refid, engine := range m.enginesByRefID {
 		if first {
 			first = false
 		} else {
@@ -212,6 +231,11 @@ func (l *EngineMap) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// UnmarshalJSON converts the JSON textual format back into a set of container
+// engines, including resolving container IDs into object references. Depending
+// on a particular order of unmarshalling containers, engines, and groups,
+// preliminary zero'd container objects are created, to be filled later as
+// unmarshalling progresses.
 func (m *EngineMap) UnmarshalJSON(data []byte) error {
 	aux := map[uint]json.RawMessage{}
 	if err := json.Unmarshal(data, &aux); err != nil {
@@ -234,21 +258,20 @@ func (m *EngineMap) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// -----
-
+// GroupMap wraps a set of discovered model.Groups for JSON (un)marshalling.
 type GroupMap struct {
-	groupsByRefID map[uint]*model.Group // associate (ref) IDs with the groups.
-	groupRefIDs   map[*model.Group]uint // map ref IDs to groups.
+	groupsByRefID map[uint]*model.Group // map ref IDs to groups.
+	groupRefIDs   map[*model.Group]uint // associate (ref) IDs with the groups.
 	cm            *ContainerModel
 }
 
 // NewEngineMap creates a new map for ContainerEngines, optionally building
 // using a discovered list of containers (with their ContainerEngines).
-func NewGroupMap(cosco *ContainerModel, containers []*model.Container) GroupMap {
+func NewGroupMap(cm *ContainerModel, containers []*model.Container) GroupMap {
 	m := GroupMap{
 		groupsByRefID: map[uint]*model.Group{},
 		groupRefIDs:   map[*model.Group]uint{},
-		cm:            cosco,
+		cm:            cm,
 	}
 	// If containers were discovered, then associate (ref) IDs with the groups
 	// grouping these containers.
@@ -281,11 +304,22 @@ func (m GroupMap) GroupRefID(group *model.Group) uint {
 	return m.groupRefIDs[group]
 }
 
-func (l *GroupMap) MarshalJSON() ([]byte, error) {
+// GroupMarshal is a model.Group with additional fields for (un)marshalling the
+// container references, as we cannot directly serialize plain pointers in an
+// information model with lots of cycles.
+type GroupMarshal struct {
+	Containers []uint `json:"containers"` // container ref IDs.
+	*model.Group
+}
+
+// MarshalJSON emits a set of groups in JSON textual format, representing the
+// original object pointers to containers with ID references (in form of
+// numbers).
+func (m *GroupMap) MarshalJSON() ([]byte, error) {
 	b := bytes.Buffer{}
 	b.WriteRune('{')
 	first := true
-	for refid, group := range l.groupsByRefID {
+	for refid, group := range m.groupsByRefID {
 		if first {
 			first = false
 		} else {
@@ -298,12 +332,9 @@ func (l *GroupMap) MarshalJSON() ([]byte, error) {
 		for idx, container := range group.Containers {
 			cids[idx] = uint(container.PID)
 		}
-		engjson, err := json.Marshal(&struct {
-			CIDs []uint `json:"containers"`
-			*model.Group
-		}{
-			CIDs:  cids,
-			Group: (*model.Group)(group),
+		engjson, err := json.Marshal(&GroupMarshal{
+			Containers: cids,
+			Group:      (*model.Group)(group),
 		})
 		if err != nil {
 			return nil, err
@@ -312,4 +343,31 @@ func (l *GroupMap) MarshalJSON() ([]byte, error) {
 	}
 	b.WriteRune('}')
 	return b.Bytes(), nil
+}
+
+// UnmarshalJSON converts the JSON textual format back into a set of groups,
+// including resolving container IDs into object references. Depending on a
+// particular order of unmarshalling containers, engines, and groups,
+// preliminary zero'd container objects are created, to be filled later as
+// unmarshalling progresses.
+func (m *GroupMap) UnmarshalJSON(data []byte) error {
+	aux := map[uint]json.RawMessage{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	for refid, rawg := range aux {
+		group := m.GroupByRefID(refid)
+		gaux := GroupMarshal{
+			Group: group,
+		}
+		if err := json.Unmarshal(rawg, &gaux); err != nil {
+			return err
+		}
+		containers := make([]*model.Container, len(gaux.Containers))
+		for idx, cid := range gaux.Containers {
+			containers[idx] = m.cm.Containers.ContainerByRefID(cid)
+		}
+		group.Containers = containers
+	}
+	return nil
 }
