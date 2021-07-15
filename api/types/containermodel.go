@@ -62,6 +62,15 @@ func NewContainerMap(cm *ContainerModel, containers []*model.Container) Containe
 	return m
 }
 
+// ContainerSlice returns the containers stored in the ContainerMap.
+func (m ContainerMap) ContainerSlice() []*model.Container {
+	containers := make([]*model.Container, 0, len(m.Containers))
+	for _, container := range m.Containers {
+		containers = append(containers, container)
+	}
+	return containers
+}
+
 // ContainerByRefID returns the Container object identified by the specified
 // (ref) ID. If the object isn't yet known, a new zero'd object is returned.
 func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {

@@ -65,7 +65,13 @@ var _ = Describe("discovery result JSON", func() {
 
 		opts = &DiscoveryOptions{}
 		Expect(json.Unmarshal(j, opts)).To(Succeed())
-		Expect(opts).To(Equal(doh))
+		// Slightly convoluted test for correct options sans the non-marshalled
+		// ones...
+		jopts, err := json.Marshal(opts)
+		Expect(err).NotTo(HaveOccurred())
+		jdoh, err := json.Marshal(doh)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(jopts).To(MatchJSON(jdoh))
 	})
 
 	It("marshals the discovery options, the namespaces map and process table", func() {
@@ -109,7 +115,7 @@ var _ = Describe("discovery result JSON", func() {
 		Expect(inner).To(HaveKey(MatchRegexp(`[0-9]+`)))
 	})
 
-	It("marshals and unmarshals a discovery results without hiccup", func() {
+	It("marshals and unmarshals a discovery result without hiccup", func() {
 		j, err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 		Expect(err).To(Succeed())
 
@@ -126,7 +132,22 @@ var _ = Describe("discovery result JSON", func() {
 			Expect(len(m)).To(Equal(len(allns.Mounts[mntnsid])))
 		}
 
-		Expect(dr.Result().Options).To(Equal(allns.Options))
+		// Slightly convoluted test for correct options sans the non-marshalled
+		// ones...
+		opts, err := json.Marshal(dr.Result().Options)
+		Expect(err).NotTo(HaveOccurred())
+		allnsopts, err := json.Marshal(allns.Options)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(opts).To(MatchJSON(allnsopts))
+
+		// Coarse check that the numbers of containers, engines, and groups
+		// match.
+		Expect(dr.Result().Containers).To(HaveLen(len(allns.Containers)))
+		drcm := NewContainerModel(dr.Result().Containers)
+		allnscm := NewContainerModel(allns.Containers)
+		Expect(drcm.Containers.Containers).To(HaveLen(len(allnscm.Containers.Containers)))
+		Expect(drcm.ContainerEngines.engineRefIDs).To(HaveLen(len(allnscm.ContainerEngines.engineRefIDs)))
+		Expect(drcm.Groups.groupRefIDs).To(HaveLen(len(allnscm.Groups.groupRefIDs)))
 	})
 
 })

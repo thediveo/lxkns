@@ -141,7 +141,7 @@ func init() {
 	})
 }
 
-// LabelSetupCLI adds the flags ...
+// LabelSetupCLI adds the flags for controlling control group name display.
 func LabelSetupCLI(cmd *cobra.Command) {
 	controlGroupNames = CgroupComplete // ensure clean initial state for testing
 	cmd.PersistentFlags().Var(

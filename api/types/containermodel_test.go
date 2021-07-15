@@ -19,8 +19,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	. "github.com/onsi/gomega/gstruct"
+
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -128,6 +128,15 @@ var _ = Describe("container model JSON", func() {
 		))
 		Expect(cmu.Containers.Containers[uint(c1.PID)].Groups[0]).To(
 			BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)].Groups[0]))
+		cs := cmu.Containers.ContainerSlice()
+		Expect(cs).To(ConsistOf(
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID": Equal(c1.ID),
+			})),
+			PointTo(MatchFields(IgnoreExtras, Fields{
+				"ID": Equal(c2.ID),
+			})),
+		))
 	})
 
 	It("marshals container engines", func() {

@@ -82,6 +82,7 @@ type DiscoveryResult struct {
 	// types (the ones that then must do the real work).
 	Fields          map[string]interface{}
 	DiscoveryResult *lxkns.DiscoveryResult `json:"-"`
+	ContainerModel  *ContainerModel        `json:"-"`
 }
 
 // JSON object field names for the standardized discovery result parts.
@@ -136,7 +137,11 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	}
 	// And now for the user-space container-related things, comprising not only
 	// containers, but also container groups and container engines.
-
+	dr.ContainerModel = NewContainerModel(dr.DiscoveryResult.Containers)
+	dr.Fields[FieldContainers] = &dr.ContainerModel.Containers
+	dr.Fields[FieldContainerEngines] = &dr.ContainerModel.ContainerEngines
+	dr.Fields[FieldContainerGroups] = &dr.ContainerModel.Groups
+	// Done. Phew.
 	return dr
 }
 
@@ -225,5 +230,9 @@ func (dr *DiscoveryResult) UnmarshalJSON(data []byte) error {
 			delete(dr.DiscoveryResult.Processes, proc.PID)
 		}
 	}
+	// Get the containers and put them into the underlying discovery result; the
+	// containers will reference the engines and groups.
+	dr.DiscoveryResult.Containers = dr.ContainerModel.Containers.ContainerSlice()
+
 	return nil
 }
