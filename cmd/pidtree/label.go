@@ -39,20 +39,29 @@ func ProcessLabel(proc *model.Process, pidmap model.PIDMapper, rootpidns model.N
 	// from the initial PID namespace down to the PID namespace this process
 	// is joined to.
 	if procpidns := proc.Namespaces[model.PIDNS]; procpidns != nil {
+		var s string
+		showCgroupController := true
+
+		// If there's a container associated with the process, then show the
+		// container's name.
+		if proc.Container != nil {
+			s = fmt.Sprintf("container %q ", style.ContainerStyle.V(proc.Container.Name))
+			showCgroupController = false
+		}
+
 		pids := []string{}
 		for _, el := range pidmap.NamespacedPIDs(proc.PID, rootpidns) {
 			pids = append(pids, strconv.FormatUint(uint64(el.PID), 10))
 		}
-		var s string
 		if len(pids) > 1 {
-			s = fmt.Sprintf("%q (%s)",
+			s += fmt.Sprintf("%q (%s)",
 				style.ProcessStyle.V(style.ProcessName(proc)),
 				strings.Join(pids, "/"))
 		} else {
-			s = fmt.Sprintf("%q (%d)",
+			s += fmt.Sprintf("%q (%d)",
 				style.ProcessStyle.V(style.ProcessName(proc)), proc.PID)
 		}
-		if proc.CpuCgroup != "" {
+		if showCgroupController && proc.CpuCgroup != "" {
 			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(output.ControlgroupDisplayName(proc.CpuCgroup)))
 		}
 		return s

@@ -66,11 +66,11 @@ func init() {
 // TreeStyleSetupCLI is a plugin function that registers the CLI "treestyle"
 // flag.
 func TreeStyleSetupCLI(rootCmd *cobra.Command) {
+	treestyle = TreeStyleLine
 	rootCmd.PersistentFlags().Var(
 		enumflag.New(&treestyle, "treestyle", treeStyleIds, enumflag.EnumCaseSensitive),
 		"treestyle",
-		"select the tree render style; can be 'line' (default if omitted)\n"+
-			"or 'ascii'")
+		"select the tree render style; can be 'line' or 'ascii'")
 }
 
 // TreeStyleBeforeRun is a plugin function that handles selection, reading, or

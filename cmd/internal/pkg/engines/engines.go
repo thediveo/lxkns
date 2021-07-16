@@ -108,11 +108,10 @@ func init() {
 }
 
 func EngineSetupCLI(cmd *cobra.Command) {
-	engines = []Engine{}
+	engines = []Engine{All}
 	cmd.PersistentFlags().VarP(
 		enumflag.NewSlice(&engines, "enginetype",
 			EngineModes, enumflag.EnumCaseInsensitive),
 		"engine", "e",
-		"container engines; can be 'docker', 'containerd', 'none' or 'all' (default if omitted")
-	cmd.PersistentFlags().Lookup("engine").NoOptDefVal = "all"
+		"container engines to query; can be 'docker', 'containerd', 'none' or 'all'")
 }

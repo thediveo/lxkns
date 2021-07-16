@@ -34,6 +34,16 @@ import (
 // there is no such process then in form of a filesystem reference.
 func NamespaceReferenceLabel(ns model.Namespace) string {
 	if ancient := ns.Ealdorman(); ancient != nil {
+		var s string
+		showCgroupController := true
+
+		// If there's a container associated with the ealdorman process, then
+		// show the container's name.
+		if ancient.Container != nil {
+			s = fmt.Sprintf("container %q ", style.ContainerStyle.V(ancient.Container.Name))
+			showCgroupController = false
+		}
+
 		// The earldorman always comes first ... age before beauty.
 		procs := []*model.Process{ancient}
 		if allLeaders {
@@ -52,7 +62,7 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 				}
 			}
 		}
-		s := "process "
+		s += "process "
 		for idx, proc := range procs {
 			if idx > 0 {
 				s += ", "
@@ -60,16 +70,17 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 			s += fmt.Sprintf("%q (%d)",
 				style.ProcessStyle.V(style.ProcessName(proc)),
 				proc.PID)
-			if proc.CpuCgroup != "" {
-				s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(ControlgroupDisplayName(proc.CpuCgroup)))
+			if showCgroupController && proc.CpuCgroup != "" {
+				s += fmt.Sprintf(
+					" controlled by %q",
+					style.ControlGroupStyle.V(ControlgroupDisplayName(proc.CpuCgroup)))
 			}
 		}
 		return s
 	}
 	if ref := ns.Ref(); ref != "" {
 		// TODO: deal with references in other mount namespaces :)
-		return fmt.Sprintf("bind-mounted at %q",
-			ref)
+		return fmt.Sprintf("bind-mounted at %q", ref)
 	}
 	return ""
 }
@@ -143,12 +154,12 @@ func init() {
 
 // LabelSetupCLI adds the flags for controlling control group name display.
 func LabelSetupCLI(cmd *cobra.Command) {
-	controlGroupNames = CgroupComplete // ensure clean initial state for testing
+	controlGroupNames = CgroupShortened // ensure clean initial state for testing
 	cmd.PersistentFlags().Var(
 		enumflag.New(&controlGroupNames, "cgformat", ControlGroupNameModes, enumflag.EnumCaseInsensitive),
 		"cgroup",
-		"control group name display; can be 'full' or 'short' (default if omitted)")
-	cmd.PersistentFlags().Lookup("cgroup").NoOptDefVal = "short"
+		"control group name display; can be 'full' or 'short'")
+	//cmd.PersistentFlags().Lookup("cgroup").NoOptDefVal = "short"
 	allLeaders = false
 	cmd.PersistentFlags().BoolVar(&allLeaders, "all-leaders", false,
 		"show all leader processes instead of only the most senior one")

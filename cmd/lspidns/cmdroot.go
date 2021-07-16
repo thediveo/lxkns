@@ -21,6 +21,7 @@ import (
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -37,7 +38,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			user, _ := cmd.PersistentFlags().GetBool("user")
 			// Run a standard namespace discovery (comprehensive, but without
 			// mount point discovery).
-			allns := lxkns.Discover(lxkns.WithStandardDiscovery())
+			cizer, err := engines.Containerizer(true)
+			if err != nil {
+				return err
+			}
+			allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 			fmt.Print(
 				asciitree.Render(
 					allns.PIDNSRoots,

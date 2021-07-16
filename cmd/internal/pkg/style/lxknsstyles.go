@@ -40,6 +40,8 @@ var (
 	ProcessStyle      Style // styles process names
 	ControlGroupStyle Style // control group names/references
 	UnknownStyle      Style // styles undetermined elements, such as unknown PIDs.
+
+	ContainerStyle Style // styles container names/IDs
 )
 
 // Styles maps style configuration top-level element names to their
@@ -62,4 +64,6 @@ var Styles = map[string]*Style{
 	"process":      &ProcessStyle,
 	"controlgroup": &ControlGroupStyle,
 	"unknown":      &UnknownStyle,
+
+	"container": &ContainerStyle,
 }
