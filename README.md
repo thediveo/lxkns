@@ -1,14 +1,20 @@
-# Linux kernel Namespaces <img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
+<img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
+# Linux kernel Namespaces
+
+…and Containers.
 
 [![view manual](https://img.shields.io/badge/view-manual-blue)](thediveo.github.io/lxkns)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/thediveo/lxkns)](https://pkg.go.dev/github.com/thediveo/lxkns)
+[![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-`lxkns` is a Golang package for discovering Linux kernel namespaces (and mount
-points). In every nook and cranny of your Linux hosts. It can be operated as a
-stand-alone REST service or integrated into system diagnosis tools that need an
+`lxkns` is a Golang package for discovering Linux kernel namespaces as well as
+mount points in mount namespaces, and relating them to containers, where
+possible. In every nook and cranny of your Linux hosts.
+
+Discovery can be operated as a stand-alone REST service (both web UI and JSON
+discovery results) or integrated into system diagnosis tools that need an
 unobstructed view on Linux-kernel namespaces.
 
 For mount namespaces, lxkns finds mount points even in process-less mount

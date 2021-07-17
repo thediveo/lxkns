@@ -17,6 +17,8 @@ RUN go mod download
 # And now, finally, we build the lxkns service itself.
 COPY api/ ./api/
 COPY cmd/ ./cmd/
+COPY containerizer/ ./containerizer/
+COPY decorator/ ./decorator/
 COPY internal/ ./internal/
 COPY log/ ./log/
 COPY model/ ./model/

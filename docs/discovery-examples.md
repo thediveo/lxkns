@@ -1,13 +1,13 @@
-# API Examples
+# Discovery Examples
 
 These are simple examples to give you a first impression. For the real-world
 gory stuff, please take a look at the `examples/` and `cmd/` directories in the
 lxkns repository. 😇
 
-## 🔎 Discovery
+## 🔎 Namespaces Only
 
-This simple example code runs a full namespace discovery and then prints all
-namespaces found, sorted by their type, then by their ID.
+This simple example code runs a full namespace (-only) discovery and then prints
+all namespaces found, sorted by their type, then by their ID.
 
 ```go
 package main
@@ -44,36 +44,48 @@ spins up, and then carries out a further step of the discovery process. All
 these gory details are hidden by the `github.com/thediveo/gons/reexec` package
 and its `reeexec.CheckAction()`.
 
-## 📡 Marshalling and Unmarshalling
+## 🔎 Containers
 
-`lxkns` supports un/marshalling discovery results from/to JSON. Both the
-namespaces and process information can be passed via JSON and correctly
-regenerated.
+This simple example code (from `examples/barebones`) runs a full namespace
+discovery including "containerization" and then prints all namespaces found,
+sorted by their type, then by their ID. When a namespace is associated with a
+container, then the container's name will also be printed.
 
 ```go
 package main
 
 import (
+    "context"
     "fmt"
+
     "github.com/thediveo/gons/reexec"
     "github.com/thediveo/lxkns"
-    apitypes "github.com/thediveo/lxkns/api/types"
+    "github.com/thediveo/lxkns/containerizer/whalefriend"
+    "github.com/thediveo/lxkns/model"
+    "github.com/thediveo/whalewatcher/watcher"
+    "github.com/thediveo/whalewatcher/watcher/moby"
 )
 
 func main() {
-    reexec.CheckAction() // only for discovery, not for unmarshalling
-    b, _ := json.Marshal(
-        apitypes.NewDiscoveryResult(
-            lxkns.Discover(lxkns.StandardDiscovery())))
+    reexec.CheckAction() // must be called before a standard discovery
 
-    dr := apitypes.NewDiscoveryResult(nil)
-    _ = json.Unmarshal(b, &dr)
-    result := (*lxkns.DiscoveryResult)(dr)
+    // Set up a Docker engine-connected containerizer
+    moby, err := moby.NewWatcher("")
+    if err != nil {
+        panic(err)
+    }
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+    cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
+
+    // Run the discovery, including containerization.
+    result := lxkns.Discover(
+        lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+
+    for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
+        for _, ns := range result.SortedNamespaces(nsidx) {
+            fmt.Println(ns.String())
+        }
+    }
 }
 ```
-
-> [!NOTE] Discovery results need to be explicitly "wrapped" in JSON-able objects
-> for un/marshalling. The discovery result objects returned from
-> `lxkns.Discover()` cannot be properly un/marshalled, not least as they
-> describe an information model with circular references that is optimized for
-> quick navigation, not for un/marshalling.
