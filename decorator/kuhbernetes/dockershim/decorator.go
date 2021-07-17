@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -55,6 +56,7 @@ func validate(s string, re *regexp.Regexp, maxlen int) bool {
 // Decorate decorates the discovered Docker containers with pod groups, where
 // applicable.
 func Decorate(engines []*model.ContainerEngine) {
+	total := 0
 	for _, engine := range engines {
 		// Pods cannot span container engines ;)
 		podgroups := map[string]*model.Group{}
@@ -90,6 +92,7 @@ func Decorate(engines []*model.ContainerEngine) {
 					Flavor: kuhbernetes.PodGroupType,
 				}
 				podgroups[namespacedpodname] = podgroup
+				total++
 			}
 			podgroup.AddContainer(container)
 			// Is this container a sandbox? Then mark (label) it.
@@ -99,5 +102,8 @@ func Decorate(engines []*model.ContainerEngine) {
 			// Also label the UID we found in the dockershim container name.
 			container.Labels[kuhbernetes.PodUidLabel] = podUid
 		}
+	}
+	if total > 0 {
+		log.Infof("discovered %d dockershim pods", total)
 	}
 }

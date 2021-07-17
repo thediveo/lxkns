@@ -4,7 +4,7 @@ These are simple examples to give you a first impression. For the real-world
 gory stuff, please take a look at the `examples/` and `cmd/` directories in the
 lxkns repository. 😇
 
-## 🔎 Namespaces Only
+## Namespaces Only
 
 This simple example code runs a full namespace (-only) discovery and then prints
 all namespaces found, sorted by their type, then by their ID.
@@ -44,7 +44,7 @@ spins up, and then carries out a further step of the discovery process. All
 these gory details are hidden by the `github.com/thediveo/gons/reexec` package
 and its `reeexec.CheckAction()`.
 
-## 🔎 Containers
+## Containers
 
 This simple example code (from `examples/barebones`) runs a full namespace
 discovery including "containerization" and then prints all namespaces found,

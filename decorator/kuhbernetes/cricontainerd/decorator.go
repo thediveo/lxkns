@@ -18,7 +18,9 @@ import (
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/watcher/containerd"
 )
 
 // containerKind specifies the kind of container at the engine level, in order
@@ -40,12 +42,21 @@ func init() {
 // Decorate decorates the discovered Docker containers with pod groups, where
 // applicable.
 func Decorate(engines []*model.ContainerEngine) {
+	total := 0
 	for _, engine := range engines {
+		// If it "ain't no" containerd, skip it, as we're looking specifically
+		// for containerd engines and their particular Kubernetes pod labelling.
+		if engine.Type != containerd.Type {
+			continue
+		}
 		// Pods cannot span container engines ;)
 		podgroups := map[string]*model.Group{}
 		for _, container := range engine.Containers {
 			podNamespace := container.Labels[kuhbernetes.PodNamespaceLabel]
 			podName := container.Labels[kuhbernetes.PodNameLabel]
+			if podName == "" || podNamespace == "" {
+				continue
+			}
 			// Create a new pod group, if it doesn't exist yet. Add the
 			// container to its pod group.
 			namespacedpodname := podNamespace + "/" + podName
@@ -57,6 +68,7 @@ func Decorate(engines []*model.ContainerEngine) {
 					Flavor: kuhbernetes.PodGroupType,
 				}
 				podgroups[namespacedpodname] = podgroup
+				total++
 			}
 			podgroup.AddContainer(container)
 			// Sandbox? Then tag (label) the container.
@@ -64,5 +76,8 @@ func Decorate(engines []*model.ContainerEngine) {
 				container.Labels[kuhbernetes.PodSandboxLabel] = ""
 			}
 		}
+	}
+	if total > 0 {
+		log.Infof("discovered %d containerd pods", total)
 	}
 }

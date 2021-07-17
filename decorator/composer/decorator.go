@@ -17,6 +17,7 @@ package composer
 import (
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/decorator"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -41,6 +42,7 @@ func init() {
 // Decorate decorates the discovered Docker (and nerdctl) containers with
 // composer groups, where applicable.
 func Decorate(engines []*model.ContainerEngine) {
+	total := 0
 	for _, engine := range engines {
 		// Projects do not span multiple container engines inside the same host,
 		// so we avoid mixing them up by accident. This assumes that we do not
@@ -63,8 +65,12 @@ func Decorate(engines []*model.ContainerEngine) {
 					Flavor: ComposerGroupType,
 				}
 				projects[projectname] = project
+				total++
 			}
 			project.AddContainer(container)
 		}
+	}
+	if total > 0 {
+		log.Infof("discovered %d composer projects", total)
 	}
 }

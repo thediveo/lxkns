@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -28,10 +29,15 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/whalewatcher/watcher"
+	"github.com/thediveo/whalewatcher/watcher/containerd"
+	"github.com/thediveo/whalewatcher/watcher/moby"
 	"golang.org/x/sys/unix"
 )
 
@@ -143,9 +149,56 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	}
 	log.Infof("with effective capabilities: %s", mycaps)
 
+	// Create the containerizer for the specified container engines...
+	watchers := []watcher.Watcher{}
+	if nodocker, _ := cmd.PersistentFlags().GetBool("nodocker"); !nodocker {
+		apipath, err := cmd.PersistentFlags().GetString("docker")
+		if err != nil {
+			return err
+		}
+		log.Infof("synchronizing in background to Docker engine, API %s", apipath)
+		watcher, err := moby.NewWatcher(apipath)
+		if err != nil {
+			return err
+		}
+		watchers = append(watchers, watcher)
+	}
+	if nocontainerd, _ := cmd.PersistentFlags().GetBool("nocontainerd"); !nocontainerd {
+		apipath, err := cmd.PersistentFlags().GetString("containerd")
+		if err != nil {
+			return err
+		}
+		log.Infof("synchronizing in background to containerd engine, API %s", apipath)
+		watcher, err := containerd.NewWatcher(apipath)
+		if err != nil {
+			return err
+		}
+		watchers = append(watchers, watcher)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var cizer containerizer.Containerizer
+	if len(watchers) > 0 {
+		cizer = whalefriend.New(ctx, watchers)
+		// Do not wait for the watchers to get online, they can do so in the
+		// background.
+		for _, w := range watchers {
+			go func(w watcher.Watcher) {
+				select {
+				case <-w.Ready():
+					idctx, _ := context.WithTimeout(ctx, 5*time.Second)
+					log.Infof("synchronized to type %s container engine with ID %s at API %s",
+						w.Type(), w.ID(idctx), w.API())
+				case <-time.After(5 * time.Second):
+					log.Warnf("container engine still offline for API %s ... silently trying", w.API())
+				}
+			}(w)
+		}
+	}
+
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
-	if _, err := startServer(addr); err != nil {
+	if _, err := startServer(addr, cizer); err != nil {
 		log.Errorf("cannot start service, error: %s", err.Error())
 		os.Exit(1)
 	}
@@ -183,6 +236,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	pf.Bool("initialcgroup", false, "switches into initial cgroup namespace")
 	pf.Bool("cgroupswitched", false, "")
 	_ = pf.MarkHidden("cgroupswitched")
+
+	pf.Bool("nodocker", false, "disable Docker container discovery")
+	pf.String("docker", "unix:///var/run/docker.sock", "Docker engine API socket address")
+	pf.Bool("nocontainerd", false, "disable containerd container discovery")
+	pf.String("containerd", "/run/containerd/containerd.sock", "containerd engine API socket address")
 
 	cli.AddFlags(rootCmd)
 	return

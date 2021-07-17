@@ -52,7 +52,7 @@ FROM alpine:${ALPINE_VERSION}
 COPY --from=builder /lxkns /
 RUN apk add --no-cache \
         libcap && \
-    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search+ep" /lxkns && \
+    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
     apk del --no-cache libcap
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 USER 65534

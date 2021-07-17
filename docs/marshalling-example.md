@@ -1,4 +1,4 @@
-# 📡 (Un)Marshalling Example
+# (Un)Marshalling Example
 
 `lxkns` supports un/marshalling discovery results from/to JSON. Both the
 namespaces and process information can be passed via JSON and correctly

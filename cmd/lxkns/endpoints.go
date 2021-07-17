@@ -20,22 +20,27 @@ import (
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/species"
 )
 
-// GetNamespacesHandler returns the results of a namespace discovery, as JSON.
+// GetNamespacesHandler takes a containerizer and then returns a handler
+// function that returns the results of a namespace discovery, as JSON.
 // Additionally, we opt in to mount path+point discovery.
-func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
-	allns := lxkns.Discover(lxkns.WithFullDiscovery())
-	// Note bene: set header before writing the header with the status code;
-	// actually makes sense, innit?
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(
-		types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
-	if err != nil {
-		log.Errorf("namespaces discovery error: %s", err.Error())
+func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		allns := lxkns.Discover(
+			lxkns.WithFullDiscovery(), lxkns.WithContainerizer(cizer))
+		// Note bene: set header before writing the header with the status code;
+		// actually makes sense, innit?
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err := json.NewEncoder(w).Encode(
+			types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
+		if err != nil {
+			log.Errorf("namespaces discovery error: %s", err.Error())
+		}
 	}
 }
 
