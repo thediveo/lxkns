@@ -54,6 +54,7 @@
     "build": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build",
     "build:dev": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build --profile",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
+    "icons": "node genicons",
     "cypress": "NODE_ENV=test cypress open",
     "cypress:run": "NODE_ENV=test cypress run",
     "eject": "react-scripts eject",

@@ -20,7 +20,8 @@ import { makeStyles, Tooltip } from '@material-ui/core'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
 
-import { Process } from 'models/lxkns'
+import { containerGroup, Process } from 'models/lxkns'
+import { ContainerTypeIcon } from 'utils/containericon'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -41,6 +42,28 @@ const useStyles = makeStyles((theme) => ({
         }
     },
     shortInfo: {
+    },
+    containerInfo: {
+        paddingRight: theme.spacing(1),
+        '& .MuiSvgIcon-root': {
+            color: theme.palette.container,
+        },
+    },
+    containerName: {
+        fontStyle: 'italic',
+        color: theme.palette.container,
+        '&::before': {
+            content: '"«"',
+            fontStyle: 'normal',
+        },
+        '&::after': {
+            content: '"»"',
+            fontStyle: 'normal',
+            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
+        },
+    },
+    groupInfo: {
+        color: theme.palette.container,
     },
     processName: {
         fontStyle: 'italic',
@@ -109,17 +132,36 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
 
     const classes = useStyles()
 
+    const ConIcon = process.container && ContainerTypeIcon(process.container)
+
+    var group = null
+    if (process.container) {
+        const project = containerGroup(process.container, 'com.docker.compose.project')
+        if (project) {
+            group = <span className={classes.groupInfo}> ({project.name})</span>
+        }
+    }
+
+    const container = process.container && <span className={classes.containerInfo}>
+        <ConIcon fontSize="inherit" />
+        <span className={classes.containerName}>
+            {process.container.name}
+        </span>
+        {group}
+    </span>
+
     const fridge = process.fridgefrozen ?
         <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
         <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
+            {container}
             <Tooltip title="process"><>
                 <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;<span className={classes.pid}>({process.pid})</span>
             </></Tooltip>
-            {!short && process.cpucgroup && process.cpucgroup !== "/" && (
+            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
                         <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />
