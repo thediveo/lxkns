@@ -34,8 +34,8 @@ import (
 var names = map[string]struct {
 	projectname string
 }{
-	"dumb_doormat":           {projectname: "foobar_project"},
-	"pompous_pm":             {projectname: "foobar_project"},
+	"edgy_emil":              {projectname: "foobar_project"},
+	"furious_freddy":         {projectname: "foobar_project"},
 	edgeRuntimeContainerName: {},
 }
 
@@ -77,7 +77,7 @@ var _ = Describe("Decorates composer projects", func() {
 			if err != nil && nodockerre.MatchString(err.Error()) {
 				Skip("Docker not available")
 			}
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred(), "container %q", name)
 			sleepies = append(sleepies, sleepy)
 		}
 	})

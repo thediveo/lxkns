@@ -24,5 +24,6 @@ require (
 	github.com/thediveo/testbasher v1.0.3
 	github.com/thediveo/whalewatcher v0.3.1-0.20210614195903-a447050a8870
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )

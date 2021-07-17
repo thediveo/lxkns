@@ -61,6 +61,10 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		for name := range names {
 			_ = pool.RemoveContainerByName(name)
+			Eventually(func() error {
+				_, err := pool.Client.InspectContainer(name)
+				return err
+			}, "5s").Should(HaveOccurred())
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
 				Tag:        "latest",

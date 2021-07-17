@@ -63,14 +63,14 @@ read
 		defer func() { osExit = oldExit }()
 		exit := 0
 		osExit = func(code int) { exit = code }
-		os.Args = append(os.Args[:1], "--foobar")
+		os.Args = append(os.Args[:1], "--engine=none", "--foobar")
 		out := getstdout.Stdouterr(main)
 		Expect(exit).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("CLI w/o args renders user tree", func() {
-		os.Args = os.Args[:1]
+		os.Args = append(os.Args[:1], "--engine=none")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -79,7 +79,7 @@ read
 	})
 
 	It("CLI -d renders user tree with owned namespaces", func() {
-		os.Args = append(os.Args[:1], "-d")
+		os.Args = append(os.Args[:1], "--engine=none", "-d")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -90,7 +90,7 @@ read
 	})
 
 	It("CLI -f filters owned namespaces", func() {
-		os.Args = append(os.Args[:1], "-d", "-f=pid")
+		os.Args = append(os.Args[:1], "--engine=none", "-d", "-f=pid")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -99,7 +99,7 @@ read
 [│ ]+⋄─ .*$`,
 			usernsid.Ino)))
 
-		os.Args = append(os.Args[:1], "-d", "-f=ipc,net,pid")
+		os.Args = append(os.Args[:1], "--engine=none", "-d", "-f=ipc,net,pid")
 		out = getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[├└]─ user:\[%d\] process .*

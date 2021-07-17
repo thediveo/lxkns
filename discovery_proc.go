@@ -38,6 +38,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -148,5 +149,6 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 		}
 	}
 
-	log.Infof("found %d %s namespaces joined by processes", total, nstype.Name())
+	log.Infof("found %s joined by processes",
+		plural.Elements(total, "%s namespaces", nstype.Name()))
 }

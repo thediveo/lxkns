@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/plural"
 
 	_ "github.com/thediveo/lxkns/decorator/all" // register all decorator plugins
 )
@@ -55,8 +56,9 @@ func discoverContainers(result *DiscoveryResult) {
 	for engine := range enginesmap {
 		engines = append(engines, engine)
 	}
-	log.Infof("discovered %d containers from %d container engines",
-		len(containers), len(engines))
+	log.Infof("discovered %s from %s",
+		plural.Elements(len(containers), "containers"),
+		plural.Elements(len(engines), "container engines"))
 	// Run registered Decorators on discovered containers.
 	decorators := plugger.New(decorator.PluginGroup)
 	for _, decorateur := range decorators.Func("Decorate") {

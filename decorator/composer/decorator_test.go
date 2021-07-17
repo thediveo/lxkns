@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,10 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var names = map[string]struct{}{"dumb_doormat": {}, "pompous_pm": {}}
+var names = map[string]struct{}{
+	"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10): {},
+	"pompous_pm" + strconv.FormatInt(GinkgoRandomSeed(), 10):   {},
+}
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
@@ -64,7 +68,7 @@ var _ = Describe("Decorates composer projects", func() {
 			if err != nil && nodockerre.MatchString(err.Error()) {
 				Skip("Docker not available")
 			}
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred(), "container %s", name)
 			sleepies = append(sleepies, sleepy)
 		}
 	})

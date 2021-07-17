@@ -24,6 +24,7 @@ COPY log/ ./log/
 COPY model/ ./model/
 COPY mounts/ ./mounts/
 COPY ops/ ./ops/
+COPY plural/ ./plural/
 COPY species/ ./species/
 COPY containerizer/ ./containerizer/
 COPY *.go ./

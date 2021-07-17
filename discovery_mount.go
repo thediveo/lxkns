@@ -31,6 +31,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/mounts"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -86,13 +87,14 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 				continue
 			}
 		}
-		log.Debugf("mnt:[%d] contains %d mount points",
-			mountns.ID().Ino, len(mountpoints))
+		log.Debugf("mnt:[%d] contains %s",
+			mountns.ID().Ino, plural.Elements(len(mountpoints), "mount points"))
 		mountpointtotal += len(mountpoints)
 		result.Mounts[mntid] = mounts.NewMountPathMap(mountpoints)
 	}
-	log.Infof("found %d mount points in %d mount namespaces",
-		mountpointtotal, len(result.Mounts))
+	log.Infof("found %s in %s",
+		plural.Elements(mountpointtotal, "mount points"),
+		plural.Elements(len(result.Mounts), "%s namespaces", "mount"))
 }
 
 // Register discoverMounts() as an action for re-execution.

@@ -30,6 +30,7 @@ import (
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -112,5 +113,5 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Dis
 			total++
 		}
 	}
-	log.Infof("discovered %d fd-referenced namespaces", total)
+	log.Infof("discovered %s", plural.Elements(total, "fd-referenced namespaces"))
 }

@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/plural"
 )
 
 // PIDType expresses things more clearly. And no, that's not a "PidType" since
@@ -208,7 +209,7 @@ func (p *Process) String() string {
 // a child, the caller must explicitly request this additional discovery.
 func NewProcessTable(freezer bool) (pt ProcessTable) {
 	pt = NewProcessTableFromProcfs(freezer, "/proc")
-	log.Infof("discovered %d processes", len(pt))
+	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
 	return
 }
 

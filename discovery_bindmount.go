@@ -31,6 +31,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -144,7 +145,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			log.Errorf("could not discover in mnt:[%d]: %s", mntns.ID().Ino, err.Error())
 		}
 	}
-	log.Infof("found %d bind-mounted namespaces", total)
+	log.Infof("found %s", plural.Elements(total, "bind-mounted namespaces"))
 }
 
 // Register discoverNsfsBindmounts() as an action for re-execution.

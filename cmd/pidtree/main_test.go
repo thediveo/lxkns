@@ -66,7 +66,7 @@ echo "$$"
 		rootCmd := newRootCmd()
 		out := bytes.Buffer{}
 		rootCmd.SetOut(&out)
-		rootCmd.SetArgs([]string{})
+		rootCmd.SetArgs([]string{"--engine=none"})
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\).*
@@ -117,6 +117,7 @@ $`,
 			rootCmd.SetOut(&out)
 			rootCmd.SetErr(&out)
 			rootCmd.SetArgs([]string{
+				"--engine=none",
 				fmt.Sprintf("--pid=%d", initpid),
 				fmt.Sprintf("--ns=%s", run.ns),
 			})
@@ -141,7 +142,7 @@ $`,
 		Expect(exit).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 
-		os.Args = os.Args[:1]
+		os.Args = []string{os.Args[0], "--engine=none"}
 		exit = 0
 		out = getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(`^pid:\[`))
