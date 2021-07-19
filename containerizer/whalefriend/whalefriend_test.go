@@ -70,7 +70,7 @@ var _ = Describe("ContainerEngine", func() {
 	})
 
 	It("discovers container", func() {
-		dockerw, err := moby.NewWatcher(docksock)
+		dockerw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

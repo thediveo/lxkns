@@ -73,7 +73,7 @@ var _ = Describe("Discover", func() {
 		for _, nstype := range model.TypeIndexLexicalOrder {
 			for _, ns := range allns.Namespaces[nstype] {
 				Expect(model.TypesByIndex[nstype]).To(Equal(ns.Type()))
-				Expect(ns.(model.Namespace)).NotTo(BeNil())
+				Expect(ns).NotTo(BeNil())
 				switch nstype {
 				case model.PIDNS:
 					Expect(ns.(model.Hierarchy)).NotTo(BeNil())

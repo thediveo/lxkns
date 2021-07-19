@@ -83,7 +83,7 @@ func PIDNamespaceLabel(pidns model.Namespace) (label string) {
 	label = output.NamespaceIcon(pidns) +
 		style.PIDStyle.S(pidns.(model.NamespaceStringer).TypeIDString())
 	if pidns.Owner() != nil {
-		uid := pidns.Owner().(model.Ownership).UID()
+		uid := pidns.Owner().UID()
 		var userstr string
 		if u, err := user.LookupId(fmt.Sprintf("%d", uid)); err == nil {
 			userstr = fmt.Sprintf(" (%q)", style.OwnerStyle.V(u.Username))

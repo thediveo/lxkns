@@ -17,6 +17,7 @@ import clsx from 'clsx'
 import { Pause, PlayArrow } from '@material-ui/icons'
 import { makeStyles, Tooltip } from '@material-ui/core'
 
+import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
 
@@ -138,7 +139,7 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
     if (process.container) {
         const project = containerGroup(process.container, 'com.docker.compose.project')
         if (project) {
-            group = <span className={classes.groupInfo}> ({project.name})</span>
+            group = <span className={classes.groupInfo}> (<ComposerProjectIcon fontSize="inherit"/> {project.name})</span>
         }
     }
 

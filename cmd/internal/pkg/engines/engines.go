@@ -61,14 +61,14 @@ func Containerizer(wait bool) (containerizer.Containerizer, error) {
 
 	watchers := []watcher.Watcher{}
 	if contains(Docker) {
-		w, err := moby.NewWatcher("")
+		w, err := moby.New("", nil)
 		if err != nil {
 			return nil, err
 		}
 		watchers = append(watchers, w)
 	}
 	if contains(Containerd) {
-		w, err := containerd.NewWatcher("")
+		w, err := containerd.New("", nil)
 		if err != nil {
 			return nil, err
 		}

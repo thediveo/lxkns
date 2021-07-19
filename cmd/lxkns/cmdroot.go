@@ -25,6 +25,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
@@ -157,7 +158,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		log.Infof("synchronizing in background to Docker engine, API %s", apipath)
-		watcher, err := moby.NewWatcher(apipath)
+		watcher, err := moby.New(apipath, backoff.NewConstantBackOff(5*time.Second))
 		if err != nil {
 			return err
 		}
@@ -169,7 +170,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		log.Infof("synchronizing in background to containerd engine, API %s", apipath)
-		watcher, err := containerd.NewWatcher(apipath)
+		watcher, err := containerd.New(apipath, backoff.NewConstantBackOff(5*time.Second))
 		if err != nil {
 			return err
 		}

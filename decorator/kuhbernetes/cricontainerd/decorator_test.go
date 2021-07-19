@@ -17,7 +17,6 @@ package cricontainerd
 import (
 	"context"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/containerd/containerd"
@@ -58,8 +57,6 @@ const testref = "docker.io/library/busybox:latest"
 
 var testargs = []string{"/bin/sleep", "30s"}
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
-
 var _ = Describe("Decorates containerd pod containers", func() {
 
 	var pool *containerdtest.Pool
@@ -96,7 +93,7 @@ var _ = Describe("Decorates containerd pod containers", func() {
 	})
 
 	It("decorates k8s pods", func() {
-		mw, err := cdwatcher.NewWatcher(cdsock)
+		mw, err := cdwatcher.New(cdsock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

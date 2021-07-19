@@ -65,7 +65,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred(), "container %s", sleepyname)
 
-	moby, err := moby.NewWatcher(docksock)
+	moby, err := moby.New(docksock, nil)
 	Expect(err).NotTo(HaveOccurred())
 	ctx, cancel = context.WithCancel(context.Background())
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})

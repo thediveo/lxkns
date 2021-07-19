@@ -115,7 +115,7 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		result = dr.Result()
 	} else {
 		// Set up a Docker engine-connected containerizer
-		moby, err := moby.NewWatcher("")
+		moby, err := moby.New("", nil)
 		if err != nil {
 			return err
 		}

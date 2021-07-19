@@ -88,7 +88,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 	})
 
 	It("decorates k8s pods", func() {
-		mw, err := moby.NewWatcher(docksock)
+		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

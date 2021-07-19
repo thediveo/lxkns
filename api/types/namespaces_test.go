@@ -76,7 +76,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	mobywatcher, err := moby.NewWatcher(docksock)
+	mobywatcher, err := moby.New(docksock, nil)
 	Expect(err).NotTo(HaveOccurred())
 	var ctx context.Context
 	ctx, cizercancel = context.WithCancel(context.Background())

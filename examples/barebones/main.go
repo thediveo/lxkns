@@ -32,7 +32,7 @@ func main() {
 	reexec.CheckAction() // must be called before a standard discovery
 
 	// Set up a Docker engine-connected containerizer
-	moby, err := moby.NewWatcher("")
+	moby, err := moby.New("", nil)
 	if err != nil {
 		panic(err)
 	}

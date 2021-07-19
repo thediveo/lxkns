@@ -80,7 +80,7 @@ var _ = Describe("Decorates composer projects", func() {
 	})
 
 	It("decorates composer projects", func() {
-		mw, err := moby.NewWatcher(docksock)
+		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

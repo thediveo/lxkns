@@ -4,8 +4,8 @@ go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.5.3
-	github.com/coreos/etcd v3.3.13+incompatible // indirect
+	github.com/cenkalti/backoff/v4 v4.1.1
+	github.com/containerd/containerd v1.5.4
 	github.com/getkin/kin-openapi v0.66.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.9.0
@@ -22,8 +22,8 @@ require (
 	github.com/thediveo/gons v0.9.7
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/testbasher v1.0.3
-	github.com/thediveo/whalewatcher v0.3.1-0.20210614195903-a447050a8870
+	github.com/thediveo/whalewatcher v0.4.0
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/text v0.3.6
 	gopkg.in/yaml.v2 v2.4.0
 )

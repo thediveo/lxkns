@@ -79,7 +79,7 @@ var _ = Describe("Discover containers", func() {
 			Skip("needs root")
 		}
 
-		mw, err := moby.NewWatcher(docksock)
+		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

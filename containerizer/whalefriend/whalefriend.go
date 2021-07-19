@@ -40,7 +40,7 @@ func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containe
 		watchers: watchers,
 	}
 	for _, watcher := range watchers {
-		go watcher.Watch(ctx) // ...go on watch
+		go watcher.Watch(ctx) // ...go on watch FIXME: error handling
 	}
 	return c
 }
