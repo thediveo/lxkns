@@ -26,6 +26,8 @@ Deployment features:
     docker-compose yet does not support).
   - `CAP_DAC_READ_SEARCH` allows us to discover bind-mounted namespaces without
     interference by any in-descretionary excess control (DAC).
+  - `CAP_DAC_OVERRIDE` allows us to connect to the containerd API socket without
+    being root.
 
 The convertainerized lxkns service correctly handles these pitfalls:
 

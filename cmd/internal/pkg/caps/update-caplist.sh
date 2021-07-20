@@ -2,7 +2,7 @@
 DIR=$(dirname "$0")
 
 # Updates the list of capabilities
-LIBCAP_VERSION="2.43"
+LIBCAP_VERSION="2.51"
 
 wget -O - "https://git.kernel.org/pub/scm/libs/libcap/libcap.git/snapshot/libcap-${LIBCAP_VERSION}.tar.gz" \
     | tar -xz -C /tmp "libcap-${LIBCAP_VERSION}/libcap/include/uapi/linux/capability.h"

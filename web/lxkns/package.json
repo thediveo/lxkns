@@ -25,19 +25,19 @@
     "elliptic": "^6.5.4",
     "glob": "^7.1.6",
     "http-proxy": "^1.18.1",
-    "http-proxy-middleware": "^1.0.6",
-    "jotai": "^0.14.0",
+    "http-proxy-middleware": "^2.0.1",
+    "jotai": "^1.1.3",
     "material-ui-confirm": "^2.1.1",
     "md5": "^2.3.0",
     "mdi-material-ui": "^6.22.0",
     "mdx-loader": "^3.0.2",
     "node-forge": "^0.10.0",
     "notistack": "^1.0.0",
-    "react": "^16.13.1",
-    "react-docgen-typescript": "^1.20.5",
-    "react-dom": "^16.13.1",
+    "react": "^17.0.2",
+    "react-docgen-typescript": "^2.0.0",
+    "react-dom": "^17.0.2",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "4.0.2",
+    "react-scripts": "4.0.3",
     "react-transition-group": "^4.4.1",
     "ts-loader": "^8.0.15",
     "ts-node": "^9.1.1",
@@ -46,11 +46,15 @@
     "use-error-boundary": "^2.0.4",
     "websocket-extensions": "^0.1.4"
   },
+  "resolutions": {
+    "chokidar": "^3.5.0"
+  },
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=$(git describe) PORT=3030 react-scripts start",
     "build": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build",
     "build:dev": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build --profile",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
+    "icons": "node genicons",
     "cypress": "NODE_ENV=test cypress open",
     "cypress:run": "NODE_ENV=test cypress run",
     "eject": "react-scripts eject",
@@ -87,9 +91,9 @@
   },
   "homepage": ".",
   "devDependencies": {
-    "@cypress/react": "^4.16.4",
-    "cypress": "^6.6.0",
-    "p-defer": "^3.0.0",
+    "@cypress/react": "^5.9.1",
+    "cypress": "^7.0.0",
+    "p-defer": "^4.0.0",
     "react-styleguidist": "^11.1.0"
   }
 }

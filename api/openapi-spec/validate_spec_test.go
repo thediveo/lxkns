@@ -28,13 +28,13 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-var lxknsapispec *openapi3.Swagger
+var lxknsapispec *openapi3.T
 var allns *lxkns.DiscoveryResult
-var pidmap lxkns.PIDMap
+var pidmap model.PIDMapper
 
 var _ = BeforeSuite(func() {
 	var err error
-	lxknsapispec, err = openapi3.NewSwaggerLoader().LoadSwaggerFromFile("lxkns.yaml")
+	lxknsapispec, err = openapi3.NewLoader().LoadFromFile("lxkns.yaml")
 	Expect(err).To(Succeed())
 	Expect(func() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -42,11 +42,11 @@ var _ = BeforeSuite(func() {
 		return lxknsapispec.Validate(ctx)
 	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
 
-	allns = lxkns.Discover(lxkns.FullDiscovery)
+	allns = lxkns.Discover(lxkns.WithFullDiscovery())
 	pidmap = lxkns.NewPIDMap(allns)
 })
 
-func validate(openapispec *openapi3.Swagger, schemaname string, jsondata []byte) error {
+func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error {
 	schemaref, ok := openapispec.Components.Schemas[schemaname]
 	if !ok {
 		return fmt.Errorf("invalid schema reference %q", schemaname)

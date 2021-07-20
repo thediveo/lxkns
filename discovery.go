@@ -29,49 +29,6 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// DiscoverOpts gives control over the extent of discovering Linux kernel
-// namespaces and thus time and resources spent, such as finding the
-// relationships between namespaces and with associated processes.
-type DiscoverOpts struct {
-	// The types of namespaces to discover: this is an OR'ed combination of
-	// Linux kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et
-	// cetera. If zero, defaults to discovering all namespaces.
-	NamespaceTypes species.NamespaceType `json:"-"`
-
-	// Where to scan (or not scan) for signs of namespaces?
-	SkipProcs      bool `json:"skipped-procs"`      // Don't scan processes.
-	SkipTasks      bool `json:"skipped-tasks"`      // Don't scan threads, a.k.a. tasks.
-	SkipFds        bool `json:"skipped-fds"`        // Don't scan process file descriptors for references to namespaces.
-	SkipBindmounts bool `json:"skipped-bindmounts"` // Don't scan for bind-mounted namespaces.
-	SkipHierarchy  bool `json:"skipped-hierarchy"`  // Don't discover the hierarchy of PID and user namespaces.
-	SkipOwnership  bool `json:"skipped-ownership"`  // Don't discover the ownership of non-user namespaces.
-	SkipFreezer    bool `json:"skipped-freezer"`    // Don't discover the cgroup freezer state of processes.
-
-	// Explicit opt-ins.
-	WithMounts bool `json:"with-mounts"` // Discover mount paths with mount points.
-}
-
-// FullDiscovery sets the discovery options to a full and thus extensive
-// discovery process. This is the preferred option setup for most use cases,
-// unless you know exactly what you're doing and want to fine-tune the discovery
-// process by selectively switching off certain discovery elements.
-//
-// Please note that a full discovery does not include explicit opt-ins.
-var FullDiscovery = DiscoverOpts{}
-
-// NoDiscovery set the discovery options to not discover anything. This option
-// set can be used to start from when only a few chosen discovery methods are
-// to be enabled.
-var NoDiscovery = DiscoverOpts{
-	SkipProcs:      true,
-	SkipTasks:      true,
-	SkipFds:        true,
-	SkipBindmounts: true,
-	SkipHierarchy:  true,
-	SkipOwnership:  true,
-	SkipFreezer:    true,
-}
-
 // DiscoveryResult stores the results of a tour through Linux processes and
 // kernel namespaces.
 type DiscoveryResult struct {
@@ -82,6 +39,7 @@ type DiscoveryResult struct {
 	PIDNSRoots        []model.Namespace      // the topmost PID namespace(s) in the hierarchy.
 	Processes         model.ProcessTable     // processes checked for namespaces.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
+	Containers        []*model.Container     // all alive containers found
 }
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The
@@ -176,15 +134,19 @@ func init() {
 // options specified in the call. The discovery results also specify the
 // initial namespaces, as well the process table/tree on which the discovery
 // bases at least in part.
-func Discover(opts DiscoverOpts) *DiscoveryResult {
-	result := &DiscoveryResult{
-		Options:   opts,
-		Processes: model.NewProcessTable(!opts.SkipFreezer),
+func Discover(options ...DiscoveryOption) *DiscoveryResult {
+	opts := DiscoverOpts{}
+	for _, opt := range options {
+		opt(&opts)
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
-	if result.Options.NamespaceTypes == 0 {
-		result.Options.NamespaceTypes = species.AllNS
+	if opts.NamespaceTypes == 0 {
+		opts.NamespaceTypes = species.AllNS
+	}
+	result := &DiscoveryResult{
+		Options:   opts,
+		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
@@ -198,20 +160,20 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 	//     sequence.
 	for _, disco := range discoverers {
 		if len(*disco.When) == 0 {
-			disco.Discover(result.Options.NamespaceTypes, "/proc", result)
+			disco.Discover(opts.NamespaceTypes, "/proc", result)
 		} else {
 			for _, nstypeidx := range *disco.When {
-				if nstype := model.TypesByIndex[nstypeidx]; result.Options.NamespaceTypes&nstype != 0 {
+				if nstype := model.TypesByIndex[nstypeidx]; opts.NamespaceTypes&nstype != 0 {
 					disco.Discover(nstype, "/proc", result)
 				}
 			}
 		}
 	}
 	// Fill in some additional convenience fields in the result.
-	if result.Options.NamespaceTypes&species.CLONE_NEWUSER != 0 {
+	if opts.NamespaceTypes&species.CLONE_NEWUSER != 0 {
 		result.UserNSRoots = rootNamespaces(result.Namespaces[model.UserNS])
 	}
-	if result.Options.NamespaceTypes&species.CLONE_NEWPID != 0 {
+	if opts.NamespaceTypes&species.CLONE_NEWPID != 0 {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[model.PIDNS])
 	}
 	// TODO: Find the initial namespaces...
@@ -223,6 +185,9 @@ func Discover(opts DiscoverOpts) *DiscoveryResult {
 		}
 		return fmt.Sprintf("discovered %s namespaces", strings.Join(perns, ", "))
 	})
+
+	// Optionally discover alive containers and relate the.
+	discoverContainers(result)
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)

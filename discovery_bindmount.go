@@ -31,6 +31,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -51,7 +52,7 @@ type BindmountedNamespaceInfo struct {
 // mount namespace, but also in other mount namespaces (subject to having
 // capabilities in them).
 func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipBindmounts {
+	if !result.Options.ScanBindmounts {
 		log.Infof("skipping discovery of bind-mounted namespaces")
 		return
 	}
@@ -144,7 +145,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			log.Errorf("could not discover in mnt:[%d]: %s", mntns.ID().Ino, err.Error())
 		}
 	}
-	log.Infof("found %d bind-mounted namespaces", total)
+	log.Infof("found %s", plural.Elements(total, "bind-mounted namespaces"))
 }
 
 // Register discoverNsfsBindmounts() as an action for re-execution.

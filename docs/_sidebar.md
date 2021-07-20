@@ -5,11 +5,13 @@
 * [Getting Around](getting-around)
 * Discovery
   * [Namespaces](discovery)
+  * [Containers](containers)
   * [Cgroups](cgroup)
   * [Mount Points](mountpoint)
 * [Service](service)
 * API
-  * [Examples](api-examples)
+  * [Discovery Examples](discovery-examples)
+  * [(Un)marshalling Example](marshalling-example)
   * [Information Model](model)
   * [Notes](api-notes)
 * [CLI Tools](cli)

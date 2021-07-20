@@ -22,6 +22,7 @@ import (
 	"github.com/thediveo/enumflag"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
 // NamespaceStyler styles namespace hierarchies (trees) using the selected
@@ -55,7 +56,7 @@ var treeStyleIds = map[TreeStyle][]string{
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "treestyle",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: TreeStyleSetupCLI},
 			plugger.NamedSymbol{Name: "BeforeRun", Symbol: TreeStyleBeforeRun},
@@ -66,11 +67,11 @@ func init() {
 // TreeStyleSetupCLI is a plugin function that registers the CLI "treestyle"
 // flag.
 func TreeStyleSetupCLI(rootCmd *cobra.Command) {
+	treestyle = TreeStyleLine
 	rootCmd.PersistentFlags().Var(
 		enumflag.New(&treestyle, "treestyle", treeStyleIds, enumflag.EnumCaseSensitive),
 		"treestyle",
-		"select the tree render style; can be 'line' (default if omitted)\n"+
-			"or 'ascii'")
+		"select the tree render style; can be 'line' or 'ascii'")
 }
 
 // TreeStyleBeforeRun is a plugin function that handles selection, reading, or

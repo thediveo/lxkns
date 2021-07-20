@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -28,6 +29,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -143,9 +145,17 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	}
 	log.Infof("with effective capabilities: %s", mycaps)
 
+	// Create the containerizer for the specified container engines...
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer, err := engines.Containerizer(ctx, cmd, false)
+	if err != nil {
+		return err
+	}
+
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
-	if _, err := startServer(addr); err != nil {
+	if _, err := startServer(addr, cizer); err != nil {
 		log.Errorf("cannot start service, error: %s", err.Error())
 		os.Exit(1)
 	}

@@ -4,7 +4,18 @@
   [namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) even [in
   arcane places](discovery), such as bind mounts and open file descriptors.
 
-- gives namespaces names (sic!).
+- finally gives names to namespaces (sic!):
+  - derived from container names where possible,
+  - otherwise derived from process names or bindmount path names.
+
+- extensible plug-in infrastructure for container discovery and container
+  information decoration (especially different types of container grouping).
+  - supports [Docker](https://docker.com) and
+    [containerd](https://containerd.io) out of the box.
+  - [composer](https://github.com/compose-spec/compose-spec) project-aware (such
+    as [Docker compose](https://github.com/docker/compose) and
+    [nerdctl](https://github.com/containerd/nerdctl)).
+  - [Kubernetes](https://kubernetes.io) pod aware, without any k8s API access.
 
 - [discovers the the freezer state](cgroup) and (freezer) cgroup controller path
   information for the processes attached to namespaces (transparently supports

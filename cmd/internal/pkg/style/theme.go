@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
 // The CLI flag controlling which theme to use when colorization is used.
@@ -57,7 +58,7 @@ var themeIds = map[Theme][]string{
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "theme",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ThemeSetupCLI},
 			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ThemeBeforeRun},

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { amber, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
+import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
@@ -37,6 +37,7 @@ declare module '@material-ui/core/styles/createPalette' {
             time: string,
         },
         nsref: string, // filesystem reference of a namespace
+        container: string, // container information
         process: string, // process information (name&PID)
         cgroup: string, // process cgroup path
         ownername: string, // owner user name
@@ -56,6 +57,7 @@ declare module '@material-ui/core/styles/createPalette' {
             time?: string,
         },
         nsref?: string,
+        container?: string,
         process?: string,
         cgroup?: string,
         ownername?: string,
@@ -102,6 +104,7 @@ export const lxknsLightTheme = {
             time: amber[50],
         },
         nsref: yellow[800],
+        container: lightBlue[700],
         process: teal[700],
         cgroup: grey[600],
         ownername: lime[800],
@@ -142,6 +145,7 @@ export const lxknsDarkTheme = mergeDeep(
                 time: amber[900],
             },
             process: teal[300],
+            container: lightBlue[300],
             cgroup: grey[500],
             ownername: lime[500],
             ownerroot: pink[500],

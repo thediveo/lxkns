@@ -89,6 +89,12 @@ func (p MountPath) VisibleMount() *MountPoint {
 // two separate trees: one tree for the hierarchy of mount paths and a separate
 // tree for the mount point hierarchy.
 func NewMountPathMap(mounts []mntinfo.Mountinfo) (mountpathmap MountPathMap) {
+	// Bail out immediately when there are no mounts to process. This may happen
+	// when reading the mount point information for a particular mount namespace
+	// failed.
+	if len(mounts) == 0 {
+		return
+	}
 	// First gather all (unique) mount paths from the mounts and reference the
 	// corresponding mounts from them. At the same time gather all mount point
 	// IDs, so we can later resolve them into object references.

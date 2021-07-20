@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
 // The termenv color profile to be used when styling, such as plain colorless
@@ -55,7 +56,7 @@ var colorModeIds = map[ColorMode][]string{
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "colormode",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ColorModeSetupCLI},
 			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ColorModeBeforeRun},
