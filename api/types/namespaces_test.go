@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -42,7 +43,7 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-const sleepyname = "morbid_moby"
+var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var (
 	allns      *lxkns.DiscoveryResult
@@ -67,6 +68,11 @@ var _ = BeforeSuite(func() {
 	var err error
 	pool, err = dockertest.NewPool(docksock)
 	Expect(err).NotTo(HaveOccurred())
+	_ = pool.RemoveContainerByName(sleepyname)
+	Eventually(func() error {
+		_, err := pool.Client.InspectContainer(sleepyname)
+		return err
+	}, "5s").Should(HaveOccurred())
 	sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "busybox",
 		Tag:        "latest",

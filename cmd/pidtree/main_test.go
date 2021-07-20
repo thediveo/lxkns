@@ -66,7 +66,7 @@ echo "$$"
 		rootCmd := newRootCmd()
 		out := bytes.Buffer{}
 		rootCmd.SetOut(&out)
-		rootCmd.SetArgs([]string{"--engine=none"})
+		rootCmd.SetArgs([]string{"--noengines"})
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\).*

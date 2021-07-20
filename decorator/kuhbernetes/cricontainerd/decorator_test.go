@@ -74,6 +74,7 @@ var _ = Describe("Decorates containerd pod containers", func() {
 		pool, err = containerdtest.NewPool(cdsock, "containerd-test")
 		Expect(err).NotTo(HaveOccurred())
 		for name, config := range names {
+			pool.PurgeID(name)
 			sleepy, err := pool.Run(
 				name,
 				testref,
@@ -81,8 +82,13 @@ var _ = Describe("Decorates containerd pod containers", func() {
 				testargs,
 				containerd.WithContainerLabels(config.labels),
 			)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred(), "container %s", name)
 			sleepies = append(sleepies, sleepy)
+		}
+		for _, sleepy := range sleepies {
+			Eventually(func() bool {
+				return sleepy.Status() == containerd.Running
+			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.ID())
 		}
 	})
 

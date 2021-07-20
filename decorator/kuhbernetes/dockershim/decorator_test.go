@@ -64,7 +64,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 			Eventually(func() error {
 				_, err := pool.Client.InspectContainer(name)
 				return err
-			}, "5s").Should(HaveOccurred())
+			}, "5s", "100ms").Should(HaveOccurred())
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
 				Tag:        "latest",
@@ -78,6 +78,16 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 			}
 			Expect(err).NotTo(HaveOccurred())
 			sleepies = append(sleepies, sleepy)
+		}
+		// Make sure that all newly created containers are in running state
+		// before we run unit tests which depend on the correct list of
+		// alive(!)=running containers.
+		for _, sleepy := range sleepies {
+			Eventually(func() bool {
+				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+				return c.State.Running
+			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
 	})
 

@@ -20,6 +20,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,7 +32,7 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-const sleepyname = "dumb_doormat"
+var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 

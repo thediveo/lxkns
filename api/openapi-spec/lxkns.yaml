@@ -1,8 +1,10 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.17.0
-    description: 'Discover Linux-kernel namespaces, almost everywhere in a Linux host.'
+    version: 0.18.0
+    description: |-
+        Discover Linux-kernel namespaces, almost everywhere in a Linux host. Also look
+        for mount points and their hierarchy, as well as for containers.
     contact:
         url: 'https://github.com/thediveo/lxkns'
     license:
@@ -271,6 +273,9 @@ components:
             required:
                 - namespaces
                 - processes
+                - containers
+                - container-engines
+                - container-groups
             type: object
             properties:
                 processes:
@@ -288,6 +293,15 @@ components:
                 mounts:
                     $ref: '#/components/schemas/NamespacedMountPaths'
                     description: Map of mount namespace'd mount paths with mount points.
+                containers:
+                    $ref: '#/components/schemas/ContainerMap'
+                    description: Discovered containers.
+                container-engines:
+                    $ref: '#/components/schemas/ContainerEngineMap'
+                    description: Container engines managing the discovered containers.
+                container-groups:
+                    $ref: '#/components/schemas/ContainerGroupMap'
+                    description: Groups of containers.
             example:
                 discovery-options:
                     skipped-procs: false
@@ -836,3 +850,126 @@ components:
             type: object
             additionalProperties:
                 $ref: '#/components/schemas/MountPathsDict'
+        Container:
+            description: 'Alive container with process(es), either running or paused.'
+            required:
+                - id
+                - name
+                - type
+                - flavor
+                - pid
+                - paused
+                - labels
+                - groups
+                - engine
+            type: object
+            properties:
+                id:
+                    description: Container identifier
+                    type: string
+                name:
+                    description: 'Container name as opposed to its id, might be the same for some container engines.'
+                    type: string
+                type:
+                    description: 'Type of container identifier, such as "docker.com", et cetera.'
+                    type: string
+                flavor:
+                    description: 'Flavor of container, might be the same as the type or different.'
+                    type: string
+                pid:
+                    description: Process ID of initial container process.
+                    type: integer
+                paused:
+                    description: Indicates whether the container is running or paused.
+                    type: boolean
+                labels:
+                    $ref: '#/components/schemas/Labels'
+                    description: Label name=value pairs attached to this container.
+                groups:
+                    description: |-
+                        List of group reference identifiers this container is a member of. For instance,
+                        (Docker) composer projects, Kubernetes pods, ...
+                    type: array
+                    items:
+                        type: integer
+                engine:
+                    description: Reference identifier of the container engine managing this container.
+                    type: integer
+        Labels:
+            description: 'Dictionary (map) of KEY=VALUE pairs, with KEY and VALUE both strings.'
+            type: object
+            additionalProperties:
+                type: string
+        ContainerEngine:
+            description: Information about a container engine managing a set of discovered containers.
+            required:
+                - id
+                - type
+                - api
+                - pid
+                - containers
+            type: object
+            properties:
+                id:
+                    description: 'Container engine instance identifier, such as UUID, unique string, et cetera.'
+                    type: string
+                type:
+                    description: 'Engine type identifier, such as "containerd.io", et cetera.'
+                    type: string
+                api:
+                    description: Engine API path.
+                    type: string
+                pid:
+                    description: 'Engine''s PID (in initial PID namespace) when known, otherwise zero.'
+                    type: integer
+                containers:
+                    description: List of reference IDs (=PIDs) of containers managed by this engine.
+                    type: array
+                    items:
+                        type: integer
+        ContainerGroup:
+            description: A group of containers somehow related.
+            required:
+                - name
+                - type
+                - flavor
+                - containers
+                - labels
+            type: object
+            properties:
+                name:
+                    description: |-
+                        Name of group, such as a (Docker) composer project name, Kubernetes pod
+                        namespace/name, et cetera.
+                    type: string
+                type:
+                    description: Group type identifier.
+                    type: string
+                flavor:
+                    description: 'Group flavor identifier, might be identical with group type identifier.'
+                    type: string
+                containers:
+                    description: List of reference IDs (=PIDs) of containers belonging to this group.
+                    type: array
+                    items:
+                        type: integer
+                labels:
+                    $ref: '#/components/schemas/Labels'
+                    description: Additional KEY=VALUE information.
+        ContainerMap:
+            description: |-
+                Maps container PIDs to containers. Container PIDs are the PIDs of initial
+                container processes only, but not any child processes.
+            type: object
+            additionalProperties:
+                $ref: '#/components/schemas/Container'
+        ContainerEngineMap:
+            description: Maps reference IDs to container engines.
+            type: object
+            additionalProperties:
+                $ref: '#/components/schemas/ContainerEngine'
+        ContainerGroupMap:
+            description: Maps reference IDs to container groups.
+            type: object
+            additionalProperties:
+                $ref: '#/components/schemas/ContainerGroup'

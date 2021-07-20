@@ -108,6 +108,7 @@ func (pool *Pool) Purge(c *Container) {
 		_, _ = task.Delete(ctx, containerd.WithProcessKill)
 	}
 	_ = c.Container.Delete(ctx, containerd.WithSnapshotCleanup)
+	_ = pool.Client.SnapshotService("").Remove(context.Background(), c.Container.ID()+"-snapshot")
 }
 
 // PurgeID purges the specified container (including task and snapshot),

@@ -51,6 +51,7 @@ var (
 		PID:    123,
 		Engine: &ce1,
 		Groups: []*model.Group{&g1},
+		Labels: model.Labels{"foo": "bar"},
 	}
 	c2 = model.Container{
 		ID:     "C2",
@@ -93,7 +94,9 @@ var _ = Describe("container model JSON", func() {
 		"flavor": "typeA",
 		"pid": 123,
 		"paused": false,
-		"labels": null
+		"labels": {
+			"foo": "bar"
+		}
 	  },
 	  "456": {
 		"engine": 2,
@@ -106,7 +109,7 @@ var _ = Describe("container model JSON", func() {
 		"flavor": "typeB",
 		"pid": 456,
 		"paused": false,
-		"labels": null
+		"labels": {}
 	  }
 }`))
 	})

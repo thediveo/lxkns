@@ -8,8 +8,8 @@
 ![lxkns logo](_images/lxkns-gophers.jpeg ':size=150')
 
 **lxkns** discovers Linux-kernel namespaces as well as mount points in mount
-namespaces and relates them to containers, where possible. In every nook and
-cranny of your Linux hosts.
+namespaces. It then relates them to containers, where possible. In every nook
+and cranny of your Linux hosts.
 
 Discovery can be operated as a stand-alone REST service or integrated into
 system diagnosis tools that need an unobstructed view on Linux-kernel
@@ -30,7 +30,7 @@ In a nutshell, **lxkns** is:
 - a REST API service return JSON discovery results, with an additional web-based
   user interface,
 - a set of CLI tools, such as our `lsns`-on-drugs example in `examples/lsallns`
-  that lists *all* namespaces with their corresponding containers.
+  that lists *all* namespaces with their corresponding *containers*.
 
   ```console
   NAMESPACE  TYPE   CONTAINER     PID     PROCESS         COMMENT
@@ -48,4 +48,6 @@ And now for the obligatory eye candy, click or tap to enlarge:
 
 > [!NOTE] The name **lxkns** derives from **L**inu**x** **k**ernel
 > **n**ame**sp**aces. Simply naming it "namespaces" instead would have been a
-> too generic name.
+> too generic name. And Go is *very* opinionated when it comes to module names
+> that are too long, too generic, or not generic enough. Alice must have gone
+> down a Gopher hole, Lewis Caroll didn't got that right.

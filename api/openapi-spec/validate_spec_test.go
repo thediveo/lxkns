@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -25,7 +26,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/watcher"
+	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
 var lxknsapispec *openapi3.T
@@ -42,7 +46,22 @@ var _ = BeforeSuite(func() {
 		return lxknsapispec.Validate(ctx)
 	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
 
-	allns = lxkns.Discover(lxkns.WithFullDiscovery())
+	var docksock string
+	if os.Geteuid() == 0 {
+		docksock = "unix:///proc/1/root/run/docker.sock"
+	}
+
+	mw, err := moby.New(docksock, nil)
+	Expect(err).NotTo(HaveOccurred())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
+	defer cizer.Close()
+
+	<-mw.Ready()
+
+	allns = lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.WithContainerizer(cizer))
 	pidmap = lxkns.NewPIDMap(allns)
 })
 

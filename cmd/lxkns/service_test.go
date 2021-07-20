@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -34,7 +35,7 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-const sleepyname = "empty_eno"
+var sleepyname = "empty_eno" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var baseurl string
 

@@ -82,13 +82,18 @@ func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {
 	return container
 }
 
-// ContainerMarshal is a model.Container with additional fields for
+// ContainerUnMarshal is a model.Container with additional fields for
 // (un)marshalling the engine and group references, as we cannot directly
 // serialize plain pointers in an information model with lots of cycles.
-type ContainerMarshal struct {
+type ContainerUnMarshal struct {
 	Engine uint   `json:"engine"` // engine ref IDs.
 	Groups []uint `json:"groups"` // group ref IDs.
 	*model.Container
+}
+
+type ContainerMarshal struct {
+	ContainerUnMarshal
+	Labels model.Labels `json:"labels"` // ensure to never marshal nil=nill.
 }
 
 // MarshalJSON emits a set of containers in JSON textual format, representing
@@ -111,10 +116,17 @@ func (m *ContainerMap) MarshalJSON() ([]byte, error) {
 		for idx, group := range container.Groups {
 			gids[idx] = m.cm.Groups.GroupRefID(group)
 		}
+		labels := container.Labels
+		if labels == nil {
+			labels = model.Labels{}
+		}
 		cntrjson, err := json.Marshal(&ContainerMarshal{
-			Engine:    m.cm.ContainerEngines.EngineRefID(container.Engine),
-			Groups:    gids,
-			Container: container,
+			ContainerUnMarshal: ContainerUnMarshal{
+				Engine:    m.cm.ContainerEngines.EngineRefID(container.Engine),
+				Groups:    gids,
+				Container: container,
+			},
+			Labels: labels,
 		})
 		if err != nil {
 			return nil, err
@@ -137,7 +149,7 @@ func (m *ContainerMap) UnmarshalJSON(data []byte) error {
 	}
 	for refid, rawc := range aux {
 		container := m.ContainerByRefID(refid)
-		caux := ContainerMarshal{
+		caux := ContainerUnMarshal{
 			Container: container,
 		}
 		if err := json.Unmarshal(rawc, &caux); err != nil {
@@ -312,12 +324,19 @@ func (m GroupMap) GroupRefID(group *model.Group) uint {
 	return m.groupRefIDs[group]
 }
 
-// GroupMarshal is a model.Group with additional fields for (un)marshalling the
-// container references, as we cannot directly serialize plain pointers in an
-// information model with lots of cycles.
-type GroupMarshal struct {
+// GroupUnMarshal is a model.Group with additional fields for (un)marshalling
+// the container references, as we cannot directly serialize plain pointers in
+// an information model with lots of cycles.
+type GroupUnMarshal struct {
 	Containers []uint `json:"containers"` // container ref IDs.
 	*model.Group
+}
+
+// GroupMarshal is the evil twin to GroupUnmarshal, taking care of nil label
+// maps.
+type GroupMarshal struct {
+	GroupUnMarshal
+	Labels model.Labels `json:"labels"` // ensure to never marshal nil=nill.
 }
 
 // MarshalJSON emits a set of groups in JSON textual format, representing the
@@ -340,9 +359,16 @@ func (m *GroupMap) MarshalJSON() ([]byte, error) {
 		for idx, container := range group.Containers {
 			cids[idx] = uint(container.PID)
 		}
+		labels := group.Labels
+		if labels == nil {
+			labels = model.Labels{}
+		}
 		engjson, err := json.Marshal(&GroupMarshal{
-			Containers: cids,
-			Group:      (*model.Group)(group),
+			GroupUnMarshal: GroupUnMarshal{
+				Containers: cids,
+				Group:      (*model.Group)(group),
+			},
+			Labels: labels,
 		})
 		if err != nil {
 			return nil, err
@@ -365,7 +391,7 @@ func (m *GroupMap) UnmarshalJSON(data []byte) error {
 	}
 	for refid, rawg := range aux {
 		group := m.GroupByRefID(refid)
-		gaux := GroupMarshal{
+		gaux := GroupUnMarshal{
 			Group: group,
 		}
 		if err := json.Unmarshal(rawg, &gaux); err != nil {

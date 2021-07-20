@@ -53,8 +53,8 @@ plugin management (but only using statically compiled-in plugins).
 - [composer project](https://github.com/compose-spec/compose-spec) detection,
   based on `com.docker.composer.project` labels.
 
-- Siemens [Industrial Edge](https://github.com/industrial-edge) app and runtime
-  detection (which are a "flavor" of composer projects).
+- Siemens [Industrial Edge](https://github.com/industrial-edge) app (and
+  runtime) detection, which are a "flavor" of composer projects.
 
 - [Kubernetes](https://kubernetes.io) pod detection:
   - [dockershim](https://github.com/kubernetes/kubernetes/tree/master/pkg/kubelet/dockershim),

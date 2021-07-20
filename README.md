@@ -10,7 +10,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces as well as
-mount points in mount namespaces, and relating them to containers, where
+mount points in mount namespaces. It then relates them to containers, where
 possible. In every nook and cranny of your Linux hosts.
 
 Discovery can be operated as a stand-alone REST service (both web UI and JSON

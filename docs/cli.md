@@ -263,7 +263,7 @@ Please see also the [nscaps
 command](https://godoc.org/github.com/thediveo/lxkns/cmd/nscaps)
 documentation.
 
-### dumpns
+## dumpns
 
 The lxkns namespace discovery information can also be easily made available to
 your own scripts, et cetera. Without having to integrate the Go package, simply
