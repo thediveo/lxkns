@@ -1,6 +1,6 @@
 // DO NOT EDIT
 // automatically generated file using "update-caplist.sh"
-// from libcap version 2.43
+// from libcap version 2.51
 
 package caps
 

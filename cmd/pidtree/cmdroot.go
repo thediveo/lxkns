@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -64,12 +66,16 @@ func newRootCmd() (rootCmd *cobra.Command) {
 
 // runPidtree executes the pidtree command.
 func runPidtree(cmd *cobra.Command, _ []string) error {
+	cizer, err := engines.Containerizer(context.Background(), cmd, true)
+	if err != nil {
+		return err
+	}
 	out := cmd.OutOrStdout()
 	pid, _ := cmd.PersistentFlags().GetUint32("pid")
 	// If no PID was specified ("zero" PID), then render the usual full PID
 	// namespace and process tree.
 	if pid == 0 {
-		return renderPIDTreeWithNamespaces(out)
+		return renderPIDTreeWithNamespaces(out, cizer)
 	}
 	// If there is a PID, then check next if there is also a PID namespace
 	// specified, in which the PID is valid. Then render only the branch
@@ -88,7 +94,7 @@ func runPidtree(cmd *cobra.Command, _ []string) error {
 			}
 		}
 	}
-	return renderPIDBranch(out, model.PIDType(pid), pidnsid)
+	return renderPIDBranch(out, model.PIDType(pid), pidnsid, cizer)
 }
 
 // SingleBranch encodes a single branch from the initial/root PID namespace
@@ -100,12 +106,8 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.NamespaceID) error {
+func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.NamespaceID, cizer containerizer.Containerizer) error {
 	// Run a full namespace discovery and also get the PID translation map.
-	cizer, err := engines.Containerizer(true)
-	if err != nil {
-		return err
-	}
 	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 	pidmap := lxkns.NewPIDMap(allns)
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
@@ -165,12 +167,8 @@ func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.Namespace
 }
 
 // Renders a full PID tree including PID namespaces.
-func renderPIDTreeWithNamespaces(out io.Writer) error {
+func renderPIDTreeWithNamespaces(out io.Writer, cizer containerizer.Containerizer) error {
 	// Run a full namespace discovery and also get the PID translation map.
-	cizer, err := engines.Containerizer(true)
-	if err != nil {
-		return err
-	}
 	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 	pidmap := lxkns.NewPIDMap(allns)
 	// You may wonder why lxkns returns a slice of "root" PID and user

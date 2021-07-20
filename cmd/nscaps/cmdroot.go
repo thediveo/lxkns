@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -112,7 +113,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
-	cizer, err := engines.Containerizer(true)
+	cizer, err := engines.Containerizer(context.Background(), cmd, true)
 	if err != nil {
 		return err
 	}

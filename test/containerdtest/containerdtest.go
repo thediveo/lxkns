@@ -23,16 +23,21 @@ import (
 	"github.com/containerd/containerd/oci"
 )
 
+// Pool represents a containerd client working on a specific (containerd)
+// namespace.
 type Pool struct {
 	Namespace string
 	Client    *containerd.Client
 }
 
+// Container represents a container belonging to a containerd Pool.
 type Container struct {
 	pool      *Pool
 	Container containerd.Container
 }
 
+// NewPool creates a new containerd client that works in the specified
+// containerd namespace and connects to the specified API path.
 func NewPool(endpoint string, namespace string) (*Pool, error) {
 	if endpoint == "" {
 		endpoint = "/run/containerd/containerd.sock"
@@ -95,7 +100,8 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 	return c, nil
 }
 
-// Deletes the specified container, including its task and snapshot, if any.
+// Purge (delete) the specified container from the pool, including its task and
+// snapshot, if any.
 func (pool *Pool) Purge(c *Container) {
 	ctx := pool.context()
 	if task, err := c.Container.Task(ctx, nil); err == nil {
@@ -104,8 +110,8 @@ func (pool *Pool) Purge(c *Container) {
 	_ = c.Container.Delete(ctx, containerd.WithSnapshotCleanup)
 }
 
-// Deletes the specified container (including task and snapshot), identified by
-// its ID/name.
+// PurgeID purges the specified container (including task and snapshot),
+// identified by its ID/name.
 func (pool *Pool) PurgeID(id string) {
 	if c, err := pool.Client.LoadContainer(pool.context(), id); err == nil {
 		pool.Purge(&Container{pool: pool, Container: c})

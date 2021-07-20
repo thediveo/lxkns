@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -38,7 +39,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			user, _ := cmd.PersistentFlags().GetBool("user")
 			// Run a standard namespace discovery (comprehensive, but without
 			// mount point discovery).
-			cizer, err := engines.Containerizer(true)
+			cizer, err := engines.Containerizer(context.Background(), cmd, true)
 			if err != nil {
 				return err
 			}

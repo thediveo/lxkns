@@ -7,8 +7,8 @@ activating them during discoveries.
 package all
 
 import (
-	_ "github.com/thediveo/lxkns/decorator/composer"
-	_ "github.com/thediveo/lxkns/decorator/industrialedge"
-	_ "github.com/thediveo/lxkns/decorator/kuhbernetes/cricontainerd"
-	_ "github.com/thediveo/lxkns/decorator/kuhbernetes/dockershim"
+	_ "github.com/thediveo/lxkns/decorator/composer"                  // pull in decorator plugin
+	_ "github.com/thediveo/lxkns/decorator/industrialedge"            // pull in decorator plugin
+	_ "github.com/thediveo/lxkns/decorator/kuhbernetes/cricontainerd" // pull in decorator plugin
+	_ "github.com/thediveo/lxkns/decorator/kuhbernetes/dockershim"    // pull in decorator plugin
 )

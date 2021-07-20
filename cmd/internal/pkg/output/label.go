@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
 )
@@ -145,7 +146,7 @@ var ControlGroupNameModes = map[ControlGroupNames][]string{
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "controlgroup",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: LabelSetupCLI},
 		},

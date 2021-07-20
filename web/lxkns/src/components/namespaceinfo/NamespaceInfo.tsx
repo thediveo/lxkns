@@ -38,6 +38,9 @@ const useStyles = makeStyles((theme) => ({
     shared: {
         color: `${theme.palette.text.disabled} !important`,
     },
+    containerInfo: {
+        marginLeft: '0.5em',
+    },
     procInfo: {
         marginLeft: '0.5em',
     },

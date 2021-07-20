@@ -274,8 +274,7 @@ type GroupMap struct {
 	cm            *ContainerModel
 }
 
-// NewEngineMap creates a new map for ContainerEngines, optionally building
-// using a discovered list of containers (with their ContainerEngines).
+// NewGroupMap creates a new map for Groups.
 func NewGroupMap(cm *ContainerModel, containers []*model.Container) GroupMap {
 	m := GroupMap{
 		groupsByRefID: map[uint]*model.Group{},

@@ -18,80 +18,63 @@ package engines
 
 import (
 	"context"
+	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/whalewatcher/watcher"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
-	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	_ "github.com/thediveo/lxkns/cmd/internal/pkg/engines/containerd" // pull in plugin
+	_ "github.com/thediveo/lxkns/cmd/internal/pkg/engines/moby"       // pull in plugin
 )
-
-var engines []Engine
-
-type Engine enumflag.Flag
-
-const (
-	NoEngine Engine = iota
-	Docker
-	Containerd
-	All
-)
-
-var EngineModes = map[Engine][]string{
-	NoEngine:   {"none"}, // pseudo engine name
-	All:        {"all"},  // pseudo engine name
-	Docker:     {"docker", "moby"},
-	Containerd: {"containerd"},
-}
 
 // Containerizer returns a Containerizer watching the container engines
 // specified on the CLI. Optionally waits for all container engines to come
 // online.
-func Containerizer(wait bool) (containerizer.Containerizer, error) {
-	// TODO:
-	if len(engines) == 0 {
-		engines = []Engine{All}
-	}
-	if contains(NoEngine) {
+func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containerizer.Containerizer, error) {
+	if ignoramus, _ := cmd.PersistentFlags().GetBool("noengines"); ignoramus {
 		return nil, nil
 	}
-
 	watchers := []watcher.Watcher{}
-	if contains(Docker) {
-		w, err := moby.New("", nil)
+	for _, plugf := range plugger.New(engineplugin.Group).Func("Watcher") {
+		watcher, err := plugf.(engineplugin.NewWatcher)(cmd)
 		if err != nil {
 			return nil, err
 		}
-		watchers = append(watchers, w)
-	}
-	if contains(Containerd) {
-		w, err := containerd.New("", nil)
-		if err != nil {
-			return nil, err
+		if watcher != nil {
+			watchers = append(watchers, watcher)
+			log.Infof("synchronizing in background to %s engine, API %s",
+				watcher.Name, watcher.API())
 		}
-		watchers = append(watchers, w)
 	}
 	if len(watchers) == 0 {
 		return nil, nil
 	}
-	// TODO: context
-	cizer := whalefriend.New(context.Background(), watchers)
-	for _, watcher := range watchers {
-		<-watcher.Ready()
+	cizer := whalefriend.New(ctx, watchers)
+	for _, w := range watchers {
+		if wait {
+			<-w.Ready()
+			continue
+		}
+		go func(w *engineplugin.NamedWatcher) {
+			select {
+			case <-w.Ready():
+				idctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				log.Infof("synchronized to %s engine with ID %s at API %s",
+					w.Name, w.ID(idctx), w.API())
+				cancel() // ensure to quickly release cancel
+			case <-time.After(5 * time.Second):
+				log.Warnf("%s engine still offline for API %s ... still trying in background",
+					w.Name, w.API())
+			}
+		}(w.(*engineplugin.NamedWatcher))
 	}
 	return cizer, nil
-}
-
-func contains(engine Engine) bool {
-	for _, e := range engines {
-		if e == engine || (engine != NoEngine && e == All) {
-			return true
-		}
-	}
-	return false
 }
 
 // Register our plugin functions for delayed registration of CLI flags we bring
@@ -99,19 +82,15 @@ func contains(engine Engine) bool {
 // command is finally run.
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "controlgroup",
-		Group: "cli",
+		Name:  "engines",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: EngineSetupCLI},
 		},
 	})
 }
 
+// EngineSetupCLI registers the engine-agnostic specific CLI options.
 func EngineSetupCLI(cmd *cobra.Command) {
-	engines = []Engine{All}
-	cmd.PersistentFlags().VarP(
-		enumflag.NewSlice(&engines, "enginetype",
-			EngineModes, enumflag.EnumCaseInsensitive),
-		"engine", "e",
-		"container engines to query; can be 'docker', 'containerd', 'none' or 'all'")
+	cmd.PersistentFlags().Bool("noengines", false, "do not consult any container engines")
 }

@@ -17,12 +17,10 @@ import clsx from 'clsx'
 import { Pause, PlayArrow } from '@material-ui/icons'
 import { makeStyles, Tooltip } from '@material-ui/core'
 
-import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
-
-import { containerGroup, Process } from 'models/lxkns'
-import { ContainerTypeIcon } from 'utils/containericon'
+import { Process } from 'models/lxkns'
+import ContainerInfo from 'components/containerinfo/ContainerInfo'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -42,29 +40,10 @@ const useStyles = makeStyles((theme) => ({
             color: theme.palette.text.disabled,
         }
     },
-    shortInfo: {
-    },
     containerInfo: {
-        paddingRight: theme.spacing(1),
-        '& .MuiSvgIcon-root': {
-            color: theme.palette.container,
-        },
+        marginRight: '0.5em',
     },
-    containerName: {
-        fontStyle: 'italic',
-        color: theme.palette.container,
-        '&::before': {
-            content: '"«"',
-            fontStyle: 'normal',
-        },
-        '&::after': {
-            content: '"»"',
-            fontStyle: 'normal',
-            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
-        },
-    },
-    groupInfo: {
-        color: theme.palette.container,
+    shortInfo: {
     },
     processName: {
         fontStyle: 'italic',
@@ -119,6 +98,8 @@ export interface ProcessInfoProps {
  * The `ProcessInfo` component renders only (almost) minimal information about a
  * single Linux OS process to make it easily identifyable:
  *
+ * - if associated with a container: container information (name, group).
+ * 
  * - name of the process, which is has been either set by the process itself, or
  *   has been derived from the process' command line.
  * - PID.
@@ -133,30 +114,12 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
 
     const classes = useStyles()
 
-    const ConIcon = process.container && ContainerTypeIcon(process.container)
-
-    var group = null
-    if (process.container) {
-        const project = containerGroup(process.container, 'com.docker.compose.project')
-        if (project) {
-            group = <span className={classes.groupInfo}> (<ComposerProjectIcon fontSize="inherit"/> {project.name})</span>
-        }
-    }
-
-    const container = process.container && <span className={classes.containerInfo}>
-        <ConIcon fontSize="inherit" />
-        <span className={classes.containerName}>
-            {process.container.name}
-        </span>
-        {group}
-    </span>
-
     const fridge = process.fridgefrozen ?
         <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
         <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
-            {container}
+            {process.container && <ContainerInfo container={process.container} className={classes.containerInfo} />}
             <Tooltip title="process"><>
                 <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>

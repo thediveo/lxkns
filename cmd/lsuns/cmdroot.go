@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -37,7 +38,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			details, _ := cmd.PersistentFlags().GetBool("details")
 			// Run a full namespace discovery.
-			cizer, err := engines.Containerizer(true)
+			cizer, err := engines.Containerizer(context.Background(), cmd, true)
 			if err != nil {
 				return err
 			}

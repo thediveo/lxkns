@@ -21,7 +21,8 @@ import IEAppIcon from 'icons/containers/IEApp'
 
 import PodIcon from 'icons/containers/Pod'
 import K8sPodIcon from 'icons/containers/K8sPod'
-import { Container } from 'models/lxkns'
+import { Container, containerGroup } from 'models/lxkns'
+import ComposerProjectIcon from 'icons/containers/ComposerProject'
 
 const ContainerTypeIcons = {
     'unknowntype': ContainerIcon,
@@ -32,7 +33,7 @@ const ContainerTypeIcons = {
 }
 
 const PodTypeIcons = {
-    ['io.kubernetes.pod']: K8sPodIcon,
+    'io.kubernetes.pod': K8sPodIcon,
 }
 
 /**
@@ -42,12 +43,7 @@ const PodTypeIcons = {
  * @param container container object.
  */
  export const ContainerTypeIcon = (container: Container) => {
-    // TODO: pod/Docker compose project/IE app
-
     // Now try to find a suitable container-flavor icon, or fall back to our
-    // generic one. Please note that the type checker has correctly noticed us
-    // using the Congtainer type guard above and has concluded that at this
-    // point in the code the containee variable can only be of interface
-    // Container ... sweet.
+    // generic one.
     return ContainerTypeIcons[container.flavor] || ContainerIcon
 }

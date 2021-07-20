@@ -27,14 +27,14 @@ import (
 var _ = Describe("renders branches", func() {
 
 	It("CLI --foobar fails correctly", func() {
-		os.Args = append(os.Args[:1], "--engine=none", "--foobar")
+		os.Args = append(os.Args[:1], "--noengines", "--foobar")
 		out := getstdout.Stdouterr(main)
 		Expect(exitcode).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("CLI rejects invalid target namespaces", func() {
-		os.Args = append(os.Args[:1], "--engine=none", "foo:[666]")
+		os.Args = append(os.Args[:1], "--noengines", "foo:[666]")
 		out := getstdout.Stdouterr(main)
 		Expect(exitcode).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: not a valid namespace:`))
@@ -42,7 +42,7 @@ var _ = Describe("renders branches", func() {
 
 	It("CLI rejects invalid --ns", func() {
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--ns", "net:[666]",
 			"net:[12345678]")
 		out := getstdout.Stdouterr(main)
@@ -52,7 +52,7 @@ var _ = Describe("renders branches", func() {
 
 	It("CLI rejects valid --ns ID without --pid", func() {
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--ns", "666",
 			"net:[12345678]")
 		out := getstdout.Stdouterr(main)
@@ -62,7 +62,7 @@ var _ = Describe("renders branches", func() {
 
 	It("CLI rejects non-existing --ns ID", func() {
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--ns", "666",
 			"--pid", "666",
 			"net:[12345678]")
@@ -75,7 +75,7 @@ var _ = Describe("renders branches", func() {
 		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
 		Expect(err).ToNot(HaveOccurred())
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--ns", fmt.Sprintf("%d", mypidns.Ino),
 			"--pid", fmt.Sprintf("%d", ^uint32(0)),
 			"net:[12345678]")
@@ -84,7 +84,7 @@ var _ = Describe("renders branches", func() {
 		Expect(out).To(MatchRegexp(`^Error: unknown process PID .* in`))
 
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--pid", fmt.Sprintf("%d", ^uint32(0)),
 			"net:[12345678]")
 		out = getstdout.Stdouterr(main)
@@ -96,7 +96,7 @@ var _ = Describe("renders branches", func() {
 		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
 		Expect(err).ToNot(HaveOccurred())
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"--ns", fmt.Sprintf("%d", mypidns.Ino),
 			"--pid", fmt.Sprintf("%d", os.Getpid()),
 			"net:[12345678]")
@@ -106,7 +106,7 @@ var _ = Describe("renders branches", func() {
 	})
 
 	It("CLI w/o args fails", func() {
-		os.Args = append(os.Args[:1], "--engine=none")
+		os.Args = append(os.Args[:1], "--noengines")
 		out := getstdout.Stdouterr(main)
 		Expect(exitcode).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: expects 1 arg, received 0`))
@@ -119,7 +119,7 @@ var _ = Describe("renders branches", func() {
 		mynetnsid, err := ops.NamespacePath("/proc/self/ns/net").ID()
 		Expect(err).To(Succeed())
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			fmt.Sprintf("net:[%d]", mynetnsid.Ino))
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
@@ -135,7 +135,7 @@ var _ = Describe("renders branches", func() {
 			Skip("only non-root")
 		}
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			fmt.Sprintf("net:[%d]", tnsid.Ino))
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
@@ -149,7 +149,7 @@ var _ = Describe("renders branches", func() {
 
 	It("CLI with target non-user namespace at process", func() {
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"-p", fmt.Sprintf("%d", tpid),
 			fmt.Sprintf("net:[%d]", tnsid.Ino))
 		out := getstdout.Stdouterr(main)
@@ -165,7 +165,7 @@ var _ = Describe("renders branches", func() {
 
 	It("CLI with process in other user namespace branch than target non-user namespace", func() {
 		os.Args = append(os.Args[:1],
-			"--engine=none",
+			"--noengines",
 			"-p", fmt.Sprintf("%d", procpid),
 			fmt.Sprintf("net:[%d]", tnsid.Ino))
 		out := getstdout.Stdouterr(main)
