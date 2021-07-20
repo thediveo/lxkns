@@ -59,6 +59,7 @@ var _ = Describe("Decorates composer projects", func() {
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
 		for name, config := range names {
+			_ = pool.RemoveContainerByName(name)
 			var labels map[string]string
 			if config.projectname != "" {
 				labels = map[string]string{
@@ -79,6 +80,16 @@ var _ = Describe("Decorates composer projects", func() {
 			}
 			Expect(err).NotTo(HaveOccurred(), "container %q", name)
 			sleepies = append(sleepies, sleepy)
+		}
+		// Make sure that all newly created containers are in running state
+		// before we run unit tests which depend on the correct list of
+		// alive(!)=running containers.
+		for _, sleepy := range sleepies {
+			Eventually(func() bool {
+				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+				return c.State.Running
+			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
 	})
 

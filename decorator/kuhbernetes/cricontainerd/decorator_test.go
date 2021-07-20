@@ -85,6 +85,9 @@ var _ = Describe("Decorates containerd pod containers", func() {
 			Expect(err).NotTo(HaveOccurred(), "container %s", name)
 			sleepies = append(sleepies, sleepy)
 		}
+		// Make sure that all newly created containers are in running state
+		// before we run unit tests which depend on the correct list of
+		// alive(!)=running containers.
 		for _, sleepy := range sleepies {
 			Eventually(func() bool {
 				return sleepy.Status() == containerd.Running
