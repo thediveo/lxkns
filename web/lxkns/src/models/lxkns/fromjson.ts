@@ -12,12 +12,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Namespace, NamespaceType, Process, Discovery } from './model'
+import { Container, Engine, Group } from './container'
+import { Namespace, NamespaceType, Process, Discovery, EngineMap, GroupMap } from './model'
 import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
-// being able to *omit* things from types. On the other hand, it's exactly
-// what we need here when doing bad things, anyway...
+// being able to *omit* things from types. On the other hand, it's exactly what
+// we need here when doing bad things, anyway... The reason is that we transform
+// id-based references from the JSON into proper object references so we're
+// later able to quickly chase around the information model.
 interface NamespaceSetJson { [key: string]: Namespace | number }
 interface NamespaceJson extends Omit<Namespace,
     'ealdorman' | 'leaders' | 'namespaces' | 'owner' | 'parent'
@@ -29,10 +32,18 @@ interface NamespaceJson extends Omit<Namespace,
     namespaces: NamespaceSetJson
 }
 
+interface ContainerJson extends Omit<Container,
+    'engine' | 'groups'
+> {
+    engine: Engine | number
+    groups: Group[] | number[]
+}
+
 /**
  * Post-processes a discovery response from the lxkns discovery service,
  * resolving namespace and process (cross) references into ordinary object
- * references which can be directly used.
+ * references which can be directly used. Also resolve the references between
+ * containers, container engines, groups, and processes, where available.
  *
  * @param discoverydata JSON discovery response in form of plain JS objects.
  * **IMPORTANT:** the discovery data gets modified in place, so there's no copy
@@ -62,7 +73,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         (ns as NamespaceJson).leaders
             && (ns as NamespaceJson).leaders.forEach((leader: number) => {
                 if (leader in discovery.processes) {
-                    leaders.push(discovery.processes[leader]);
+                    leaders.push(discovery.processes[leader])
                 }
             });
         ns.leaders = leaders;
@@ -70,29 +81,29 @@ export const fromjson = (discoverydata: any): Discovery => {
         // Resolve ealdorman, if present; otherwise set it to null instead of
         // undefined.
         ns.ealdorman = ((ns as NamespaceJson).ealdorman &&
-            discovery.processes[(ns as NamespaceJson).ealdorman as number]) || null;
+            discovery.processes[(ns as NamespaceJson).ealdorman as number]) || null
 
         // resolve namespace hierarchy references, if present.
         switch (ns.type) {
             case NamespaceType.user:
             case NamespaceType.pid:
                 ns.parent = ((ns as NamespaceJson).parent &&
-                    discovery.namespaces[(ns as NamespaceJson).parent as number]) || null;
-                ns.parent && ns.parent.children.push(ns); // ...billions of gothers crying
+                    discovery.namespaces[(ns as NamespaceJson).parent as number]) || null
+                ns.parent && ns.parent.children.push(ns) // ...billions of gothers crying
         }
 
         // resolve ownership, if applicable.
         if ((ns as NamespaceJson).owner) {
             ns.owner = discovery.namespaces[(ns as NamespaceJson).owner as number];
-            ns.owner.tenants.push(ns);
+            ns.owner.tenants.push(ns)
         }
     });
 
     // Process all, erm, processes and convert and initialize reference fields
     // correctly.
     Object.values(discovery.processes).forEach(proc => {
-        proc.parent = null;
-        proc.children = [];
+        proc.parent = null
+        proc.children = []
     });
 
     // Now with initial null references in places, resolve references,
@@ -100,8 +111,8 @@ export const fromjson = (discoverydata: any): Discovery => {
     Object.values(discovery.processes).forEach(proc => {
         // Resolve the parent-child relationships.
         if (proc.ppid.toString() in discovery.processes) {
-            proc.parent = discovery.processes[proc.ppid];
-            proc.parent.children.push(proc);
+            proc.parent = discovery.processes[proc.ppid]
+            proc.parent.children.push(proc)
         }
 
         // Resolve the attached namespaces relationships.
@@ -120,6 +131,43 @@ export const fromjson = (discoverydata: any): Discovery => {
                 }
             }
         )
+    }
+
+    // Now go for the discovered containers, container engines, and container
+    // groups. First reset the back references from engines and groups to the
+    // containers, as we will rebuild them as port of transforming the
+    // references in the containers from ids into proper object references.
+    if (discovery.containers) {
+        discovery.engines = discovery['container-engines'] as EngineMap
+        discovery['container-engines'] = undefined
+        Object.entries(discovery.engines).forEach(([eid, engine]) => {
+            engine.containers = []
+        })
+        discovery.groups = discovery['container-groups'] as GroupMap
+        Object.entries(discovery.groups).forEach(([gid, group]) => {
+            group.containers = []
+        })
+        discovery['container-groups'] = undefined
+        Object.entries(discovery.containers).forEach(([pid, container]) => {
+            // transform engine reference
+            const engine = discovery.engines[(container as ContainerJson).engine as number]
+            container.engine = engine
+            engine.containers.push(container)
+            // transform group references
+            const groups: Group[] = []
+            ;((container as ContainerJson).groups as number[]).forEach(gid => {
+                const group = discovery.groups[gid]
+                groups.push(group)
+                group.containers.push(container)
+            })
+            container.groups = groups
+            // link with process (if possible), keyed by PID
+            const proc = discovery.processes[pid]
+            if (proc) {
+                proc.container = container
+                container.process = proc
+            }
+        })
     }
 
     // Resolve the references in the hierarchy of mount paths and also resolve

@@ -31,7 +31,7 @@ var userns1 model.Namespace
 var initproc *model.Process
 
 var _ = BeforeSuite(func() {
-	allns = lxkns.Discover(lxkns.FullDiscovery)
+	allns = lxkns.Discover(lxkns.WithStandardDiscovery())
 	initproc = allns.Processes[model.PIDType(os.Getpid())]
 	userns1 = initproc.Namespaces[model.UserNS]
 })

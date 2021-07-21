@@ -17,17 +17,21 @@ RUN go mod download
 # And now, finally, we build the lxkns service itself.
 COPY api/ ./api/
 COPY cmd/ ./cmd/
+COPY containerizer/ ./containerizer/
+COPY decorator/ ./decorator/
 COPY internal/ ./internal/
 COPY log/ ./log/
 COPY model/ ./model/
 COPY mounts/ ./mounts/
 COPY ops/ ./ops/
+COPY plural/ ./plural/
 COPY species/ ./species/
+COPY containerizer/ ./containerizer/
 COPY *.go ./
 RUN go build -v -o /lxkns ./cmd/lxkns
 
 # 2nd stage: builds the lxkns web client react application.
-FROM node:14-alpine AS reactor
+FROM node:16-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
@@ -49,7 +53,7 @@ FROM alpine:${ALPINE_VERSION}
 COPY --from=builder /lxkns /
 RUN apk add --no-cache \
         libcap && \
-    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search+ep" /lxkns && \
+    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
     apk del --no-cache libcap
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 USER 65534

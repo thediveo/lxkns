@@ -17,12 +17,13 @@ package cli
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
 // AddFlags runs all registered SetupCLI plugin functions (in group "cli") in
-// order to register CLI flags with the root command.
+// order to register CLI flags for the specified root command.
 func AddFlags(rootCmd *cobra.Command) {
-	for _, plugf := range plugger.New("cli").Func("SetupCLI") {
+	for _, plugf := range plugger.New(cliplugin.Group).Func("SetupCLI") {
 		plugf.(func(*cobra.Command))(rootCmd)
 	}
 }
@@ -31,7 +32,7 @@ func AddFlags(rootCmd *cobra.Command) {
 // just before the selected command runs; it terminates as soon as the first
 // plugin function returns a non-nil error.
 func BeforeCommand() error {
-	for _, plugf := range plugger.New("cli").Func("BeforeRun") {
+	for _, plugf := range plugger.New(cliplugin.Group).Func("BeforeRun") {
 		if err := plugf.(func() error)(); err != nil {
 			return err
 		}

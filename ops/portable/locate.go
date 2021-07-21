@@ -21,17 +21,17 @@ func LocateNamespace(nsid species.NamespaceID, nstype species.NamespaceType) mod
 	// can narrow the search accordingly. However, we always need to discover
 	// mount namespaces in order to make the bind-mounts discovery work -- more
 	// so when our process is containerized.
-	opts := lxkns.NoDiscovery
-	opts.SkipProcs = false
-	opts.SkipFds = false
-	opts.SkipBindmounts = false
-	opts.NamespaceTypes = species.CLONE_NEWNS
-	if nstype != 0 {
-		opts.NamespaceTypes |= nstype
+	nst := species.CLONE_NEWNS
+	if nstype == 0 {
+		nst = species.AllNS
 	} else {
-		opts.NamespaceTypes |= species.AllNS
+		nst |= nstype
 	}
-	discovery := lxkns.Discover(opts)
+	discovery := lxkns.Discover(
+		lxkns.FromProcs(),
+		lxkns.FromFds(),
+		lxkns.FromBindmounts(),
+		lxkns.WithNamespaceTypes(nst))
 	return LocateNamespaceInNamespaces(nsid, nstype, discovery.Namespaces)
 }
 

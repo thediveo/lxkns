@@ -21,9 +21,8 @@ import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
 import { Box, makeStyles } from '@material-ui/core'
 import { Card } from '@material-ui/core'
-import { Provider } from 'jotai'
+import { Atom, Provider } from 'jotai'
 import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom } from 'views/settings'
-import { AnyAtom } from 'jotai/core/types'
 
 
 /**
@@ -49,12 +48,12 @@ interface ExampleProps {
     /** optional CSS maximum width for the example card element. */
     maxWidth?: string
     /** optional jōtai states. */
-    states?: [AnyAtom, unknown][]
+    states?: [Atom<any>, unknown][]
     /** the example rendering... */
     children: React.ReactNode
 }
 
-const initials: [AnyAtom, unknown][] = [
+const initials: [Atom<any>, unknown][] = [
     [showSystemProcessesAtom, false],
     [showSharedNamespacesAtom, true],
     [expandInitiallyAtom, true],

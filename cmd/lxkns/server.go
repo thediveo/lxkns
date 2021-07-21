@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
 )
 
@@ -193,15 +194,18 @@ func requestLogger(next http.Handler) http.Handler {
 	})
 }
 
-func startServer(address string) (net.Addr, error) {
+func startServer(address string, cizer containerizer.Containerizer) (net.Addr, error) {
+	// Create the HTTP server listening transport...
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, err
 	}
 
+	// Finally create the request router and set the routes to the individual
+	// handlers.
 	r := mux.NewRouter()
 	r.Use(requestLogger)
-	r.HandleFunc("/api/namespaces", GetNamespacesHandler).Methods("GET")
+	r.HandleFunc("/api/namespaces", GetNamespacesHandler(cizer)).Methods("GET")
 	r.HandleFunc("/api/processes", GetProcessesHandler).Methods("GET")
 	r.HandleFunc("/api/pidmap", GetPIDMapHandler).Methods("GET")
 	r.PathPrefix("/api").HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNotFound) })

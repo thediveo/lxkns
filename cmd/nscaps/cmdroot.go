@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -23,6 +24,7 @@ import (
 	"github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -111,7 +113,11 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
-	allns := lxkns.Discover(lxkns.FullDiscovery)
+	cizer, err := engines.Containerizer(context.Background(), cmd, true)
+	if err != nil {
+		return err
+	}
+	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 	pidmap := lxkns.NewPIDMap(allns)
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the

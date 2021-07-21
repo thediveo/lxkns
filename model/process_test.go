@@ -58,7 +58,7 @@ var _ = Describe("Process", func() {
 	})
 
 	It("skips broken process stat", func() {
-		Expect(newProcess(1, "test/proctable/kaputt")).To(BeNil())
+		Expect(NewProcessInProcfs(1, "test/proctable/kaputt")).To(BeNil())
 	})
 
 	It("properties are read from /proc/[PID]", func() {
@@ -87,25 +87,25 @@ var _ = Describe("Process", func() {
 	})
 
 	It("gets basename and command line", func() {
-		proc42 := newProcess(PIDType(42), "test/proctable/proc")
+		proc42 := NewProcessInProcfs(PIDType(42), "test/proctable/proc")
 		Expect(proc42.Cmdline).To(HaveLen(3))
 		Expect(proc42.Basename()).To(Equal("mumble.exe"))
 		Expect(proc42.Cmdline[2], "arg2")
 
 		// $0 doesn't contain any "/"
-		proc667 := newProcess(PIDType(667), "test/proctable/kaputt")
+		proc667 := NewProcessInProcfs(PIDType(667), "test/proctable/kaputt")
 		Expect(proc667.Basename()).To(Equal("mumble.exe"))
 	})
 
 	It("falls back on process name", func() {
 		// Please note that our synthetic PID 1 has no command line, but only
 		// a process name in its stat file.
-		proc1 := newProcess(PIDType(1), "test/proctable/proc")
+		proc1 := NewProcessInProcfs(PIDType(1), "test/proctable/proc")
 		Expect(proc1.Basename()).To(Equal("init"))
 	})
 
 	It("synthesizes basename if all else fails", func() {
-		proc := newProcess(PIDType(666), "test/proctable/kaputt")
+		proc := NewProcessInProcfs(PIDType(666), "test/proctable/kaputt")
 		Expect(proc.Basename()).To(Equal("process (666)"))
 	})
 
@@ -114,7 +114,7 @@ var _ = Describe("Process", func() {
 var _ = Describe("ProcessTable", func() {
 
 	It("reads synthetic /proc", func() {
-		pt := newProcessTable(false, "test/proctable/proc")
+		pt := NewProcessTableFromProcfs(false, "test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
 
@@ -127,7 +127,7 @@ var _ = Describe("ProcessTable", func() {
 	})
 
 	It("returns nil for inaccessible /proc", func() {
-		Expect(newProcessTable(false, "test/nirvana")).To(BeNil())
+		Expect(NewProcessTableFromProcfs(false, "test/nirvana")).To(BeNil())
 	})
 
 	It("gathers from real /proc", func() {

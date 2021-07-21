@@ -52,6 +52,19 @@ namespaces: these are indicated by dashed borders around their namespace
 When user or PID namespaces have child user namespaces, then the total number of
 child and grandchild namespaces is shown right after a namespace "badge".
 
+### Container Processes
+
+In case a process that is "attached" to a namespace is also associated with a
+container then lxkns will first show the name of the container associated with
+the particular leader processes.
+
+If a container happens to be part of some types of groups, then these group
+names will be shown after the container name. These groups are recognized in the
+user interface:
+
+- Docker/nerdctl composer projects,
+- Kubernetes pods.
+
 ### "Leader" Processes
 
 Often, multiple (well, _many_) processes are "attached" to (using) the same

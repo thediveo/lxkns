@@ -21,12 +21,13 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "cli_test",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: UnittestSetupCLI},
 			plugger.NamedSymbol{Name: "BeforeRun", Symbol: UnittestBeforeRun},

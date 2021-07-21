@@ -124,14 +124,21 @@ func (pns *PlainNamespace) TypeIDString() string {
 	return fmt.Sprintf("%s:[%d]", pns.nstype.Name(), pns.nsid.Ino)
 }
 
-// LeaderString returns a textual list of leader process PIDs.
+// LeaderString returns a textual list of leader process names with PIDs,
+// optionally including the associated container name.
 func (pns *PlainNamespace) LeaderString() string {
 	if len(pns.leaders) == 0 {
 		return ""
 	}
 	leaders := []string{}
 	for _, leader := range pns.leaders {
-		leaders = append(leaders, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
+		if leader.Container != nil {
+			leaders = append(leaders,
+				fmt.Sprintf("container %q with process %q (%d)",
+					leader.Container.Name, leader.Name, leader.PID))
+		} else {
+			leaders = append(leaders, fmt.Sprintf("%q (%d)", leader.Name, leader.PID))
+		}
 	}
 	return fmt.Sprintf("joined by %s", strings.Join(leaders, ", "))
 }

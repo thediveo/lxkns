@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { Container, Engine, Group } from "./container";
 import { MountPathMap, NamespacedMountPathMaps } from "./mount";
 
 /**
@@ -97,7 +98,7 @@ export interface NamespaceMap { [nsid: string]: Namespace }
  * Information about a single OS-level process, within the process hierarchy.
  * Each process is always attached to namespaces, one of each type (except for
  * namespace types not enabled or present on a particular Linux kernel
- * instance).
+ * instance). A container might be associated with this process.
  */
 export interface Process {
     pid: number
@@ -111,9 +112,13 @@ export interface Process {
     fridgecgroup: string
     fridgefrozen: boolean
     namespaces: NamespaceSet
+    container: Container
 }
 
 export interface ProcessMap { [key: string]: Process }
+export interface ContainerMap { [id: string]: Container }
+export interface EngineMap { [id: string]: Engine }
+export interface GroupMap { [id: string]: Group }
 
 /**
  * The results of a discovery from the REST API endpoint /api/namespaces.
@@ -122,4 +127,7 @@ export interface Discovery {
     namespaces: NamespaceMap
     processes: ProcessMap
     mounts: NamespacedMountPathMaps
+    containers: ContainerMap
+    engines: EngineMap
+    groups: GroupMap
 }

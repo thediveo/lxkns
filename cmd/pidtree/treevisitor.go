@@ -31,7 +31,7 @@ import (
 // namespace changes from one to another.
 type TreeVisitor struct {
 	Details   bool
-	PIDMap    lxkns.PIDMap
+	PIDMap    model.PIDMapper
 	RootPIDNS model.Namespace
 }
 

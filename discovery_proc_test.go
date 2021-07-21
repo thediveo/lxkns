@@ -28,9 +28,7 @@ import (
 var _ = Describe("Discover from processes", func() {
 
 	It("finds at least the namespaces lsns finds", func() {
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		allns := Discover(opts)
+		allns := Discover(FromProcs())
 		alllsns := lsns()
 		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash) (.+ )?/tmp/`)
 		for _, ns := range alllsns {

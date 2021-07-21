@@ -15,23 +15,35 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+
+	. "github.com/thediveo/lxkns/nstest/gmodel"
+
+	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/nstest/gmodel"
-	. "github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+	"github.com/thediveo/whalewatcher/watcher"
+	"github.com/thediveo/whalewatcher/watcher/moby"
 )
+
+var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var (
 	allns      *lxkns.DiscoveryResult
@@ -39,9 +51,46 @@ var (
 	scriptscmd *testbasher.TestCommand
 	userns     model.Namespace
 	usernames  lxkns.UidUsernameMap
+
+	cizer       containerizer.Containerizer
+	cizercancel context.CancelFunc
+	pool        *dockertest.Pool
+	sleepy      *dockertest.Resource
 )
 
 var _ = BeforeSuite(func() {
+	// Spin up a Docker engine watcher and wait for it to become ready...
+	docksock := ""
+	if os.Getegid() == 0 {
+		docksock = "unix:///proc/1/root/run/docker.sock"
+	}
+
+	var err error
+	pool, err = dockertest.NewPool(docksock)
+	Expect(err).NotTo(HaveOccurred())
+	_ = pool.RemoveContainerByName(sleepyname)
+	Eventually(func() error {
+		_, err := pool.Client.InspectContainer(sleepyname)
+		return err
+	}, "5s").Should(HaveOccurred())
+	sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "busybox",
+		Tag:        "latest",
+		Name:       sleepyname,
+		Cmd:        []string{"/bin/sleep", "30s"},
+		Labels:     map[string]string{"foo": "bar"},
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	mobywatcher, err := moby.New(docksock, nil)
+	Expect(err).NotTo(HaveOccurred())
+	var ctx context.Context
+	ctx, cizercancel = context.WithCancel(context.Background())
+	cizer = whalefriend.New(ctx, []watcher.Watcher{mobywatcher})
+	Expect(cizer).NotTo(BeNil())
+	<-mobywatcher.Ready()
+
+	// Add some controlled namespaces for discovery...
 	scripts.Common(nstest.NamespaceUtilsScript)
 	scripts.Script("main", `
 unshare -Ur unshare -U $stage2 # create a new user ns inside another user ns (so we get a proper owner relationship).
@@ -53,15 +102,21 @@ read # wait for test to proceed()
 	scriptscmd = scripts.Start("main")
 	usernsid := nstest.CmdDecodeNSId(scriptscmd)
 
-	disco := lxkns.FullDiscovery
-	disco.SkipBindmounts = true
-	disco.SkipFds = true
-	disco.SkipTasks = true
-	disco.WithMounts = true
-	allns = lxkns.Discover(disco) // "nearly-all-ns"
+	// "nearly-all-ns" and ... containerz!
+	allns = lxkns.Discover(
+		lxkns.WithStandardDiscovery(),
+		lxkns.NotFromFds(), lxkns.NotFromBindmounts(),
+		lxkns.WithMounts(),
+		lxkns.WithContainerizer(cizer))
 
-	userns = allns.Namespaces[model.UserNS][usernsid].(model.Namespace)
+	// basic checks that discovery worked as expected; we're here to test the
+	// (un)marshalling, not discovery.
+	userns = allns.Namespaces[model.UserNS][usernsid]
 	Expect(userns).NotTo(BeNil())
+	Expect(allns.Containers).To(ContainElement(
+		PointTo(MatchFields(IgnoreExtras, Fields{
+			"Name": Equal(sleepyname),
+		}))))
 
 	// For some JSON tests we need the names of the users owning user
 	// namespaces. We're expecting here that the user name discovery has been
@@ -71,6 +126,12 @@ read # wait for test to proceed()
 })
 
 var _ = AfterSuite(func() {
+	if cizercancel != nil {
+		cizercancel() // shut down the moby watcher
+	}
+	if sleepy != nil {
+		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+	}
 	if scriptscmd != nil {
 		scriptscmd.Close()
 	}
