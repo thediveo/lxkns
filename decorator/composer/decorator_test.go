@@ -59,7 +59,7 @@ var _ = Describe("Decorates composer projects", func() {
 				Repository: "busybox",
 				Tag:        "latest",
 				Name:       name,
-				Cmd:        []string{"/bin/sleep", "30s"},
+				Cmd:        []string{"/bin/sleep", "120s"},
 				Labels: map[string]string{
 					ComposerProjectLabel: name + "-project",
 				},
@@ -70,6 +70,16 @@ var _ = Describe("Decorates composer projects", func() {
 			}
 			Expect(err).NotTo(HaveOccurred(), "container %s", name)
 			sleepies = append(sleepies, sleepy)
+		}
+		// Make sure that all newly created containers are in running state
+		// before we run unit tests which depend on the correct list of
+		// alive(!)=running containers.
+		for _, sleepy := range sleepies {
+			Eventually(func() bool {
+				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+				return c.State.Running
+			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
 	})
 

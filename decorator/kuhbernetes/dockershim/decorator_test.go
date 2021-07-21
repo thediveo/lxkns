@@ -69,7 +69,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 				Repository: "busybox",
 				Tag:        "latest",
 				Name:       name,
-				Cmd:        []string{"/bin/sleep", "30s"},
+				Cmd:        []string{"/bin/sleep", "120s"},
 				Labels:     map[string]string{},
 			})
 			// Skip test in case Docker is not accessible.

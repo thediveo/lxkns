@@ -53,7 +53,7 @@ var _ = Describe("ContainerEngine", func() {
 			Repository: "busybox",
 			Tag:        "latest",
 			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "30s"},
+			Cmd:        []string{"/bin/sleep", "120s"},
 			Labels:     map[string]string{"foo": "bar"},
 		})
 		// Skip test in case Docker is not accessible.
@@ -61,6 +61,11 @@ var _ = Describe("ContainerEngine", func() {
 			Skip("Docker not available")
 		}
 		Expect(err).NotTo(HaveOccurred())
+		Eventually(func() bool {
+			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+			return c.State.Running
+		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		Expect(pool.Client.PauseContainer(sleepyname)).NotTo(HaveOccurred())
 	})
 

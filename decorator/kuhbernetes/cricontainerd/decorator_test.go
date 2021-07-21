@@ -55,7 +55,7 @@ const cdsock = "/proc/1/root/run/containerd/containerd.sock"
 
 const testref = "docker.io/library/busybox:latest"
 
-var testargs = []string{"/bin/sleep", "30s"}
+var testargs = []string{"/bin/sleep", "120s"}
 
 var _ = Describe("Decorates containerd pod containers", func() {
 

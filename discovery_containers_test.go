@@ -57,7 +57,7 @@ var _ = Describe("Discover containers", func() {
 			Repository: "busybox",
 			Tag:        "latest",
 			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "30s"},
+			Cmd:        []string{"/bin/sleep", "120s"},
 			Labels: map[string]string{
 				composer.ComposerProjectLabel: "lxkns-project",
 			},
@@ -67,6 +67,11 @@ var _ = Describe("Discover containers", func() {
 			Skip("Docker not available")
 		}
 		Expect(err).NotTo(HaveOccurred())
+		Eventually(func() bool {
+			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+			return c.State.Running
+		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 	})
 
 	AfterEach(func() {

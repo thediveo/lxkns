@@ -77,10 +77,18 @@ var _ = BeforeSuite(func() {
 		Repository: "busybox",
 		Tag:        "latest",
 		Name:       sleepyname,
-		Cmd:        []string{"/bin/sleep", "30s"},
+		Cmd:        []string{"/bin/sleep", "120s"},
 		Labels:     map[string]string{"foo": "bar"},
 	})
 	Expect(err).NotTo(HaveOccurred())
+	// Make sure that the newly created container is in running state before we
+	// run unit tests which depend on the correct list of alive(!)=running
+	// containers.
+	Eventually(func() bool {
+		c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+		Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+		return c.State.Running
+	}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 
 	mobywatcher, err := moby.New(docksock, nil)
 	Expect(err).NotTo(HaveOccurred())

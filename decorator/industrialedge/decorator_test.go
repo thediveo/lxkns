@@ -71,7 +71,7 @@ var _ = Describe("Decorates composer projects", func() {
 				Repository: "busybox",
 				Tag:        "latest",
 				Name:       name,
-				Cmd:        []string{"/bin/sleep", "30s"},
+				Cmd:        []string{"/bin/sleep", "120s"},
 				Labels:     labels,
 			})
 			// Skip test in case Docker is not accessible.
