@@ -1,5 +1,5 @@
-<img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
 # Linux kernel Namespaces
+<img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
 
 …and Containers.
 
