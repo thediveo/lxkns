@@ -133,8 +133,8 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 	if len(pidmore) < 2 {
 		return nil
 	}
-	pid, err := strconv.Atoi(pidmore[0])
-	if err != nil || pid < 0 {
+	pid, err := strconv.ParseInt(pidmore[0], 10, 32)
+	if err != nil || pid <= 0 {
 		return nil
 	}
 	proc.PID = PIDType(pid)

@@ -134,7 +134,7 @@ func nspid(proc *model.Process, procroot string) (pids []model.PIDType) {
 			pidstxts := strings.Split(line[7:], "\t")
 			pids = make([]model.PIDType, len(pidstxts))
 			for idx, pidtxt := range pidstxts {
-				pid, err := strconv.Atoi(pidtxt)
+				pid, err := strconv.ParseInt(pidtxt, 10, 32)
 				if err != nil {
 					return []model.PIDType{}
 				}
