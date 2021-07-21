@@ -40,7 +40,7 @@ const edgeRuntimeContainerName = "edge-iot-core"
 // Edge device runtime to attach certain configuration information to containers
 // of Industrial Edge apps. We use the presence of these labels to decorate
 // composer-project containers as Industrial Edge app containers.
-const edgeAppConfigLabelPrefix = "com_mwp_config_"
+const edgeAppConfigLabelPrefix = "com_mwp_conf_"
 
 // Register this Decorator plugin.
 func init() {
