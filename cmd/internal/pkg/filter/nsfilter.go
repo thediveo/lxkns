@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -67,7 +68,7 @@ var nsFilterIds = map[species.NamespaceType][]string{
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "filter",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: FilterSetupCLI},
 		},

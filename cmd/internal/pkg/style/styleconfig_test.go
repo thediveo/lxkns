@@ -77,7 +77,8 @@ pid:
   - spanishinquisition: 666
 `)
 		})).To(MatchRegexp(`^warning: unknown color spanishinquisition: 666`))
-		Expect(PIDStyle.S("x")).To(ContainSubstring("[38;5;232;48;5;181mx"))
+		Expect(len(PIDStyle.S("x"))).To(BeNumerically(">", 1))
+		Expect(PIDStyle.S("x")).To(ContainSubstring("mx"))
 	})
 
 })

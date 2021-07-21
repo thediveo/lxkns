@@ -24,15 +24,8 @@ import (
 
 var _ = Describe("maps PIDs", func() {
 
-	It("returns empty PID slice for non-existing PID", func() {
-		Expect(NSpid(&model.Process{})).To(BeEmpty())
-	})
-
 	It("doesn't translates non-existing PID/namespace", func() {
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		opts.SkipHierarchy = false
-		allns := Discover(opts)
+		allns := Discover(FromProcs(), WithHierarchy())
 		pidmap := NewPIDMap(allns)
 		Expect(pidmap.Translate(0, allns.InitialNamespaces[model.PIDNS], allns.InitialNamespaces[model.PIDNS])).To(BeZero())
 	})
@@ -59,10 +52,7 @@ read # wait for test to proceed()
 		var leafpid model.PIDType
 		cmd.Decode(&leafpid)
 
-		opts := NoDiscovery
-		opts.SkipProcs = false
-		opts.SkipHierarchy = false
-		allns := Discover(opts)
+		allns := Discover(FromProcs(), WithHierarchy())
 		pidns := allns.Namespaces[model.PIDNS][pidnsid]
 		initialpidns := allns.PIDNSRoots[0]
 

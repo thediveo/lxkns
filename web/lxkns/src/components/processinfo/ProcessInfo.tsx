@@ -19,8 +19,8 @@ import { makeStyles, Tooltip } from '@material-ui/core'
 
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
-
 import { Process } from 'models/lxkns'
+import ContainerInfo from 'components/containerinfo/ContainerInfo'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -39,6 +39,9 @@ const useStyles = makeStyles((theme) => ({
         '&$shortInfo *': {
             color: theme.palette.text.disabled,
         }
+    },
+    containerInfo: {
+        marginRight: '0.5em',
     },
     shortInfo: {
     },
@@ -95,6 +98,8 @@ export interface ProcessInfoProps {
  * The `ProcessInfo` component renders only (almost) minimal information about a
  * single Linux OS process to make it easily identifyable:
  *
+ * - if associated with a container: container information (name, group).
+ * 
  * - name of the process, which is has been either set by the process itself, or
  *   has been derived from the process' command line.
  * - PID.
@@ -114,12 +119,13 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
 
     return !!process && (
         <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
+            {process.container && <ContainerInfo container={process.container} className={classes.containerInfo} />}
             <Tooltip title="process"><>
                 <ProcessIcon fontSize="inherit" />
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;<span className={classes.pid}>({process.pid})</span>
             </></Tooltip>
-            {!short && process.cpucgroup && process.cpucgroup !== "/" && (
+            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container && (
                 <Tooltip title="control-group path" className="cgroupinfo">
                     <span className={clsx(classes.cgroupInfo, className)}>
                         <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />

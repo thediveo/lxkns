@@ -21,16 +21,24 @@ Flags
 
 The following lspidns flags are available:
 
+        --all-leaders            show all leader processes instead of only the most senior one
+        --cgroup cgformat        control group name display; can be 'full' or 'short' (default short)
     -c, --color color[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
                                  or 'never' (default auto)
+        --containerd string      containerd engine API socket path (default "/run/containerd/containerd.sock")
+        --docker string          Docker engine API socket path (default "unix:///var/run/docker.sock")
         --dump                   dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
     -h, --help                   help for lspidns
+        --icon                   show/hide unicode icons next to namespaces
+        --nocontainerd           do not consult a containerd engine
+        --nodocker               do not consult a Docker engine
+        --noengines              do not consult any container engines
         --proc proc[=name]       process name style; can be 'name' (default if omitted), 'basename',
                                  or 'exe' (default name)
         --theme theme            colorization theme 'dark' or 'light' (default dark)
-        --treestyle treestyle    select the tree render style; can be 'line' (default if omitted)
-                                 or 'ascii' (default line)
+        --treestyle treestyle    select the tree render style; can be 'line' or 'ascii' (default line)
     -u, --user                   shows owner user namespaces
+    -v, --version                version for lspidns
 
 Colorization
 

@@ -14,7 +14,7 @@ results without any hassle. So, here we go:
 
 To marshall a given lxkns.DiscoveryResult in a service:
 
-    allns := lxkns.Discover(lxkns.FullDiscovery)
+    allns := lxkns.Discover(lxkns.StandardDiscovery())
     err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 
 And then to unmarshall a discovery result into "allns" when consuming a

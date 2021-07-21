@@ -15,12 +15,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
@@ -36,7 +38,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			details, _ := cmd.PersistentFlags().GetBool("details")
 			// Run a full namespace discovery.
-			allns := lxkns.Discover(lxkns.FullDiscovery)
+			cizer, err := engines.Containerizer(context.Background(), cmd, true)
+			if err != nil {
+				return err
+			}
+			allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 			fmt.Print(
 				asciitree.Render(
 					allns.UserNSRoots,

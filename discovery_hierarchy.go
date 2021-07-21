@@ -39,6 +39,7 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/relations"
+	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -55,7 +56,7 @@ import (
 // be referenced by fd's returned by the kernel namespace ioctl()s. This would
 // then force us to keep potentially a larger number of fd's open.
 func discoverHierarchy(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
-	if result.Options.SkipHierarchy {
+	if !result.Options.DiscoverHierarchy {
 		log.Infof("skipping discovery of %s namespace hierarchy", nstype.Name())
 		return
 	}
@@ -146,5 +147,5 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 		// Don't leak...
 		_ = nsf.(io.Closer).Close()
 	}
-	log.Infof("found %d hidden %s namespaces", hidden, nstype.Name())
+	log.Infof("found %s", plural.Elements(hidden, "hidden %s namespaces", nstype.Name()))
 }

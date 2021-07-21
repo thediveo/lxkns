@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -25,16 +26,19 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/watcher"
+	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var lxknsapispec *openapi3.Swagger
+var lxknsapispec *openapi3.T
 var allns *lxkns.DiscoveryResult
-var pidmap lxkns.PIDMap
+var pidmap model.PIDMapper
 
 var _ = BeforeSuite(func() {
 	var err error
-	lxknsapispec, err = openapi3.NewSwaggerLoader().LoadSwaggerFromFile("lxkns.yaml")
+	lxknsapispec, err = openapi3.NewLoader().LoadFromFile("lxkns.yaml")
 	Expect(err).To(Succeed())
 	Expect(func() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -42,11 +46,26 @@ var _ = BeforeSuite(func() {
 		return lxknsapispec.Validate(ctx)
 	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
 
-	allns = lxkns.Discover(lxkns.FullDiscovery)
+	var docksock string
+	if os.Geteuid() == 0 {
+		docksock = "unix:///proc/1/root/run/docker.sock"
+	}
+
+	mw, err := moby.New(docksock, nil)
+	Expect(err).NotTo(HaveOccurred())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
+	defer cizer.Close()
+
+	<-mw.Ready()
+
+	allns = lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.WithContainerizer(cizer))
 	pidmap = lxkns.NewPIDMap(allns)
 })
 
-func validate(openapispec *openapi3.Swagger, schemaname string, jsondata []byte) error {
+func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error {
 	schemaref, ok := openapispec.Components.Schemas[schemaname]
 	if !ok {
 		return fmt.Errorf("invalid schema reference %q", schemaname)

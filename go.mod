@@ -4,13 +4,15 @@ go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/getkin/kin-openapi v0.53.0
+	github.com/containerd/containerd v1.5.4
+	github.com/getkin/kin-openapi v0.66.0
 	github.com/gorilla/mux v1.8.0
-	github.com/muesli/termenv v0.8.0
-	github.com/onsi/ginkgo v1.15.2
-	github.com/onsi/gomega v1.11.0
+	github.com/muesli/termenv v0.9.0
+	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/gomega v1.14.0
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/thediveo/enumflag v0.10.1
 	github.com/thediveo/errxpect v0.10.1
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
@@ -19,7 +21,8 @@ require (
 	github.com/thediveo/gons v0.9.7
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/testbasher v1.0.3
-	golang.org/x/net v0.0.0-20210324205630-d1beb07c2056 // indirect
-	golang.org/x/sys v0.0.0-20210324051608-47abb6519492
+	github.com/thediveo/whalewatcher v0.4.0
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/text v0.3.6
 	gopkg.in/yaml.v2 v2.4.0
 )

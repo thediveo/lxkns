@@ -1,0 +1,13 @@
+name: "Linux-kernel Namespaces"
+repository: lxkns
+website: "https://github.com/thediveo/lxkns"
+description: >
+  Linux-kernel Namespaces (lxkns) is a diagnosis application for deep-diving
+  into some of the inner mechanics underneath container technology, namely
+  "namespaces". Discover Linux-kernel namespaces and mount points (including
+  hierarchy and "overmounts") in Industrial Edge devices. For easy
+  identification, lxkns relates the namespaces discovered to running containers
+  and apps, where possible; this is useful as on the kernel level, namespaces do
+  not (sic!) have names.
+category: Other
+icon: lxkns-logo-150x150.png

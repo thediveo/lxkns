@@ -23,7 +23,10 @@ for, according to the needs of API users of the lxkns package.
 
 Discovery
 
-A namespace discovery is just a single call to function lxkns.Discover().
+A namespace discovery is just a single call to function lxkns.Discover(). It
+accepts option setters, such as lxkns.StandardDiscovery(),
+lxkns.WithMounts(), et cetera.
+
 Additionally, there's a one-time support function call to reexec.CheckAction()
 required as early as possible in main().
 
@@ -35,7 +38,7 @@ required as early as possible in main().
     func main() {
         reexec.CheckAction()
         ...
-        allns := lxkns.Discover(lxkns.FullDiscovery)
+        allns := lxkns.Discover(lxkns.StandardDiscovery())
         ...
     }
 

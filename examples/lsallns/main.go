@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,17 +28,21 @@ import (
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/watcher"
+	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
 // NamespaceRow stores information about a single namespace, to be printed
 // as a single row.
 type NamespaceRow struct {
-	ID       uint64
-	Type     string
-	PID      int
-	ProcName string
-	Comment  string
+	ID            uint64
+	Type          string
+	PID           int
+	ContainerName string
+	ProcName      string
+	Comment       string
 }
 
 // dumpresult takes discovery results, extracts the required fields, and then
@@ -59,6 +64,9 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 			if proc := ns.Ealdorman(); proc != nil {
 				item.PID = int(proc.PID)
 				item.ProcName = proc.Name
+				if proc.Container != nil {
+					item.ContainerName = proc.Container.Name
+				}
 				item.Comment = proc.CpuCgroup
 			} else if ns.Ref() != "" {
 				item.Comment = "bound:" + ns.Ref()
@@ -70,7 +78,7 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 	// the "kubectl-like outputter". The DefaultColumnSpec specifies the table
 	// headers in the form of "<Headertext>:{<JSON-Path-Expression>}".
 	prn, err := klo.PrinterFromFlag("",
-		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},PID:{.PID},PROCESS:{.ProcName},COMMENT:{.Comment}"})
+		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},CONTAINER:{.ContainerName},PID:{.PID},PROCESS:{.ProcName},COMMENT:{.Comment}"})
 	if err != nil {
 		return err
 	}
@@ -106,8 +114,18 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		}
 		result = dr.Result()
 	} else {
-		// Run a full namespace discovery.
-		result = lxkns.Discover(lxkns.FullDiscovery)
+		// Set up a Docker engine-connected containerizer
+		moby, err := moby.New("", nil)
+		if err != nil {
+			return err
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
+		// Run a full namespace discovery without mount point discovery, but
+		// with containers.
+		result = lxkns.Discover(
+			lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
 	}
 	return dumpresult(result)
 }

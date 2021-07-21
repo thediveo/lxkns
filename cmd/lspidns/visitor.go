@@ -59,7 +59,7 @@ func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 	}
 	userroots := []model.Namespace{}
 	for uns := range userns {
-		userroots = append(userroots, uns.(model.Namespace))
+		userroots = append(userroots, uns)
 	}
 	userroots = lxkns.SortNamespaces(userroots)
 	count := len(userroots)
@@ -110,7 +110,7 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 		for _, ns := range uns.Ownings()[model.PIDNS] {
 			pidns := ns.(model.Hierarchy)
 			ppidns := pidns.Parent()
-			if ppidns == nil || ppidns.(model.Namespace).Owner() != uns.(model.Ownership) {
+			if ppidns == nil || ppidns.(model.Namespace).Owner() != uns {
 				clist = append(clist, ns)
 			}
 		}

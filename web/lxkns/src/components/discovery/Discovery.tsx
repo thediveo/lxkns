@@ -14,8 +14,7 @@
 
 import { useEffect } from 'react'
 
-import { atom, useAtom } from 'jotai'
-import { Setter } from 'jotai/core/types'
+import { atom, useAtom, Setter } from 'jotai'
 
 import { useSnackbar } from 'notistack'
 
@@ -60,9 +59,9 @@ const initialRefreshInterval = (() => {
  * The discovery refresh interval state; null means refresh is disabled. This
  * state is automatically synced to the local storage.
  */
-export const discoveryRefreshIntervalAtom = atom(
+export const discoveryRefreshIntervalAtom = atom<number, number>(
     initialRefreshInterval,
-    (get, set, interval) => {
+    (_get, set, interval) => {
         set(discoveryRefreshIntervalAtom, interval)
         localStorage.setItem(refreshIntervalKey, JSON.stringify(interval))
     }

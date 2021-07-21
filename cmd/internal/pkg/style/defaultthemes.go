@@ -42,9 +42,13 @@ process:
 owner:
 - foreground: '#e0e000'
 controlgroup:
-- foreground: '#00c000'
+- foreground: '#ff9900'
 unknown:
 - foreground: '#ff0000'
+
+container:
+- bold
+- foreground: '#0099ff'
 `
 
 const defaultLightTheme = `# light lxkns colorization theme
@@ -77,7 +81,7 @@ process:
 owner:
 - foreground: '#808000'
 controlgroup:
-- foreground: '#004000'
+- foreground: '#cc7a00'
 unknown:
 - foreground: '#800000'
 
@@ -91,4 +95,9 @@ user-effcaps:
 user-fullcaps:
 - background: '#008000'
 - foreground: '#ffffff'
+
+# container
+container:
+- bold
+- foreground: '#0099ff'
 `

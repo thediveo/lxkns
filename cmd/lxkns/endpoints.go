@@ -20,33 +20,34 @@ import (
 
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/species"
 )
 
-// GetNamespacesHandler returns the results of a namespace discovery, as JSON.
+// GetNamespacesHandler takes a containerizer and then returns a handler
+// function that returns the results of a namespace discovery, as JSON.
 // Additionally, we opt in to mount path+point discovery.
-func GetNamespacesHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.FullDiscovery
-	opts.WithMounts = true
-	allns := lxkns.Discover(opts)
-	// Note bene: set header before writing the header with the status code;
-	// actually makes sense, innit?
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(
-		types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
-	if err != nil {
-		log.Errorf("namespaces discovery error: %s", err.Error())
+func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		allns := lxkns.Discover(
+			lxkns.WithFullDiscovery(), lxkns.WithContainerizer(cizer))
+		// Note bene: set header before writing the header with the status code;
+		// actually makes sense, innit?
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err := json.NewEncoder(w).Encode(
+			types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
+		if err != nil {
+			log.Errorf("namespaces discovery error: %s", err.Error())
+		}
 	}
 }
 
 // GetProcessesHandler returns the process table with namespace references, as
 // JSON.
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.NoDiscovery
-	opts.SkipProcs = false
-	disco := lxkns.Discover(opts)
+	disco := lxkns.Discover(lxkns.FromProcs())
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -61,9 +62,7 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 // GetPIDMapHandler returns data for translating PIDs between hierarchical PID
 // namespaces, as JSON.
 func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
-	opts := lxkns.FullDiscovery
-	opts.NamespaceTypes = species.CLONE_NEWPID
-	pidmap := lxkns.NewPIDMap(lxkns.Discover(opts))
+	pidmap := lxkns.NewPIDMap(lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithNamespaceTypes(species.CLONE_NEWPID)))
 
 	w.Header().Set("Content-Type", "application/json")
 

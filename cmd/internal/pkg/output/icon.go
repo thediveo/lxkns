@@ -3,6 +3,7 @@ package output
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -39,7 +40,7 @@ var showNamespaceIcons bool
 func init() {
 	plugger.RegisterPlugin(&plugger.PluginSpec{
 		Name:  "icon",
-		Group: "cli",
+		Group: cliplugin.Group,
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: IconSetupCLI},
 		},
