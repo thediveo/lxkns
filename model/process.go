@@ -226,8 +226,8 @@ func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) 
 	for _, procentry := range procentries {
 		// Get the process PID as a number and then read its /proc/[PID]/stat
 		// procfs entry in order to get some details about the process.
-		pid, err := strconv.Atoi(procentry.Name())
-		if err != nil || pid == 0 {
+		pid, err := strconv.ParseInt(procentry.Name(), 10, 32)
+		if err != nil || pid <= 0 {
 			continue
 		}
 		proc := NewProcessInProcfs(PIDType(pid), procroot)
