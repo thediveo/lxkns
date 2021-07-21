@@ -19,10 +19,10 @@ import ContainerdIcon from 'icons/containers/Containerd'
 import IERuntimeIcon from 'icons/containers/IERuntime'
 import IEAppIcon from 'icons/containers/IEApp'
 
-import PodIcon from 'icons/containers/Pod'
-import K8sPodIcon from 'icons/containers/K8sPod'
-import { Container, containerGroup } from 'models/lxkns'
-import ComposerProjectIcon from 'icons/containers/ComposerProject'
+//import PodIcon from 'icons/containers/Pod'
+//import K8sPodIcon from 'icons/containers/K8sPod'
+import { Container } from 'models/lxkns'
+//import ComposerProjectIcon from 'icons/containers/ComposerProject'
 
 const ContainerTypeIcons = {
     'unknowntype': ContainerIcon,
@@ -32,9 +32,11 @@ const ContainerTypeIcons = {
     'com.siemens.industrialedge.app': IEAppIcon,
 }
 
+/*
 const PodTypeIcons = {
     'io.kubernetes.pod': K8sPodIcon,
 }
+*/
 
 /**
  * Returns a container type icon (constructor) based on the type and flavor of
