@@ -24,7 +24,7 @@ the visibility of mount points, taking different forms of "overmounting" into
 consideration.
 
 Take a look at the comprehensive [user (and developer)
-manual](thediveo.github.io/lxkns).
+manual](https://thediveo.github.io/lxkns).
 
 Or, watch the short overview video how to find your way around discovery web
 frontend:
