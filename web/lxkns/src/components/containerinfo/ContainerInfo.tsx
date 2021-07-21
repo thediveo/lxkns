@@ -22,6 +22,7 @@ import { ContainerTypeIcon } from 'utils/containericon'
 
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/Pod'
+import IEAppIcon from 'icons/containers/IEApp'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -89,14 +90,19 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
     const ContainerIcon = ContainerTypeIcon(container)
 
-    var group = null
+    var groupicon = null
+    var groupname = ""
     const project = containerGroup(container, 'com.docker.compose.project')
     if (project) {
-        group = <><ComposerProjectIcon fontSize="inherit" />{project.name}</>
+        groupname = project.name
+        groupicon = container.flavor === 'com.siemens.industrialedge.app'
+            ? <IEAppIcon fontSize="inherit" />
+            : <ComposerProjectIcon fontSize="inherit" />
     }
     const pod = containerGroup(container, 'io.kubernetes.pod')
     if (pod) {
-        group = <><PodIcon fontSize="inherit" />{pod.name}</>
+        groupname = pod.name
+        groupicon = <PodIcon fontSize="inherit" />
     }
 
     const paused = container.paused && <Pause fontSize="inherit" />
@@ -108,8 +114,8 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
             <span className={classes.containerName}>
                 {container.name}
             </span>
-            {group && <span className={classes.groupInfo}>
-                in <span className={classes.groupName}>{group}</span>
+            {groupicon && <span className={classes.groupInfo}>
+                in {groupicon}<span className={classes.groupName}>{groupname}</span>
             </span>}
         </span>
     )

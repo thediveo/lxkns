@@ -56,7 +56,7 @@ func discoverContainers(result *DiscoveryResult) {
 	for engine := range enginesmap {
 		engines = append(engines, engine)
 	}
-	log.Infof("discovered %s from %s",
+	log.Infof("discovered %s managed by %s",
 		plural.Elements(len(containers), "containers"),
 		plural.Elements(len(engines), "container engines"))
 	// Run registered Decorators on discovered containers.

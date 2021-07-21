@@ -4,7 +4,11 @@ services:
         image: lxkns:latest
         read_only: true
         mem_limit: 32mb
-        command: ["/lxkns", "--initialcgroup"]
+        command:
+            - "/lxkns"
+            - "--initialcgroup"
+            - "--docker=unix:///proc/1/root/run/docker.sock"
+            - "--nocontainerd"
         ports:
             - "5010:5010"
         user: "65534"
@@ -18,6 +22,7 @@ services:
             - SYS_CHROOT      # change mount namespaces
             - SYS_PTRACE      # access nsfs namespace information
             - DAC_READ_SEARCH # for fully discovering bind-mounted namespaces
+            - DAC_OVERRIDE    # for accessing the containerd API socket
         # We need the full PID view for correct scanning.
         pid: host
         # when operating in a "pure" unified cgroup hierarchy without any traces
