@@ -13,12 +13,14 @@ namespace lxkns {
   
   class "DiscoverOpts" <<(S,YellowGreen)>> {
     NamespaceTypes species.NamespaceType
-    SkipProcs bool
-    SkipTasks bool
-    SkipFds bool
-    SkipBindmounts bool
-    SkipHierarchy bool
-    SkipOwnership bool
+    ScanProcs bool
+    ScanFds bool
+    ScanBindmounts bool
+    DiscoverHierarchy bool
+    DiscoverOwnership bool
+    DiscoverFreezerState bool
+    DiscoverMounts bool
+    Containerizer containerizer.Containerizer
   }
   
   class "DiscoveryResult" <<(S,YellowGreen)>> {
@@ -27,6 +29,8 @@ namespace lxkns {
     InitialNamespaces model.NamespacesSet
     ' TODO: Root(s)
     Processes model.ProcessTable
+    Mounts NamespacedMountPathMap
+    Containers []*model.Container
   }
   
 }

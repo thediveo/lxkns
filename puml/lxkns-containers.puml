@@ -1,0 +1,49 @@
+@startuml lxkns-containers
+hide empty fields
+hide empty methods
+!define L <size:12><&link-intact></size><i>
+
+package "lxkns.model" {
+
+class Process {
+  L *Container
+}
+
+class Container {
+  ID string
+  Name string
+  PID int
+  Type string
+  Flavor string
+  Paused bool
+  Labels map[string]string
+  L Groups []*Group
+  L Engine *ContainerEngine
+  L Process *Process
+}
+
+Process <- "0,1" Container : "Container    "
+Process <- Container : "Process"
+
+class Group {
+    Name string
+    Type string
+    Flavor string
+    Labels map[string]string
+    L Containers []*Container
+}
+
+class ContainerEngine {
+    ID string
+    Type string
+    API string
+    PID int
+    L Containers []*Container
+}
+
+ContainerEngine "1" -- "1..*" Container : "  "
+Container "*" - "*" Group : "  "
+
+}
+
+@enduml

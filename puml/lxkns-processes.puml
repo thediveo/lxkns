@@ -19,10 +19,19 @@ ProcessTable -> Process : "[PID]"
 class Process {
   L Parent *Process
   L Namespaces NamespacesSet
+  L *Container
 }
 
 Process --> "7" Namespace : Namespaces
 Process "*" --> Process : Parent
+
+class Container {
+  PID int
+  L Process *Process
+}
+
+Process -> "0,1" Container : Container
+Process <- Container : "Process"
 
 }
 

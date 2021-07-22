@@ -13,6 +13,7 @@
   * [Discovery Examples](discovery-examples)
   * [(Un)marshalling Example](marshalling-example)
   * [Information Model](model)
+  * [Decorations](deco)
   * [Notes](api-notes)
 * [CLI Tools](cli)
 * [Tinkering](tinkering)
