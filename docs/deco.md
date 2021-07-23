@@ -19,14 +19,15 @@ Containers that are part of a Kubernetes pod are decorated using pod groups.
 - `Group.Type`: `"io.kubernetes.pod"`
 - `Group.Flavor`: `"io.kubernetes.pod"`
 
-The decorators additionally ensure that these container labels are even present
-for dockershim-managed containers:
+The dockershim decorator additionally ensures that the aforementioned container
+labels are even present for dockershim-managed containers:
 
 - `io.kubernetes.pod.uid`: pod UID.
-- `lxkns/k8s/container/kind`: present only if this container is a sandbox
-  ("pause") container. This **lxkns**-specific decorator label allows
-  applications to easily detect the sandbox containers of pods, regardless of
-  how the containers are managed (CRI or dockershim).
+- `lxkns/k8s/container/kind`: this label is present only if this container is a
+  sandbox ("pause") container and always has an empty `""` value. This
+  **lxkns**-specific decorator label allows applications to easily detect the
+  sandbox containers of pods, regardless of how the containers are managed (CRI
+  or dockershim).
 
 ## Decorator Plugins
 

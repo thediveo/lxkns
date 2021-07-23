@@ -44,7 +44,7 @@ The gory technical details of discovering Linux-kernel namespaces are hidden
 beneath the surface of `Discover()`. This discovery function takes discovery
 options and returns results. So far so good.
 
-![Discovering Linux kernel namespaces](_images/namespaces-discovery.png)
+![Discovering Linux kernel namespaces](_images/namespaces-discovery.svg)
 
 Instead of fiddling around with several fields of the `DiscoveryOpts` structure,
 the `Discover()` API supports the option pattern, for instance:
@@ -81,7 +81,7 @@ network interfaces, processes, filesystem mounts, et cetera.
 Linux namespaces are somewhat peculiar, as shown in this diagram – please keep
 in mind that all element names depicted below are **not** valid `lxkns` types:
 
-![Linux kernel namespaces](_images/linux-namespaces.png)
+![Linux kernel namespaces](_images/linux-namespaces.svg)
 
 - Linux kernal **namespaces have no names**; the term "namespace" originally
   derives from the first Linux namespace type implemented ever: [mount
@@ -248,7 +248,7 @@ of namespaces.
 > hierarchical "PID" and "user" namespaces provide the `Hierarchy` interface,
 > and only "user" namespaces offer the fourth `Ownership` interface.
 
-![lxkns namespaces](_images/lxkns-namespaces.png)
+![lxkns namespaces](_images/lxkns-namespaces.svg)
 
 - `Namespace`: this interface gives access to the properties common to all
   Linux kernel namespaces, as well as to what we additionally discovered and
@@ -272,7 +272,7 @@ namespaces usually have processes "attached" to them. Not least is the `proc`
 filesystem an important place to discover namespaces. `lxkns` automatically
 discovers the tree of processes, and the links between processes and namespaces.
 
-![Processes and Namespaces](_images/lxkns-processes.png)
+![Processes and Namespaces](_images/lxkns-processes.svg)
 
 To reduce interlinking, each `Namespace` only references those topmost
 processes in the process tree which are associated to it: the so-called
@@ -316,7 +316,7 @@ namespace, as well as in all the parent “PID” namespaces is stored in the
 us the PIDs, but not the namespaces. We also need the "PID" namespaces
 hieararchy in order to understand which PIDs belongs to which "PID" namespaces.
 
-![PID map](_images/pid-map.png)
+![PID map](_images/pid-map.svg)
 
 The PID translation map introduces the concept of a PID being only meaningful in
 the context of its "PID" namespace as type `NamespacedPID`. Ignoring how to
@@ -341,7 +341,7 @@ As Linux-kernel namespaces are often used as some of the technical underpinnings
 of containers, relating namespaces to containers via processes might prove quite
 helpful.
 
-![containers and more](_images/lxkns-containers.png)
+![containers and more](_images/lxkns-containers.svg)
 
 There can be only at most one `Container` per process. In particular, the
 process then is the initial process started for this container. **lxkns** does
@@ -352,8 +352,8 @@ Each and every container is associated with its managing `ContainerEngine`.
 Additionally, containers might be organized into `Group`s. Examples of groups
 are (Docker) composer projects, Kubernetes pods, et cetera. As groups typically
 are not first-class elements for container engines **lxkns** uses so-called
-"decorators" to discover and recover different types (and flavors) of container
-group memberships, usually from container labels. If necessary, applications
-integrating the **lxkns** module can easily bring in their own decorators via a
-simple plug-in mechanism (leveraging
+"[decorators](deco)" to discover and recover different [types (and
+flavors)](typesflavors) of container group memberships, usually from container
+labels. If necessary, applications integrating the **lxkns** module can easily
+bring in their own decorators via a simple plug-in mechanism (leveraging
 [thediveo/go-plugger](https://github.com/thediveo/go-plugger)).
