@@ -23,5 +23,5 @@ import (
 
 func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/mounteneer package")
+	RunSpecs(t, "lxkns/ops/mounteneer package")
 }

@@ -16,22 +16,41 @@ package mounteneer
 
 import (
 	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/thediveo/lxkns/mntnssandbox" // ensure to pull in the pre-Go initializer.
 )
 
 // MntnsSandboxBinary is the name of a binary switching into a specified mount
-// namespace and then going to sleep indefinitely.
+// namespace and then going to sleep indefinitely. The rationale for a dedicated
+// binary is that it will be much smaller than any binary containing all the
+// nice lxkns discovery stuff and thus starts much faster and consumes less
+// resources. A rough figure: ~840K on aarch64 without symbol and debug
+// information.
 const MntnsSandboxBinary = "mntnssandbox"
 
-// useFallback caches the outcome of whether the sandbox binary is available or
-// we alternatively need to fallback to re-excuting our own (larger) binary
-// instead of the small sandbox binary.
-var useFallback = true
+// sandboxBinary points either to a dedicated sandbox binary, or when
+// this binary is unavailable, to our own binary as a fallback.
+var sandboxBinary = "/proc/self/exe"
+
+// Is the dedicated mount namespace sandbox binary available? Then use that,
+// otherwise fall back to our own binary.
+func init() {
+	pathname, err := exec.LookPath(MntnsSandboxBinary)
+	if err != nil {
+		return
+	}
+	pathname, err = filepath.Abs(pathname)
+	if err == nil {
+		sandboxBinary = pathname
+	}
+}
 
 // NewPauseProcess starts a new pause process that immediately attaches itself
 // to the mount namespace referenced by mntnsref. This function only returns
@@ -43,35 +62,48 @@ var useFallback = true
 // the mount namespace and pausing when the "mntnssandbox" binary cannot be
 // found.
 func NewPauseProcess(mntnsref string) (*exec.Cmd, error) {
-	return reexecIntoPause(mntnsref)
+	return newPauseProcess(sandboxBinary, mntnsref)
 }
 
-// reexecIntoPause
-func reexecIntoPause(mntnsref string) (*exec.Cmd, error) {
-	sleepychild := exec.Command("/proc/self/exe")
+// newPauseProcess starts a new pause process using the specified sandbox
+// binary.
+func newPauseProcess(binary string, mntnsref string) (*exec.Cmd, error) {
+	sleepychild := exec.Command(binary)
 	sleepychild.Env = append(os.Environ(),
 		mntnssandbox.EnvironmentVariableName+"="+mntnsref)
+	// Stream the sandbox output live as we need to wait for the sandbox' "OK"
+	// while it hasn't yet terminated.
 	childout, err := sleepychild.StdoutPipe()
 	if err != nil {
-		panic(fmt.Sprintf("cannot re-execute into pause: %s", err.Error()))
+		panic(fmt.Sprintf("failed to prepare to start pause process: %s", err.Error()))
 	}
-	childerr, err := sleepychild.StderrPipe()
-	if err != nil {
-		panic(fmt.Sprintf("cannot re-execute into pause: %s", err.Error()))
-	}
+	// Collect all stderr output into a buffer so we have it ready when Wait()
+	// returns and has closed the pipes.
+	var childerr bytes.Buffer
+	sleepychild.Stderr = &childerr
+	// Take off...
 	if err := sleepychild.Start(); err != nil {
-		panic(fmt.Sprintf("cannot re-execute into pause: %s", err.Error()))
+		return nil, fmt.Errorf("cannot start pause process: %s", err.Error())
 	}
-	// Wait for pause process to attach to the specified mount namespace; this
-	// avoids race conditions where we otherwise would access the wrong mount
-	// namespace.
+	// Now wait for pause process to attach to the specified mount namespace;
+	// this avoids race conditions where we otherwise would access the wrong
+	// mount namespace. Of course, things might still go horribly wrong in after
+	// starting the pause process, such as with invalid mount namespace
+	// references, denied access, et cetera. So we need to deal with the pause
+	// process permaturely terminating while we wait for the "OK" that will
+	// never come...
 	okch := make(chan bool)
-	errch := make(chan error, 1) // decouple sender from (maybe missing) consumer.
+	waiterrch := make(chan error, 1) // decouple sender from (maybe missing) consumer.
 	go func() {
 		r := bufio.NewReader(childout)
 		s, err := r.ReadString('\n')
-		okch <- err == nil && s == "OK\n"
-		close(okch)
+		if err != io.EOF {
+			// Only signal if there is some output, but not if we got EOF
+			// without any output because the pause process terminated
+			// prematurely instead with an error.
+			okch <- err == nil && s == "OK\n"
+			close(okch)
+		}
 	}()
 	// Wait for the sleepychild process to terminate in the background, even
 	// after it has signalled "OK" and we have returned to the caller. The
@@ -81,35 +113,34 @@ func reexecIntoPause(mntnsref string) (*exec.Cmd, error) {
 	// avoid leaking blocked goroutines because there's none consuming the
 	// channel messages anymores.
 	go func() {
-		errch <- sleepychild.Wait()
-		close(errch)
+		waiterrch <- sleepychild.Wait()
+		close(waiterrch)
 	}()
 	// Wait for the pause process to report that it has successfully attached to
-	// the specified mount namespace, or that it has "crashed".
+	// the specified mount namespace, or alternatively that it has "crashed".
 	select {
 	case ok := <-okch:
 		// If we got at least one line of pause process stdout output and if
 		// that doesn't match what we would expect, then terminate the pause
 		// process and report an error to the caller.
 		if !ok {
-			sleepychild.Process.Kill()
+			_ = sleepychild.Process.Kill()
 			return nil, fmt.Errorf("error: unexpected pause process output")
 		}
-	case err := <-errch:
+	case err := <-waiterrch:
 		// The pause process has already terminated either with or without
 		// error: that should not happen under normal circumstances, as the
 		// pause process is supposed to pause indefinitely until we kill it.
-		// Please note that Wait() will correctly copy over all stdout/stderr
-		// output before cleaning up, so we can safely catch here any stderr
-		// output while Wait is running in a separate goroutine.
-		if sleepyerrmsg, sleepyerr := ioutil.ReadAll(childerr); len(sleepyerrmsg) != 0 {
-			return nil, fmt.Errorf("pause process failure: %s", string(sleepyerrmsg))
-		} else {
-			if err != nil {
-				return nil, err
-			}
-			return nil, fmt.Errorf("pause process failure: %s", sleepyerr.Error())
+		// Please note that we've already captured any stderr output in a buffer
+		// because we cannot read the stderr pipe after Wait() has returned ...
+		// which might have raced against us here.
+		if childerrmsg := childerr.String(); childerrmsg != "" {
+			return nil, fmt.Errorf("pause process failure: %s", childerrmsg)
 		}
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("premature pause process termination")
 	}
 	// Keep the pause ... erm, running.
 	return sleepychild, nil
