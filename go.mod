@@ -20,6 +20,7 @@ require (
 	github.com/thediveo/go-plugger v0.9.0
 	github.com/thediveo/gons v0.9.7
 	github.com/thediveo/klo v1.0.1
+	github.com/thediveo/procfsroot v0.1.0
 	github.com/thediveo/testbasher v1.0.3
 	github.com/thediveo/whalewatcher v0.4.0
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
