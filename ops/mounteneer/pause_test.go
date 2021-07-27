@@ -16,7 +16,6 @@ package mounteneer
 
 import (
 	"fmt"
-	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,19 +27,16 @@ import (
 var _ = Describe("mounteneer", func() {
 
 	It("returns error for non-existing sandbox binary", func() {
-		Errxpect(newPauseProcess("/not-existing", "/proc/self/ns/mnt")).To(MatchError(
+		Errxpect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).To(MatchError(
 			MatchRegexp(`cannot start pause process: .* /not-existing: no such file or directory`)))
 	})
 
 	It("returns sandbox errors", func() {
-		Errxpect(newPauseProcess("/proc/self/exe", "/proc/self/non-existing")).To(MatchError(
+		Errxpect(newPauseProcess("/proc/self/exe", "/proc/self/non-existing", "")).To(MatchError(
 			MatchRegexp(`invalid mount namespace reference .* No such file or directory`)))
 	})
 
 	It("mounts a mount namespace", func() {
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
@@ -56,7 +52,9 @@ read
 		var pid int
 		cmd.Decode(&pid)
 
-		p, err := NewPauseProcess(fmt.Sprintf("/proc/%d/ns/mnt", pid))
+		p, err := NewPauseProcess(
+			fmt.Sprintf("/proc/%d/ns/mnt", pid),
+			fmt.Sprintf("/proc/%d/ns/user", pid))
 		Expect(err).NotTo(HaveOccurred())
 		_ = p.Process.Kill()
 	})

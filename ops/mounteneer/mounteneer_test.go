@@ -26,8 +26,18 @@ import (
 var _ = Describe("mounteneer", func() {
 
 	It("opens a mount namespace path in initial context", func() {
+
+		/*
+			// Don't want to run a full discovery, just prime the user namespace map
+			// with the needed entry.
+			usernsmap := model.NamespaceMap{}
+			usernsid, err := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/user", pid)).ID()
+			Expect(err).NotTo(HaveOccurred())
+			usernsmap[usernsid] = namespaces.New(species.CLONE_NEWUSER, usernsid, fmt.Sprintf("/proc/%d/ns/user", pid))
+		*/
+
 		// FIXME: needs a correct test setup.
-		m, err := New([]string{"/run/snapd/ns/chromium.mnt"})
+		m, err := New([]string{"/run/snapd/ns/chromium.mnt"}, nil)
 		Expect(err).NotTo(HaveOccurred())
 		defer m.Close()
 

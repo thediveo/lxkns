@@ -61,16 +61,20 @@ func init() {
 // binary. It will automatically fall back to re-executing itself for switching
 // the mount namespace and pausing when the "mntnssandbox" binary cannot be
 // found.
-func NewPauseProcess(mntnsref string) (*exec.Cmd, error) {
-	return newPauseProcess(sandboxBinary, mntnsref)
+func NewPauseProcess(mntnsref string, usernsref string) (*exec.Cmd, error) {
+	return newPauseProcess(sandboxBinary, mntnsref, usernsref)
 }
 
 // newPauseProcess starts a new pause process using the specified sandbox
 // binary.
-func newPauseProcess(binary string, mntnsref string) (*exec.Cmd, error) {
+func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cmd, error) {
 	sleepychild := exec.Command(binary)
 	sleepychild.Env = append(os.Environ(),
-		mntnssandbox.EnvironmentVariableName+"="+mntnsref)
+		mntnssandbox.MntnsEnvironmentVariableName+"="+mntnsref)
+	if usernsref != "" {
+		sleepychild.Env = append(sleepychild.Env,
+			mntnssandbox.UsernsEnvironmentVariableName+"="+usernsref)
+	}
 	// Stream the sandbox output live as we need to wait for the sandbox' "OK"
 	// while it hasn't yet terminated.
 	childout, err := sleepychild.StdoutPipe()

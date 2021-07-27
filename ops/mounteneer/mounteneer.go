@@ -16,11 +16,13 @@ package mounteneer
 
 import (
 	"errors"
+	"io"
 	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/procfsroot"
 )
 
@@ -50,7 +52,11 @@ type Mounteneer struct {
 //
 // B. a sequence of mount namespace references that need to be opened first
 // before the final namespace reference.
-func New(refs []string) (*Mounteneer, error) {
+//
+// Specifying a map of user namespaces allows entering mount namespaces in those
+// situations where the caller has insufficient capabilities itself but has
+// sufficient capabilities in the user namespace owning the mount namespace.
+func New(refs []string, usernsmap model.NamespaceMap) (*Mounteneer, error) {
 	if len(refs) == 0 {
 		return nil, errors.New("cannot open zero mount namespace reference")
 	}
@@ -67,7 +73,7 @@ func New(refs []string) (*Mounteneer, error) {
 		// invalid.
 		if ref == "" || ref[0] != '/' {
 			if m.sandbox != nil {
-				m.sandbox.Process.Kill()
+				_ = m.sandbox.Process.Kill()
 			}
 			return nil, errors.New("invalid mount namespace reference " + ref)
 		}
@@ -104,7 +110,7 @@ func New(refs []string) (*Mounteneer, error) {
 		}
 		// Start a pause process and attach it to the mount namespace referenced
 		// by "ref" (in the mount namespace reachable via process with "pid").
-		sandbox, err := NewPauseProcess(wormholedref)
+		sandbox, err := NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap))
 		if err != nil {
 			if m.sandbox != nil {
 				_ = m.sandbox.Process.Kill()
@@ -149,4 +155,46 @@ func (m *Mounteneer) Resolve(pathname string) (string, error) {
 		return "", err
 	}
 	return m.contentsRoot + pathname, nil
+}
+
+// usernsref returns a reference to the user namespace owning a mount namespace
+// if the user namespace of the current process and the user namespace of the
+// mount namespace differ. Otherwise, it returns an empty reference "",
+// indicating that user namespace switching isn't necessary.
+//
+// Please note that usernsref does not check if switching the user namespace
+// will actually be possible.
+func (m *Mounteneer) usernsref(mntnsref string, usernsmap model.NamespaceMap) string {
+	if usernsmap == nil {
+		// Without a user namespace map we cannot determine a user namespace
+		// reference in case switching the user namespace is necessary to enter
+		// the mount namespace.
+		return ""
+	}
+	// If we're running without the necessary privileges to change into mount
+	// namespaces, but we are running under the user which is the owner of the
+	// mount namespace, then we first gain the necessary privileges by switching
+	// into the user namespace for the mount namespace we're the owner (creator)
+	// of, and then can successfully enter the mount namespaces. And yes, this
+	// is how Linux namespaces are supposed to work, and especially the user
+	// namespaces and setns().
+	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
+	mntuserns, err := ops.NamespacePath(mntnsref).User()
+	if err != nil {
+		return ""
+	}
+	mntusernsid, _ := mntuserns.ID()
+	_ = mntuserns.(io.Closer).Close() // ...do not leak.
+	if mntusernsid == ownusernsid {
+		return "" // same owning user namespace, no need to switch userns.
+	}
+	// So we want to try to switch into the user namespace owning the mount
+	// namespace first. The complication here is: the Linux kernel gave us a
+	// file descriptor and that tells us what the ID of that user namespace is.
+	// But it doesn't tell us how to address that user namespace, bummer.
+	userns, ok := usernsmap[mntusernsid]
+	if !ok {
+		return ""
+	}
+	return userns.Ref()
 }

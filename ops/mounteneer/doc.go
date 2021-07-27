@@ -1,27 +1,37 @@
 /*
 
-Package mounteneer allows accessing the filesystem contents from (other) mount
-namespaces via procfs. If necessary, support "sandbox" processes are temporarly
-deployed so that the procfs root "wormholes" can be used. This package normally
-offers less overhead compared to the original gons/reexec method.
+Package mounteneer allows accessing the file system contents from (other) mount
+namespaces via procfs. If necessary, supporting "sandbox" processes are
+temporarly deployed so that the current process can make good use of procfs root
+"wormholes". This package normally offers less overhead compared to the original
+gons/reexec method, as no marshalling and unmarshalling of information between a
+parent and the re-executed child process is necessary anymore. Additionally,
+when using a dedicated support "sandbox" binary, start time and resource
+consumption is greatly reduced, too.
 
-It abstracts away the ugly details of when and how to make a mount namespace
-(the "target mount namespaced") available to access from the current mount
-namespace, via the proc filesystem. It even handles the totally bonkers
+Mounteneers
+
+Mounteneers kind of mount mount namespaces.
+
+They abstract away the ugly details of when and how to make a mount namespace
+(the "target mount namespaced") directly accessible from the current mount
+namespace, via the proc file system. They even handle the totally bonkers
 situation where a target mount namespace can only be referenced via a series of
 bind-mounted mount namespace references (without any process using them at this
 time).
 
+Always remember: there are Engineers, Hellseneers, Mounteneers, ...
+
 Do Not Leak
 
 Make sure to always Close() any target mount namespace you (implicitly) opened
-when creating a new Mounteneer in order to access the contents inside the target
-mount namespace. Failure to do so causes some mount namespaces to become blocked
-against garbage collection by the Linux kernel until the discovery process
-finally exits (which might be "never" in case of a discovery service).
+by creating a new Mounteneer. Failure to do so causes some mount namespaces to
+become blocked against garbage collection by the Linux kernel until the
+discovery process finally exits (which might be "never" in case of a discovery
+service).
 
-Note: for the technical background please see the later technical details at the
-end of this module documentation.
+Note: for a much more detailed technical background please see the later
+technical details at the end of this module documentation.
 
 Use Cases
 
@@ -45,7 +55,7 @@ mount namespace directly, yet also directly access the target's mount namespace
 contents.
 
 This is the case when there's a process attached to the target mount namespace.
-Here, we assume that the proc filesystem has been mounted in the context of the
+Here, we assume that the proc file system has been mounted in the context of the
 initial PID namespace. This allows a discovery process, given proper capabilites
 and CAP_SYS_PTRACE in particular, to access the target mount namespace. For
 instance, we want to access mount namespace contents given the following
@@ -126,7 +136,7 @@ Wormholes
 
 The key to the inner workings of the mounteneer package is to know that Linux
 allows to access the files and directories inside a different mount namespace
-via the proc filesystem. This requires to be in a parent or same PID namespace
+via the proc file system. This requires to be in a parent or same PID namespace
 as the processes of which we want to access their mount namespaces. Typically,
 this will be the initial PID namespace with a full view on each and every
 process in the system.
@@ -149,7 +159,7 @@ namespace at start and then go to sleep, until killed. They're not supposed to
 eat, and not RAM in particular.
 
 With a sandbox process attached to a mount namespace it is now easy to access
-the files and directories inside that mount namespace via the proc filesystem
+the files and directories inside that mount namespace via the proc file system
 and the "root" elements of processes in particular.
 
 Compared to the "older" known full re-exec method (as implemented, for instance,

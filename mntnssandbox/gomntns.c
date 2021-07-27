@@ -35,22 +35,56 @@
 #include <errno.h>
 #include <limits.h>
 
-#define ENVVAR "sleepy_mntns"
+#define MNT_ENVVAR "sleepy_mntns"
+#define USER_ENVVAR "sleepy_userns"
 
 /*
  * Switch into the Linux kernel mount namespace specified through an env
  * variable. This env var references the namespace via a filesystem path. If
- * this env var is unspecified, there's nothing to switch.
+ * this env var is unspecified, there's nothing to switch. Optionally, switch
+ * the user namespace first.
  *
  * After switching (or an attempted) send a message and then block indefinitely.
  * If no switch has been requested, then it silently returns to the caller.
  */
 void gomntns(void) {
-    char *mntnsref = getenv(ENVVAR);
+    // Do we need to switch the user namespace first?
+    char *usernsref = getenv(USER_ENVVAR);
+    if (usernsref && *usernsref) {
+        int usernsfd = open(usernsref, O_RDONLY);
+        if (usernsfd < 0) {
+            dprintf(STDERR_FILENO, 
+                "package mntnssandbox: invalid user namespace reference \"%s\": %s\n", 
+                usernsref, strerror(errno));
+            exit(66);
+        }
+        /*
+         * Do not use the glibc version of setns, but go for the syscall itself.
+         * This allows us to avoid dynamically linking to glibc even when using
+         * cgo, resorting to musl, et cetera. As musl is a mixed bag in terms of
+         * its glibc compatibility, especially in such dark corners as Linux
+         * namespaces, we try to minimize potentially problematic dependencies
+         * here.
+         *
+         * A useful reference is Dominik Honnef's blog post "Statically compiled
+         * Go programs, always, even with cgo, using musl":
+         * https://dominik.honnef.co/posts/2015/06/statically_compiled_go_programs__always__even_with_cgo__using_musl/
+         */
+        long res = syscall(SYS_setns, usernsfd, CLONE_NEWUSER);
+        close(usernsfd); /* Don't leak file descriptors */
+        if (res < 0) {
+            dprintf(STDERR_FILENO,
+                "package gons: cannot join user namespace using reference \"%s\": %s\n", 
+                usernsref, strerror(errno));
+            exit(66);
+        }
+    }
+    // And now let's switch the mount namespace.
+    char *mntnsref = getenv(MNT_ENVVAR);
     if (!mntnsref || !*mntnsref) {
         return; // proceed
     }
-    // Try to reference the specified mount namespace.
+    // Try to reference the specified mount namespace and then switch.
     int mntnsfd = open(mntnsref, O_RDONLY);
     if (mntnsfd < 0) {
         dprintf(STDERR_FILENO, 
@@ -58,18 +92,6 @@ void gomntns(void) {
             mntnsref, strerror(errno));
         exit(66);
     }
-    /*
-    * Do not use the glibc version of setns, but go for the syscall
-    * itself. This allows us to avoid dynamically linking to glibc
-    * even when using cgo, resorting to musl, et cetera. As musl is a
-    * mixed bag in terms of its glibc compatibility, especially in
-    * such dark corners as Linux namespaces, we try to minimize
-    * problematic dependencies here.
-    *
-    * A useful reference is Dominik Honnef's blog post "Statically
-    * compiled Go programs, always, even with cgo, using musl":
-    * https://dominik.honnef.co/posts/2015/06/statically_compiled_go_programs__always__even_with_cgo__using_musl/
-    */
     long res = syscall(SYS_setns, mntnsfd, CLONE_NEWNS);
     close(mntnsfd); /* Don't leak file descriptors */
     if (res < 0) {

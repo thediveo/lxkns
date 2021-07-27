@@ -22,6 +22,7 @@ void __attribute__((constructor)) mntnssandboxinit(void) {
 */
 import "C"
 
-const EnvironmentVariableName = "sleepy_mntns"
+const MntnsEnvironmentVariableName = "sleepy_mntns"
+const UsernsEnvironmentVariableName = "sleepy_userns"
 
 // There's nothing else here; gomntns will never return.
