@@ -17,7 +17,9 @@ package mounteneer
 import (
 	"errors"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -90,7 +92,11 @@ func New(refs []string, usernsmap model.NamespaceMap) (*Mounteneer, error) {
 			}
 			// This is a (single) proc filesystem reference that we can directly
 			// reference without any need for pause processes.
-			m.contentsRoot = ref
+			r := strings.SplitN(ref, "/", 4)
+			if len(r) < 4 || r[3] == "" {
+				return nil, errors.New("invalid " + ref + " mount namespace reference")
+			}
+			m.contentsRoot = "/proc/" + r[2] + "/root"
 			return m, nil
 		}
 		// It's a bind-mounted mount namespace reference, to be taken in the
@@ -141,16 +147,41 @@ func (m *Mounteneer) Close() {
 	}
 }
 
+// Open opens the named file for reading, resolving the specified name correctly
+// for any symbolic links in the context of the particular mount namespace.
+func (m *Mounteneer) Open(name string) (*os.File, error) {
+	return m.OpenFile(name, os.O_RDONLY, 0)
+}
+
+// OpenFile opens the named file with the specified flag, using the mode perm
+// when creating new files. The specified name is resolved correctly for any
+// symbolic links in the context of the particular mount namespace.
+func (m *Mounteneer) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
+	pathname, err := m.Resolve(name)
+	if err != nil {
+		return nil, err
+	}
+	return os.OpenFile(pathname, flag, perm)
+}
+
 // Resolve resolves a pathname inside the open mount namespace to a pathname
 // that can be used by a caller in a different mount namespace, using a
-// host-wide PID view.
+// host-wide PID view. If the specified pathname is not absolute it is taken
+// relative to the current working directory.
 func (m *Mounteneer) Resolve(pathname string) (string, error) {
+	var err error
+	pathname, err = filepath.Abs(pathname)
+	if err != nil {
+		return "", err
+	}
+	// If we don't need to use a wormhole to a different mount namespace then
+	// simply return the absolute path as is.
 	if m.contentsRoot == "" {
 		return pathname, nil
 	}
 	// EvalSymlinks returns the evaluated paths always as absolute, but without
 	// the separate (prefixing) root.
-	pathname, err := procfsroot.EvalSymlinks(pathname, m.contentsRoot, procfsroot.EvalFullPath)
+	pathname, err = procfsroot.EvalSymlinks(pathname, m.contentsRoot, procfsroot.EvalFullPath)
 	if err != nil {
 		return "", err
 	}

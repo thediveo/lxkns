@@ -17,16 +17,45 @@ package mounteneer
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/testbasher"
 )
 
 var _ = Describe("mounteneer", func() {
+
+	It("does not accept empty references", func() {
+		Errxpect(New(nil, nil)).To(HaveOccurred())
+		Errxpect(New([]string{""}, nil)).To(HaveOccurred())
+		Errxpect(New([]string{"foobar"}, nil)).To(HaveOccurred())
+		Errxpect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).To(HaveOccurred())
+		Errxpect(New([]string{"/proc/self"}, nil)).To(HaveOccurred())
+		Errxpect(New([]string{"/proc/self/"}, nil)).To(HaveOccurred())
+	})
+
+	It("resolves paths", func() {
+		m, err := New([]string{"/proc/self/ns/mnt"}, nil)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(m.contentsRoot).To(Equal("/proc/self/root"))
+		pwd, err := filepath.Abs("")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(m.Resolve("")).To(Equal("/proc/self/root" + pwd))
+	})
+
+	It("opens", func() {
+		m, err := New([]string{"/proc/self/ns/mnt"}, nil)
+		Expect(err).NotTo(HaveOccurred())
+		f, err := m.Open("mounteneer_test.go")
+		Expect(err).NotTo(HaveOccurred())
+		f.Close()
+		Errxpect(m.Open("foobar.go")).To(HaveOccurred())
+	})
 
 	It("opens a mount namespace path in initial context", func() {
 		if os.Getegid() != 0 {
@@ -145,6 +174,10 @@ read # wait for test to proceed()
 			fmt.Sprintf("/proc/%d/root%s", m.sandbox.Process.Pid, canary)))
 
 		f, err := os.Open(path)
+		Expect(err).NotTo(HaveOccurred())
+		f.Close()
+
+		f, err = m.Open(canary)
 		Expect(err).NotTo(HaveOccurred())
 		f.Close()
 
