@@ -47,7 +47,7 @@
  * After switching (or an attempted) send a message and then block indefinitely.
  * If no switch has been requested, then it silently returns to the caller.
  */
-void gomntns(void) {
+void gosandbox(void) {
     // Do we need to switch the user namespace first?
     char *usernsref = getenv(USER_ENVVAR);
     if (usernsref && *usernsref) {
@@ -103,6 +103,6 @@ void gomntns(void) {
     // Work suckzessfully done. Sleep.
     dprintf(STDOUT_FILENO, "OK\n");
     for (;;) {
-        pause();
+        pause(); // pause might get interrupted, so wrap it.
     }
 }

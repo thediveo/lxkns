@@ -15,9 +15,9 @@
 package mntnssandbox
 
 /*
-extern void gomntns(void);
+extern void gosandbox(void);
 void __attribute__((constructor)) mntnssandboxinit(void) {
-	gomntns();
+	gosandbox();
 }
 */
 import "C"

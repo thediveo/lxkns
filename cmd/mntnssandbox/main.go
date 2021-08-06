@@ -14,7 +14,7 @@
 
 package main
 
-import _ "github.com/thediveo/lxkns/mntnssandbox" // it's all fine.
+import _ "github.com/thediveo/lxkns/ops/mounteneer/mntnssandbox" // it's all fine.
 
 func main() {
 	panic("missing mount namespace reference")

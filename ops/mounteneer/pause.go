@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/thediveo/lxkns/mntnssandbox" // ensure to pull in the pre-Go initializer.
+	"github.com/thediveo/lxkns/ops/mounteneer/mntnssandbox" // ensure to pull in the pre-Go initializer.
 )
 
 // MntnsSandboxBinary is the name of a binary switching into a specified mount

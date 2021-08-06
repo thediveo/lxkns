@@ -16,30 +16,116 @@ package mounteneer
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
+	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/testbasher"
 )
 
 var _ = Describe("mounteneer", func() {
 
 	It("opens a mount namespace path in initial context", func() {
+		if os.Getegid() != 0 {
+			// This unit test cannot be run inside a user namespace :(
+			Skip("needs root")
+		}
 
-		/*
-			// Don't want to run a full discovery, just prime the user namespace map
-			// with the needed entry.
-			usernsmap := model.NamespaceMap{}
-			usernsid, err := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/user", pid)).ID()
-			Expect(err).NotTo(HaveOccurred())
-			usernsmap[usernsid] = namespaces.New(species.CLONE_NEWUSER, usernsid, fmt.Sprintf("/proc/%d/ns/user", pid))
-		*/
+		// This test harness is admittedly involved: we create a new mount
+		// namespace and then bind-mount it. Unfortunately, bind-mounting mount
+		// namespaces is more restricted and tricky than bind-mounting a network
+		// namespace, see also: https://unix.stackexchange.com/a/473819. And we
+		// also want to be able to correctly identify the use of the proper
+		// mount namespace by placing a file into it not visible from the mount
+		// namespace the test runs in.
+		scripts := testbasher.Basher{}
+		defer scripts.Done()
 
-		// FIXME: needs a correct test setup.
-		m, err := New([]string{"/run/snapd/ns/chromium.mnt"}, nil)
+		bm := "/tmp/lxkns-unittest-bindmountpoint"
+		td := "/tmp/lxkns-unittest-data"
+		canary := td + "/killroy.was.here"
+
+		scripts.Common(fmt.Sprintf(`bm=%s
+td=%s
+canary=%s`, bm, td, canary))
+		scripts.Common(nstest.NamespaceUtilsScript)
+
+		scripts.Script("main1", `
+umount $bm || /bin/true
+umount $bm || /bin/true
+touch $bm
+mount --bind $bm $bm
+mount --make-private $bm
+
+umount $td || /bin/true
+umount $td || /bin/true
+mkdir -p $td
+mount --bind $td $td
+mount --make-private $td
+
+echo "\"\""
+
+read PID # wait for test to proceed()
+mount --bind /proc/$PID/ns/mnt $bm
+
+echo "\"\""
+
+read # wait for test to proceed()
+umount $bm || /bin/true
+umount $bm || /bin/true
+rm $bm
+umount $td || /bin/true
+umount $td || /bin/true
+rmdir $td
+`)
+
+		scripts.Script("main2", `
+unshare -m $stage2
+`)
+		scripts.Script("stage2", `
+mount -t tmpfs -o size=1m tmpfs $td
+touch $canary
+echo $$
+process_namespaceid mnt # prints the "current" mount namespace ID.
+read # wait for test to proceed()
+`)
+		cmd := scripts.Start("main1")
+		defer cmd.Close() // ...just in case of slight panic
+		var dummy string
+		cmd.Decode(&dummy)
+
+		// create new mount namespace, mount a tmpfs into it and create the
+		// canary file.
+		cmd2 := scripts.Start("main2")
+		defer cmd.Close()
+		var pid int
+		cmd2.Decode(&pid)
+		mntnsid := nstest.CmdDecodeNSId(cmd2)
+
+		// tell the first script to bind-mount the new mount namespace.
+		cmd.Tell(strconv.Itoa(pid))
+		cmd.Decode(&dummy)
+
+		// we don't need to keep the second script anymore, as the mount
+		// namespace is now kept alive via the bind-mount.
+		cmd2.Close()
+
+		// sanity check that the bind-mount points to the expected mount namespace.
+		bmnsid, err := ops.NamespacePath(bm).ID()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bmnsid).To(Equal(mntnsid))
+
+		// tell the mounteneer to sandbox the newly created mount namespace via
+		// the bind-mount reference.
+		m, err := New([]string{bm}, nil)
 		Expect(err).NotTo(HaveOccurred())
 		defer m.Close()
+
+		// canary must not be visible in this mount namespace
+		Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
 
 		// It must have created a sandbox/pause process.
 		Expect(m.sandbox).NotTo(BeNil())
@@ -53,16 +139,14 @@ var _ = Describe("mounteneer", func() {
 			fmt.Sprintf("/proc/%d/root", m.sandbox.Process.Pid)))
 
 		// Content path resolution must be correct.
-		path, err := m.Resolve("/writable")
+		path, err := m.Resolve(canary)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(path).To(Equal(
-			fmt.Sprintf("/proc/%d/root/writable", m.sandbox.Process.Pid)))
+			fmt.Sprintf("/proc/%d/root%s", m.sandbox.Process.Pid, canary)))
 
-		root, err := m.Resolve("/")
+		f, err := os.Open(path)
 		Expect(err).NotTo(HaveOccurred())
-		files, err := ioutil.ReadDir(root)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(files).NotTo(BeEmpty())
+		f.Close()
 
 		// Correctly stops the sandbox process -- no sandbox leaks, please.
 		m.Close()

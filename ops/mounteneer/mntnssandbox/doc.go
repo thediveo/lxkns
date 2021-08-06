@@ -1,10 +1,10 @@
 /*
 
 Package mntnssandbox is a single-purpose, stripped-down version of
-thediveo/gons. Our variant here only supports switching the mount and user
-namespaces, and then immediately goes into endless sleep. There's neither
-switching multiple other namespaces nor running any registered action. All there
-is is endless sleep.
+thediveo/gons. Our variant here only supports switching the mount namespace and
+optionally the user namespace, and then immediately goes into endless sleep.
+There's neither switching (multiple) other namespaces nor running any registered
+action. All there is is endless sleep.
 
 Why should this be useful at all? For accessing the contents of a mount
 namespace (target mount namespace) different from the mount namespace of the
