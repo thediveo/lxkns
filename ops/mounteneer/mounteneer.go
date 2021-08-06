@@ -188,6 +188,14 @@ func (m *Mounteneer) Resolve(pathname string) (string, error) {
 	return m.contentsRoot + pathname, nil
 }
 
+// PID returns the PID of the sandbox process (if any), or this process' PID.
+func (m *Mounteneer) PID() model.PIDType {
+	if m.sandbox == nil {
+		return model.PIDType(os.Getpid())
+	}
+	return model.PIDType(m.sandbox.Process.Pid)
+}
+
 // usernsref returns a reference to the user namespace owning a mount namespace
 // if the user namespace of the current process and the user namespace of the
 // mount namespace differ. Otherwise, it returns an empty reference "",

@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/errxpect"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/testbasher"
@@ -51,6 +52,9 @@ var _ = Describe("mounteneer", func() {
 	It("opens", func() {
 		m, err := New([]string{"/proc/self/ns/mnt"}, nil)
 		Expect(err).NotTo(HaveOccurred())
+
+		Expect(m.PID()).To(Equal(model.PIDType(os.Getpid())))
+
 		f, err := m.Open("mounteneer_test.go")
 		Expect(err).NotTo(HaveOccurred())
 		f.Close()
@@ -166,6 +170,8 @@ read # wait for test to proceed()
 		// the contentsroot must be set to the sandbox process.
 		Expect(m.contentsRoot).To(Equal(
 			fmt.Sprintf("/proc/%d/root", m.sandbox.Process.Pid)))
+
+		Expect(m.PID()).To(Equal(model.PIDType(m.sandbox.Process.Pid)))
 
 		// Content path resolution must be correct.
 		path, err := m.Resolve(canary)
