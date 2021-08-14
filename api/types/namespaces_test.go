@@ -172,14 +172,14 @@ func refifnotempty(ref model.NamespaceRef) string {
 	if err != nil {
 		panic(err)
 	}
-	return `"reference": [` + string(b) + `],`
+	return `"reference": ` + string(b) + `,`
 }
 
 var _ = Describe("namespaces JSON", func() {
 
 	It("always gets a Namespace from the dictionary", func() {
 		d := NewNamespacesDict(nil)
-		uns := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
+		uns := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
 		d.AllNamespaces[model.UserNS][uns.ID()] = uns
 
 		ns := d.Get(uns.ID(), uns.Type())

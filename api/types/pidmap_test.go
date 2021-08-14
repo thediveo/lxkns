@@ -36,8 +36,8 @@ var _ = Describe("PIDMap twin", func() {
 			[{"pid": 666,"nsid": 1},{"pid": 1,"nsid": 2}],
 			[{"pid": 777,"nsid": 1}]
 		]`
-		rootpidns   = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(1), "")
-		pidns2      = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(2), "")
+		rootpidns   = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(1), nil)
+		pidns2      = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(2), nil)
 		proc666pids = model.NamespacedPIDs{
 			model.NamespacedPID{PID: 666, PIDNS: rootpidns},
 			model.NamespacedPID{PID: 1, PIDNS: pidns2},
