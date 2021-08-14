@@ -108,7 +108,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Dis
 				continue
 			}
 			log.Debugf("found namespace %s:[%d]", nstype.Name(), nsid.Ino)
-			result.Namespaces[nstypeidx][nsid] = namespaces.New(
+			result.Namespaces[nstypeidx][nsid] = namespaces.NewWithSimpleRef(
 				nstype, nsid, basepath+"/"+fdentry.Name())
 			total++
 		}

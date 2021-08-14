@@ -162,11 +162,17 @@ func childlist(hns model.Hierarchy) string {
 	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
 }
 
-func refifnotempty(ref string) string {
-	if ref == "" {
+// returns a "reference:ref," string to insert into a JSON object serialization,
+// if the specified reference isn't empty.
+func refifnotempty(ref model.NamespaceRef) string {
+	if len(ref) == 0 {
 		return ""
 	}
-	return `"reference": "` + ref + `",`
+	b, err := json.Marshal(ref)
+	if err != nil {
+		panic(err)
+	}
+	return `"reference": [` + string(b) + `],`
 }
 
 var _ = Describe("namespaces JSON", func() {

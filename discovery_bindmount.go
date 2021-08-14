@@ -83,9 +83,9 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			if !ok {
 				// As we haven't seen this namespace yet, record it with our
 				// results.
-				ns = namespaces.New(bmntns.Type, bmntns.ID, "")
+				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)
 				result.Namespaces[typeidx][bmntns.ID] = ns
-				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Path)
+				ns.(namespaces.NamespaceConfigurer).SetRef(model.NamespaceRef{bmntns.Path}) // FIXME:!!!
 				log.Debugf("found namespace %s:[%d] bind-mounted at %q",
 					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Path)
 				total++

@@ -76,7 +76,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 		// For climbing up the hierarchy, Linux wants us to give it file
 		// descriptors referencing the namespaces to be queried for their
 		// parents.
-		f, err := os.Open(ns.Ref())
+		f, err := os.Open(ns.Ref()[0]) // FIXME: turn down multi-element references
 		if err != nil {
 			continue
 		}
@@ -132,7 +132,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 				//
 				// Anyway, we need to create a new namespace node for what we
 				// found.
-				parentns = namespaces.New(nstype, parentnsid, "")
+				parentns = namespaces.New(nstype, parentnsid, nil)
 				nsmap[parentnsid] = parentns
 				log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
 				hidden++

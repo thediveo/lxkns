@@ -67,7 +67,7 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 			// such a process-less mount namespace, we use a mounteneer to
 			// handle the ugly details of providing a sandbox process that gives
 			// us access to the mount namespace.
-			mnteer, err := mounteneer.New([]string{mountns.Ref()},
+			mnteer, err := mounteneer.New(mountns.Ref(),
 				result.Namespaces[model.UserNS])
 			if err != nil {
 				log.Errorf("could not discover mount points in mnt:[%d]: %s",

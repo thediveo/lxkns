@@ -38,7 +38,7 @@ func MountEnterNamespaces(
 	// user namespaces and setns(), are supposed to work.
 	ownusernsid, _ := ops.NamespacePath("/proc/self/ns/user").ID()
 	enterns := []model.Namespace{mntns}
-	if usermntnsref, err := ops.NamespacePath(mntns.Ref()).User(); err == nil {
+	if usermntnsref, err := ops.NamespacePath(mntns.Ref()[0]).User(); err == nil { // FIXME:!!!
 		usernsid, _ := usermntnsref.ID()
 		// Do not leak, release user namespace immediately, as we're done with
 		// it.

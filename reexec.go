@@ -38,7 +38,7 @@ func ReexecIntoActionEnv(actionname string, namespaces []model.Namespace, envvar
 	rexns := make([]reexec.Namespace, len(namespaces))
 	for idx := range namespaces {
 		rexns[idx].Type = "!" + namespaces[idx].Type().Name()
-		rexns[idx].Path = namespaces[idx].Ref()
+		rexns[idx].Path = namespaces[idx].Ref()[0] // FIXME: !!!
 	}
 	return reexec.RunReexecAction(
 		actionname,

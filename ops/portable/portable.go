@@ -52,7 +52,7 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 			return nil, nil, fmt.Errorf("cannot locate namespace %s:[%d]",
 				portref.Type.Name(), portref.ID.Ino)
 		}
-		path = ns.Ref()
+		path = ns.Ref()[0] // FIXME: handle bind-mounted references
 	}
 	// Before we run further checks, we have to open the namespace first, so
 	// that it cannot get destroyed anymore as long as we keep the fd open that

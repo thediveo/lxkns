@@ -125,30 +125,31 @@ type Namespace interface {
 	// with the device ID of that nsfs filesystem. IDs cannot be set as only the
 	// Linux allocates and manages them.
 	ID() species.NamespaceID
-	// Type returns the type of namespace in form of one of the NamespaceType, such
-	// as species.CLONE_NEWNS, species.CLONE_NEWCGROUP, et cetera.
+	// Type returns the type of namespace in form of one of the NamespaceType,
+	// such as species.CLONE_NEWNS, species.CLONE_NEWCGROUP, et cetera.
 	Type() species.NamespaceType
 	// Owner returns the user namespace "owning" this namespace. For user
 	// namespaces, Owner always returns nil; use Hierarchy.Parent() instead, as
 	// the owner of a user namespace is its parent user namespace.
 	Owner() Ownership
-	// Ref returns a filesystem path suitable for referencing this namespace. A zero
-	// ref indicates that there is no reference path available: this is the case for
-	// "hidden" PID and user namespaces sandwiched in between PID or user namespaces
+	// Ref returns a filesystem path (or sequence of paths, see NamespaceRef for
+	// details) suitable for referencing this namespace. A zero ref indicates
+	// that there is no reference path available: this is the case for "hidden"
+	// PID and user namespaces sandwiched in between PID or user namespaces
 	// where reference paths are available, because these other namespaces have
-	// processes joined to them, or are either bind-mounted or fd-referenced. Hidden
-	// PID namespaces can appear only when there is no process in any of their child
-	// namespaces and the child PID namespace(s) is bind-mounted or fd-references
-	// (the parent PID namespace is then kept alive because the child PID namespaces
-	// are kept alive).
-	Ref() string
+	// processes joined to them, or are either bind-mounted or fd-referenced.
+	// Hidden PID namespaces can appear only when there is no process in any of
+	// their child namespaces and the child PID namespace(s) is bind-mounted or
+	// fd-references (the parent PID namespace is then kept alive because the
+	// child PID namespaces are kept alive).
+	Ref() NamespaceRef
 	// Leaders returns an unsorted list of Process-es which are joined to this
 	// namespace and which are the topmost processes in the process tree still
 	// joined to this namespace.
 	Leaders() []*Process
-	// LeaderPIDs returns the list of leader PIDs. This is a convenience method for
-	// those use cases where just a list of leader process PIDs is needed, but not
-	// the leader Process objects themselves.
+	// LeaderPIDs returns the list of leader PIDs. This is a convenience method
+	// for those use cases where just a list of leader process PIDs is needed,
+	// but not the leader Process objects themselves.
 	LeaderPIDs() []PIDType // "leader" process PIDs only.
 	// Ealdorman returns the most senior leader process. The "most senior"
 	// process is the one which was created at the earliest, based on the start
@@ -159,6 +160,20 @@ type Namespace interface {
 	// and optionally information about owner, children, parent.
 	String() string
 }
+
+// NamespaceRef is a filesystem reference to a namespace. It can be a single
+// path, such as "/proc/1/ns/net" or "/proc/666/fd/6" in case the namespace can
+// be referenced from any mount namespace (as long as there's a procfs mounted
+// in the usual place). For bind-mounted namespaces this is either a single-path
+// optimized reference or a multi-path reference. In this latter case the first
+// path is to be interpreted in the context of PID 1 and references a mount
+// namespace. All following paths, except for the last path in case of non-mount
+// namespaces, are then to be taken relative in that mount namespace referenced
+// by the previous element.
+//
+// If this does sound moonstruck, then it most probably is. But didn't we said
+// "in every nook and cranny"?
+type NamespaceRef []string
 
 // NamespaceStringer describes a namespace either in its descriptive form when
 // using the well-known String() method, or in a terse format when going for

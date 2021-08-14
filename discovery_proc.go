@@ -90,7 +90,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			// leader process, and not of some child process deep down the
 			// hierarchy, which might not even live for long (as sad as this
 			// might be).
-			ns = namespaces.New(nstype, nsid, "")
+			ns = namespaces.New(nstype, nsid, nil)
 			nsmap[nsid] = ns
 			log.Debugf("found namespace %s", ns.(model.NamespaceStringer).TypeIDString())
 			total++
@@ -145,7 +145,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 	for _, ns := range nsmap {
 		if senior := ns.Ealdorman(); senior != nil {
 			ns.(namespaces.NamespaceConfigurer).SetRef(
-				fmt.Sprintf("/proc/%d/ns/%s", senior.PID, nstypename))
+				model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/%s", senior.PID, nstypename)})
 		}
 	}
 

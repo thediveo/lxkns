@@ -11,7 +11,7 @@ import (
 // types don't support polymorphism. On the other hand, thousands of blog
 // posts and SO answers cannot be wrong, more so, the more upvotes they
 // accumulated ;)
-func New(nstype species.NamespaceType, nsid species.NamespaceID, ref string) model.Namespace {
+func New(nstype species.NamespaceType, nsid species.NamespaceID, ref model.NamespaceRef) model.Namespace {
 	switch nstype {
 	case species.CLONE_NEWUSER:
 		// Someone please tell me that golang actually makes sense... at least
@@ -42,4 +42,11 @@ func New(nstype species.NamespaceType, nsid species.NamespaceID, ref string) mod
 	default:
 		return &PlainNamespace{nsid: nsid, nstype: nstype, ref: ref}
 	}
+}
+
+// NewWithSimpleRef returns a new zero'ed namespace object via New and takes a
+// "simple" namespace reference path (as opposed to a full-blown reference path
+// slice).
+func NewWithSimpleRef(nstype species.NamespaceType, nsid species.NamespaceID, ref string) model.Namespace {
+	return New(nstype, nsid, []string{ref})
 }
