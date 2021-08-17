@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("maps UIDs", func() {
 
-	It("returns same information as direct query", func() {
+	It("returns same information as library queries", func() {
 		myuid := os.Getuid()
 		u, err := user.LookupId(strconv.FormatUint(uint64(myuid), 10))
 		Expect(err).To(Succeed())
@@ -40,17 +40,7 @@ var _ = Describe("maps UIDs", func() {
 		Expect(u).NotTo(BeNil())
 		rootname := u.Username
 
-		unames := userNamesFromPasswd()
-		Expect(unames).To(HaveKeyWithValue(uint32(0), rootname))
-		Expect(unames).To(HaveKeyWithValue(uint32(myuid), myusername))
-
-		unames = map[uint32]string{}
-		err = ReexecIntoActionEnv(
-			"discover-uid-names",
-			[]model.Namespace{},
-			nil,
-			&unames)
-		Expect(err).To(Succeed())
+		unames := userNamesFromPasswd(etcpasswd)
 		Expect(unames).To(HaveKeyWithValue(uint32(0), rootname))
 		Expect(unames).To(HaveKeyWithValue(uint32(myuid), myusername))
 	})

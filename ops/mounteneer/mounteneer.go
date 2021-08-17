@@ -25,6 +25,7 @@ import (
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/procfsroot"
 )
 
@@ -42,6 +43,30 @@ type Mounteneer struct {
 	contentsRoot string
 	// pause/sandbox process, if any.
 	sandbox *exec.Cmd
+	// PID to report back: this can be either of the pause/sandbox process or
+	// PID 1, depending on the reference: this allows API users to unify usage
+	// without having to differentiate between having a sandbox and PID or not
+	// when dealing with existing Go modules working on /proc nodes.
+	pid model.PIDType
+}
+
+// NewWithMountNamespace is like New, but instead expects a mount namespace
+// interface as opposed to a namespace reference in form of one or more VFS
+// paths. It only accepts mount namespaces, not any other type of namespace. It
+// optimizes the case where the mount namespace has a process attached.
+func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap) (*Mounteneer, error) {
+	if mountns.Type() != species.CLONE_NEWNS {
+		return nil, errors.New("invalid non-mount namespace " +
+			mountns.(model.NamespaceStringer).TypeIDString())
+	}
+	if ealdorman := mountns.Ealdorman(); ealdorman != nil {
+		return &Mounteneer{
+			ref:          mountns.Ref(),
+			contentsRoot: "/proc/" + strconv.FormatUint(uint64(ealdorman.PID), 10) + "/root",
+			pid:          ealdorman.PID,
+		}, nil
+	}
+	return New(mountns.Ref(), usernsmap)
 }
 
 // New opens the mount namespace for file access and returns a new managing
@@ -70,7 +95,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 	pid := model.PIDType(0) // sic! we won't want to kill the init process ;)
 	// Now work along the list of mount namespace references, switching contexts
 	// along the way as we make progress...
-	for _, refpath := range ref {
+	for idx, refpath := range ref {
 		// Sanity check: empty and non-absolute reference paths are considered
 		// invalid.
 		if refpath == "" || refpath[0] != '/' {
@@ -79,11 +104,11 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 			}
 			return nil, errors.New("invalid mount namespace reference " + refpath)
 		}
-		// Sanity check: only a single final reference is allowed to reference
-		// the proc filesystem. Otherwise, we consider any stray proc filesystem
-		// reference to be a violation.
+		// Sanity check: only a single (=first) reference is allowed to
+		// reference the proc filesystem. Otherwise, we consider any stray proc
+		// filesystem reference to be a violation.
 		if strings.HasPrefix(refpath, "/proc/") {
-			if len(ref) > 1 {
+			if idx != 0 {
 				if m.sandbox != nil {
 					_ = m.sandbox.Process.Kill()
 				}
@@ -92,11 +117,19 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 			}
 			// This is a (single) proc filesystem reference that we can directly
 			// reference without any need for pause processes.
+			//
+			//      / proc / $PID / root / ...
+			//  [0]   [1]    [2]   [3]     [4]...
 			r := strings.SplitN(refpath, "/", 4)
 			if len(r) < 4 || r[3] == "" {
 				return nil, errors.New("invalid " + refpath + " mount namespace reference")
 			}
+			pid, err := strconv.Atoi(r[2])
+			if err != nil || pid <= 0 {
+				return nil, errors.New("invalid " + refpath + " mount namespace reference")
+			}
 			m.contentsRoot = "/proc/" + r[2] + "/root"
+			m.pid = model.PIDType(pid)
 			return m, nil
 		}
 		// It's a bind-mounted mount namespace reference, to be taken in the
@@ -131,10 +164,11 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 		if m.sandbox != nil {
 			_ = m.sandbox.Process.Kill()
 		}
+		m.pid = pid
 		m.sandbox = sandbox // switch over, and rinse+repeat.
 		m.contentsRoot = "/proc/" + strconv.FormatUint(uint64(pid), 10) + "/root"
 	}
-	// Keep the last sandbox open.
+	// ...and we keep the last sandbox open.
 	return m, nil
 }
 
@@ -188,12 +222,10 @@ func (m *Mounteneer) Resolve(pathname string) (string, error) {
 	return m.contentsRoot + pathname, nil
 }
 
-// PID returns the PID of the sandbox process (if any), or this process' PID.
+// PID returns the PID of the sandbox process (if any), or PID 1 in case a
+// sandbox wasn't needed.
 func (m *Mounteneer) PID() model.PIDType {
-	if m.sandbox == nil {
-		return model.PIDType(os.Getpid())
-	}
-	return model.PIDType(m.sandbox.Process.Pid)
+	return m.pid
 }
 
 // usernsref returns a reference to the user namespace owning a mount namespace

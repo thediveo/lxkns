@@ -54,32 +54,19 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 	result.Mounts = NamespacedMountPathMap{}
 	mountpointtotal := 0
 	for mntid, mountns := range result.Namespaces[model.MountNS] {
-		var mountpoints []mntinfo.Mountinfo
-		if ealdorman := mountns.Ealdorman(); ealdorman != nil {
-			// As we have a process attached to the mount namespace in question,
-			// we can directly gather the mount point information from that
-			// process -- albeit there's a slight catch here: if the ealdorman
-			// has chroot'ed then we won't get the full original picture.
-			mountpoints = mntinfo.MountsOfPid(int(ealdorman.PID))
-		} else {
-			// This is a bind-mounted mount namespace without any process at the
-			// moment. In order to be able to get mount point information for
-			// such a process-less mount namespace, we use a mounteneer to
-			// handle the ugly details of providing a sandbox process that gives
-			// us access to the mount namespace.
-			mnteer, err := mounteneer.New(mountns.Ref(),
-				result.Namespaces[model.UserNS])
-			if err != nil {
-				log.Errorf("could not discover mount points in mnt:[%d]: %s",
-					mountns.ID().Ino, err.Error())
-				continue
-			}
-			log.Debugf("reading mount point information from bind-mounted mnt:[%d] (%q)...",
-				mountns.ID().Ino, mountns.Ref())
-			// Warp speed Mr Sulu, through the proc root wormhole!
-			mountpoints = mntinfo.MountsOfPid(int(mnteer.PID()))
-			mnteer.Close()
+		mnteer, err := mounteneer.NewWithMountNamespace(
+			mountns,
+			result.Namespaces[model.UserNS])
+		if err != nil {
+			log.Errorf("could not discover mount points in mnt:[%d]: %s",
+				mountns.ID().Ino, err.Error())
+			continue
 		}
+		log.Debugf("reading mount point information from bind-mounted mnt:[%d] (%q)...",
+			mountns.ID().Ino, mountns.Ref())
+		// Warp speed Mr Sulu, through the proc root wormhole!
+		mountpoints := mntinfo.MountsOfPid(int(mnteer.PID()))
+		mnteer.Close()
 		log.Debugf("mnt:[%d] contains %s",
 			mountns.ID().Ino, plural.Elements(len(mountpoints), "mount points"))
 		mountpointtotal += len(mountpoints)

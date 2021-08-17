@@ -41,16 +41,18 @@ var _ = Describe("mounteneer", func() {
 	})
 
 	It("resolves paths", func() {
-		m, err := New([]string{"/proc/self/ns/mnt"}, nil)
+		pid := os.Getpid()
+		m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(m.contentsRoot).To(Equal("/proc/self/root"))
+		Expect(m.contentsRoot).To(Equal(fmt.Sprintf("/proc/%d/root", pid)))
 		pwd, err := filepath.Abs("")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(m.Resolve("")).To(Equal("/proc/self/root" + pwd))
+		Expect(m.Resolve("")).To(Equal(fmt.Sprintf("/proc/%d/root%s", pid, pwd)))
 	})
 
 	It("opens", func() {
-		m, err := New([]string{"/proc/self/ns/mnt"}, nil)
+		pid := os.Getpid()
+		m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(m.PID()).To(Equal(model.PIDType(os.Getpid())))
