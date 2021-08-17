@@ -92,7 +92,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryR
 			// might be).
 			ns = namespaces.New(nstype, nsid, nil)
 			nsmap[nsid] = ns
-			log.Debugf("found namespace %s", ns.(model.NamespaceStringer).TypeIDString())
+			log.Debugf("found namespace %s at %s", ns.(model.NamespaceStringer).TypeIDString(), nsref)
 			total++
 		}
 		// To speed up finding the process leaders in a specific namespace, we

@@ -80,8 +80,8 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)
 				result.Namespaces[typeidx][bmntns.ID] = ns
 				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Ref)
-				log.Debugf("found bind-mounted namespace %s:[%d] at %q",
-					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref)
+				log.Debugf("found bind-mounted namespace %s:[%d] at %s",
+					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref.String())
 				total++
 				// And if its a mount namespace we haven't yet visited, add it
 				// to our backlock.
@@ -108,14 +108,14 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 		if _, ok := visitedmntns[mntns.ID()]; ok {
 			continue // We already visited you ... next one!
 		}
-		log.Debugf("scanning mnt:[%d] (%q) for bind-mounted namespaces...",
-			mntns.ID().Ino, mntns.Ref())
+		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
+			mntns.ID().Ino, mntns.Ref().String())
 		visitedmntns[mntns.ID()] = true
 
 		mnteer, err := mounteneer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
-			log.Errorf("cannot open mnt:[%d] (%q) for VFS operations: %s",
-				mntns.ID().Ino, mntns.Ref(), err)
+			log.Errorf("cannot open mnt:[%d] (%s) for VFS operations: %s",
+				mntns.ID().Ino, mntns.Ref().String(), err)
 			continue
 		}
 		ownedbindmounts := ownedBindMounts(mnteer)

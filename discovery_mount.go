@@ -62,8 +62,8 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 				mountns.ID().Ino, err.Error())
 			continue
 		}
-		log.Debugf("reading mount point information from bind-mounted mnt:[%d] (%q)...",
-			mountns.ID().Ino, mountns.Ref())
+		log.Debugf("reading mount point information from bind-mounted mnt:[%d] at %s...",
+			mountns.ID().Ino, mountns.Ref().String())
 		// Warp speed Mr Sulu, through the proc root wormhole!
 		mountpoints := mntinfo.MountsOfPid(int(mnteer.PID()))
 		mnteer.Close()

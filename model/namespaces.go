@@ -23,6 +23,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/thediveo/lxkns/species"
 )
@@ -174,6 +175,12 @@ type Namespace interface {
 // If this does sound moonstruck, then it most probably is. But didn't we said
 // "in every nook and cranny"?
 type NamespaceRef []string
+
+// String returns the textual representation of a NamespaceRef in form of a
+// series of namespace reference paths, separated by some fancy unicode glyph.
+func (r NamespaceRef) String() string {
+	return strings.Join(r, "»")
+}
 
 // NamespaceStringer describes a namespace either in its descriptive form when
 // using the well-known String() method, or in a terse format when going for
