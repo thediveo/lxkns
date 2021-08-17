@@ -128,9 +128,9 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 			if err != nil || pid <= 0 {
 				return nil, errors.New("invalid " + refpath + " mount namespace reference")
 			}
-			m.contentsRoot = "/proc/" + r[2] + "/root"
 			m.pid = model.PIDType(pid)
-			return m, nil
+			m.contentsRoot = "/proc/" + r[2] + "/root"
+			continue
 		}
 		// It's a bind-mounted mount namespace reference, to be taken in the
 		// current context. The current context is a process, either the initial
@@ -179,6 +179,11 @@ func (m *Mounteneer) Close() {
 	if m.sandbox != nil {
 		_ = m.sandbox.Process.Kill()
 	}
+}
+
+// Ref returns the mount namespace reference.
+func (m *Mounteneer) Ref() model.NamespaceRef {
+	return m.ref
 }
 
 // Open opens the named file for reading, resolving the specified name correctly

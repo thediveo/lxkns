@@ -54,6 +54,18 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 	}
 	log.Debugf("starting discovery of bind-mounted namespaces...")
 	total := 0
+	// In order to avoid multiple visits to the same namespace, keep track of
+	// which mount namespaces not to visit again.
+	visitedmntns := map[species.NamespaceID]bool{}
+	// Now initialize a backlog with the mount namespaces we know so far,
+	// because we need to visit them in order to potentially discover more
+	// bind-mounted namespaces. These will then be added to the backlog if not
+	// already known by then. And yes, this is ugly.
+	mountnsBacklog := make([]model.Namespace, 0, len(result.Namespaces[model.MountNS]))
+	for _, mntns := range result.Namespaces[model.MountNS] {
+		mountnsBacklog = append(mountnsBacklog, mntns)
+	}
+
 	// Helper function which adds namespaces not yet known to the discovery
 	// result. We keep this inline in order to allow the helper to access the
 	// outer result.Namespaces map and easily update it.
@@ -68,9 +80,17 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)
 				result.Namespaces[typeidx][bmntns.ID] = ns
 				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Ref)
-				log.Debugf("found namespace %s:[%d] bind-mounted at %q",
+				log.Debugf("found bind-mounted namespace %s:[%d] at %q",
 					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref)
 				total++
+				// And if its a mount namespace we haven't yet visited, add it
+				// to our backlock.
+				if bmntns.Type == species.CLONE_NEWNS {
+					if _, ok := visitedmntns[bmntns.ID]; !ok {
+						mountnsBacklog = append(mountnsBacklog, ns)
+					}
+				}
+
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
@@ -79,17 +99,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			}
 		}
 	}
-	// In order to avoid multiple visits to the same namespace, keep track of
-	// which mount namespaces not to visit again.
-	visitedmntns := map[species.NamespaceID]bool{}
-	// Now initialize a backlog with the mount namespaces we know so far,
-	// because we need to visit them in order to potentially discover more
-	// bind-mounted namespaces. These will then be added to the backlog if not
-	// already known by then. And yes, this is ugly.
-	mountnsBacklog := make([]model.Namespace, 0, len(result.Namespaces[model.MountNS]))
-	for _, mntns := range result.Namespaces[model.MountNS] {
-		mountnsBacklog = append(mountnsBacklog, mntns)
-	}
+
 	// Now try to clear the back log of mount namespaces to visit and to
 	// search for further bind-mounted namespaces.
 	for len(mountnsBacklog) > 0 {
@@ -108,7 +118,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 				mntns.ID().Ino, mntns.Ref(), err)
 			continue
 		}
-		ownedbindmounts := ownedBindMounts(mntns.Ref(), mnteer.PID())
+		ownedbindmounts := ownedBindMounts(mnteer)
 		mnteer.Close()
 		updateNamespaces(ownedbindmounts)
 	}
@@ -117,18 +127,22 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 
 // Returns a list of bind-mounted namespaces for process with PID, including
 // owning user namespace ID information.
-func ownedBindMounts(mntnsref model.NamespaceRef, pid model.PIDType) []BindmountedNamespaceInfo {
+func ownedBindMounts(mnteer *mounteneer.Mounteneer) []BindmountedNamespaceInfo {
 	// Please note that while the mount details of /proc/[PID]/mountinfo tell us
 	// about bind-mounted namespaces with their types and inodes, they don't
 	// tell us the device IDs of those namespaces. Argh, again we need to go
 	// through hoops and loops just in order to satisfy Eric Biederman's dire
 	// warning of a future where we will need to deal with multiple namespace
 	// filesystem types. Some like it complicated.
-	bindmounts := mntinfo.MountsOfType(int(pid), "nsfs")
+	bindmounts := mntinfo.MountsOfType(int(mnteer.PID()), "nsfs")
 	ownedbindmounts := make([]BindmountedNamespaceInfo, 0, len(bindmounts))
 	for _, bindmount := range bindmounts {
 		var ownernsid species.NamespaceID
-		path := bindmount.MountPoint
+		path, err := mnteer.Resolve(bindmount.MountPoint)
+		if err != nil {
+			log.Errorf("cannot resolve reference %s: %s", bindmount.MountPoint, err.Error())
+		}
+		log.Debugf("mount point for %s at %s", bindmount.Root, path)
 		// Get the type of namespace, but ignore the inode number, because it
 		// lacks the dev ID for a complete namespace ID.
 		_, nstype := species.IDwithType(bindmount.Root)
@@ -157,7 +171,7 @@ func ownedBindMounts(mntnsref model.NamespaceRef, pid model.PIDType) []Bindmount
 		ownedbindmounts = append(ownedbindmounts, BindmountedNamespaceInfo{
 			Type:      nstype,
 			ID:        nsid,
-			Ref:       append(mntnsref, path),
+			Ref:       append(mnteer.Ref(), bindmount.MountPoint),
 			OwnernsID: ownernsid,
 		})
 	}
