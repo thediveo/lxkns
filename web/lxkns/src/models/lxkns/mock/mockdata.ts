@@ -9,14 +9,14 @@ export const fakeBindmountedIpc = {
     nsid: initProc.namespaces.ipc.nsid,
     type: initProc.namespaces.ipc.type,
     owner: initProc.namespaces.ipc.owner,
-    reference: '/run/snapd/ns/foobar.ipc'
+    reference: ['/run/snapd/ns/foobar.ipc'],
 }
 
 export const fakeFdIpc = {
     nsid: initProc.namespaces.ipc.nsid,
     type: initProc.namespaces.ipc.type,
     owner: initProc.namespaces.ipc.owner,
-    reference: '/proc/666/fd/666'
+    reference: ['/proc/666/fd/666'],
 }
 
 export const fakeHiddenPid = {

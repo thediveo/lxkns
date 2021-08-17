@@ -44,7 +44,7 @@ export interface Namespace {
      */
     type: NamespaceType
     /** file system path for referencing this namespace, if any. */
-    reference: string
+    reference: string[]
     /** for non-user namespaces the owning user namespace, otherwise null. */
     owner: Namespace
     /** 

@@ -131,8 +131,12 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
     const classes = useStyles()
 
     const isProcfdPath = namespace.reference &&
-        namespace.reference.startsWith('/proc/') &&
-        namespace.reference.includes('/fd/')
+        namespace.reference[0].startsWith('/proc/') &&
+        namespace.reference[0].includes('/fd/')
+
+    const ref = namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
+        ? namespace.reference.slice(1)
+        : namespace.reference
 
     return (
         (!namespace.reference &&
@@ -147,14 +151,14 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <span className={clsx(classes.namespaceReference, classes.fdref, className)}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
+                    <span className="bindmount">"{namespace.reference[0]}"</span>
                 </span>
             </Tooltip>
         ) || (
             <Tooltip title={`bind-mounted ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.bindmounted, className)}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
+                    <span className="bindmount">"{ref}"</span>
                 </span>
             </Tooltip>
         )
