@@ -19,6 +19,7 @@ import { makeStyles, Tooltip } from '@material-ui/core'
 
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
+import Init1Icon from 'icons/Init1'
 import { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
 
@@ -35,6 +36,9 @@ const useStyles = makeStyles((theme) => ({
             position: 'relative',
             top: '0.2ex',
             color: theme.palette.process,
+        },
+        '& .init1': {
+            color: theme.palette.init1,
         },
         '&$shortInfo *': {
             color: theme.palette.text.disabled,
@@ -121,7 +125,7 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
         <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
             {process.container && <ContainerInfo container={process.container} className={classes.containerInfo} />}
             <Tooltip title="process"><>
-                <ProcessIcon fontSize="inherit" />
+                {process.pid === 1 ? <Init1Icon className="init1" fontSize="inherit" /> : <ProcessIcon fontSize="inherit" />}
                 <span className={classes.processName}>{process.name}</span>
                 &nbsp;<span className={classes.pid}>({process.pid})</span>
             </></Tooltip>

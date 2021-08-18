@@ -109,14 +109,14 @@ var _ = Describe("maps PIDs", func() {
 		initpidnsid, err := initpidnsref.ID()
 		Expect(err).NotTo(HaveOccurred())
 
-		initialpidns := namespaces.New(species.CLONE_NEWPID, initpidnsid, string(initpidnsref))
+		initialpidns := namespaces.NewWithSimpleRef(species.CLONE_NEWPID, initpidnsid, string(initpidnsref))
 		Expect(initialpidns).NotTo(BeNil())
 		pt[selfpid].Namespaces[model.PIDNS] = initialpidns
 
 		leafpidnsref := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/pid", initleafpid))
 		leafpidnsid, err := leafpidnsref.ID()
 		Expect(err).NotTo(HaveOccurred())
-		leafpidns := namespaces.New(species.CLONE_NEWPID, leafpidnsid, string(leafpidnsref))
+		leafpidns := namespaces.NewWithSimpleRef(species.CLONE_NEWPID, leafpidnsid, string(leafpidnsref))
 		Expect(leafpidns).NotTo(BeNil())
 		pt[initleafpid].Namespaces[model.PIDNS] = leafpidns
 

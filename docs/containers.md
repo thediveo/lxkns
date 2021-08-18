@@ -41,8 +41,10 @@ sibling project:
 - Docker
 - containerd
 
-Further container engine types can be added, preferably via the whalewatcher
-project.
+> [!TIP] Applications can easily add their own containerizers (via so-called
+> "watchers") to the lxkns service and the CLI tools, extending them via the
+> `go-plugger` mechanism. Please see `cmd/internal/pkg/engines/moby/moby.go` for
+> a good example.
 
 ## Decorators
 
@@ -62,3 +64,9 @@ plugin management (but only using statically compiled-in plugins).
   - [containerd CRI
     annotations](https://github.com/containerd/containerd/tree/main/pkg/cri),
     based on CRI-specific container labels.
+
+> [!TIP] Applications using the `lxkns` module directly can seamlessly add their
+> own decorators. They simply need to register them as "plugins" using the
+> `go-plugger` mechanism. Please refer to the existing decorators in
+> `decorator/` for details, such as `decorator/composer/decorator.go` as a good
+> starter example.

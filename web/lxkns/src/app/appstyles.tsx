@@ -43,6 +43,7 @@ declare module '@material-ui/core/styles/createPalette' {
         ownername: string, // owner user name
         ownerroot: string, // owner user root
         fstype: string, // filesystem type
+        init1: string, // PID1 icon
     }
     // allow configuration using `createMuiTheme`
     interface PaletteOptions {
@@ -63,6 +64,7 @@ declare module '@material-ui/core/styles/createPalette' {
         ownername?: string,
         ownerroot?: string,
         fstype?: string,
+        init1?: string,
     }
 }
 
@@ -110,6 +112,7 @@ export const lxknsLightTheme = {
         ownername: lime[800],
         ownerroot: pink[700],
         fstype: grey[600],
+        init1: amber[500],
     },
 }
 

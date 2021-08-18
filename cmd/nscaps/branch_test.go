@@ -45,7 +45,7 @@ var _ = Describe("(in)capability", func() {
 		_, _, err := caps(&model.Process{PID: 1}, nil)
 		Expect(err).To(HaveOccurred())
 		_, _, err = caps(allns.Processes[model.PIDType(os.Getpid())],
-			namespaces.New(species.CLONE_NEWNET, species.NoneID, ""))
+			namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NoneID, ""))
 		Expect(err).To(HaveOccurred())
 	})
 

@@ -22,15 +22,11 @@
 package lxkns
 
 import (
-	"encoding/json"
-	"os"
-
 	"github.com/thediveo/go-mntinfo"
-	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/mounts"
+	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
@@ -58,35 +54,19 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 	result.Mounts = NamespacedMountPathMap{}
 	mountpointtotal := 0
 	for mntid, mountns := range result.Namespaces[model.MountNS] {
-		var mountpoints []mntinfo.Mountinfo
-		if ealdorman := mountns.Ealdorman(); ealdorman != nil {
-			// As we have a process attached to the mount namespace in question,
-			// we can directly gather the mount point information from that
-			// process -- albeit there's a slight catch here: if the ealdorman
-			// has chroot'ed then we won't get the full original picture.
-			mountpoints = mntinfo.MountsOfPid(int(ealdorman.PID))
-		} else {
-			// This is a bind-mounted mount namespace without any process at the
-			// moment. In order to be able to get mount point information for
-			// such a process-less mount namespace, we fork and re-execute a
-			// discovery probe process in the mount namespace and that then
-			// reads its own mount point information from that mount namespace.
-			log.Debugf("reading mount point information from bind-mounted mnt:[%d] (%q)...",
-				mountns.ID().Ino, mountns.Ref())
-			// Warp speed Mr Sulu, through the proc root wormhole! (TODO: this
-			// might need some more generalization in the future -- no, not the
-			// Star Treck future -- as to handle bind-mounted mount namespaces
-			// that are bind-mounted in other mount namespaces, et cetera.)
-			wormholedmountns := namespaces.New(species.CLONE_NEWNS, mountns.ID(),
-				"/proc/1/root"+mountns.Ref())
-			enterns := MountEnterNamespaces(wormholedmountns, result.Namespaces)
-			if err := ReexecIntoAction(
-				"discover-mountinfo", enterns, &mountpoints); err != nil {
-				log.Errorf("could not discover mount points in mnt:[%d]: %s",
-					mountns.ID().Ino, err.Error())
-				continue
-			}
+		mnteer, err := mountineer.NewWithMountNamespace(
+			mountns,
+			result.Namespaces[model.UserNS])
+		if err != nil {
+			log.Errorf("could not discover mount points in mnt:[%d]: %s",
+				mountns.ID().Ino, err.Error())
+			continue
 		}
+		log.Debugf("reading mount point information from bind-mounted mnt:[%d] at %s...",
+			mountns.ID().Ino, mountns.Ref().String())
+		// Warp speed Mr Sulu, through the proc root wormhole!
+		mountpoints := mntinfo.MountsOfPid(int(mnteer.PID()))
+		mnteer.Close()
 		log.Debugf("mnt:[%d] contains %s",
 			mountns.ID().Ino, plural.Elements(len(mountpoints), "mount points"))
 		mountpointtotal += len(mountpoints)
@@ -95,22 +75,4 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 	log.Infof("found %s in %s",
 		plural.Elements(mountpointtotal, "mount points"),
 		plural.Elements(len(result.Mounts), "%s namespaces", "mount"))
-}
-
-// Register discoverMounts() as an action for re-execution.
-func init() {
-	reexec.Register("discover-mountinfo", discoverMountinfo)
-}
-
-// discoverMountinfo is the reexec action run in a separate (bind-mounted) mount
-// namespace in order to retrieve the mount information a process attached to it
-// would see. Since it is a bind-mounted mount namespace for which we didn't
-// find any process attached to it, we're now temporarily playing this role
-// ourselves in order to discover what the mount points in this mount namespace
-// will be. The information gathered is then serialized as JSON as sent back to
-// the parent discovery process via stdout.
-func discoverMountinfo() {
-	if err := json.NewEncoder(os.Stdout).Encode(mntinfo.Mounts()); err != nil {
-		panic(err.Error())
-	}
 }

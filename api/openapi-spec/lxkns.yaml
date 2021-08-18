@@ -511,7 +511,9 @@ components:
                         File system reference to the namespace, if available. The hierarchical PID and
                         user namespaces can also exist without any file system references, as long as
                         there are still child namespaces present for such a PID or user namespace.
-                    type: string
+                    type: array
+                    items:
+                        type: string
                 leaders:
                     description: |-
                         List of PIDs of "leader" processes joined to this namespace.

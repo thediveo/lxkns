@@ -190,10 +190,12 @@ namespace of an OS thread isn't possible after the Golang runtime has started**
 namespace”](https://stackoverflow.com/q/25704661)). This can be achieved by
 using, for instance, the [`gons` package](https://github.com/thediveo/gons).
 
-However, in some situations switching mount namespaces might not be necessary at
+However, in many situations switching mount namespaces is not be necessary at
 all: instead, simply access files in a different mount namespaces via the
 [procfs root "wormholes"](https://github.com/TheDiveO/procfsroot)
-(thediveo/procfsroot) using ordinary file I/O system calls.
+(thediveo/procfsroot) using ordinary file I/O system calls. And if there happens
+to be no process at hand, then simply call the [mountineers](mountineers) to our
+rescue.
 
 ### PID Namespaces
 

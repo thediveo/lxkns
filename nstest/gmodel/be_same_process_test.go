@@ -47,13 +47,13 @@ var proc2 = &model.Process{
 }
 
 var namespaceset = model.NamespacesSet{
-	namespaces.New(species.CLONE_NEWNS, species.NamespaceID{Dev: 666, Ino: 66610}, ""),
-	namespaces.New(species.CLONE_NEWCGROUP, species.NamespaceID{Dev: 666, Ino: 66611}, ""),
-	namespaces.New(species.CLONE_NEWUTS, species.NamespaceID{Dev: 666, Ino: 66612}, ""),
-	namespaces.New(species.CLONE_NEWIPC, species.NamespaceID{Dev: 666, Ino: 66613}, ""),
-	namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 666, Ino: 66614}, ""),
-	namespaces.New(species.CLONE_NEWPID, species.NamespaceID{Dev: 666, Ino: 66615}, ""),
-	namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 666, Ino: 66616}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWNS, species.NamespaceID{Dev: 666, Ino: 66610}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWCGROUP, species.NamespaceID{Dev: 666, Ino: 66611}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWUTS, species.NamespaceID{Dev: 666, Ino: 66612}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWIPC, species.NamespaceID{Dev: 666, Ino: 66613}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceID{Dev: 666, Ino: 66614}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWPID, species.NamespaceID{Dev: 666, Ino: 66615}, ""),
+	namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 666, Ino: 66616}, ""),
 	nil,
 }
 
@@ -89,6 +89,14 @@ var _ = Describe("Process", func() {
 		proc = *proc1
 		proc.Namespaces[model.UserNS] = nil
 		Expect(proc).NotTo(BeSameTreeProcess(*proc1))
+	})
+
+	It("matches namespace references", func() {
+		Expect(sameRef(nil, nil)).To(BeTrue())
+		Expect(sameRef(model.NamespaceRef{}, model.NamespaceRef{})).To(BeTrue())
+		Expect(sameRef(model.NamespaceRef{"/foo"}, model.NamespaceRef{"/foo"})).To(BeTrue())
+		Expect(sameRef(model.NamespaceRef{"/foo"}, model.NamespaceRef{"/bar"})).NotTo(BeTrue())
+		Expect(sameRef(model.NamespaceRef{"/foo", "/bar"}, model.NamespaceRef{"/foo"})).NotTo(BeTrue())
 	})
 
 })

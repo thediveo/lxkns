@@ -54,7 +54,7 @@ export const compareNamespaceByTypeId = (ns1: Namespace, ns2: Namespace) => {
  * @param ns2 another namespace
  */
 export const compareNamespaceByRefTypeId = (ns1: Namespace, ns2: Namespace) => {
-    const beforeAfter = ns1.reference.localeCompare(ns2.reference)
+    const beforeAfter = ns1.reference.join(":").localeCompare(ns2.reference.join(":"))
     return beforeAfter !== 0 ? beforeAfter : compareNamespaceByTypeId
 }
 
