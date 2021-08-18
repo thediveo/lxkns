@@ -2,7 +2,7 @@
 
 Package mountineer allows accessing the file system contents from (other) mount
 namespaces via procfs. If necessary, supporting "sandbox" processes are
-temporarly deployed so that the current process can make good use of procfs root
+temporary deployed so that the current process can make good use of procfs root
 "wormholes". This package normally offers less overhead compared to the original
 gons/reexec method, as no marshalling and unmarshalling of information between a
 parent and the re-executed child process is necessary anymore. Additionally,
@@ -68,7 +68,7 @@ contents.
 
 This is the case when there's a process attached to the target mount namespace.
 Here, we assume that the proc file system has been mounted in the context of the
-initial PID namespace. This allows a discovery process, given proper capabilites
+initial PID namespace. This allows a discovery process, given proper capabilities
 and CAP_SYS_PTRACE in particular, to access the target mount namespace. For
 instance, we want to access mount namespace contents given the following
 reference:
