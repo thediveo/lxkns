@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mounteneer
+package mountineer
 
 import (
 	"bufio"
@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/thediveo/lxkns/ops/mounteneer/mntnssandbox" // ensure to pull in the pre-Go initializer.
+	"github.com/thediveo/lxkns/ops/mountineer/mntnssandbox" // ensure to pull in the pre-Go initializer.
 )
 
 // MntnsSandboxBinary is the name of a binary switching into a specified mount
@@ -38,6 +38,7 @@ const MntnsSandboxBinary = "mntnssandbox"
 // sandboxBinary points either to a dedicated sandbox binary, or when
 // this binary is unavailable, to our own binary as a fallback.
 var sandboxBinary = "/proc/self/exe"
+var separateSandboxBinary = false
 
 // Is the dedicated mount namespace sandbox binary available? Then use that,
 // otherwise fall back to our own binary.
@@ -49,7 +50,18 @@ func init() {
 	pathname, err = filepath.Abs(pathname)
 	if err == nil {
 		sandboxBinary = pathname
+		separateSandboxBinary = true
 	}
+}
+
+// StandaloneSandboxBinary returns the pathname of a separate sandbox binary
+// when found, or a zero string if the process needs to re-execute itself in
+// order to start sandboxes.
+func StandaloneSandboxBinary() string {
+	if !separateSandboxBinary {
+		return ""
+	}
+	return sandboxBinary
 }
 
 // NewPauseProcess starts a new pause process that immediately attaches itself

@@ -15,6 +15,7 @@
   * [Information Model](model)
   * [Container Types/Flavors](typesflavors)
   * [Decorations](deco)
+  * [Mountineers](mountineers)
   * [Notes](api-notes)
 * [CLI Tools](cli)
 * [Tinkering](tinkering)

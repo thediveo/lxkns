@@ -1,6 +1,6 @@
 /*
 
-Package mounteneer allows accessing the file system contents from (other) mount
+Package mountineer allows accessing the file system contents from (other) mount
 namespaces via procfs. If necessary, supporting "sandbox" processes are
 temporarly deployed so that the current process can make good use of procfs root
 "wormholes". This package normally offers less overhead compared to the original
@@ -9,9 +9,9 @@ parent and the re-executed child process is necessary anymore. Additionally,
 when using a dedicated support "sandbox" binary, start time and resource
 consumption is greatly reduced, too.
 
-Mounteneers
+Mountineers
 
-Mounteneers kind of mount mount namespaces, given a mount namespace reference.
+Mountineers kind of mount mount namespaces, given a mount namespace reference.
 For instance, the following example reads the contents of file /etc/hostname in
 a bind-mounted process-less mount namespace (please insert your own appropriate
 error handling yourself):
@@ -20,25 +20,24 @@ error handling yourself):
     // we need to reference it first via the host's mount namespace (which we
     // know to be attached to PID 1 in all cases) and then via its bind mount
     // there.
-    mnteer, err := mounteneer.New(
+    mnteer, err := mountineer.New(
         model.NamespaceRef{"/proc/1/ns/mnt", "/run/snapd/ns/chromium.mnt"}, nil)
     defer mntneer.Close()
-    etchostnamepath, err := mntneer.Resolve("/etc/hostname")
-    etchostname, err := io.ReadFile(etchostnamepath)
+    etchostname, err := mnteer.ReadFile("/etc/hostname")
 
-They abstract away the ugly details of when and how to make a mount namespace
-(the "target mount namespaced") directly accessible from the current mount
-namespace, via the proc file system. They even handle the totally bonkers
+Mountineers abstract away the ugly details of when and how to make a mount
+namespace (the "target mount namespaced") directly accessible from the current
+mount namespace, via the proc file system. They even handle the totally bonkers
 situation where a target mount namespace can only be referenced via a series of
 bind-mounted mount namespace references (without any process using them at this
 time).
 
-Always remember: there are Engineers, Hellseneers, Mounteneers, ...
+Always remember: there are Engineers, Hellsineers, Mountineers, ...
 
 Do Not Leak
 
 Make sure to always Close() any target mount namespace you (implicitly) opened
-by creating a new Mounteneer. Failure to do so causes some mount namespaces to
+by creating a new Mountineer. Failure to do so causes some mount namespaces to
 become blocked against garbage collection by the Linux kernel until the
 discovery process finally exits (which might be "never" in case of a discovery
 service).
@@ -147,7 +146,7 @@ namespaces.
 
 Wormholes
 
-The key to the inner workings of the mounteneer package is to know that Linux
+The key to the inner workings of the mountineer package is to know that Linux
 allows to access the files and directories inside a different mount namespace
 via the proc file system. This requires to be in a parent or same PID namespace
 as the processes of which we want to access their mount namespaces. Typically,
@@ -182,4 +181,4 @@ painfully marshal this information back. Instead, when the sandbox correctly has
 spun up, then we read everything from within our current threads/goroutines.
 
 */
-package mounteneer
+package mountineer

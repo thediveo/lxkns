@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mounteneer
+package mountineer
 
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,10 +31,10 @@ import (
 	"github.com/thediveo/procfsroot"
 )
 
-// Mounteneer takes a namespace reference, where this namespace reference might
+// Mountineer takes a namespace reference, where this namespace reference might
 // even be located in some other mount namespace (to be reached by a series of
 // mount namespace references).
-type Mounteneer struct {
+type Mountineer struct {
 	// Target mount namespace reference, optionally preceeded by contextual
 	// mount namespace references. The first reference is always taken in the
 	// context of the initial mount namespace, each following reference then in
@@ -68,13 +69,13 @@ var initialContextPID = model.PIDType(1)
 // interface as opposed to a namespace reference in form of one or more VFS
 // paths. It only accepts mount namespaces, not any other type of namespace. It
 // optimizes the case where the mount namespace has a process attached.
-func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap) (*Mounteneer, error) {
+func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap) (*Mountineer, error) {
 	if mountns.Type() != species.CLONE_NEWNS {
 		return nil, errors.New("invalid non-mount namespace " +
 			mountns.(model.NamespaceStringer).TypeIDString())
 	}
 	if ealdorman := mountns.Ealdorman(); ealdorman != nil {
-		return &Mounteneer{
+		return &Mountineer{
 			ref:          mountns.Ref(),
 			contentsRoot: "/proc/" + strconv.FormatUint(uint64(ealdorman.PID), 10) + "/root",
 			pid:          ealdorman.PID,
@@ -84,7 +85,7 @@ func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap
 }
 
 // New opens the mount namespace for file access and returns a new managing
-// Mounteneer. The mount namespace is referenced in one of the following ways:
+// Mountineer. The mount namespace is referenced in one of the following ways:
 //
 // A. a single mount namespace reference that can be addressed in the initial
 // mount namespace. If this reference isn't inside the /proc file system, then
@@ -97,11 +98,11 @@ func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap
 // Specifying a map of user namespaces allows entering mount namespaces in those
 // situations where the caller has insufficient capabilities itself but has
 // sufficient capabilities in the user namespace owning the mount namespace.
-func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, error) {
+func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, error) {
 	if len(ref) == 0 {
 		return nil, errors.New("cannot open zero mount namespace reference")
 	}
-	m := &Mounteneer{
+	m := &Mountineer{
 		ref: ref,
 	}
 	// The starting context for mount namespace references is the initial mount
@@ -192,27 +193,27 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 // Close the network namespace that previously has been "opened" by this
 // Mountneneer, releasing any additional resources that might have been needed
 // for opening the mount namespace and keeping it open.
-func (m *Mounteneer) Close() {
+func (m *Mountineer) Close() {
 	if m.sandbox != nil {
 		_ = m.sandbox.Process.Kill()
 	}
 }
 
 // Ref returns the mount namespace reference.
-func (m *Mounteneer) Ref() model.NamespaceRef {
+func (m *Mountineer) Ref() model.NamespaceRef {
 	return m.ref
 }
 
 // Open opens the named file for reading, resolving the specified name correctly
 // for any symbolic links in the context of the particular mount namespace.
-func (m *Mounteneer) Open(name string) (*os.File, error) {
+func (m *Mountineer) Open(name string) (*os.File, error) {
 	return m.OpenFile(name, os.O_RDONLY, 0)
 }
 
 // OpenFile opens the named file with the specified flag, using the mode perm
 // when creating new files. The specified name is resolved correctly for any
 // symbolic links in the context of the particular mount namespace.
-func (m *Mounteneer) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
+func (m *Mountineer) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 	pathname, err := m.Resolve(name)
 	if err != nil {
 		return nil, err
@@ -220,11 +221,20 @@ func (m *Mounteneer) OpenFile(name string, flag int, perm os.FileMode) (*os.File
 	return os.OpenFile(pathname, flag, perm)
 }
 
+// ReadFile reads all contents of the named file, returning it as a byte slice.
+func (m *Mountineer) ReadFile(name string) ([]byte, error) {
+	pathname, err := m.Resolve(name)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadFile(pathname)
+}
+
 // Resolve resolves a pathname inside the open mount namespace to a pathname
 // that can be used by a caller in a different mount namespace, using a
 // host-wide PID view. If the specified pathname is not absolute it is taken
 // relative to the current working directory.
-func (m *Mounteneer) Resolve(pathname string) (string, error) {
+func (m *Mountineer) Resolve(pathname string) (string, error) {
 	var err error
 	pathname, err = filepath.Abs(pathname)
 	if err != nil {
@@ -246,7 +256,7 @@ func (m *Mounteneer) Resolve(pathname string) (string, error) {
 
 // PID returns the PID of the sandbox process (if any), or PID 1 in case a
 // sandbox wasn't needed.
-func (m *Mounteneer) PID() model.PIDType {
+func (m *Mountineer) PID() model.PIDType {
 	return m.pid
 }
 
@@ -257,7 +267,7 @@ func (m *Mounteneer) PID() model.PIDType {
 //
 // Please note that usernsref does not check if switching the user namespace
 // will actually be possible.
-func (m *Mounteneer) usernsref(mntnsref string, usernsmap model.NamespaceMap) string {
+func (m *Mountineer) usernsref(mntnsref string, usernsmap model.NamespaceMap) string {
 	if usernsmap == nil {
 		// Without a user namespace map we cannot determine a user namespace
 		// reference in case switching the user namespace is necessary to enter

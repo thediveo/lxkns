@@ -27,7 +27,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/ops/mounteneer"
+	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
@@ -112,7 +112,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 			mntns.ID().Ino, mntns.Ref().String())
 		visitedmntns[mntns.ID()] = true
 
-		mnteer, err := mounteneer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
+		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
 			log.Errorf("cannot open mnt:[%d] (%s) for VFS operations: %s",
 				mntns.ID().Ino, mntns.Ref().String(), err)
@@ -127,7 +127,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResu
 
 // Returns a list of bind-mounted namespaces for process with PID, including
 // owning user namespace ID information.
-func ownedBindMounts(mnteer *mounteneer.Mounteneer) []BindmountedNamespaceInfo {
+func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 	// Please note that while the mount details of /proc/[PID]/mountinfo tell us
 	// about bind-mounted namespaces with their types and inodes, they don't
 	// tell us the device IDs of those namespaces. Argh, again we need to go

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mounteneer
+package mountineer
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ import (
 	"github.com/thediveo/testbasher"
 )
 
-var _ = Describe("mounteneer", func() {
+var _ = Describe("mountineer", func() {
 
 	It("returns error for non-existing sandbox binary", func() {
 		Errxpect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).To(MatchError(

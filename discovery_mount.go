@@ -26,7 +26,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/mounts"
-	"github.com/thediveo/lxkns/ops/mounteneer"
+	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
@@ -54,7 +54,7 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryR
 	result.Mounts = NamespacedMountPathMap{}
 	mountpointtotal := 0
 	for mntid, mountns := range result.Namespaces[model.MountNS] {
-		mnteer, err := mounteneer.NewWithMountNamespace(
+		mnteer, err := mountineer.NewWithMountNamespace(
 			mountns,
 			result.Namespaces[model.UserNS])
 		if err != nil {

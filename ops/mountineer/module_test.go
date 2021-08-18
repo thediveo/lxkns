@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package mounteneer
+package mountineer
 
 import (
 	"testing"
@@ -23,5 +23,5 @@ import (
 
 func TestNamespaceTypes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/ops/mounteneer package")
+	RunSpecs(t, "lxkns/ops/mountineer package")
 }

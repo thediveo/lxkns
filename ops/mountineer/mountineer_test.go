@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mounteneer
+package mountineer
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ import (
 	"github.com/thediveo/testbasher"
 )
 
-var _ = Describe("mounteneer", func() {
+var _ = Describe("mountineer", func() {
 
 	It("does not accept empty references", func() {
 		Errxpect(New(nil, nil)).To(HaveOccurred())
@@ -57,7 +57,7 @@ var _ = Describe("mounteneer", func() {
 
 		Expect(m.PID()).To(Equal(model.PIDType(os.Getpid())))
 
-		f, err := m.Open("mounteneer_test.go")
+		f, err := m.Open("mountineer_test.go")
 		Expect(err).NotTo(HaveOccurred())
 		f.Close()
 		Errxpect(m.Open("foobar.go")).To(HaveOccurred())
@@ -153,7 +153,7 @@ read # wait for test to proceed()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bmnsid).To(Equal(mntnsid))
 
-		// tell the mounteneer to sandbox the newly created mount namespace via
+		// tell the mountineer to sandbox the newly created mount namespace via
 		// the bind-mount reference.
 		m, err := New([]string{bm}, nil)
 		Expect(err).NotTo(HaveOccurred())

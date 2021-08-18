@@ -8,6 +8,7 @@ services:
             dockerfile: deployments/lxkns/Dockerfile
         command:
             - "/lxkns"
+            - "--debug"
             - "--initialcgroup"
             - "--docker=unix:///proc/1/root/run/docker.sock"
             - "--containerd=/proc/1/root/run/containerd/containerd.sock"

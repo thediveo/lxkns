@@ -87,7 +87,7 @@ read
 └─ pid:\[%d\] process .*$`,
 			initusernsid.Ino, initpidnsid.Ino)))
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^   [├└]─ user:\[%d\] process .*
-   [│ ]  └─ pid:\[%d\] process .*$`,
+   [│ ]  [├└]─ pid:\[%d\] process .*$`,
 			usernsid.Ino, pidnsid.Ino)))
 	})
 

@@ -23,7 +23,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/ops/mounteneer"
+	"github.com/thediveo/lxkns/ops/mountineer"
 )
 
 // etcpasswd is the pathname of the password file.
@@ -58,7 +58,7 @@ func DiscoverUserNames(namespaces model.AllNamespaces) UidUsernameMap {
 		log.Warnf("missing information about PID 1 mount namespace")
 		return UidUsernameMap{}
 	}
-	mnteer, err := mounteneer.NewWithMountNamespace(namespaces[model.MountNS][mntnsid], namespaces[model.UserNS])
+	mnteer, err := mountineer.NewWithMountNamespace(namespaces[model.MountNS][mntnsid], namespaces[model.UserNS])
 	if err != nil {
 		log.Errorf("cannot open mount namespace for VFS operations: %s", err.Error())
 		return UidUsernameMap{}
