@@ -11,7 +11,20 @@ consumption is greatly reduced, too.
 
 Mounteneers
 
-Mounteneers kind of mount mount namespaces.
+Mounteneers kind of mount mount namespaces, given a mount namespace reference.
+For instance, the following example reads the contents of file /etc/hostname in
+a bind-mounted process-less mount namespace (please insert your own appropriate
+error handling yourself):
+
+    // There's a bind-mounted mount namespace in the host's mount namespace, so
+    // we need to reference it first via the host's mount namespace (which we
+    // know to be attached to PID 1 in all cases) and then via its bind mount
+    // there.
+    mnteer, err := mounteneer.New(
+        model.NamespaceRef{"/proc/1/ns/mnt", "/run/snapd/ns/chromium.mnt"}, nil)
+    defer mntneer.Close()
+    etchostnamepath, err := mntneer.Resolve("/etc/hostname")
+    etchostname, err := io.ReadFile(etchostnamepath)
 
 They abstract away the ugly details of when and how to make a mount namespace
 (the "target mount namespaced") directly accessible from the current mount

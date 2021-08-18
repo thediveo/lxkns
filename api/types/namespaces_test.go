@@ -204,7 +204,7 @@ var _ = Describe("namespaces JSON", func() {
 				"nsid": %d,
 				"type": "net",
 				"owner": %d,
-				"reference": %q,
+				"reference": [%q],
 				"leaders": %s,
 				"ealdorman": %d
 			}`,

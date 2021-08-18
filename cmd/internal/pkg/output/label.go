@@ -80,7 +80,7 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 		return s
 	}
 	if ref := ns.Ref(); len(ref) != 0 {
-		return fmt.Sprintf("bind-mounted at %q", strings.Join(ref, "→"))
+		return fmt.Sprintf("bind-mounted at %q", ref.String())
 	}
 	return ""
 }

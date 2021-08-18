@@ -76,7 +76,12 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Discovery
 		// For climbing up the hierarchy, Linux wants us to give it file
 		// descriptors referencing the namespaces to be queried for their
 		// parents.
-		f, err := os.Open(ns.Ref()[0]) // FIXME: turn down multi-element references
+		if len(ns.Ref()) != 1 {
+			log.Infof("skipping bind-mounted namespace %s:[%d]",
+				ns.Type(), ns.ID().Ino)
+			continue
+		}
+		f, err := os.Open(ns.Ref()[0])
 		if err != nil {
 			continue
 		}

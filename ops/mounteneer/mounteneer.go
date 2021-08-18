@@ -45,11 +45,24 @@ type Mounteneer struct {
 	// pause/sandbox process, if any.
 	sandbox *exec.Cmd
 	// PID to report back: this can be either of the pause/sandbox process or
-	// PID 1, depending on the reference: this allows API users to unify usage
-	// without having to differentiate between having a sandbox and PID or not
-	// when dealing with existing Go modules working on /proc nodes.
+	// PID 1 (alternatively the own PID if PID 1 is out of reach), depending on
+	// the reference: this allows API users to unify usage without having to
+	// differentiate between having a sandbox and PID or not when dealing with
+	// existing Go modules working on /proc nodes.
 	pid model.PIDType
 }
+
+// Check whether PID 1 (more precisely, /proc/1) is accessible to us or fall
+// back to our own PID. This is mostly useful to users of the CLI tools.
+func init() {
+	if _, err := os.Stat("/proc/1/ns/mnt"); err != nil {
+		initialContextPID = model.PIDType(os.Getpid())
+	}
+}
+
+// initialContextPID is the PID to use as the intial context for resolving
+// non-proc reference path elements.
+var initialContextPID = model.PIDType(1)
 
 // NewWithMountNamespace is like New, but instead expects a mount namespace
 // interface as opposed to a namespace reference in form of one or more VFS
@@ -139,7 +152,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 		// process (to get things going) or a pause process.
 		rooterpid := uint64(pid)
 		if rooterpid == 0 {
-			rooterpid = 1 // initial context is mount namespace of init process.
+			rooterpid = uint64(initialContextPID) // initial context is mount namespace of init process.
 		}
 		contentsRoot := "/proc/" + strconv.FormatUint(rooterpid, 10) + "/root"
 		evilrefpath, err := procfsroot.EvalSymlinks(refpath, contentsRoot, procfsroot.EvalFullPath)
@@ -153,7 +166,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mounteneer, err
 		// by "ref" (in the mount namespace reachable via process with "pid").
 		wormholedref := contentsRoot + evilrefpath
 		log.Debugf("opening pandora's sandbox at %s", wormholedref)
-		sandbox, err := NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap)) // TODO: usernsref(wormholedref, ...)???
+		sandbox, err := NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap))
 		if err != nil {
 			if m.sandbox != nil {
 				_ = m.sandbox.Process.Kill()
@@ -276,5 +289,13 @@ func (m *Mounteneer) usernsref(mntnsref string, usernsmap model.NamespaceMap) st
 	if !ok {
 		return ""
 	}
-	return userns.Ref()[0] // FIXME: turn down bind-mounted user namespaces.
+	if len(userns.Ref()) != 1 {
+		// We do not support bind-mounted owning user namespaces, as this would
+		// make switching the sandbox process correctly very difficult to
+		// achieve. It's much easier to simply run the API caller in the initial
+		// user namespace, so it has access to the namespaces belonging to child
+		// user namespaces.
+		return ""
+	}
+	return userns.Ref()[0]
 }
