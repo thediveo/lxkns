@@ -162,18 +162,24 @@ func childlist(hns model.Hierarchy) string {
 	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
 }
 
-func refifnotempty(ref string) string {
-	if ref == "" {
+// returns a "reference:ref," string to insert into a JSON object serialization,
+// if the specified reference isn't empty.
+func refifnotempty(ref model.NamespaceRef) string {
+	if len(ref) == 0 {
 		return ""
 	}
-	return `"reference": "` + ref + `",`
+	b, err := json.Marshal(ref)
+	if err != nil {
+		panic(err)
+	}
+	return `"reference": ` + string(b) + `,`
 }
 
 var _ = Describe("namespaces JSON", func() {
 
 	It("always gets a Namespace from the dictionary", func() {
 		d := NewNamespacesDict(nil)
-		uns := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
+		uns := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
 		d.AllNamespaces[model.UserNS][uns.ID()] = uns
 
 		ns := d.Get(uns.ID(), uns.Type())
@@ -198,7 +204,7 @@ var _ = Describe("namespaces JSON", func() {
 				"nsid": %d,
 				"type": "net",
 				"owner": %d,
-				"reference": %q,
+				"reference": [%q],
 				"leaders": %s,
 				"ealdorman": %d
 			}`,

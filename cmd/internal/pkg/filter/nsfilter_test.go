@@ -47,8 +47,8 @@ var _ = Describe("--filter flag", func() {
 			species.CLONE_NEWUTS,
 			species.CLONE_NEWUSER,
 		))
-		Expect(Filter(namespaces.New(species.CLONE_NEWNET, species.NamespaceID{}, ""))).To(BeFalse())
-		Expect(Filter(namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{}, ""))).To(BeTrue())
+		Expect(Filter(namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{}, ""))).To(BeFalse())
+		Expect(Filter(namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceID{}, ""))).To(BeTrue())
 	})
 
 })

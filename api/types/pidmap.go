@@ -163,7 +163,7 @@ func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 			pidnsid := species.NamespaceIDfromInode(nspid.NamespaceID)
 			pidns, ok := pidmap.PIDns[pidnsid]
 			if !ok {
-				pidns = namespaces.New(species.CLONE_NEWPID, pidnsid, "")
+				pidns = namespaces.New(species.CLONE_NEWPID, pidnsid, nil)
 				pidmap.PIDns[pidnsid] = pidns
 			}
 			nspids[idx] = model.NamespacedPID{

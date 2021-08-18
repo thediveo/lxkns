@@ -67,9 +67,9 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 				if proc.Container != nil {
 					item.ContainerName = proc.Container.Name
 				}
-				item.Comment = proc.CpuCgroup
-			} else if ns.Ref() != "" {
-				item.Comment = "bound:" + ns.Ref()
+				item.Comment = "cgroup:" + proc.CpuCgroup
+			} else if ref := ns.Ref(); len(ref) != 0 {
+				item.Comment = "bound:" + ns.Ref().String()
 			}
 			list = append(list, item)
 		}

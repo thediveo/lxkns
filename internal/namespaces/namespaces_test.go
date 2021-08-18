@@ -122,7 +122,7 @@ var _ = Describe("namespaces", func() {
 	Describe("user namespaces", func() {
 
 		It("render details", func() {
-			uns := New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1111}, "").(*UserNamespace)
+			uns := New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1111}, nil).(*UserNamespace)
 			uns.owneruid = os.Getuid()
 			uns.AddLeader(&model.Process{
 				PID:  88888,
@@ -145,6 +145,20 @@ var _ = Describe("namespaces", func() {
 				fmt.Sprintf(`UID %d ("%s")`, os.Geteuid(), u.Username)))
 		})
 
+	})
+
+	It("creates new namespace objects", func() {
+		plainns := NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1111}, "/foobar")
+		Expect(plainns).To(BeAssignableToTypeOf(&PlainNamespace{}))
+		Expect(plainns).NotTo(BeAssignableToTypeOf(&HierarchicalNamespace{}))
+		Expect(plainns.Type()).To(Equal(species.CLONE_NEWNET))
+		Expect(plainns.Ref()).To(ConsistOf("/foobar"))
+
+		pidns := NewWithSimpleRef(species.CLONE_NEWPID, species.NamespaceID{Dev: 1, Ino: 1111}, "/foobar")
+		Expect(pidns).To(BeAssignableToTypeOf(&HierarchicalNamespace{}))
+		Expect(pidns).NotTo(BeAssignableToTypeOf(&UserNamespace{}))
+		Expect(pidns.Type()).To(Equal(species.CLONE_NEWPID))
+		Expect(pidns.Ref()).To(ConsistOf("/foobar"))
 	})
 
 })

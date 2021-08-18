@@ -30,7 +30,7 @@ var _ = Describe("Discover from processes", func() {
 	It("finds at least the namespaces lsns finds", func() {
 		allns := Discover(FromProcs())
 		alllsns := lsns()
-		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash) (.+ )?/tmp/`)
+		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash|runc) (.+ )?/tmp/`)
 		for _, ns := range alllsns {
 			nsidx := model.TypeIndex(species.NameToType(ns.Type))
 			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]

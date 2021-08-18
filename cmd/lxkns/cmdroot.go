@@ -33,6 +33,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/sys/unix"
 )
@@ -137,6 +138,10 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 		lxkns.SemVersion)
 	log.Infof("Copyright (c) Harald Albrecht, 2020..., see: https://github.com/thediveo/lxkns")
 	log.Infof("This software is licensed under the Apache License, version 2.0, see: https://www.apache.org/licenses/LICENSE-2.0")
+
+	if pausebin := mountineer.StandaloneSandboxBinary(); pausebin != "" {
+		log.Infof("using optimized pandora's sandbox binary %s", pausebin)
+	}
 
 	log.Infof("running as user ID %d", os.Geteuid())
 	mycaps := strings.Join(caps.ProcessCapabilities(model.PIDType(os.Getpid())), ", ")

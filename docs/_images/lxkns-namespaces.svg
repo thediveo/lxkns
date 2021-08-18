@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="376px" preserveAspectRatio="none" style="width:523px;height:376px;background:#FFFFFF;" version="1.1" viewBox="0 0 523 376" width="523px" zoomAndPan="magnify"><defs><filter height="300%" id="f3au7yfbzmnan" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><!--MD5=[63e60b4e525f7b729b77c5a3e1b351bb]
+cluster lxkns.model--><polygon fill="#FFFFFF" filter="url(#f3au7yfbzmnan)" points="16,6.602,107,6.602,114,31.6699,506,31.6699,506,369.602,16,369.602,16,6.602" style="stroke:#000000;stroke-width:1.5;"/><line style="stroke:#000000;stroke-width:1.5;" x1="16" x2="114" y1="31.6699" y2="31.6699"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="85" x="20" y="23.5679">lxkns.model</text><!--MD5=[152b53ade32beeea0ebc8eec93c7e8b9]
+class Hierarchy--><rect codeLine="7" fill="#FEFECE" filter="url(#f3au7yfbzmnan)" height="69.9638" id="Hierarchy" style="stroke:#A80036;stroke-width:1.5;" width="124" x="32" y="44.602"/><ellipse cx="65" cy="60.602" fill="#B4A7E5" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M61.0313,67.102 L61.0313,65.3989 L63.3906,65.1332 L63.3906,56.9301 L61.0313,56.6645 L61.0313,54.9614 L68.1719,54.9614 L68.1719,56.6645 L65.75,56.9301 L65.75,65.1332 L68.1719,65.3989 L68.1719,67.102 L61.0313,67.102 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="52" x="83" y="65.258">Hierarchy</text><line style="stroke:#A80036;stroke-width:1.5;" x1="33" x2="155" y1="76.602" y2="76.602"/><path d="M44.88,84.6139 C44.7,84.6239 44.52,84.6439 44.35,84.7039 C44.08,84.8039 43.82,84.9539 43.6,85.1739 A0.5,0.5 0 1 0 44.29,85.8639 C44.4,85.7539 44.53,85.6939 44.67,85.6439 C45.02,85.5239 45.45,85.5739 45.73,85.8639 C46.12,86.2539 46.12,86.9039 45.73,87.3039 L44.23,88.8039 C43.79,89.2439 43.43,89.2839 43.17,89.2739 C42.91,89.2639 42.76,89.1439 42.76,89.1439 A0.5,0.5 0 1 0 42.26,90.0239 C42.6,90.2439 42.6,90.2439 43.1,90.2739 C43.6,90.3039 44.3,90.1139 44.91,89.4939 L46.41,87.9939 C47.19,87.2139 47.19,85.9539 46.41,85.1839 C46.13,84.9039 45.8,84.7339 45.44,84.6539 C45.26,84.6139 45.06,84.6139 44.88,84.6239 M42.88,86.9339 C42.38,86.9139 41.69,87.0839 41.1,87.6839 L39.6,89.1839 C38.82,89.9639 38.82,91.2239 39.6,91.9939 C40.16,92.5539 40.96,92.7139 41.66,92.4639 C41.93,92.3639 42.19,92.2139 42.41,91.9939 A0.5,0.5 0 1 0 41.72,91.3039 C41.61,91.4139 41.48,91.4739 41.34,91.5239 C40.99,91.6439 40.56,91.5939 40.28,91.3039 C39.89,90.9139 39.89,90.2639 40.28,89.8639 L41.78,88.3639 C42.18,87.9639 42.53,87.9139 42.81,87.9239 C43.09,87.9339 43.28,88.0139 43.28,88.0139 A0.5,0.5 0 1 0 43.72,87.1339 C43.38,86.9339 43.38,86.9339 42.88,86.9139 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="85" x="51" y="92.3609">Parent() Hierarchy</text><path d="M44.88,99.5958 C44.7,99.6058 44.52,99.6258 44.35,99.6858 C44.08,99.7858 43.82,99.9358 43.6,100.1558 A0.5,0.5 0 1 0 44.29,100.8458 C44.4,100.7358 44.53,100.6758 44.67,100.6258 C45.02,100.5058 45.45,100.5558 45.73,100.8458 C46.12,101.2358 46.12,101.8858 45.73,102.2858 L44.23,103.7858 C43.79,104.2258 43.43,104.2658 43.17,104.2558 C42.91,104.2458 42.76,104.1258 42.76,104.1258 A0.5,0.5 0 1 0 42.26,105.0058 C42.6,105.2258 42.6,105.2258 43.1,105.2558 C43.6,105.2858 44.3,105.0958 44.91,104.4758 L46.41,102.9758 C47.19,102.1958 47.19,100.9358 46.41,100.1658 C46.13,99.8858 45.8,99.7158 45.44,99.6358 C45.26,99.5958 45.06,99.5958 44.88,99.6058 M42.88,101.9158 C42.38,101.8958 41.69,102.0658 41.1,102.6658 L39.6,104.1658 C38.82,104.9458 38.82,106.2058 39.6,106.9758 C40.16,107.5358 40.96,107.6958 41.66,107.4458 C41.93,107.3458 42.19,107.1958 42.41,106.9758 A0.5,0.5 0 1 0 41.72,106.2858 C41.61,106.3958 41.48,106.4558 41.34,106.5058 C40.99,106.6258 40.56,106.5758 40.28,106.2858 C39.89,105.8958 39.89,105.2458 40.28,104.8458 L41.78,103.3458 C42.18,102.9458 42.53,102.8958 42.81,102.9058 C43.09,102.9158 43.28,102.9958 43.28,102.9958 A0.5,0.5 0 1 0 43.72,102.1158 C43.38,101.9158 43.38,101.9158 42.88,101.8958 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="99" x="51" y="107.3428">Children() []Hierarchy</text><!--MD5=[b34ad0795e0eeccd752a3970dd825c77]
+class Ownership--><rect codeLine="12" fill="#FEFECE" filter="url(#f3au7yfbzmnan)" height="69.9638" id="Ownership" style="stroke:#A80036;stroke-width:1.5;" width="149" x="341.5" y="44.602"/><ellipse cx="383.05" cy="60.602" fill="#B4A7E5" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M379.0813,67.102 L379.0813,65.3989 L381.4406,65.1332 L381.4406,56.9301 L379.0813,56.6645 L379.0813,54.9614 L386.2219,54.9614 L386.2219,56.6645 L383.8,56.9301 L383.8,65.1332 L386.2219,65.3989 L386.2219,67.102 L379.0813,67.102 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="58" x="402.95" y="65.258">Ownership</text><line style="stroke:#A80036;stroke-width:1.5;" x1="342.5" x2="489.5" y1="76.602" y2="76.602"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="43" x="347.5" y="92.3609">UID() int</text><path d="M354.38,99.5958 C354.2,99.6058 354.02,99.6258 353.85,99.6858 C353.58,99.7858 353.32,99.9358 353.1,100.1558 A0.5,0.5 0 1 0 353.79,100.8458 C353.9,100.7358 354.03,100.6758 354.17,100.6258 C354.52,100.5058 354.95,100.5558 355.23,100.8458 C355.62,101.2358 355.62,101.8858 355.23,102.2858 L353.73,103.7858 C353.29,104.2258 352.93,104.2658 352.67,104.2558 C352.41,104.2458 352.26,104.1258 352.26,104.1258 A0.5,0.5 0 1 0 351.76,105.0058 C352.1,105.2258 352.1,105.2258 352.6,105.2558 C353.1,105.2858 353.8,105.0958 354.41,104.4758 L355.91,102.9758 C356.69,102.1958 356.69,100.9358 355.91,100.1658 C355.63,99.8858 355.3,99.7158 354.94,99.6358 C354.76,99.5958 354.56,99.5958 354.38,99.6058 M352.38,101.9158 C351.88,101.8958 351.19,102.0658 350.6,102.6658 L349.1,104.1658 C348.32,104.9458 348.32,106.2058 349.1,106.9758 C349.66,107.5358 350.46,107.6958 351.16,107.4458 C351.43,107.3458 351.69,107.1958 351.91,106.9758 A0.5,0.5 0 1 0 351.22,106.2858 C351.11,106.3958 350.98,106.4558 350.84,106.5058 C350.49,106.6258 350.06,106.5758 349.78,106.2858 C349.39,105.8958 349.39,105.2458 349.78,104.8458 L351.28,103.3458 C351.68,102.9458 352.03,102.8958 352.31,102.9058 C352.59,102.9158 352.78,102.9958 352.78,102.9958 A0.5,0.5 0 1 0 353.22,102.1158 C352.88,101.9158 352.88,101.9158 352.38,101.8958 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="124" x="360.5" y="107.3428">Ownings() AllNamespaces</text><!--MD5=[7870f61a2b09887c08d38df1315a7195]
+class Namespace--><rect codeLine="24" fill="#FEFECE" filter="url(#f3au7yfbzmnan)" height="159.8551" id="Namespace" style="stroke:#A80036;stroke-width:1.5;" width="170" x="89" y="193.602"/><ellipse cx="138.75" cy="209.602" fill="#B4A7E5" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M134.7813,216.102 L134.7813,214.3989 L137.1406,214.1332 L137.1406,205.9301 L134.7813,205.6645 L134.7813,203.9614 L141.9219,203.9614 L141.9219,205.6645 L139.5,205.9301 L139.5,214.1332 L141.9219,214.3989 L141.9219,216.102 L134.7813,216.102 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="62" x="159.25" y="214.258">Namespace</text><line style="stroke:#A80036;stroke-width:1.5;" x1="90" x2="258" y1="225.602" y2="225.602"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="132" x="95" y="241.3609">ID() species.NamespaceID</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="158" x="95" y="256.3428">Type() species.NamespaceType</text><path d="M101.88,263.5776 C101.7,263.5876 101.52,263.6076 101.35,263.6676 C101.08,263.7676 100.82,263.9176 100.6,264.1376 A0.5,0.5 0 1 0 101.29,264.8276 C101.4,264.7176 101.53,264.6576 101.67,264.6076 C102.02,264.4876 102.45,264.5376 102.73,264.8276 C103.12,265.2176 103.12,265.8676 102.73,266.2676 L101.23,267.7676 C100.79,268.2076 100.43,268.2476 100.17,268.2376 C99.91,268.2276 99.76,268.1076 99.76,268.1076 A0.5,0.5 0 1 0 99.26,268.9876 C99.6,269.2076 99.6,269.2076 100.1,269.2376 C100.6,269.2676 101.3,269.0776 101.91,268.4576 L103.41,266.9576 C104.19,266.1776 104.19,264.9176 103.41,264.1476 C103.13,263.8676 102.8,263.6976 102.44,263.6176 C102.26,263.5776 102.06,263.5776 101.88,263.5876 M99.88,265.8976 C99.38,265.8776 98.69,266.0476 98.1,266.6476 L96.6,268.1476 C95.82,268.9276 95.82,270.1876 96.6,270.9576 C97.16,271.5176 97.96,271.6776 98.66,271.4276 C98.93,271.3276 99.19,271.1776 99.41,270.9576 A0.5,0.5 0 1 0 98.72,270.2676 C98.61,270.3776 98.48,270.4376 98.34,270.4876 C97.99,270.6076 97.56,270.5576 97.28,270.2676 C96.89,269.8776 96.89,269.2276 97.28,268.8276 L98.78,267.3276 C99.18,266.9276 99.53,266.8776 99.81,266.8876 C100.09,266.8976 100.28,266.9776 100.28,266.9776 A0.5,0.5 0 1 0 100.72,266.0976 C100.38,265.8976 100.38,265.8976 99.88,265.8776 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="85" x="108" y="271.3247">Owner() Hierarchy</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="57" x="95" y="286.3066">Ref() string</text><path d="M101.88,293.5414 C101.7,293.5514 101.52,293.5714 101.35,293.6314 C101.08,293.7314 100.82,293.8814 100.6,294.1014 A0.5,0.5 0 1 0 101.29,294.7914 C101.4,294.6814 101.53,294.6214 101.67,294.5714 C102.02,294.4514 102.45,294.5014 102.73,294.7914 C103.12,295.1814 103.12,295.8314 102.73,296.2314 L101.23,297.7314 C100.79,298.1714 100.43,298.2114 100.17,298.2014 C99.91,298.1914 99.76,298.0714 99.76,298.0714 A0.5,0.5 0 1 0 99.26,298.9514 C99.6,299.1714 99.6,299.1714 100.1,299.2014 C100.6,299.2314 101.3,299.0414 101.91,298.4214 L103.41,296.9214 C104.19,296.1414 104.19,294.8814 103.41,294.1114 C103.13,293.8314 102.8,293.6614 102.44,293.5814 C102.26,293.5414 102.06,293.5414 101.88,293.5514 M99.88,295.8614 C99.38,295.8414 98.69,296.0114 98.1,296.6114 L96.6,298.1114 C95.82,298.8914 95.82,300.1514 96.6,300.9214 C97.16,301.4814 97.96,301.6414 98.66,301.3914 C98.93,301.2914 99.19,301.1414 99.41,300.9214 A0.5,0.5 0 1 0 98.72,300.2314 C98.61,300.3414 98.48,300.4014 98.34,300.4514 C97.99,300.5714 97.56,300.5214 97.28,300.2314 C96.89,299.8414 96.89,299.1914 97.28,298.7914 L98.78,297.2914 C99.18,296.8914 99.53,296.8414 99.81,296.8514 C100.09,296.8614 100.28,296.9414 100.28,296.9414 A0.5,0.5 0 1 0 100.72,296.0614 C100.38,295.8614 100.38,295.8614 99.88,295.8414 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="93" x="108" y="301.2884">Leaders() []*Process</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="121" x="95" y="316.2703">LeaderPIDs() []PIDType</text><path d="M101.88,323.5052 C101.7,323.5152 101.52,323.5352 101.35,323.5952 C101.08,323.6952 100.82,323.8452 100.6,324.0652 A0.5,0.5 0 1 0 101.29,324.7552 C101.4,324.6452 101.53,324.5852 101.67,324.5352 C102.02,324.4152 102.45,324.4652 102.73,324.7552 C103.12,325.1452 103.12,325.7952 102.73,326.1952 L101.23,327.6952 C100.79,328.1352 100.43,328.1752 100.17,328.1652 C99.91,328.1552 99.76,328.0352 99.76,328.0352 A0.5,0.5 0 1 0 99.26,328.9152 C99.6,329.1352 99.6,329.1352 100.1,329.1652 C100.6,329.1952 101.3,329.0052 101.91,328.3852 L103.41,326.8852 C104.19,326.1052 104.19,324.8452 103.41,324.0752 C103.13,323.7952 102.8,323.6252 102.44,323.5452 C102.26,323.5052 102.06,323.5052 101.88,323.5152 M99.88,325.8252 C99.38,325.8052 98.69,325.9752 98.1,326.5752 L96.6,328.0752 C95.82,328.8552 95.82,330.1152 96.6,330.8852 C97.16,331.4452 97.96,331.6052 98.66,331.3552 C98.93,331.2552 99.19,331.1052 99.41,330.8852 A0.5,0.5 0 1 0 98.72,330.1952 C98.61,330.3052 98.48,330.3652 98.34,330.4152 C97.99,330.5352 97.56,330.4852 97.28,330.1952 C96.89,329.8052 96.89,329.1552 97.28,328.7552 L98.78,327.2552 C99.18,326.8552 99.53,326.8052 99.81,326.8152 C100.09,326.8252 100.28,326.9052 100.28,326.9052 A0.5,0.5 0 1 0 100.72,326.0252 C100.38,325.8252 100.38,325.8252 99.88,325.8052 " fill="#000000" style="stroke:;stroke-width:0.0;stroke-dasharray:;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacing" textLength="104" x="108" y="331.2522">Ealdorman() *Process</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="72" x="95" y="346.2341">String() string</text><!--MD5=[0c9347c80f3b671ad8130a1c2b411d97]
+class NamespaceStringer--><rect codeLine="37" fill="#FEFECE" filter="url(#f3au7yfbzmnan)" height="54.9819" id="NamespaceStringer" style="stroke:#A80036;stroke-width:1.5;" width="137" x="294.5" y="246.102"/><ellipse cx="309.5" cy="262.102" fill="#B4A7E5" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M305.5313,268.602 L305.5313,266.8989 L307.8906,266.6332 L307.8906,258.4301 L305.5313,258.1645 L305.5313,256.4614 L312.6719,256.4614 L312.6719,258.1645 L310.25,258.4301 L310.25,266.6332 L312.6719,266.8989 L312.6719,268.602 L305.5313,268.602 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="105" x="323.5" y="266.758">NamespaceStringer</text><line style="stroke:#A80036;stroke-width:1.5;" x1="295.5" x2="430.5" y1="278.102" y2="278.102"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="109" x="300.5" y="293.8609">TypeIDString() string</text><!--MD5=[ef7b5da8081327a4bba1ed511bae0173]
+reverse link Hierarchy to Hierarchy--><path codeLine="17" d="M161.42,72.752 C178.34,73.222 191,75.512 191,79.602 C191,84.122 175.58,86.432 156.04,86.532 " fill="none" id="Hierarchy-backto-Hierarchy" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="156.04,72.672,164.9701,76.8257,161.0393,72.7577,165.1072,68.8268,156.04,72.672" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="40" x="197" y="84.999">Parent</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="164.0277" y="83.2829">*</text><!--MD5=[ef7b5da8081327a4bba1ed511bae0173]
+reverse link Hierarchy to Hierarchy--><path codeLine="18" d="M161.23,66.542 C202.48,63.752 243,68.112 243,79.602 C243,91.562 199.12,95.792 156.2,92.282 " fill="none" id="Hierarchy-backto-Hierarchy-1" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="156.2,66.922,165.4723,70.2423,161.1862,66.5505,164.878,62.2644,156.2,66.922" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="50" x="249" y="84.999">Children</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="163.7966" y="108.6708">*</text><!--MD5=[684d85846f74643a54c8c02c3e8c61a1]
+link Hierarchy to Ownership--><!--MD5=[1db9d608c13ef0006685134693c6c218]
+link Ownership to Namespace--><path codeLine="22" d="M373.01,114.702 C342.61,138.832 300.75,172.042 263.27,201.782 " fill="none" id="Ownership-to-Namespace" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="259.19,205.012,268.7331,202.577,263.1151,201.9147,263.7774,196.2967,259.19,205.012" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="53" x="331" y="159.499">Ownings</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="267.089" y="195.0811">*</text><!--MD5=[7e1713658cc299d7419fe60b5e33bfa4]
+reverse link Hierarchy to Namespace--><path codeLine="35" d="M110.27,119.652 C119.14,140.942 130.45,168.072 141.06,193.562 " fill="none" id="Hierarchy-backto-Namespace" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="108.3,114.932,108.0541,124.7778,110.216,119.5503,115.4434,121.7122,108.3,114.932" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="40" x="128" y="159.499">Owner</text><!--MD5=[eb5fe5d861fa3e819a85e017ee52de0b]
+reverse link Namespace to NamespaceStringer--><path codeLine="40" d="M279.42,273.602 C284.32,273.602 289.22,273.602 294.12,273.602 " fill="none" id="Namespace-backto-NamespaceStringer" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="279.27,280.602,259.27,273.602,279.27,266.602,279.27,280.602" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[2e6742f32a9bccf190c7dbd71c1a6033]
+@startuml lxkns-namespaces
+hide empty fields
+hide empty methods
+!define L <size:12><&link-intact></size><i>
+
+package "lxkns.model" {
+
+interface Hierarchy {
+  L Parent() Hierarchy
+  L Children() []Hierarchy
+}
+
+interface Ownership {
+  UID() int
+  L Ownings() AllNamespaces
+}
+
+Hierarchy "*" -up-> Hierarchy : Parent
+Hierarchy <-down- "*" Hierarchy : Children
+
+Hierarchy -[hidden] Ownership
+
+Ownership - -> "*" Namespace : "Ownings"
+
+interface Namespace {
+  ID() species.NamespaceID
+  Type() species.NamespaceType
+  L Owner() Hierarchy
+  Ref() string
+  L Leaders() []*Process
+  LeaderPIDs() []PIDType
+  L Ealdorman() *Process
+  String() string
+}
+
+Hierarchy <- - Namespace : "Owner"
+
+interface NamespaceStringer {
+  TypeIDString() string
+}
+Namespace <|- NamespaceStringer
+
+@enduml
+
+@startuml lxkns-namespaces
+hide empty fields
+hide empty methods
+
+package "lxkns.model" {
+
+interface Hierarchy {
+  <size:12><&link-intact></size><i> Parent() Hierarchy
+  <size:12><&link-intact></size><i> Children() []Hierarchy
+}
+
+interface Ownership {
+  UID() int
+  <size:12><&link-intact></size><i> Ownings() AllNamespaces
+}
+
+Hierarchy "*" -up-> Hierarchy : Parent
+Hierarchy <-down- "*" Hierarchy : Children
+
+Hierarchy -[hidden] Ownership
+
+Ownership - -> "*" Namespace : "Ownings"
+
+interface Namespace {
+  ID() species.NamespaceID
+  Type() species.NamespaceType
+  <size:12><&link-intact></size><i> Owner() Hierarchy
+  Ref() string
+  <size:12><&link-intact></size><i> Leaders() []*Process
+  LeaderPIDs() []PIDType
+  <size:12><&link-intact></size><i> Ealdorman() *Process
+  String() string
+}
+
+Hierarchy <- - Namespace : "Owner"
+
+interface NamespaceStringer {
+  TypeIDString() string
+}
+Namespace <|- NamespaceStringer
+
+@enduml
+
+PlantUML version 1.2021.7(Sun May 23 14:40:07 CEST 2021)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

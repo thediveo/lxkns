@@ -79,9 +79,8 @@ func NamespaceReferenceLabel(ns model.Namespace) string {
 		}
 		return s
 	}
-	if ref := ns.Ref(); ref != "" {
-		// TODO: deal with references in other mount namespaces :)
-		return fmt.Sprintf("bind-mounted at %q", ref)
+	if ref := ns.Ref(); len(ref) != 0 {
+		return fmt.Sprintf("bind-mounted at %q", ref.String())
 	}
 	return ""
 }

@@ -34,8 +34,8 @@ var _ = Describe("Discover", func() {
 
 	It("sorts namespace maps", func() {
 		nsmap := model.NamespaceMap{
-			species.NamespaceID{Dev: 1, Ino: 5678}: namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
-			species.NamespaceID{Dev: 1, Ino: 1234}: namespaces.New(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
+			species.NamespaceID{Dev: 1, Ino: 5678}: namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			species.NamespaceID{Dev: 1, Ino: 1234}: namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		dr := DiscoveryResult{}
 		dr.Namespaces[model.NetNS] = nsmap
@@ -47,8 +47,8 @@ var _ = Describe("Discover", func() {
 
 	It("sorts namespace lists", func() {
 		nslist := []model.Namespace{
-			namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
-			namespaces.New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
+			namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
+			namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
 		sortedns := SortNamespaces(nslist)
 		Expect(sortedns).To(HaveLen(2))

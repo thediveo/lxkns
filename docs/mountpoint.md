@@ -24,14 +24,15 @@ points.
 
 Mount points can become hidden (invisible) when getting "overmounted":
 
-- in-place overmount: another mount point at the same mount path as a previous
-  mount point hides the former mount point. It is even possible to bind-mount a
-  mount point onto itself, changing mount options, such as mount point
-  propagation, et cetera.
+- **in-place overmount**: another mount point at the same mount path as a
+  previous mount point hides the former mount point. It is even possible to
+  bind-mount a mount point onto itself, changing mount options, such as mount
+  point propagation, et cetera.
 
-- overmount higher up the mount path: a mount point has a prefix path of another
-  mount path and mount point and thus is hidding the latter, including all mount
-  points with paths further down the hierarchy below the hidden mount point.
+- **overmount higher up the mount path**: a mount point has a prefix path of
+  another mount path and mount point and thus is hidding the latter, including
+  all mount points with paths further down the hierarchy below the hidden mount
+  point.
 
 Lxkns also discovers mount points in mount namespaces that currently are
 process-less, but that have been bind-mounted into the VFS – one example is the

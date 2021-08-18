@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report buildapp startapp
+.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify
 
 help:
 	@echo "available targets: clean, citestapp, coverage, deploy, undeploy, install, test, report, buildapp, startapp"
@@ -97,3 +97,6 @@ buildapp:
 startapp:
 	@echo "starting version" $${GIT_VERSION}
 	@cd web/lxkns && yarn start
+
+docsify:
+	@docsify serve -p 3030 -P 3031 docs

@@ -91,9 +91,12 @@ type ContainerUnMarshal struct {
 	*model.Container
 }
 
+// ContainerMarshal basically is ContainerUnMarshal, but brings in its own
+// labels field so that we can ensure to never marshal a nil map without having
+// to change the underlaying information model container object.
 type ContainerMarshal struct {
 	ContainerUnMarshal
-	Labels model.Labels `json:"labels"` // ensure to never marshal nil=nill.
+	Labels model.Labels `json:"labels"` // ensure to never marshal nil=null.
 }
 
 // MarshalJSON emits a set of containers in JSON textual format, representing

@@ -65,7 +65,7 @@ func (d NamespacesDict) Get(nsid species.NamespaceID, nstype species.NamespaceTy
 	nsidx := model.TypeIndex(nstype)
 	ns, ok := d.AllNamespaces[nsidx][nsid]
 	if !ok {
-		ns = namespaces.New(nstype, nsid, "")
+		ns = namespaces.New(nstype, nsid, nil)
 		d.AllNamespaces[nsidx][nsid] = ns
 	}
 	return ns
@@ -121,14 +121,14 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
 type NamespaceUnMarshal struct {
-	ID       uint64          `json:"nsid"`                // namespace ID.
-	Type     string          `json:"type"`                // "net", "user", et cetera...
-	Owner    uint64          `json:"owner,omitempty"`     // namespace ID of owning user namespace.
-	Ref      string          `json:"reference,omitempty"` // file system path reference.
-	Leaders  []model.PIDType `json:"leaders,omitempty"`   // list of leader PIDs.
-	Parent   uint64          `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
-	UserUID  int             `json:"user-id,omitempty"`   // user: owner's user ID (UID).
-	UserName string          `json:"user-name,omitempty"` // user: name.
+	ID       uint64             `json:"nsid"`                // namespace ID.
+	Type     string             `json:"type"`                // "net", "user", et cetera...
+	Owner    uint64             `json:"owner,omitempty"`     // namespace ID of owning user namespace.
+	Ref      model.NamespaceRef `json:"reference,omitempty"` // file system path reference(s).
+	Leaders  []model.PIDType    `json:"leaders,omitempty"`   // list of leader PIDs.
+	Parent   uint64             `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
+	UserUID  int                `json:"user-id,omitempty"`   // user: owner's user ID (UID).
+	UserName string             `json:"user-name,omitempty"` // user: name.
 }
 
 // NamespaceMarshal adds those fields to NamespaceUnmarshal we marshal as a

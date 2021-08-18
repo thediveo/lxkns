@@ -11,7 +11,7 @@ import (
 // by other lxkns subpackages.
 type NamespaceConfigurer interface {
 	AddLeader(proc *model.Process)             // adds yet another self-styled leader.
-	SetRef(string)                             // sets a filesystem path for referencing this namespace.
+	SetRef(ref model.NamespaceRef)             // sets a filesystem path for referencing this namespace.
 	DetectOwner(nsr relations.Relation)        // detects owning user namespace id.
 	SetOwner(usernsid species.NamespaceID)     // sets the owning user namespace id directly.
 	ResolveOwner(usernsmap model.NamespaceMap) // resolves owner ns id into object reference.
