@@ -116,20 +116,27 @@ func NamespaceIDfromInode(ino uint64) NamespaceID {
 	return NoneID
 }
 
+// undefined nsfs DEv ID.
+const undefined = ^uint64(0)
+
 // In order return correct NamespaceIDs given only the kernel's currently
 // incomplete textual format, we need to pick up the device ID of the kernel's
 // special nsfs filesystem. nsfs manages namespace identifiers. In order to
 // avoid a circual dependency, we cannot use ops.NamespacePath, but instead have
 // to use the underlying query directly to get the required device ID.
-var nsfsdev = ^uint64(0)
+var nsfsdev = undefined
 
 // nsfsDev returns the device ID of the nsfs filesystem, to be used to fix
 // incomplete textual namespace references. This function dynamically discovers
 // the device ID and then caches it. It relies on a properly mounted /proc.
 func nsfsDev() uint64 {
-	if nsfsdev == ^uint64(0) {
+	return testableNsfsDev("/proc/self/ns/net")
+}
+
+func testableNsfsDev(nsref string) uint64 {
+	if nsfsdev == undefined { // Gophers will kill you if you try to write "===" here.
 		var stat unix.Stat_t
-		if err := unix.Stat("/proc/self/ns/net", &stat); err != nil {
+		if err := unix.Stat(nsref, &stat); err != nil {
 			nsfsdev = 0
 		} else {
 			nsfsdev = stat.Dev

@@ -1,11 +1,12 @@
 /*
 
-Package species defines the type constants and type names of the 8 Linux kernel
-namespace types ("species"). In addition, this package also defines how to
-represent namespace identifiers, which actually consist of not only an inode
-number, but also the device ID where a namespace inode is located on. This
-package also converts between the namespace type names and their corresponding
-(Linux kernel) constants, as well as between the internal and textual
+Package species defines the type constants and type names of the currently 8
+Linux kernel namespace types ("species"). Furthermore, this package also defines
+how to represent namespace identifiers: they consist of not only an inode
+number, but also the device ID where a namespace inode is located on (but see
+the next section below). The species package also converts between the namespace
+type names (such as "mnt", "net", and so on) and their corresponding (Linux
+kernel) constants (CLONE_NEWxxx), as well as between the internal and textual
 representations of namespace identifiers.
 
 Namespace Identifiers

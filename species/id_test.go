@@ -21,6 +21,20 @@ import (
 
 var _ = Describe("Namespace IDs", func() {
 
+	BeforeEach(func() {
+		nsfsdev = undefined
+	})
+
+	It("handles errors when detecting nsfs Device ID", func() {
+		Expect(testableNsfsDev("foobar")).To(BeZero())
+	})
+
+	It("returns NoneID when nsfs detection fails", func() {
+		nsfsdev = 0
+		id, _ := IDwithType("net:[12345678]")
+		Expect(id).To(Equal(NoneID))
+	})
+
 	It("compares namespace IDs", func() {
 		ns1 := NamespaceID{Dev: 42, Ino: 123}
 		ns11 := NamespaceID{Dev: 42, Ino: 123}
