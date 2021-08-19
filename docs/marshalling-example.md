@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-    reexec.CheckAction() // only for discovery, not for unmarshalling
     b, _ := json.Marshal(
         apitypes.NewDiscoveryResult(
             lxkns.Discover(lxkns.StandardDiscovery())))

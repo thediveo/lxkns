@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
@@ -29,8 +28,6 @@ import (
 )
 
 func main() {
-	reexec.CheckAction() // must be called before a standard discovery
-
 	// Set up a Docker engine-connected containerizer
 	moby, err := moby.New("", nil)
 	if err != nil {

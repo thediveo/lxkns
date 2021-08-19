@@ -20,7 +20,6 @@ import (
 )
 
 func main() {
-    reexec.CheckAction() // must be called before a standard discovery
     result := lxkns.Discover(lxkns.StandardDiscovery())
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
@@ -67,8 +66,6 @@ import (
 )
 
 func main() {
-    reexec.CheckAction() // must be called before a standard discovery
-
     // Set up a Docker engine-connected containerizer
     moby, err := moby.NewWatcher("")
     if err != nil {

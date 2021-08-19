@@ -27,27 +27,15 @@ A namespace discovery is just a single call to function lxkns.Discover(). It
 accepts option setters, such as lxkns.StandardDiscovery(),
 lxkns.WithMounts(), et cetera.
 
-Additionally, there's a one-time support function call to reexec.CheckAction()
-required as early as possible in main().
-
     import (
         "github.com/thediveo/gons/reexec"
         "github.com/thediveo/lxkns"
     )
 
     func main() {
-        reexec.CheckAction()
-        ...
         allns := lxkns.Discover(lxkns.StandardDiscovery())
         ...
     }
-
-Technical note: in order to discover namespaces in some locations, such as
-bind-mounted namespaces, lxkns needs to fork the process it used from in, in
-order to switch the forked copy into other mount namespaces for further
-discovery. In order to implement this mechanism as painless as possible, process
-using lxkns need to call reexec.CheckAction() as early as possible from their
-main().
 
 Basics of the lxkns Information Model
 
