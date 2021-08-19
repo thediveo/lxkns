@@ -74,7 +74,7 @@ void gosandbox(void) {
         close(usernsfd); /* Don't leak file descriptors */
         if (res < 0) {
             dprintf(STDERR_FILENO,
-                "package gons: cannot join user namespace using reference \"%s\": %s\n", 
+                "package mntnssandbox: cannot join user namespace using reference \"%s\": %s\n", 
                 usernsref, strerror(errno));
             exit(66);
         }
@@ -96,7 +96,7 @@ void gosandbox(void) {
     close(mntnsfd); /* Don't leak file descriptors */
     if (res < 0) {
         dprintf(STDERR_FILENO,
-            "package gons: cannot join mount namespace using reference \"%s\": %s\n", 
+            "package mntnssandbox: cannot join mount namespace using reference \"%s\": %s\n", 
             mntnsref, strerror(errno));
         exit(66);
     }

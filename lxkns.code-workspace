@@ -10,6 +10,7 @@
 		"plantuml.diagramsRoot": "puml",
 		"plantuml.exportFormat": "svg",
 		"plantuml.exportOutDir": "docs/_images",
-		"plantuml.exportSubFolder": false
+		"plantuml.exportSubFolder": false,
+		"go.testFlags": ["-v"]
 	}
 }
