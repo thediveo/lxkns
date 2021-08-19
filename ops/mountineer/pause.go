@@ -106,7 +106,7 @@ func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cm
 	// mount namespace. Of course, things might still go horribly wrong in after
 	// starting the pause process, such as with invalid mount namespace
 	// references, denied access, et cetera. So we need to deal with the pause
-	// process permaturely terminating while we wait for the "OK" that will
+	// process prematurely terminating while we wait for the "OK" that will
 	// never come...
 	okch := make(chan bool)
 	waiterrch := make(chan error, 1) // decouple sender from (maybe missing) consumer.

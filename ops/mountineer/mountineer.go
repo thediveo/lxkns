@@ -35,10 +35,10 @@ import (
 // even be located in some other mount namespace (to be reached by a series of
 // mount namespace references).
 type Mountineer struct {
-	// Target mount namespace reference, optionally preceeded by contextual
-	// mount namespace references. The first reference is always taken in the
-	// context of the initial mount namespace, each following reference then in
-	// the context of its preceeding mount namespace.
+	// Target mount namespace reference, optionally preceded by contextual mount
+	// namespace references. The first reference is always taken in the context
+	// of the initial mount namespace, each following reference then in the
+	// context of its preceding mount namespace.
 	ref model.NamespaceRef
 	// root path for addressing paths and directories ("contents") in the file
 	// system view provided by a mount namespace.
@@ -61,7 +61,7 @@ func init() {
 	}
 }
 
-// initialContextPID is the PID to use as the intial context for resolving
+// initialContextPID is the PID to use as the initial context for resolving
 // non-proc reference path elements.
 var initialContextPID = model.PIDType(1)
 

@@ -139,7 +139,7 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
         namespace.reference[0].includes('/fd/')
 
     const ref = (namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
-        ? namespace.reference.slice(1) : namespace.reference)
+        ? namespace.reference.slice(1) : (namespace.reference || []))
         .map((refpath, idx) => [
             idx > 0 ? <DoubleArrowIcon fontSize="inherit" className={classes.bmsep} /> : undefined,
             <span className="bindmount">{refpath}</span>,
