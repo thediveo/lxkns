@@ -32,5 +32,5 @@ container *types*.
 
 > [!ATTENTION] As the containerd namespace (not: Linux-kernel namespace) named
 > `"moby"` is used by the Docker engine for its containers and the names(!) of
-> Docker containers are not accessible via containerd this particular namespace
-> is always ignored.
+> Docker containers are not accessible via `containerd` this particular `"moby"`
+> namespace is always ignored by the `containerd`-specific discovery.

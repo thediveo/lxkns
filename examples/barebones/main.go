@@ -28,11 +28,14 @@ import (
 )
 
 func main() {
-	// Set up a Docker engine-connected containerizer
+	// Set up a Docker engine-connected containerizer and wait for it to
+	// synchronize.
 	moby, err := moby.New("", nil)
 	if err != nil {
 		panic(err)
 	}
+	<-moby.Ready()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
