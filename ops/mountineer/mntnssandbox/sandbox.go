@@ -22,7 +22,13 @@ void __attribute__((constructor)) mntnssandboxinit(void) {
 */
 import "C"
 
+// MntnsEnvironmentVariableName specifies the name of the mandatory environment
+// variable via which to pass the path referencing the mount namespace to enter.
 const MntnsEnvironmentVariableName = "sleepy_mntns"
+
+// UsernsEnvironmentVariableName specifies the name of the optional environment
+// variable via which to pass the path referencing the user namespace to enter
+// before entering the mount namespace.
 const UsernsEnvironmentVariableName = "sleepy_userns"
 
 // There's nothing else here; gomntns will never return.

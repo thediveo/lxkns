@@ -36,24 +36,43 @@ func discoverContainers(result *DiscoveryResult) {
 	if result.Options.Containerizer == nil {
 		return
 	}
-	containers := result.Options.Containerizer.Containers(context.Background(), result.Processes, nil) // TODO:
+	var initialPIDns model.Namespace
+	if len(result.PIDNSRoots) == 1 {
+		initialPIDns = result.PIDNSRoots[0]
+	}
+	containers := result.Options.Containerizer.Containers(context.Background(), result.Processes, result.PIDMap)
 	// Update the discovery information with the container found and establish
-	// the links between container and process information model objects.
+	// the links between container and process information model objects. Also
+	// translate container PIDs where necessary, such as in case of
+	// containerized container engines (sic!).
 	result.Containers = containers
-	enginesmap := map[*model.ContainerEngine]struct{}{}
+	enginesPIDns := map[*model.ContainerEngine]model.Namespace{} // cache engines' PID namespaces
+	pidmap := result.PIDMap
 	for _, container := range containers {
 		if container.Engine == nil {
 			panic(fmt.Sprintf("containerizer returned container without engine: %+v", container))
 		}
-		enginesmap[container.Engine] = struct{}{}
-		// TODO: translate PID to initial PID namespace, if necessary.
-		if proc, ok := result.Processes[container.PID]; ok {
-			proc.Container = container
-			container.Process = proc
+		enginePIDns, ok := enginesPIDns[container.Engine]
+		if !ok {
+			if engineProc, ok := result.Processes[container.Engine.PID]; ok {
+				enginePIDns = engineProc.Namespaces[model.PIDNS]
+			}
+			// Cache even unsuckcessful engine PID namespace lookups.
+			enginesPIDns[container.Engine] = enginePIDns
+		}
+		// Translate container PID from its managing container engine PID
+		// namespace to initial PID namespace, if necessary.
+		if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns { // TODO: optimize check
+			container.PID = pidmap.Translate(container.PID, enginePIDns, initialPIDns)
+		}
+		// Relate this container with its initial process and vice versa.
+		if containerProc, ok := result.Processes[container.PID]; ok {
+			containerProc.Container = container
+			container.Process = containerProc
 		}
 	}
-	engines := make([]*model.ContainerEngine, 0, len(enginesmap))
-	for engine := range enginesmap {
+	engines := make([]*model.ContainerEngine, 0, len(enginesPIDns))
+	for engine := range enginesPIDns {
 		engines = append(engines, engine)
 	}
 	log.Infof("discovered %s managed by %s",

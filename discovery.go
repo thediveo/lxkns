@@ -38,6 +38,7 @@ type DiscoveryResult struct {
 	UserNSRoots       []model.Namespace      // the topmost user namespace(s) in the hierarchy.
 	PIDNSRoots        []model.Namespace      // the topmost PID namespace(s) in the hierarchy.
 	Processes         model.ProcessTable     // processes checked for namespaces.
+	PIDMap            model.PIDMapper        `json:"-"` // optional PID translator.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
 	Containers        []*model.Container     // all alive containers found
 }
@@ -144,6 +145,10 @@ func Discover(options ...DiscoveryOption) *DiscoveryResult {
 	if opts.NamespaceTypes == 0 {
 		opts.NamespaceTypes = species.AllNS
 	}
+	// If a PID mapping is required, ensure that PID namespaces are discovered.
+	if opts.withPIDmap || opts.Containerizer != nil {
+		opts.NamespaceTypes |= species.CLONE_NEWPID
+	}
 	result := &DiscoveryResult{
 		Options:   opts,
 		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
@@ -185,6 +190,11 @@ func Discover(options ...DiscoveryOption) *DiscoveryResult {
 		}
 		return fmt.Sprintf("discovered %s namespaces", strings.Join(perns, ", "))
 	})
+
+	// Do we need a PID mapping between PID namespaces?
+	if opts.withPIDmap || opts.Containerizer != nil {
+		result.PIDMap = NewPIDMap(result)
+	}
 
 	// Optionally discover alive containers and relate the.
 	discoverContainers(result)

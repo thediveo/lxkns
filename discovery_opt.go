@@ -41,6 +41,8 @@ type DiscoverOpts struct {
 	DiscoverMounts       bool `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
 
 	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
+
+	withPIDmap bool `json:"-"` // create a PID translator.
 }
 
 // DiscoveryOption represents a function able to set a particular discovery
@@ -64,6 +66,7 @@ func WithStandardDiscovery() DiscoveryOption {
 		o.DiscoverHierarchy = true
 		o.DiscoverOwnership = true
 		o.DiscoverFreezerState = true
+		o.withPIDmap = false
 	}
 }
 
@@ -83,6 +86,13 @@ func WithFullDiscovery() DiscoveryOption {
 // types need to be OR'ed together. Setting 0 will discover all available types.
 func WithNamespaceTypes(t species.NamespaceType) DiscoveryOption {
 	return func(o *DiscoverOpts) { o.NamespaceTypes = t }
+}
+
+// WithPIDMapper opts in to discover the PID mapping between PID namespaces.
+// Please note that specifying a containerizer also automatically opts in to PID
+// mapping discovery.
+func WithPIDMapper() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.withPIDmap = true }
 }
 
 // FromProcs opts to find namespaces attached to processes.
