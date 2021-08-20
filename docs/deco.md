@@ -1,5 +1,11 @@
 # Decorations
 
+No, this isn't about the icing on your cake and we don't care if you try to have
+and eat it at the same time. Instead, this is about useful information about
+containers – and especially groups of containers – beyond the containers
+themselves. Decoration cover common use cases so applications get relieved from
+this kind of boring "data reconditioning".
+
 ## (Docker) Composer Projects
 
 Containers belonging to a (Docker/nerdctl) composer project are decorated using

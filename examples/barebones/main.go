@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
@@ -29,13 +28,14 @@ import (
 )
 
 func main() {
-	reexec.CheckAction() // must be called before a standard discovery
-
-	// Set up a Docker engine-connected containerizer
+	// Set up a Docker engine-connected containerizer and wait for it to
+	// synchronize.
 	moby, err := moby.New("", nil)
 	if err != nil {
 		panic(err)
 	}
+	<-moby.Ready()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})

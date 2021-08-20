@@ -1,16 +1,19 @@
 # Mountineers
 
-> There are Engineers, Hellsineers<sup>*</sup>, Mountineers...
+There are Engineers, Hellsineers<sup>*</sup>, Mountineers...
 
-Okay, all the joking aside, "mountineers" are used in lxkns to access the
-filesystem inside mount namespaces which are bind-mounted and (at least
-currently) have no process joined to them. So, mountineers mount mount
-namespaces in order to access their contents using ordinary file operations.
+Okay, all the joking aside, "mountineers" are used in lxkns to access the file
+system inside those mount namespaces which are only bind-mounted and thus
+currently have no process attached to them. So, mountineers mount mount
+namespaces in order to access their contents using ordinary file operations
+(albeit not in the technical sense of the `mount(2)` syscall).
 
-In fact, mountineers are also used to unify access to the filesystem contents
-inside mount namespaces in general. They hide all the logic to decide whether
-there's a process already in place that gives us access via the process
-filesystem, or whether we need to spin up a temporary "sandbox" process.
+In fact, mountineers are used to unify access to the file system contents inside
+mount namespaces in general, regardless of bind-mounted or not. The mountineers
+hide all the logic to decide whether there's a convenient process already in
+place that gives us access via the process filesystem, or whether we need to
+spin up our own dedicates, yet temporary "sandbox" process (see also:
+[mntnssandbox](mntnssandbox)).
 
 ## Usage
 

@@ -41,10 +41,8 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > lies in the design of the Go runtime which runs multiple threads and Linux not
 > allowing multi-threaded processes to switch mount namespaces. In order to work
 > around this constraint, `lxkns` must fork and immediately re-execute the
-> process it is used in. Applications that want to use such advanced discovery
-> methods thus **must** call `reexec.CheckAction()` as early as possible in
-> their `main()` function. For this, you need to `import
-> "github.com/thediveo/gons/reexec"`.
+> process it is used in just to make it sleep (there's an optional separate
+> minimized mntnssandbox binary for this).
 
 ## Required Capabilities
 

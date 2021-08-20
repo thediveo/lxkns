@@ -16,6 +16,7 @@ package mountineer
 
 import (
 	"fmt"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,6 +38,9 @@ var _ = Describe("mountineer", func() {
 	})
 
 	It("mounts a mount namespace", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)

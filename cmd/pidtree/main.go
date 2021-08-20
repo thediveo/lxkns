@@ -22,18 +22,12 @@ package main
 
 import (
 	"os"
-
-	"github.com/thediveo/gons/reexec"
 )
 
 func main() {
-	// For some discovery methods this app must be forked and re-executed; the
-	// call to reexec.CheckAction() will automatically handle this situation
-	// and then never return when in re-execution.
-	reexec.CheckAction()
-	// Otherwise, this is cobra boilerplate documentation, except for the
-	// missing call to fmt.Println(err) which in the original boilerplate is
-	// just plain wrong: it renders the error message twice, see also:
+	// This is cobra boilerplate documentation, except for the missing call to
+	// fmt.Println(err) which in the original boilerplate is just plain wrong:
+	// it renders the error message twice, see also:
 	// https://github.com/spf13/cobra/issues/304
 	if err := newRootCmd().Execute(); err != nil {
 		osExit(1)

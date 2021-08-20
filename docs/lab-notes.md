@@ -1,21 +1,21 @@
-# API Notes
+# Laboratory Notes
 
-Laboratory notes about lxkns API and functionality that truely don't belong to
-the information model section.
+Things that truely don't belong into the information model section.
 
 ## Namespace Discovery
 
 - function `Discover()`
 - type `DiscoveryResult`
 
-Nota bene:
+### Capabilities
 
 Discovering namespaces from the `proc` filesystem (usually mounted as `/proc`)
 requires sufficient "privileges" – capabilities – in order to query processes
 owned by users different than the one running a `lxkns` namespace discovery.
 More specific, this requires `CAP_SYS_PTRACE`, which is a rather nasty
 capability, allowing to stop and trace other processes, to dump them, and many
-more god-like things.
+more god-like things like shamelessly peeking into the mount namespaces of
+unsuspecting containers.
 
 ### Multiple "Root" PID and user Namespaces
 

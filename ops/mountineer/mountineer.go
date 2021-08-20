@@ -139,7 +139,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, err
 			if len(r) < 4 || r[3] == "" {
 				return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String())
 			}
-			rooterpid, err := strconv.Atoi(r[2])
+			rooterpid, err := strconv.ParseInt(r[2], 10, 32)
 			if err != nil || rooterpid <= 0 {
 				return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String())
 			}

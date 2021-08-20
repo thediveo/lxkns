@@ -15,12 +15,10 @@
 package main
 
 import (
-	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	rxtst "github.com/thediveo/gons/reexec/testing"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
@@ -101,14 +99,6 @@ var _ = BeforeEach(func() {
 var _ = AfterEach(func() {
 	osExit = oldexit
 })
-
-func TestMain(m *testing.M) {
-	// Ensure that the registered handler is run in the re-executed child.
-	// This won't trigger the handler while we're in the parent. We're using
-	// gons' very special coverage profiling support for re-execution.
-	mm := &rxtst.M{M: m}
-	os.Exit(mm.Run())
-}
 
 func TestNscapsCmd(t *testing.T) {
 	style.PrepareForTest()
