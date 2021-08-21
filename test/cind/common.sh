@@ -5,7 +5,7 @@ KINDBASE_IMAGE="kindest/base:v20210729-302b42d2"
 CIND_IMAGE="lxkns/cind:inception"
 
 # Name of test container instance.
-CNTR_NAME="containerd-in-docker"
+CNTR_NAME="${CNTR_NAME:-containerd-in-docker}"
 
 # While waiting for the containerd docker container to boot and start its
 # inner testing container, print a "." every n lines of container log output.

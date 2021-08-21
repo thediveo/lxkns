@@ -31,11 +31,15 @@ import (
 
 // discoverContainers discovers alive containers using the optionally specified
 // Containerizer and then resolves the relationships between containers and
-// processes (and thus also namespaces).
+// processes (and thus also namespaces). Also translates container PIDs for
+// containers in containers when their container engine PIDs are known so that
+// PID translation is possible.
 func discoverContainers(result *DiscoveryResult) {
 	if result.Options.Containerizer == nil {
 		return
 	}
+	// Get the initial PID namespace so we can translate container-in-container
+	// PIDs if it should become necessary.
 	var initialPIDns model.Namespace
 	if len(result.PIDNSRoots) == 1 {
 		initialPIDns = result.PIDNSRoots[0]
@@ -62,8 +66,10 @@ func discoverContainers(result *DiscoveryResult) {
 		}
 		// Translate container PID from its managing container engine PID
 		// namespace to initial PID namespace, if necessary.
-		if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns { // TODO: optimize check
-			container.PID = pidmap.Translate(container.PID, enginePIDns, initialPIDns)
+		if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns {
+			if pid := pidmap.Translate(container.PID, enginePIDns, initialPIDns); pid != 0 {
+				container.PID = pid
+			}
 		}
 		// Relate this container with its initial process and vice versa.
 		if containerProc, ok := result.Processes[container.PID]; ok {

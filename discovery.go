@@ -40,7 +40,7 @@ type DiscoveryResult struct {
 	Processes         model.ProcessTable     // processes checked for namespaces.
 	PIDMap            model.PIDMapper        `json:"-"` // optional PID translator.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
-	Containers        []*model.Container     // all alive containers found
+	Containers        model.Containers       // all alive containers found
 }
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The

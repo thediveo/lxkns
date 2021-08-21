@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,23 +31,32 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var _ = Describe("Discover containers in containers", func() {
+const cindName = "containerd-in-docker" // name of Docker container with containerd
 
-	It("translates container PIDs", func() {
+var _ = Describe("Discovering containers in containers", func() {
+
+	BeforeEach(func() {
 		if os.Getuid() != 0 {
 			Skip("needs root")
+			return
 		}
+		out, err := exec.Command("./test/cind/setup.sh").CombinedOutput()
+		Expect(err).NotTo(HaveOccurred(), "with output:", out)
+	})
 
-		pt := model.NewProcessTable(false)
-		var mobypid model.PIDType
-		for _, proc := range pt {
-			if proc.Name == "dockerd" {
-				mobypid = proc.PID
-				break
-			}
-		}
-		Expect(mobypid).NotTo(BeZero(), "dockerd not found")
+	AfterEach(func() {
+		out, err := exec.Command("./test/cind/teardown.sh").CombinedOutput()
+		Expect(err).NotTo(HaveOccurred(), "with output:", out)
+	})
 
+	It("translates container-in-container PIDs", func() {
+		By("finding the Docker daemon PID")
+		mobyproc := model.NewProcessTable(false).ByName("dockerd")
+		Expect(mobyproc).To(HaveLen(1))
+		mobypid := mobyproc[0].PID
+		Expect(mobypid).NotTo(BeZero())
+
+		By("watching the Docker daemon with a known PID")
 		mw, err := moby.New("", nil, mobyengine.WithPID(int(mobypid)))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -54,24 +64,17 @@ var _ = Describe("Discover containers in containers", func() {
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()
-
 		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 
+		By("finding the containerd-in-docker container")
 		allns := Discover(WithStandardDiscovery(), WithContainerizer(cizer))
-		Expect(allns.Containers).To(ContainElement(
-			WithTransform(func(c *model.Container) string { return c.Name }, Equal("containerd-in-docker"))))
-
-		var cind *model.Container
-		for _, c := range allns.Containers {
-			if c.Name == "containerd-in-docker" {
-				cind = c
-				break
-			}
-		}
+		cind := allns.Containers.FirstWithName(cindName)
+		Expect(cind).NotTo(BeNil())
 		enginepid := cind.PID
 		Expect(enginepid).NotTo(BeZero(), "missing/invalid container %q with zero PID", cind.Name)
 		cancel()
 
+		By("watching both the Docker daemon and containerd")
 		mw, err = moby.New("", nil, mobyengine.WithPID(int(mobypid)))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -87,19 +90,15 @@ var _ = Describe("Discover containers in containers", func() {
 		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 		Eventually(cdw.Ready()).Should(BeClosed(), "containerd watcher failed to synchronize")
 
+		By("finding the sleepy container with the sleep process inside the containerd-in-docker container")
 		allns = Discover(WithStandardDiscovery(), WithContainerizer(cizer))
-		Expect(allns.Containers).To(ContainElement(
-			WithTransform(func(c *model.Container) string { return c.Engine.Type }, Equal(cdengine.Type))))
-		var sleepy *model.Container
-		for _, c := range allns.Containers {
-			if c.Engine.Type == cdengine.Type {
-				Expect(sleepy).To(BeZero())
-				sleepy = c
-			}
-		}
+		containerds := allns.Containers.WithEngineType(cdengine.Type)
+		Expect(containerds).To(HaveLen(1))
+		sleepy := containerds[0]
+		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).NotTo(BeNil())
 		Expect(sleepy.Process.Cmdline).To(ConsistOf("sleep", ContainSubstring("1000")))
-
+		Expect(sleepy.PID).To(Equal(sleepy.Process.PID))
 	})
 
 })

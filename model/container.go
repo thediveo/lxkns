@@ -16,6 +16,10 @@
 
 package model
 
+// Containers is a slice of Container, offering some convenience functions, such
+// as finding a container by name.
+type Containers []*Container
+
 // Container is a deliberately limited and simplified view on "alive" containers
 // (where alive containers always have at least an initial process, so are never
 // process-less). This is all we need in the context of Linux-kernel namespaces.
@@ -66,4 +70,25 @@ func (c *Container) Group(Type string) *Group {
 		}
 	}
 	return nil
+}
+
+// FirstWithName returns the first container with the specified name, or nil if
+// none could be found.
+func (cs Containers) FirstWithName(name string) *Container {
+	for _, c := range cs {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
+}
+
+// WithEngineType returns only containers matching the specific engine type.
+func (cs Containers) WithEngineType(enginetype string) (tcs Containers) {
+	for _, c := range cs {
+		if c.Engine.Type == enginetype {
+			tcs = append(tcs, c)
+		}
+	}
+	return
 }

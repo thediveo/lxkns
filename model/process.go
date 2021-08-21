@@ -263,6 +263,16 @@ func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) 
 	return
 }
 
+// ByName returns all processes with the specified name.
+func (t ProcessTable) ByName(name string) (procs []*Process) {
+	for _, proc := range t {
+		if proc.Name == name {
+			procs = append(procs, proc)
+		}
+	}
+	return
+}
+
 // ProcessListByPID is a type alias for sorting slices of *Process by their
 // PIDs in numerically ascending order.
 type ProcessListByPID []*Process
