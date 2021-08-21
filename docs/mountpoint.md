@@ -1,8 +1,11 @@
 # Mount Point Discovery
 
 In mount namespaces, lxkns discovers the **mount point hierarchy** from
-`mountinfo` in procfs. It then not only derives the VFS mount **path hierarchy**
-from this information, but determines also mount point **visibility**.
+`mountinfo` in the [process file
+system](https://man7.org/linux/man-pages/man5/proc.5.html). It then not only
+derives the VFS mount **path hierarchy** from this information, but determines
+also mount point **visibility**. This is a slightly involved process[^1], to put
+it mildly, so lxkns does it for you.
 
 ## Point and Path Hierarchies
 
@@ -37,3 +40,10 @@ Mount points can become hidden (invisible) when getting "overmounted":
 Lxkns also discovers mount points in mount namespaces that currently are
 process-less, but that have been bind-mounted into the VFS – one example is the
 ["snap" technology](https://snapcraft.io/docs) by Canonical.
+
+#### Notes
+
+[^1]: see also this StackExchange question: [Check for
+      overmount?](https://unix.stackexchange.com/questions/398983/check-for-overmount);
+      the originally proposed algorithm unfortunately causes false positives, so
+      lxkns uses a completely redesigned algorithm instead.

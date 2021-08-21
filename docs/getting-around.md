@@ -67,7 +67,8 @@ different cgroup controllers ❸, ❹. These are additionally listed as to not m
 such different "tenants".
 
 > [!NOTE] The init process with PID 1 is always shown first, while all other
-> "tenants" are sorted by their process names.
+> "tenants" are sorted by their process names. Additionally, PID 1 is marked
+> with a golden crown icon.
 
 Those namespaces ❸ created at system start are called "initial namespaces".
 These are visually marked by dashed borders to make them easily spottable.

@@ -26,7 +26,7 @@ All lxkns module tests (including tests for the CLI tools) can be run in a test
 container, see the `deployments/test` directory for how the test container is
 built.
 
-A docker engine (including the containerd engine) are required to be installed,
+A Docker engine (including the containerd engine) is required to be installed,
 operational, and accessible also from non-root users.
 
 Getting rid of `--privileged` even for the test container was a challenge. The

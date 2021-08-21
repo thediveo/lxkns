@@ -17,13 +17,17 @@ Deployment features:
     file system.
   - `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` allow us to switch (especially mount)
     namespaces in order to look into more places compared to standard discovery
-    tools. Additionally, they allow us to switch the discovery service back into
-    the initial cgroup namespace in order to discover correct cgroup hierarchy
-    information. Similar, temporarily switching into the initial mount namespace
-    allows us to correctly pick up the freezer ("fridge") states of processes,
-    this works around having to either explicitly mount the host's cgroup into
-    the container or to unprotect the container's system paths (which
-    docker-compose yet does not support).
+    tools.
+    
+    Additionally, they allow us to switch the discovery service back into the
+    initial cgroup namespace in order to discover correct cgroup hierarchy
+    information.
+    
+    Similar, temporarily switching into the initial mount namespace allows us to
+    correctly pick up the freezer ("fridge") states of processes, this works
+    around having to either explicitly mount the host's cgroup into the
+    container or to unprotect the container's system paths (which docker-compose
+    yet does not support).
   - `CAP_DAC_READ_SEARCH` allows us to discover bind-mounted namespaces without
     interference by any in-descretionary excess control (DAC).
   - `CAP_DAC_OVERRIDE` allows us to connect to the containerd API socket without

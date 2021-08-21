@@ -1,8 +1,10 @@
 # Cgroup Discovery
 
-In addition to namespaces and their related processes, lxkns also discovers the
-freezer state and (freezer) cgroup controller path information for the processes
-attached to namespaces.
+In addition to namespaces and their related processes, lxkns also **discovers
+the freezer state** and (freezer)
+[cgroup](https://man7.org/linux/man-pages/man7/cgroups.7.html) controller path
+information for the processes attached to namespaces. Freezer controllers
+suspend and resume all processes in a cgroup (including children).
 
 > [!ATTENTION] When the lxkns service is deployed containerized using the included
 > `deployments/lxkns/docker-compose.yaml` it will automatically detect system
