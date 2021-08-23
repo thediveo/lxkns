@@ -142,7 +142,7 @@ qualification.
   _and_ input parameters, that is, `net:[4026531905]`. After all, that's what
   all the well-established tools like `lsns` do.
 
-- `lxkns.species` defines two functions through which half-baked inode numbers
+- `species` defines two functions through which half-baked inode numbers
   enter the namespace ID universe:
   - `IDwithType(s string) (id NamespaceID, t NamespaceType)` parses a textual
     namespace representation and then returns the full ID and type of
@@ -242,9 +242,8 @@ child namespaces thereof.
 
 ## Linux Namespace Representation in lxkns
 
-`lxkns.model` represents the namespace concepts we've just learned. It
-represents them using four interfaces, each interface grouping related aspects
-of namespaces.
+`model` represents the namespace concepts we've just learned. It represents them
+using four interfaces, each interface grouping related aspects of namespaces.
 
 > [!NOTE] Not all types of namespaces offer all interfaces. That is, only
 > hierarchical "PID" and "user" namespaces provide the `Hierarchy` interface,

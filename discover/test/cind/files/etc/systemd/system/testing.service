@@ -1,0 +1,11 @@
+[Unit]
+Description=containerd testing setup
+After=containerd.service
+
+[Service]
+Type=oneshot
+ExecStart=/testing/setup.sh
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

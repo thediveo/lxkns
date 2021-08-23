@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -27,17 +27,17 @@ import (
 // can be marshalled and unmarshalled to and from JSON. This type usually isn't
 // used on its own but instead as part of un/marshalling the DiscoveryResult
 // type.
-type DiscoveryOptions lxkns.DiscoverOpts
+type DiscoveryOptions discover.DiscoverOpts
 
 // MarshalJSON emits discovery options as JSON, handling the slightly involved
 // part of marshalling the list of namespace types included in the discovery
 // scan.
 func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
 	aux := struct {
-		*lxkns.DiscoverOpts
+		*discover.DiscoverOpts
 		NamespaceTypes []string `json:"scanned-namespace-types"`
 	}{
-		DiscoverOpts: (*lxkns.DiscoverOpts)(&doh),
+		DiscoverOpts: (*discover.DiscoverOpts)(&doh),
 	}
 	// Convert the bitmask of CLONE_NEWxxx into the usual textual type names for
 	// namespaces, such as "net", et cetera.
@@ -54,10 +54,10 @@ func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
 // into a bitmap mask of CLONE_NEWxxx namespace type flags.
 func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 	aux := struct {
-		*lxkns.DiscoverOpts
+		*discover.DiscoverOpts
 		NamespaceTypes []string `json:"scanned-namespace-types"`
 	}{
-		DiscoverOpts: (*lxkns.DiscoverOpts)(doh),
+		DiscoverOpts: (*discover.DiscoverOpts)(doh),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
@@ -81,8 +81,8 @@ type DiscoveryResult struct {
 	// Maps discovery result top-level JSON elements to their (un)marshalling
 	// types (the ones that then must do the real work).
 	Fields          map[string]interface{}
-	DiscoveryResult *lxkns.DiscoveryResult `json:"-"`
-	ContainerModel  *ContainerModel        `json:"-"`
+	DiscoveryResult *discover.Result `json:"-"`
+	ContainerModel  *ContainerModel  `json:"-"`
 }
 
 // JSON object field names for the standardized discovery result parts.
@@ -110,14 +110,14 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	// internal mechanics of the multiple parts of a discovery result
 	// interacting with each other.
 	if dr.DiscoveryResult == nil {
-		dr.DiscoveryResult = &lxkns.DiscoveryResult{
+		dr.DiscoveryResult = &discover.Result{
 			Namespaces: *model.NewAllNamespaces(),
 			Processes:  model.ProcessTable{},
-			Mounts:     lxkns.NamespacedMountPathMap{},
+			Mounts:     discover.NamespacedMountPathMap{},
 		}
 	}
 	// Wrap the discovery result options, so that they can be properly
-	// un/marshalled. A plain lxkns.DiscoveryOption cannot be fully
+	// un/marshalled. A plain discover.DiscoveryOption cannot be fully
 	// un/marshalled.
 	dr.Fields[FieldDiscoveryOptions] = (*DiscoveryOptions)(&dr.DiscoveryResult.Options)
 	// Wrap the namespaces "map" (dictionary) so that the original result
@@ -153,7 +153,7 @@ type NewDiscoveryResultOption func(newdiscoveryresult *DiscoveryResult)
 // result; this is typically used for marshalling only, but not needed for
 // unmarshalling. In the latter case you probably want to prefer starting with a
 // clean slate.
-func WithResult(result *lxkns.DiscoveryResult) NewDiscoveryResultOption {
+func WithResult(result *discover.Result) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.DiscoveryResult = result
 	}
@@ -182,19 +182,19 @@ func WithElement(name string, obj interface{}) NewDiscoveryResultOption {
 	}
 }
 
-// Result returns the wrapped lxkns.DiscoveryResult.
-func (dr DiscoveryResult) Result() *lxkns.DiscoveryResult {
+// Result returns the wrapped discover.DiscoveryResult.
+func (dr DiscoveryResult) Result() *discover.Result {
 	return dr.DiscoveryResult
 }
 
-// Processes returns the process table from the wrapped lxkns.DiscoveryResult.
+// Processes returns the process table from the wrapped discover.DiscoveryResult.
 func (dr DiscoveryResult) Processes() model.ProcessTable {
 	return dr.DiscoveryResult.Processes
 }
 
 // Mounts returns the namespace'd mount paths and points from the wrapped
-// lxkns.DiscoveryResult.
-func (dr DiscoveryResult) Mounts() lxkns.NamespacedMountPathMap {
+// discover.DiscoveryResult.
+func (dr DiscoveryResult) Mounts() discover.NamespacedMountPathMap {
 	return dr.DiscoveryResult.Mounts
 }
 

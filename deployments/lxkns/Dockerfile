@@ -19,6 +19,7 @@ COPY api/ ./api/
 COPY cmd/ ./cmd/
 COPY containerizer/ ./containerizer/
 COPY decorator/ ./decorator/
+COPY discover/ ./discover/
 COPY internal/ ./internal/
 COPY log/ ./log/
 COPY model/ ./model/

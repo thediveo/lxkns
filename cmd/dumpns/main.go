@@ -26,6 +26,7 @@ import (
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
+	"github.com/thediveo/lxkns/discover"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes
@@ -36,9 +37,11 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	allns := lxkns.Discover(
-		lxkns.WithStandardDiscovery(),
-		lxkns.WithContainerizer(containerizer))
+	allns := discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(containerizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 	var j []byte
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.

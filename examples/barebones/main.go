@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
@@ -41,8 +41,11 @@ func main() {
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
 
 	// Run the discovery, including containerization.
-	result := lxkns.Discover(
-		lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+	result := discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(cizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 
 	for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
 		for _, ns := range result.SortedNamespaces(nsidx) {

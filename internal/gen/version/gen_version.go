@@ -25,7 +25,10 @@ import (
 	"regexp"
 )
 
-var versionExtractor = regexp.MustCompile(`^v(\d+\.\d+\.\d(-\d+(-[a-z0-9]+))?)\n?$`)
+const semVerPattern = `(\d+\.\d+\.\d(-\d+(-[a-z0-9]+))?)`
+
+var versionExtractor = regexp.MustCompile(`^v` + semVerPattern + `\n?$`)
+var branchVersionExtractor = regexp.MustCompile(`^release/v` + semVerPattern + `\n?$`)
 
 var defsVersionGoTemplate = template.Must(template.New("defs_version.go").Parse(
 	`// Let goreportcard check us.
@@ -37,16 +40,25 @@ const SemVersion = "{{ . }}"
 `))
 
 func main() {
-	gitdescribe := exec.Command("git", "describe")
-	out, err := gitdescribe.Output()
+	var version string
+	// Are we on a git-flow release branch?
+	out, err := exec.Command("git", "branch", "--show-current").Output()
 	if err != nil {
 		panic(err)
 	}
-	match := versionExtractor.FindStringSubmatch(string(out))
-	if match == nil {
-		panic(fmt.Sprintf("error: invalid version %q", string(out)))
+	if match := branchVersionExtractor.FindStringSubmatch(string(out)); match != nil {
+		version = match[1]
+	} else {
+		out, err = exec.Command("git", "describe").Output()
+		if err != nil {
+			panic(err)
+		}
+		match := versionExtractor.FindStringSubmatch(string(out))
+		if match == nil {
+			panic(fmt.Sprintf("error: invalid version %q", string(out)))
+		}
+		version = match[1]
 	}
-	version := match[1]
 	fmt.Printf("defs_version.go: version %q\n", version)
 	f, err := os.Create("defs_version.go")
 	if err != nil {

@@ -24,16 +24,16 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
 var lxknsapispec *openapi3.T
-var allns *lxkns.DiscoveryResult
+var allns *discover.Result
 var pidmap model.PIDMapper
 
 var _ = BeforeSuite(func() {
@@ -61,8 +61,8 @@ var _ = BeforeSuite(func() {
 
 	<-mw.Ready()
 
-	allns = lxkns.Discover(lxkns.WithFullDiscovery(), lxkns.WithContainerizer(cizer))
-	pidmap = lxkns.NewPIDMap(allns)
+	allns = discover.Namespaces(discover.WithFullDiscovery(), discover.WithContainerizer(cizer))
+	pidmap = discover.NewPIDMap(allns)
 })
 
 func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error {

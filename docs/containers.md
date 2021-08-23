@@ -1,11 +1,12 @@
 # Containers
 
 While namespace discovery truely is kernel-space territory it often is helpful
-to correlate the discovered namespaces with user-space artefacts, and containers
-in particular. Without doubt, containers are a dominant showcase of namespace
-technology.
+to correlate the discovered namespaces with user-space artefacts – and
+containers in particular. Without doubt, containers are a dominant showcase of
+namespace technology.
 
-The container-related part of **lxkns'** discovery information model has on offer:
+The container-related part of the **lxkns** discovery information model has on
+offer:
 
 - **containers** (as was to be expected),
 - their managing container **engines**,

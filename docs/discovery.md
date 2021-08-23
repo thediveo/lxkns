@@ -42,24 +42,29 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 > allowing multi-threaded processes to switch mount namespaces. In order to work
 > around this constraint, `lxkns` must fork and immediately re-execute the
 > process it is used in just to make it sleep (there's an optional separate
-> minimized mntnssandbox binary for this).
+> minimized [`mntnssandbox`](mntnssandbox) binary for this to further reduce
+> system resource consumption).
 
 ## Required Capabilities
 
 **lxkns** discoveries require the following capabilities:
 
 - `CAP_SYS_PTRACE` grants access to the namespace information in the `/proc`
-  filesystem.
+  file system, as well as access to the file system in other mount namespaces.
 
-- `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` grants switching into other (especially
+- `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` grant switching into other (especially
   mount) namespaces in order to look into more places compared to standard
-  discovery tools. Additionally, these capabilities allows a discovery service
-  to switch back into the initial cgroup namespace in order to discover correct
-  cgroup hierarchy information. Similarly, temporarily switching into the
-  initial mount namespace allows us to correctly pick up the freezer ("fridge")
-  states of processes, this works around having to either explicitly mount the
-  host's cgroup into the container or to unprotect the container's system paths
-  (which docker-compose yet does not support).
+  discovery tools.
+  
+  Additionally, these capabilities allows a discovery service to switch back
+  into the initial cgroup namespace in order to discover correct cgroup
+  hierarchy information.
+  
+  Similarly, temporarily switching into the initial mount namespace allows us to
+  correctly pick up the freezer ("fridge") states of processes, this works
+  around having to either explicitly mount the host's cgroup into the container
+  or to unprotect the container's system paths (which docker-compose yet does
+  not support).
 
 - `CAP_DAC_READ_SEARCH` grants discovering bind-mounted namespaces without
   interference by any DAC, or "(in)descretionary axcess control".

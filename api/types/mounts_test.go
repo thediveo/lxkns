@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/go-mntinfo"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/mounts"
 	"github.com/thediveo/lxkns/species"
 )
@@ -113,7 +113,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 	})
 
 	It("marshals mount path maps from multiple mount namespaces", func() {
-		allm := lxkns.NamespacedMountPathMap{
+		allm := discover.NamespacedMountPathMap{
 			species.NamespaceIDfromInode(123): mounts.MountPathMap(mountpathmap),
 		}
 		jtext, err := json.Marshal(NamespacedMountMap(allm))
@@ -125,7 +125,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 	})
 
 	It("unmarshals its own JSON", func() {
-		allm := lxkns.NamespacedMountPathMap{
+		allm := discover.NamespacedMountPathMap{
 			species.NamespaceIDfromInode(123): mounts.MountPathMap(mountpathmap),
 		}
 		jtext, err := json.Marshal(NamespacedMountMap(allm))

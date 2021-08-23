@@ -39,8 +39,8 @@ func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containe
 	c := &WhaleFriend{
 		watchers: watchers,
 	}
-	for _, watcher := range watchers {
-		go watcher.Watch(ctx) // ...go on watch FIXME: error handling
+	for _, w := range watchers {
+		go func(w watcher.Watcher) { _ = w.Watch(ctx) }(w)
 	}
 	return c
 }
@@ -53,7 +53,7 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 		ID:   engine.ID(ctx),
 		Type: engine.Type(),
 		API:  engine.API(),
-		PID:  0, // FIXME: need to know ;)
+		PID:  model.PIDType(engine.PID()),
 	}
 	for _, projname := range append(engine.Portfolio().Names(), "") {
 		project := engine.Portfolio().Project(projname)

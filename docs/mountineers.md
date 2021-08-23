@@ -1,6 +1,6 @@
 # Mountineers
 
-There are Engineers, Hellsineers<sup>*</sup>, Mountineers...
+There are Engineers, Hellsineers[^1], Mountineers...
 
 Okay, all the joking aside, "mountineers" are used in lxkns to access the file
 system inside those mount namespaces which are only bind-mounted and thus
@@ -79,9 +79,9 @@ order to turn this child copy into an idle pause process.
 The separate `mntnssandbox` binary is preferable from the perspective of
 minimizing resource consumption, especially when re-executing a large binary.
 
-----
+#### Notes
 
-<small><sup>(*)</sup> not without reason, the good people of
-[Franconia](https://en.wikipedia.org/wiki/Franconia) in Germany are also known
-as "consonant defilers". They defile not only German g's, k's, b's and p's, but
-also English th's.</small>
+[^1]: not without reason, the good people of
+      [Franconia](https://en.wikipedia.org/wiki/Franconia) in Germany are also
+      known as "consonant defilers". They defile not only German g's, k's, b's
+      and p's, but also English th's.
