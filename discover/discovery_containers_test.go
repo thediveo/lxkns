@@ -24,7 +24,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/whalewatcher/watcher"

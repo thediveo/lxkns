@@ -16,7 +16,7 @@ import (
 func main() {
     b, _ := json.Marshal(
         apitypes.NewDiscoveryResult(
-            discover.Discover(discover.StandardDiscovery())))
+            discover.Namespaces(discover.StandardDiscovery())))
 
     dr := apitypes.NewDiscoveryResult(nil)
     _ = json.Unmarshal(b, &dr)
@@ -26,6 +26,6 @@ func main() {
 
 > [!NOTE] Discovery results need to be explicitly "wrapped" in JSON-able objects
 > for un/marshalling. The discovery result objects returned from
-> `discover.Discover()` cannot be properly un/marshalled, not least as they
+> `discover.Namespaces()` cannot be properly un/marshalled, not least as they
 > describe an information model with circular references that is optimized for
 > quick navigation, not for un/marshalling.

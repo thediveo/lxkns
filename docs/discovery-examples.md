@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-    result := discover.Discover(discover.StandardDiscovery())
+    result := discover.Namespaces(discover.StandardDiscovery())
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
             fmt.Println(ns.String())
@@ -62,14 +62,15 @@ func main() {
     if err != nil {
         panic(err)
     }
-    <-moby.Ready()
 
     ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
     cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
 
+    <-moby.Ready()
+
     // Run the discovery, including containerization.
-    result := discover.Discover(
+    result := discover.Namespaces(
         discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
 
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
