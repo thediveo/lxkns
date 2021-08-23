@@ -2,7 +2,7 @@
 
 ## 0.20.0
 
-1. lxkns has grown tremendously in the past more than one-and-a-half year since
+1. lxkns has grown tremendously in the past more than one-and-a-half years since
    its first steps. Not unexpectedly, this has lead into the issue of the main
    `github.com/thediveo/lxkns` repo folder to hoard lots of discovery-related
    source files, despite all the other sub packages. For this reason, almost all
