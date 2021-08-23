@@ -96,7 +96,7 @@ func userNamesFromPasswd(passwdpath string) UidUsernameMap {
 			fields[0][0] == '+' || fields[0][0] == '-' {
 			continue
 		}
-		if uid, err := strconv.Atoi(fields[2]); err == nil {
+		if uid, err := strconv.ParseUint(fields[2], 10, 32); err == nil {
 			usernames[uint32(uid)] = fields[0]
 		}
 	}
