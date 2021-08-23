@@ -23,6 +23,9 @@ technology](https://snapcraft.io/docs). Our discovery engine even determines the
 **visibility of mount points**, taking different forms of **overmounting** into
 consideration.
 
+> [!WARNING] Please check [Important Changes](changelog), especially if you
+> have been used the API in the past, and not only the service.
+
 ## Eye Candy
 
 The lxkns service provides a web user interface for comfy discovery.

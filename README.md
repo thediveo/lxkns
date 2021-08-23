@@ -26,6 +26,10 @@ consideration.
 Take a look at the comprehensive [user (and developer)
 manual](https://thediveo.github.io/lxkns).
 
+> Please check [Important Changes](https://thediveo.github.io/lxkns#/changelog),
+> especially if you have been used the API in the past, and not only the
+> service.
+
 Or, watch the short overview video how to find your way around discovery web
 frontend:
 
