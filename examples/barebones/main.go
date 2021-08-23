@@ -34,11 +34,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	<-moby.Ready()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
+
+	<-moby.Ready()
 
 	// Run the discovery, including containerization.
 	result := discover.Namespaces(

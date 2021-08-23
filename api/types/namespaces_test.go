@@ -29,7 +29,7 @@ import (
 
 	. "github.com/thediveo/lxkns/nstest/gmodel"
 
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/discover"

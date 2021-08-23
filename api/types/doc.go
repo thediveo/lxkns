@@ -14,7 +14,7 @@ results without any hassle. So, here we go:
 
 To marshall a given discover.Result in a service:
 
-    allns := discover.Discover(discover.StandardDiscovery())
+    allns := discover.Namespaces(discover.StandardDiscovery())
     err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 
 And then to unmarshall a discovery result into "allns" when consuming a
