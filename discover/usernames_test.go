@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	"os"
@@ -53,7 +53,7 @@ var _ = Describe("maps UIDs", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
-		allns := Discover(WithStandardDiscovery())
+		allns := Namespaces(WithStandardDiscovery())
 		if _, ok := allns.Processes[1]; !ok {
 			Skip("needs root capabilities and PID=host")
 		}

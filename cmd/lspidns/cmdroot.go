@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 )
 
 func newRootCmd() (rootCmd *cobra.Command) {
@@ -43,7 +44,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			if err != nil {
 				return err
 			}
-			allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+			allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
 			fmt.Print(
 				asciitree.Render(
 					allns.PIDNSRoots,

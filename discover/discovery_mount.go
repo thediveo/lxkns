@@ -19,7 +19,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"github.com/thediveo/go-mntinfo"
@@ -39,7 +39,7 @@ type NamespacedMountPathMap map[species.NamespaceID]mounts.MountPathMap
 // mount namespaces. API users must have opted in not only to this discovery
 // step but must have also enabled discovery of mount namespaces. Otherwise,
 // this step will be skipped.
-func discoverFromMountinfo(_ species.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverFromMountinfo(_ species.NamespaceType, _ string, result *Result) {
 	if !result.Options.DiscoverMounts {
 		log.Infof("skipping discovery of mount paths and mount points")
 		return

@@ -28,6 +28,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -108,8 +109,8 @@ type SingleBranch struct {
 // specific PID, optionally in a specific PID namespace.
 func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.NamespaceID, cizer containerizer.Containerizer) error {
 	// Run a full namespace discovery and also get the PID translation map.
-	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
-	pidmap := lxkns.NewPIDMap(allns)
+	allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+	pidmap := discover.NewPIDMap(allns)
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
@@ -169,8 +170,8 @@ func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.Namespace
 // Renders a full PID tree including PID namespaces.
 func renderPIDTreeWithNamespaces(out io.Writer, cizer containerizer.Containerizer) error {
 	// Run a full namespace discovery and also get the PID translation map.
-	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
-	pidmap := lxkns.NewPIDMap(allns)
+	allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+	pidmap := discover.NewPIDMap(allns)
 	// You may wonder why lxkns returns a slice of "root" PID and user
 	// namespaces, instead of only a single root for each. The rationale is
 	// that in some situation without sufficient privileges (capabilities) and

@@ -14,7 +14,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"context"
@@ -95,7 +95,7 @@ var _ = Describe("Discover containers", func() {
 
 		<-mw.Ready()
 
-		allns := Discover(WithStandardDiscovery(), WithContainerizer(cizer))
+		allns := Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
 
 		Expect(allns.Containers).To(ContainElement(
 			WithTransform(func(c *model.Container) string { return c.Name }, Equal(sleepyname))))

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lxkns
+package discover
 
 import (
 	"context"
@@ -67,7 +67,7 @@ var _ = Describe("Discovering containers in containers", func() {
 		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 
 		By("finding the containerd-in-docker container")
-		allns := Discover(WithStandardDiscovery(), WithContainerizer(cizer))
+		allns := Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
 		cind := allns.Containers.FirstWithName(cindName)
 		Expect(cind).NotTo(BeNil())
 		enginepid := cind.PID
@@ -91,7 +91,7 @@ var _ = Describe("Discovering containers in containers", func() {
 		Eventually(cdw.Ready()).Should(BeClosed(), "containerd watcher failed to synchronize")
 
 		By("finding the sleepy container with the sleep process inside the containerd-in-docker container")
-		allns = Discover(WithStandardDiscovery(), WithContainerizer(cizer))
+		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
 		containerds := allns.Containers.WithEngineType(cdengine.Type)
 		Expect(containerds).To(HaveLen(1))
 		sleepy := containerds[0]

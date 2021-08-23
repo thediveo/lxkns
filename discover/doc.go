@@ -1,6 +1,6 @@
 /*
 
-Package lxkns discovers Linux kernel namespaces of types cgroup, ipc, mount,
+package discover discovers Linux kernel namespaces of types cgroup, ipc, mount,
 net, pid, time, user, and uts. This package discovers namespaces not only when
 processes have joined them, but also when namespaces have been bind-mounted or
 are only referenced anymore by process file descriptors or within a hierarchy
@@ -23,17 +23,16 @@ for, according to the needs of API users of the lxkns package.
 
 Discovery
 
-A namespace discovery is just a single call to function lxkns.Discover(). It
-accepts option setters, such as lxkns.StandardDiscovery(),
-lxkns.WithMounts(), et cetera.
+A namespace discovery is just a single call to function discover.Namespaces().
+It accepts option setters, such as discover.StandardDiscovery(),
+discover.WithMounts(), et cetera.
 
     import (
-        "github.com/thediveo/gons/reexec"
-        "github.com/thediveo/lxkns"
+        "github.com/thediveo/lxkns/discover"
     )
 
     func main() {
-        allns := lxkns.Discover(lxkns.StandardDiscovery())
+        allns := discover.Namespaces(discover.StandardDiscovery())
         ...
     }
 
@@ -49,7 +48,7 @@ namespace identifier:
     // Iterate over all 7 types of Linux-kernel namespaces, then over all
     // namespaces of a given type...
     for nsidx := range allns.Namespaces {
-        for _, ns := range allns.SortedNamespaces(lxkns.NamespaceTypeIndex(nsidx)) {
+        for _, ns := range allns.SortedNamespaces(discover.NamespaceTypeIndex(nsidx)) {
             println(ns.Type().Name(), ns.ID().Ino)
         }
     }
@@ -78,7 +77,7 @@ discovered, but further information, such as the parent or child namespaces for
 PID and user namespaces, is undiscoverable.
 
 Users of the lxkns information model thus must be prepared to handle incomplete
-information yielded by unprivileged lxkns.Discover() calls. In particular,
+information yielded by unprivileged discover.Namespaces() calls. In particular,
 applications must be prepared to handle:
 
   * more than a single "initial" namespace per type of namespace,
@@ -108,18 +107,18 @@ much difference to "just be root" in the end, unless you want show off your
 Namespace Hierarchies
 
 PID and user namespaces form separate and independent namespaces hierarchies.
-This parent-child hierarchy is exposed through the lxkns.Hierarchy interface of
+This parent-child hierarchy is exposed through the model.Hierarchy interface of
 the discovered namespaces.
 
-Please note that lxkns represents namespaces often using the lxkns.Namespace
+Please note that lxkns represents namespaces often using the model.Namespace
 interface when the specific type of namespace doesn't matter. In case of PID and
-user-type namespaces an lxkns.Namespace can be "converted" into an interface
-value of type lxkns.Hierarchy using a type assertion, in order to access the
+user-type namespaces an model.Namespace can be "converted" into an interface
+value of type model.Hierarchy using a type assertion, in order to access the
 particular namespace hierarchy.
 
     // If it's a PID or user namespace, then we can turn a "Namespace"
     // into an "Hierarchy" in order to access hierarchy information.
-    if hns, ok := ns.(lxkns.Hierarchy); ok {
+    if hns, ok := ns.(model.Hierarchy); ok {
         if hns.Parent() != nil {
             ...
         }
@@ -145,20 +144,20 @@ to as "ownings": welcome to the wonderful Gopher world of "er"-ers, where
 interface method naming conventions create wonderful identifier art.
 
 If a namespace interface value represents a user-type namespace, then it can be
-"converted" into an lxkns.Ownership interface value using a type assertion. This
+"converted" into an model.Ownership interface value using a type assertion. This
 interface discloses which namespaces are owned by a particular user namespace.
 Please note that this does not include child user namespaces, use
 Hierarchy.Children() instead.
 
     // Get the user namespace -owned-> namespaces relationships.
-    if owns, ok := ns.(lxkns.Ownership); ok {
+    if owns, ok := ns.(model.Ownership); ok {
         for _, ownedns := range owns.Ownings() {
             ...
         }
     }
 
 In the opposite direction, the owner of a namespace can be directly queried via
-the lxkns.Namespace interface (again, only for non-user namespaces):
+the model.Namespace interface (again, only for non-user namespaces):
 
     // Get the namespace -owned by-> user namespace relationship.
     ownerns := ns.Owner()
@@ -179,7 +178,7 @@ of the process tree at discovery time (please relax now, as this is a snapshot
 of the "tree", not of all the processes themselves).
 
     // Get the init(1) process representation.
-    initprocess := allns.Processes[lxkns.PIDType(1)]
+    initprocess := allns.Processes[model.PIDType(1)]
     for _, childprocess := range initprocess.Children() {
         ...
     }
@@ -190,7 +189,7 @@ process tree information show which namespaces are used by (or "joined by")
 which particular processes.
 
     // Show all namespaces joined by a specific process, such as init(1).
-    for nsidx := lxkns.MountNS; nsidx < lxkns.NamespaceTypesCount; nsidx++ {
+    for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         println(initprocess.Namespaces[nsidx].String())
     }
 
@@ -209,14 +208,14 @@ container. The lxkns information then is able to correctly handle and represent
 such system states.
 
     // Show the leader processes joined to the initial user namespace.
-    for _, leaders := range initprocess.Namespaces[lxkns.UserNS].Leaders() {
+    for _, leaders := range initprocess.Namespaces[model.UserNS].Leaders() {
         ...
     }
 
 Architecture
 
 Please find more details about the lxkns information model in the architectural
-documents: https://github.com/TheDiveO/lxkns/blob/master/docs/architecture.md.
+section of the lxkns manual: https://thediveo.github.io/lxkns/#/model
 
 */
-package lxkns
+package discover

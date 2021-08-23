@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -25,7 +25,7 @@ import (
 var _ = Describe("Discover owning user namespaces", func() {
 
 	It("finds owners", func() {
-		allns := Discover(FromProcs(), WithHierarchy(), WithOwnership())
+		allns := Namespaces(FromProcs(), WithHierarchy(), WithOwnership())
 
 		myusernsid, err := ops.NamespacePath("/proc/self/ns/user").ID()
 		Expect(err).To(Succeed())

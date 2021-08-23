@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -48,11 +48,11 @@ read # wait for test to proceed()
 		Expect(fdnetnsid).ToNot(Equal(netnsid))
 		// correctly misses fd-referenced namespaces without proper discovery
 		// method enabled.
-		allns := Discover(FromProcs())
+		allns := Namespaces(FromProcs())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 		Expect(allns.Namespaces[model.NetNS]).ToNot(HaveKey(fdnetnsid))
 		// correctly finds fd-referenced namespaces now.
-		allns = Discover(FromFds())
+		allns = Namespaces(FromFds())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(fdnetnsid))
 	})
 
@@ -60,7 +60,7 @@ read # wait for test to proceed()
 		var stat unix.Stat_t
 		Expect(unix.Stat("./test/fdscan/proc", &stat)).ToNot(HaveOccurred())
 		Expect(stat.Dev).NotTo(BeZero())
-		r := DiscoveryResult{
+		r := Result{
 			Options: DiscoverOpts{
 				ScanFds: true,
 			},

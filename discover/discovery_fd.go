@@ -19,7 +19,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ import (
 // them. Since file descriptors are per process only, but not per task/thread,
 // it sufficies to only iterate the process fd entries, leaving out the copies
 // in the task fd entries.
-func discoverFromFd(t species.NamespaceType, procfs string, result *DiscoveryResult) {
+func discoverFromFd(t species.NamespaceType, procfs string, result *Result) {
 	if !result.Options.ScanFds {
 		log.Infof("skipping discovery of fd-referenced namespaces")
 		return
@@ -50,7 +50,7 @@ func discoverFromFd(t species.NamespaceType, procfs string, result *DiscoveryRes
 
 // namespaceFromFd is discoverFromFd with special test harness handling enabled
 // or disabled.
-func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *DiscoveryResult) {
+func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Result) {
 	// Iterate over all known processes, and then over all of their open file
 	// descriptors. The /proc filesystem will give us the required
 	// information.

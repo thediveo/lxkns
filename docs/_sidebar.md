@@ -8,7 +8,10 @@
   * [Containers](containers)
   * [Cgroups](cgroup)
   * [Mount Points](mountpoint)
-* [Service](service)
+* Service
+  * [Deployment](service-deployment)
+  * [Behind Proxy](service-behind-proxy)
+  * [Extensible](service-extensible)
 * API
   * [Important Changes](changelog)
   * [Discovery Examples](discovery-examples)

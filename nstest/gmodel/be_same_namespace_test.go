@@ -20,18 +20,18 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/errxpect"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
-var allns *lxkns.DiscoveryResult
+var allns *discover.Result
 var userns1 model.Namespace
 var initproc *model.Process
 
 var _ = BeforeSuite(func() {
-	allns = lxkns.Discover(lxkns.WithStandardDiscovery())
+	allns = discover.Namespaces(discover.WithStandardDiscovery())
 	initproc = allns.Processes[model.PIDType(os.Getpid())]
 	userns1 = initproc.Namespaces[model.UserNS]
 })

@@ -12,17 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// +build linux
-
-package lxkns
+package discover
 
 import (
-	"github.com/thediveo/lxkns/internal/pidmap"
-	"github.com/thediveo/lxkns/model"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-// NewPIDMap returns a new PID map (PIDMapper) based on the specified discovery
-// results and further information gathered from the /proc filesystem.
-func NewPIDMap(result *DiscoveryResult) model.PIDMapper {
-	return pidmap.NewPIDMap(result.Processes)
+func TestLinuxKernelNamespaces(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "lxkns package")
 }

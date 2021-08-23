@@ -14,7 +14,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"github.com/thediveo/lxkns/containerizer"
@@ -170,7 +170,7 @@ func WithContainerizer(c containerizer.Containerizer) DiscoveryOption {
 }
 
 // SameAs reuses the discovery options used for a previous discovery.
-func SameAs(r *DiscoveryResult) DiscoveryOption {
+func SameAs(r *Result) DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		*o = r.Options
 	}

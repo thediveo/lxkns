@@ -17,7 +17,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"fmt"
@@ -29,9 +29,9 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// DiscoveryResult stores the results of a tour through Linux processes and
+// Result stores the results of a tour through Linux processes and
 // kernel namespaces.
-type DiscoveryResult struct {
+type Result struct {
 	Options           DiscoverOpts           // options used during discovery.
 	Namespaces        model.AllNamespaces    // all discovered namespaces, subject to filtering according to Options.
 	InitialNamespaces model.NamespacesSet    // the 7 initial namespaces.
@@ -87,7 +87,7 @@ func SortedNamespaces(nsmap model.NamespaceMap) []model.Namespace {
 // specified type. The namespaces are sorted by their identifier, which is an
 // inode number (on the special "nsfs" filesystem), ignoring a namespace's
 // device ID.
-func (dr *DiscoveryResult) SortedNamespaces(nsidx model.NamespaceTypeIndex) []model.Namespace {
+func (dr *Result) SortedNamespaces(nsidx model.NamespaceTypeIndex) []model.Namespace {
 	return SortedNamespaces(dr.Namespaces[nsidx])
 }
 
@@ -131,11 +131,11 @@ func init() {
 	}
 }
 
-// Discover returns the Linux kernel namespaces found, based on discovery
-// options specified in the call. The discovery results also specify the
-// initial namespaces, as well the process table/tree on which the discovery
-// bases at least in part.
-func Discover(options ...DiscoveryOption) *DiscoveryResult {
+// Namespaces returns the Linux kernel namespaces found, based on discovery
+// options specified in the call. The discovery results also specify the initial
+// namespaces, as well the process table/tree on which the discovery bases at
+// least in part.
+func Namespaces(options ...DiscoveryOption) *Result {
 	opts := DiscoverOpts{}
 	for _, opt := range options {
 		opt(&opts)
@@ -149,7 +149,7 @@ func Discover(options ...DiscoveryOption) *DiscoveryResult {
 	if opts.withPIDmap || opts.Containerizer != nil {
 		opts.NamespaceTypes |= species.CLONE_NEWPID
 	}
-	result := &DiscoveryResult{
+	result := &Result{
 		Options:   opts,
 		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
 	}
@@ -206,7 +206,7 @@ func Discover(options ...DiscoveryOption) *DiscoveryResult {
 
 // discoveryFunc implements some Linux kernel namespace discovery
 // functionality.
-type discoveryFunc func(species.NamespaceType, string, *DiscoveryResult)
+type discoveryFunc func(species.NamespaceType, string, *Result)
 
 // discoverer describes a single discoveryFunc and when to call it: once, per
 // each namespace type and for which namespace types in what sequence. Please

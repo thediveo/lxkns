@@ -28,7 +28,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"fmt"
@@ -46,7 +46,7 @@ import (
 // using the namespace links inside the proc filesystem: "/proc/[PID]/ns/...".
 // It does not check any other places, as these are covered by separate
 // discovery functions.
-func discoverFromProc(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 	if !result.Options.ScanProcs {
 		log.Infof("skipping discovery of %s namespaces used by processes", nstype.Name())
 		return

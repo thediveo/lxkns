@@ -22,9 +22,9 @@ import (
 	"os/user"
 	"reflect"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -39,7 +39,7 @@ type PIDNSVisitor struct {
 // be honest, it returns the owning user namespaces instead in case user
 // namespaces should be shown too.
 func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	pidroots := lxkns.SortNamespaces(roots.Interface().([]model.Namespace))
+	pidroots := discover.SortNamespaces(roots.Interface().([]model.Namespace))
 	if !v.ShowUserNS {
 		// When only showing PID namespaces, then sort all PID "root" namespaces
 		// numerically and then visit them, descending down the hierarchy.
@@ -61,7 +61,7 @@ func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 	for uns := range userns {
 		userroots = append(userroots, uns)
 	}
-	userroots = lxkns.SortNamespaces(userroots)
+	userroots = discover.SortNamespaces(userroots)
 	count := len(userroots)
 	children = make([]reflect.Value, count)
 	for idx := 0; idx < count; idx++ {
@@ -114,7 +114,7 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 				clist = append(clist, ns)
 			}
 		}
-		children = reflect.ValueOf(lxkns.SortNamespaces(clist))
+		children = reflect.ValueOf(discover.SortNamespaces(clist))
 		return
 	}
 	// For a PID namespace, the children are either PID namespaces, or user
@@ -126,14 +126,14 @@ func (v *PIDNSVisitor) Get(node reflect.Value) (
 			// Show only the PID namespace hierarchy: this is easy, as we all we
 			// need to do is to take all child PID namespaces and return them.
 			// That's it.
-			for _, cpidns := range lxkns.SortChildNamespaces(hns.Children()) {
+			for _, cpidns := range discover.SortChildNamespaces(hns.Children()) {
 				clist = append(clist, cpidns)
 			}
 		} else {
 			// Insert user namespaces into the PID namespace hierarchy, whenever
 			// there is a change of user namespaces in the PID hierarchy.
 			userns := node.Interface().(model.Namespace).Owner()
-			for _, cpidns := range lxkns.SortChildNamespaces(hns.Children()) {
+			for _, cpidns := range discover.SortChildNamespaces(hns.Children()) {
 				if ownerns := cpidns.(model.Namespace).Owner(); ownerns == userns {
 					// The child PID namespace is still in the same user namespace,
 					// so we take it as a direct child.

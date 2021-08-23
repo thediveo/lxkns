@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	"github.com/thediveo/lxkns/internal/namespaces"
@@ -26,7 +26,7 @@ import (
 var _ = Describe("Discover", func() {
 
 	It("discovers nothing unless told so", func() {
-		allns := Discover()
+		allns := Namespaces()
 		for _, nsmap := range allns.Namespaces {
 			Expect(nsmap).To(HaveLen(0))
 		}
@@ -37,7 +37,7 @@ var _ = Describe("Discover", func() {
 			species.NamespaceID{Dev: 1, Ino: 5678}: namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),
 			species.NamespaceID{Dev: 1, Ino: 1234}: namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 1234}, ""),
 		}
-		dr := DiscoveryResult{}
+		dr := Result{}
 		dr.Namespaces[model.NetNS] = nsmap
 		sortedns := dr.SortedNamespaces(model.NetNS)
 		Expect(sortedns).To(HaveLen(2))
@@ -64,12 +64,12 @@ var _ = Describe("Discover", func() {
 	It("rejects finding roots for plain namespaces", func() {
 		// We only need to run a simplified discovery on processes, but
 		// nothing else.
-		allns := Discover(FromProcs(), WithNamespaceTypes(species.CLONE_NEWNET))
+		allns := Namespaces(FromProcs(), WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(func() { rootNamespaces(allns.Namespaces[model.NetNS]) }).To(Panic())
 	})
 
 	It("returns namespaces in correct slots, implementing correct interfaces", func() {
-		allns := Discover(WithStandardDiscovery())
+		allns := Namespaces(WithStandardDiscovery())
 		for _, nstype := range model.TypeIndexLexicalOrder {
 			for _, ns := range allns.Namespaces[nstype] {
 				Expect(model.TypesByIndex[nstype]).To(Equal(ns.Type()))

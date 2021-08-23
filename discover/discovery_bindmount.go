@@ -17,7 +17,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"io"
@@ -47,7 +47,7 @@ type BindmountedNamespaceInfo struct {
 // to be run only once per discovery: but it will search not only in the current
 // mount namespace, but also in other mount namespaces (subject to having
 // capabilities in them).
-func discoverBindmounts(_ species.NamespaceType, _ string, result *DiscoveryResult) {
+func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	if !result.Options.ScanBindmounts {
 		log.Infof("skipping discovery of bind-mounted namespaces")
 		return

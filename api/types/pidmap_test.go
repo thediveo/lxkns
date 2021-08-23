@@ -22,7 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/internal/pidmap"
 	"github.com/thediveo/lxkns/model"
@@ -51,13 +51,13 @@ var _ = Describe("PIDMap twin", func() {
 	)
 
 	var (
-		allns     *lxkns.DiscoveryResult
+		allns     *discover.Result
 		allpidmap model.PIDMapper
 	)
 
 	BeforeEach(func() {
-		allns = lxkns.Discover(lxkns.WithStandardDiscovery())
-		allpidmap = lxkns.NewPIDMap(allns)
+		allns = discover.Namespaces(discover.WithStandardDiscovery())
+		allpidmap = discover.NewPIDMap(allns)
 	})
 
 	Describe("JSON un/marshaller", func() {
@@ -67,7 +67,7 @@ var _ = Describe("PIDMap twin", func() {
 			Expect(pmt.PIDMap).NotTo(BeNil())
 			Expect(pmt.PIDns).NotTo(BeNil())
 
-			pidmap := lxkns.NewPIDMap(allns)
+			pidmap := discover.NewPIDMap(allns)
 			pmt = NewPIDMap(WithPIDMap(pidmap))
 			Expect(pmt.PIDMap).To(Equal(pidmap))
 

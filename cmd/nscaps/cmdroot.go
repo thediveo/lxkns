@@ -26,6 +26,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -117,8 +118,8 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	allns := lxkns.Discover(lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
-	pidmap := lxkns.NewPIDMap(allns)
+	allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+	pidmap := discover.NewPIDMap(allns)
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.

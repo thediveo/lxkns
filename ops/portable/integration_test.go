@@ -23,7 +23,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
@@ -113,16 +113,16 @@ read # wait for test to proceed()
 		// in process references. Second, it must still be present in open file
 		// descriptor references.
 		time.Sleep(time.Second)
-		netns := lxkns.Discover(lxkns.FromProcs(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
+		netns := discover.Namespaces(discover.FromProcs(), discover.WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(netns.Namespaces[model.NetNS]).NotTo(HaveKey(netnsid),
 			"temporary network namespace still found in processes")
-		netns = lxkns.Discover(lxkns.FromFds(), lxkns.WithNamespaceTypes(species.CLONE_NEWNET))
+		netns = discover.Namespaces(discover.FromFds(), discover.WithNamespaceTypes(species.CLONE_NEWNET))
 		Expect(netns.Namespaces[model.NetNS]).To(HaveKey(netnsid),
 			"temporary network namespace missing from open fd references")
 		// Unlock temporary network namespace and wait a short time for things
 		// to settle. Then check.
 		netnsunlocker()
-		netns = lxkns.Discover(lxkns.SameAs(netns))
+		netns = discover.Namespaces(discover.SameAs(netns))
 		Expect(netns.Namespaces[model.NetNS]).NotTo(HaveKey(netnsid),
 			"this *#@!& temporary network namespace won't get away!")
 		// The wrapping namespace reference can from now on be garbage

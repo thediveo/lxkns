@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ rmdir $bm || /bin/true
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		netnsid := nstest.CmdDecodeNSId(cmd)
-		allns := Discover(WithNamespaceTypes(species.CLONE_NEWNS), FromProcs(), WithMounts())
+		allns := Namespaces(WithNamespaceTypes(species.CLONE_NEWNS), FromProcs(), WithMounts())
 
 		namespacedmmap := allns.Mounts
 		Expect(namespacedmmap).NotTo(BeNil())

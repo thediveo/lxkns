@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -55,7 +55,7 @@ mount --bind /proc/self/ns/net $bm
 		cmd := scripts.Start("main")
 		defer cmd.Close()
 		netnsid := nstest.CmdDecodeNSId(cmd)
-		allns := Discover(WithStandardDiscovery())
+		allns := Namespaces(WithStandardDiscovery())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 	})
 

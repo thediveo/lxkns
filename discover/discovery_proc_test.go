@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ import (
 var _ = Describe("Discover from processes", func() {
 
 	It("finds at least the namespaces lsns finds", func() {
-		allns := Discover(FromProcs())
+		allns := Namespaces(FromProcs())
 		alllsns := lsns()
 		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash|runc) (.+ )?/tmp/`)
 		for _, ns := range alllsns {

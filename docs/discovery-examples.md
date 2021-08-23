@@ -15,13 +15,12 @@ package main
 
 import (
     "fmt"
-    "github.com/thediveo/gons/reexec"
-    "github.com/thediveo/lxkns"
+    "github.com/thediveo/lxkns/discover"
     "github.com/thediveo/lxkns/model"
 )
 
 func main() {
-    result := lxkns.Discover(lxkns.StandardDiscovery())
+    result := discover.Discover(discover.StandardDiscovery())
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
             fmt.Println(ns.String())
@@ -49,8 +48,8 @@ import (
     "context"
     "fmt"
 
-    "github.com/thediveo/lxkns"
     "github.com/thediveo/lxkns/containerizer/whalefriend"
+    "github.com/thediveo/lxkns/discover"
     "github.com/thediveo/lxkns/model"
     "github.com/thediveo/whalewatcher/watcher"
     "github.com/thediveo/whalewatcher/watcher/moby"
@@ -70,8 +69,8 @@ func main() {
     cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
 
     // Run the discovery, including containerization.
-    result := lxkns.Discover(
-        lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+    result := discover.Discover(
+        discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
 
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {

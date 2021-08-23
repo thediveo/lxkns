@@ -17,7 +17,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"github.com/thediveo/lxkns/internal/namespaces"
@@ -30,7 +30,7 @@ import (
 // namespaces. We only run the resolution phase after we've discovered a
 // complete map of all user namespaces: only now we can resolve the owner
 // userspace ids to their corresponding user namespace objects.
-func resolveOwnership(nstype species.NamespaceType, _ string, result *DiscoveryResult) {
+func resolveOwnership(nstype species.NamespaceType, _ string, result *Result) {
 	if !result.Options.DiscoverOwnership || nstype == species.CLONE_NEWUSER {
 		if !result.Options.DiscoverOwnership {
 			log.Infof("skipping discovery of namespaces ownership")

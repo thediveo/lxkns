@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package discover
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -25,7 +25,7 @@ import (
 var _ = Describe("maps PIDs", func() {
 
 	It("doesn't translates non-existing PID/namespace", func() {
-		allns := Discover(FromProcs(), WithHierarchy())
+		allns := Namespaces(FromProcs(), WithHierarchy())
 		pidmap := NewPIDMap(allns)
 		Expect(pidmap.Translate(0, allns.InitialNamespaces[model.PIDNS], allns.InitialNamespaces[model.PIDNS])).To(BeZero())
 	})
@@ -52,7 +52,7 @@ read # wait for test to proceed()
 		var leafpid model.PIDType
 		cmd.Decode(&leafpid)
 
-		allns := Discover(FromProcs(), WithHierarchy())
+		allns := Namespaces(FromProcs(), WithHierarchy())
 		pidns := allns.Namespaces[model.PIDNS][pidnsid]
 		initialpidns := allns.PIDNSRoots[0]
 

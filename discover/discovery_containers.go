@@ -14,7 +14,7 @@
 
 // +build linux
 
-package lxkns
+package discover
 
 import (
 	"context"
@@ -34,7 +34,7 @@ import (
 // processes (and thus also namespaces). Also translates container PIDs for
 // containers in containers when their container engine PIDs are known so that
 // PID translation is possible.
-func discoverContainers(result *DiscoveryResult) {
+func discoverContainers(result *Result) {
 	if result.Options.Containerizer == nil {
 		return
 	}

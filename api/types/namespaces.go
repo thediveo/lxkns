@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -38,7 +38,7 @@ type NamespacesDict struct {
 // for use. It will be empty if nil discovery results are specified; otherwise,
 // the information from the discovery results will be used by this namespace
 // dictionary.
-func NewNamespacesDict(discoveryresults *lxkns.DiscoveryResult) *NamespacesDict {
+func NewNamespacesDict(discoveryresults *discover.Result) *NamespacesDict {
 	var d *NamespacesDict
 	if discoveryresults == nil {
 		d = &NamespacesDict{
@@ -74,7 +74,7 @@ func (d NamespacesDict) Get(nsid species.NamespaceID, nstype species.NamespaceTy
 // MarshalJSON emits a Linux-kernel namespace dictionary as JSON, with details
 // about the individual namespaces.
 func (d *NamespacesDict) MarshalJSON() ([]byte, error) {
-	usernames := lxkns.DiscoverUserNames(*d.AllNamespaces)
+	usernames := discover.DiscoverUserNames(*d.AllNamespaces)
 	b := bytes.Buffer{}
 	b.WriteRune('{')
 	first := true

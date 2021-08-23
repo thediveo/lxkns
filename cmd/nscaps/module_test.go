@@ -19,8 +19,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
@@ -39,7 +39,7 @@ var targetcmd *testbasher.TestCommand
 var tpid model.PIDType
 var tuserid, tnsid species.NamespaceID
 
-var allns *lxkns.DiscoveryResult
+var allns *discover.Result
 
 var _ = BeforeSuite(func() {
 	procscripts.Common(nstest.NamespaceUtilsScript)
@@ -72,7 +72,7 @@ read
 	tuserid = nstest.CmdDecodeNSId(targetcmd)
 	tnsid = nstest.CmdDecodeNSId(targetcmd)
 
-	allns = lxkns.Discover(lxkns.WithStandardDiscovery())
+	allns = discover.Namespaces(discover.WithStandardDiscovery())
 })
 
 var _ = AfterSuite(func() {

@@ -12,8 +12,8 @@ package for a working example.
 
 Plug-ins in the "cli" group should export these functions:
 
-    * SetupCLI: a func(*cobra.Command) registering CLI one or more flags.
-    * BeforeRun: an optional func() error which is called before the command runs.
+    * SetupCLI: a "func(*cobra.Command)" registering CLI one or more flags.
+    * BeforeRun: an optional "func() error" which is called before the command runs.
 
 Registration of the exported functions should be done, as usual, in an init()
 function. For better modularity, multiple such registration-related init()
