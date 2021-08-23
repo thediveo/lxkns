@@ -42,7 +42,10 @@ func main() {
 
 	// Run the discovery, including containerization.
 	result := discover.Namespaces(
-		discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(cizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 
 	for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
 		for _, ns := range result.SortedNamespaces(nsidx) {

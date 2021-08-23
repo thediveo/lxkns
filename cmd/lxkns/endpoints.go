@@ -31,7 +31,10 @@ import (
 func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		allns := discover.Namespaces(
-			discover.WithFullDiscovery(), discover.WithContainerizer(cizer))
+			discover.WithFullDiscovery(),
+			discover.WithContainerizer(cizer),
+			discover.WithPIDMapper(), // recommended when using WithContainerizer.
+		)
 		// Note bene: set header before writing the header with the status code;
 		// actually makes sense, innit?
 		w.Header().Set("Content-Type", "application/json")

@@ -145,10 +145,6 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	if opts.NamespaceTypes == 0 {
 		opts.NamespaceTypes = species.AllNS
 	}
-	// If a PID mapping is required, ensure that PID namespaces are discovered.
-	if opts.withPIDmap || opts.Containerizer != nil {
-		opts.NamespaceTypes |= species.CLONE_NEWPID
-	}
 	result := &Result{
 		Options:   opts,
 		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
@@ -192,7 +188,7 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	})
 
 	// Do we need a PID mapping between PID namespaces?
-	if opts.withPIDmap || opts.Containerizer != nil {
+	if opts.withPIDmap {
 		result.PIDMap = NewPIDMap(result)
 	}
 

@@ -43,7 +43,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			if err != nil {
 				return err
 			}
-			allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+			allns := discover.Namespaces(
+				discover.WithStandardDiscovery(),
+				discover.WithContainerizer(cizer),
+				discover.WithPIDMapper(), // recommended when using WithContainerizer.
+			)
 			fmt.Print(
 				asciitree.Render(
 					allns.UserNSRoots,

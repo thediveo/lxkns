@@ -39,7 +39,9 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 	}
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
-		discover.WithContainerizer(containerizer))
+		discover.WithContainerizer(containerizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 	var j []byte
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.

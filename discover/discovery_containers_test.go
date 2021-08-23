@@ -27,7 +27,6 @@ import (
 	"github.com/ory/dockertest"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
-	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
@@ -43,12 +42,12 @@ var _ = Describe("Discover containers", func() {
 	var docksock string
 
 	BeforeEach(func() {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
+		// We cannot discover the initial container process running as root when
+		// we're not root too.
+		if os.Geteuid() != 0 {
+			Skip("needs root")
 		}
+		docksock = "unix:///proc/1/root/run/docker.sock"
 
 		var err error
 		pool, err = dockertest.NewPool(docksock)
@@ -78,13 +77,8 @@ var _ = Describe("Discover containers", func() {
 		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 	})
 
-	It("finds containers, relates with processes", func() {
-		// We cannot discover the initial container process running as root when
-		// we're not root too.
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-
+	It("finds containers and relates them with their initial processes", func() {
+		By("spinning up a Docker watcher")
 		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -92,20 +86,11 @@ var _ = Describe("Discover containers", func() {
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()
+		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 
-		<-mw.Ready()
-
+		By("looking for the sleepy container")
 		allns := Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
-
-		Expect(allns.Containers).To(ContainElement(
-			WithTransform(func(c *model.Container) string { return c.Name }, Equal(sleepyname))))
-		var sleepy *model.Container
-		for _, cntr := range allns.Containers {
-			if cntr.Name == sleepyname {
-				sleepy = cntr
-				break
-			}
-		}
+		sleepy := allns.Containers.FirstWithName(sleepyname)
 		Expect(sleepy).NotTo(BeNil())
 		Expect(sleepy.PID).NotTo(BeZero())
 		Expect(allns.Processes).To(HaveKey(sleepy.PID))

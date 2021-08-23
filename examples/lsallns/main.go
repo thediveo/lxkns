@@ -125,7 +125,10 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		// Run a full namespace discovery without mount point discovery, but
 		// with containers.
 		result = discover.Namespaces(
-			discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
+			discover.WithStandardDiscovery(),
+			discover.WithContainerizer(cizer),
+			discover.WithPIDMapper(), // recommended when using WithContainerizer.
+		)
 	}
 	return dumpresult(result)
 }

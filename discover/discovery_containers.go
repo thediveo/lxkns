@@ -51,7 +51,7 @@ func discoverContainers(result *Result) {
 	// containerized container engines (sic!).
 	result.Containers = containers
 	enginesPIDns := map[*model.ContainerEngine]model.Namespace{} // cache engines' PID namespaces
-	pidmap := result.PIDMap
+	pidmap := result.PIDMap                                      // might be nil
 	for _, container := range containers {
 		if container.Engine == nil {
 			panic(fmt.Sprintf("containerizer returned container without engine: %+v", container))

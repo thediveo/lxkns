@@ -79,6 +79,7 @@ func WithFullDiscovery() DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		stddisco(o)
 		o.DiscoverMounts = true
+		o.withPIDmap = true
 	}
 }
 
@@ -88,9 +89,11 @@ func WithNamespaceTypes(t species.NamespaceType) DiscoveryOption {
 	return func(o *DiscoverOpts) { o.NamespaceTypes = t }
 }
 
-// WithPIDMapper opts in to discover the PID mapping between PID namespaces.
-// Please note that specifying a containerizer also automatically opts in to PID
-// mapping discovery.
+// WithPIDMapper opts in to discover the PID mapping between PID namespaces. In
+// order to correctly map container PIDs of containers inside another container,
+// API users need to enable this option. It defaults to off due to the
+// additional system load it causes when scanning all processes for their PID
+// namespace-related information and building the full translation map.
 func WithPIDMapper() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.withPIDmap = true }
 }
@@ -162,7 +165,9 @@ func WithoutMounts() DiscoveryOption {
 }
 
 // WithContainerizer opts for discovery of containers related to namespaces,
-// using the specified Containerizer.
+// using the specified Containerizer. Depending on your system configuration you
+// might want to additionally use WithPIDMapper() in order to support containers
+// in containers.
 func WithContainerizer(c containerizer.Containerizer) DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		o.Containerizer = c

@@ -22,6 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	cdengine "github.com/thediveo/whalewatcher/engineclient/containerd"
@@ -90,11 +91,25 @@ var _ = Describe("Discovering containers in containers", func() {
 		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 		Eventually(cdw.Ready()).Should(BeClosed(), "containerd watcher failed to synchronize")
 
-		By("finding the sleepy container with the sleep process inside the containerd-in-docker container")
+		By("without a PIDMapper looking for the sleepy container with the sleep process inside the containerd-in-docker container")
 		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
+		Expect(allns.PIDMap).To(BeNil()) //!!!ensure we don't have any mapping available
 		containerds := allns.Containers.WithEngineType(cdengine.Type)
 		Expect(containerds).To(HaveLen(1))
 		sleepy := containerds[0]
+		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
+		Expect(sleepy.Process).To(Or(
+			BeNil(),
+			gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+				"Cmdline": ConsistOf("sleep", ContainSubstring("1000")),
+			})))
+
+		By("looking for the sleepy container, now with a PID mapper")
+		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer), WithPIDMapper())
+		Expect(allns.PIDMap).NotTo(BeNil())
+		containerds = allns.Containers.WithEngineType(cdengine.Type)
+		Expect(containerds).To(HaveLen(1))
+		sleepy = containerds[0]
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).NotTo(BeNil())
 		Expect(sleepy.Process.Cmdline).To(ConsistOf("sleep", ContainSubstring("1000")))

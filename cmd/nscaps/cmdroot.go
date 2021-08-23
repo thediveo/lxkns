@@ -118,8 +118,12 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	allns := discover.Namespaces(discover.WithStandardDiscovery(), discover.WithContainerizer(cizer))
-	pidmap := discover.NewPIDMap(allns)
+	allns := discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(cizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
+	pidmap := allns.PIDMap
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
 	// If necessary, translate the PID from its own PID namespace into the
 	// initial/this program's PID namespace.
