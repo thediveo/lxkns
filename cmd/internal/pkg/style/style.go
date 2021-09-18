@@ -72,5 +72,5 @@ func (sv StyledValue) Format(s fmt.State, c rune) {
 		format += "." + strconv.Itoa(precision)
 	}
 	format += string(c)
-	s.Write([]byte(sv.style.Styled(fmt.Sprintf(format, sv.value))))
+	_, _ = s.Write([]byte(sv.style.Styled(fmt.Sprintf(format, sv.value))))
 }

@@ -80,7 +80,7 @@ func NewPauseProcess(mntnsref string, usernsref string) (*exec.Cmd, error) {
 // newPauseProcess starts a new pause process using the specified sandbox
 // binary.
 func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cmd, error) {
-	sleepychild := exec.Command(binary)
+	sleepychild := exec.Command(binary) // #nosec G204
 	sleepychild.Env = append(os.Environ(),
 		mntnssandbox.MntnsEnvironmentVariableName+"="+mntnsref)
 	if usernsref != "" {

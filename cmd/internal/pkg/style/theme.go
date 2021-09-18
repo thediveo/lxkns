@@ -94,6 +94,7 @@ func ThemeBeforeRun() error {
 	// is empty, then we fall back onto the default themes.
 	var th string
 	if home, err := os.UserHomeDir(); err == nil {
+		// #nosec G304
 		if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
 			th = string(styling)
 		}

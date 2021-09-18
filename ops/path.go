@@ -132,7 +132,7 @@ func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.Refere
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
-	return openref, func() { openref.Close() }, nil
+	return openref, func() { _ = openref.Close() }, nil
 }
 
 // NsFd returns a file descriptor referencing the namespace indicated in a
@@ -152,7 +152,7 @@ func (nsp NamespacePath) NsFd() (int, opener.FdCloser, error) {
 	if err != nil {
 		return fdi, nil, newInvalidNamespaceError(nsp, err)
 	}
-	return int(fdi), func() { unix.Close(int(fdi)) }, nil
+	return int(fdi), func() { _ = unix.Close(int(fdi)) }, nil
 }
 
 // Ensures that NamespacePath implements the Relation interface.

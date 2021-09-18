@@ -74,7 +74,7 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 	// Before we run further checks, we have to open the namespace first, so
 	// that it cannot get destroyed anymore as long as we keep the fd open that
 	// is referencing it.
-	nsf, err := os.Open(path)
+	nsf, err := os.Open(path) // #nosec G304
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,7 +82,7 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 	// down below somewhere while deep in the cross-checks.
 	defer func() {
 		if err != nil && nsf != nil {
-			nsf.Close()
+			_ = nsf.Close()
 		}
 	}()
 	// Optionally check that we have opened the correct type of namespace.
@@ -126,5 +126,5 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 	}
 	// Okay, we successfully passed the checks, so the caller is now entitled to
 	// use the opened namespace reference...
-	return typedref, func() { nsf.Close() }, nil
+	return typedref, func() { _ = nsf.Close() }, nil
 }

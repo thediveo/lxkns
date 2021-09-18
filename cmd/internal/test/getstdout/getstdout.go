@@ -41,8 +41,8 @@ func Stdouterr(f func()) string {
 		panic(err)
 	}
 	defer func() {
-		r.Close()
-		w.Close()
+		_ = r.Close()
+		_ = w.Close()
 	}()
 	// Kick off reading all data sent into the pipe off it so writers won't
 	// stall indefinitely. In case of a non-EOF error, we append the pipe
@@ -64,6 +64,6 @@ func Stdouterr(f func()) string {
 	// Done; signal the background pipe reading go routine to finish copying
 	// and wait for it to return the captured stdout ... which we then return
 	// to our caller.
-	w.Close()
+	_ = w.Close()
 	return <-stdout
 }

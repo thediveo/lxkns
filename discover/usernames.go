@@ -76,11 +76,11 @@ func DiscoverUserNames(namespaces model.AllNamespaces) UidUsernameMap {
 // namespace and return the mapping from user IDs (uids) to user names.
 func userNamesFromPasswd(passwdpath string) UidUsernameMap {
 	usernames := UidUsernameMap{}
-	f, err := os.Open(passwdpath)
+	f, err := os.Open(passwdpath) // #nosec G304
 	if err != nil {
 		return usernames
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		// Scanning follows the rules the glibc seems to follow, ignoring

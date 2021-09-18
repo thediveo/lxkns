@@ -121,7 +121,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 		runtime.LockOSThread() // this still runs on the main thread...!
 		proc := model.NewProcess(model.PIDType(os.Getpid()))
 		procname := append([]byte(proc.Basename()), 0)
-		ptr := unsafe.Pointer(&procname[0])
+		ptr := unsafe.Pointer(&procname[0]) // #nosec G103
 		// prctl(PR_SET_NAME, ...) will silently truncate any process name
 		// deemed too long, see also:
 		// https://man7.org/linux/man-pages/man2/prctl.2.html

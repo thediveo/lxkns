@@ -111,6 +111,7 @@ func frozenV2(fridgepath string) (frozen bool) {
 	// doesn't have the "cgroup.freeze" interface file. Other than that, see
 	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
 	// for details.
+	/* #nosec G304 */
 	if events, err := ioutil.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
 		for _, event := range strings.Split(string(events), "\n") {
 			if strings.HasPrefix(event, "frozen ") {
@@ -130,6 +131,7 @@ func frozenV1(fridgepath string) (frozen bool) {
 	// Please note: "the root cgroup is non-freezable and the above
 	// interface files don't exist."
 	// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
+	/* #nosec G304 */
 	if state, err := ioutil.ReadFile(
 		filepath.Join(fridgepath, "freezer.state")); err == nil {
 		switch strings.TrimSuffix(string(state), "\n") {
@@ -158,7 +160,7 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	if err != nil {
 		return
 	}
-	defer cgroup.Close()
+	defer func() { _ = cgroup.Close() }()
 	scanner := bufio.NewScanner(cgroup)
 	unifiedroot := "" // (if detected) the cgroups v2 unified hierarchy root
 	for scanner.Scan() {
