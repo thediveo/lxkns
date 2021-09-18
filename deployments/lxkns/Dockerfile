@@ -19,6 +19,7 @@ COPY api/ ./api/
 COPY cmd/ ./cmd/
 COPY containerizer/ ./containerizer/
 COPY decorator/ ./decorator/
+COPY discover/ ./discover/
 COPY internal/ ./internal/
 COPY log/ ./log/
 COPY model/ ./model/
@@ -26,9 +27,8 @@ COPY mounts/ ./mounts/
 COPY ops/ ./ops/
 COPY plural/ ./plural/
 COPY species/ ./species/
-COPY containerizer/ ./containerizer/
 COPY *.go ./
-RUN go build -v -o /lxkns ./cmd/lxkns
+RUN go build -v -o /lxkns ./cmd/lxkns && go build -v -o /mntnssandbox ./cmd/mntnssandbox
 
 # 2nd stage: builds the lxkns web client react application.
 FROM node:16-alpine AS reactor
@@ -50,11 +50,13 @@ RUN yarn imagebuild
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
 FROM alpine:${ALPINE_VERSION}
-COPY --from=builder /lxkns /
+COPY --from=builder /lxkns /mntnssandbox /
 RUN apk add --no-cache \
         libcap && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
+    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox && \
     apk del --no-cache libcap
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
+ENV PATH /
 USER 65534
 CMD ["/lxkns"]

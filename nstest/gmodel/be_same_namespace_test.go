@@ -20,18 +20,18 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/errxpect"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
 
-var allns *lxkns.DiscoveryResult
+var allns *discover.Result
 var userns1 model.Namespace
 var initproc *model.Process
 
 var _ = BeforeSuite(func() {
-	allns = lxkns.Discover(lxkns.WithStandardDiscovery())
+	allns = discover.Namespaces(discover.WithStandardDiscovery())
 	initproc = allns.Processes[model.PIDType(os.Getpid())]
 	userns1 = initproc.Namespaces[model.UserNS]
 })
@@ -39,15 +39,15 @@ var _ = BeforeSuite(func() {
 var _ = Describe("Namespace", func() {
 
 	It("matches same ID and Type", func() {
-		ns1 := namespaces.New(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foobar")
-		ns2 := namespaces.New(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foobar")
+		ns1 := namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foobar")
+		ns2 := namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foobar")
 		Expect(ns1).To(BeSameNamespace(ns2))
 		Expect(ns1).NotTo(
-			BeSameNamespace(namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(1), "/foobar")))
+			BeSameNamespace(namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(1), "/foobar")))
 		Expect(ns1).NotTo(
-			BeSameNamespace(namespaces.New(species.CLONE_NEWNET, species.NamespaceIDfromInode(666), "/foobar")))
+			BeSameNamespace(namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceIDfromInode(666), "/foobar")))
 		Expect(ns1).NotTo(
-			BeSameNamespace(namespaces.New(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foo/bar")))
+			BeSameNamespace(namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foo/bar")))
 	})
 
 	It("matches PID lists", func() {
@@ -79,7 +79,7 @@ var _ = Describe("Namespace", func() {
 
 		// parents must be checked
 		u2 = *(userns1.(*namespaces.UserNamespace))
-		dummyuserns := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(1), "/roode")
+		dummyuserns := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(1), "/roode")
 		dummyuserns.(namespaces.HierarchyConfigurer).AddChild(model.Hierarchy(&u2))
 		Expect(userns1).NotTo(BeSameNamespace(userns2))
 
@@ -90,8 +90,8 @@ var _ = Describe("Namespace", func() {
 
 		// children must be same...
 		u0 := *(userns1.(*namespaces.UserNamespace))
-		c1 := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(667), "/667")
-		c2 := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(668), "/668")
+		c1 := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(667), "/667")
+		c2 := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(668), "/668")
 		(namespaces.HierarchyConfigurer)(&u0).AddChild(c1.(model.Hierarchy))
 		(namespaces.HierarchyConfigurer)(&u0).AddChild(c2.(model.Hierarchy))
 		Expect(&u0).NotTo(BeSameNamespace(userns1))
@@ -102,8 +102,8 @@ var _ = Describe("Namespace", func() {
 		// add the "same" children to a clean copy without any children, then
 		// expect both parent namespaces to still be the "same".
 		u2 = *(userns1.(*namespaces.UserNamespace))
-		c1 = namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(667), "/667")
-		c2 = namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(668), "/668")
+		c1 = namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(667), "/667")
+		c2 = namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(668), "/668")
 		(namespaces.HierarchyConfigurer)(&u2).AddChild(c1.(model.Hierarchy))
 		Expect(&u2).NotTo(BeSameNamespace(&u0))
 		(namespaces.HierarchyConfigurer)(&u2).AddChild(c2.(model.Hierarchy))

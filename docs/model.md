@@ -2,7 +2,8 @@
 
 Looking instead for the Golang API
 [![GoDoc](https://godoc.org/github.com/TheDiveO/lxkns?status.svg)](http://godoc.org/github.com/TheDiveO/lxkns)
-instead? [lxkns API docs](http://godoc.org/github.com/TheDiveO/lxkns).
+instead? See [lxkns API docs](http://godoc.org/github.com/TheDiveO/lxkns)
+instead.
 
 This part of the documentation gives technical background information in order
 to better understand the `lxkns` information model.
@@ -13,8 +14,14 @@ From an API user's perspective, there are the following "main" relevant
 packages:
 
 - `lxkns`: namespace discovery and PID translation.
-- `lxkns/model`: defines the core information model of namespaces and
-  processes, with their relationships.
+- `lxkns/model`: defines the core information model of namespaces, processes and
+  mount points, with their relationships. Additionally covers containers related
+  to processes (and vice versa), as well as groups of containers and the
+  managing container engines.
+- `lxkns/containerizer/whalefriend`: allows discovering containers as part of
+  the namespace discovery, from engines supported by the
+  [thediveo/whalewatcher](https://github.com/thediveo/whalewatcher) module
+  (Docker and containerd at this time).
 - `lxkns/species`: supplies kernel-related namespace type and textual
   representation definitions and convenience functions.
 - `lxkns/ops`: offers a Go-ish API to the kernel ioctl() API for discovering
@@ -24,22 +31,35 @@ packages:
 
 Auxiliary packages:
 
-- `lxkns/cmd`: eating our own dog food, it is home to the  `lsuns`, `lspns`,
-  and `pidtree` commands. These namespace CLI tools simultaneously serve as
-  more complex real-world examples.
+- `lxkns/cmd`: eating our own dog food, it is home to the  `lsuns`, `lspidns`,
+  `pidtree`, `dumpns`, and `nscaps` commands. These namespace CLI tools
+  simultaneously serve as more complex real-world examples.
 - `lxkns/examples`: examples illustrating the `lxkns` API usage.
 - `lxkns/internal/namespaces`: contains the implementation of the various
   namespace-related interfaces from `lxkns/model`.
 
 ## Discovering Namespaces
 
-The gory details of discovering Linux-kernel namespaces are hidden beneath the
-surface of `Discover()`. This discovery function takes a discovery options and
-returns a result. So far so good.
+The gory technical details of discovering Linux-kernel namespaces are hidden
+beneath the surface of `Discover()`. This discovery function takes discovery
+options and returns results. So far so good.
 
-![Discovering Linux kernel namespaces](_images/namespaces-discovery.png)
+![Discovering Linux kernel namespaces](_images/namespaces-discovery.svg)
 
-> [!NOTE] Writing a namespace discoverer in Golang is going down the Gopher
+Instead of fiddling around with several fields of the `DiscoveryOpts` structure,
+the `Discover()` API supports the option pattern, for instance:
+
+- `WithStandardDiscovery()` discovers namespaces, their hierarchy and ownership
+  and freezer states of processes attached to the namespaces. It does not
+  discover mount points.
+- `WithFullDiscovery()` is a standard discovery with additional mount point
+  discovery.
+- `FromProcs()` and `NotFromProcs()`, et cetera, to individually configure
+  individual discovery aspects.
+- `WithContainerizer()` to enable container discovery using a so-called
+  "containerizer".
+
+> [!RANT] Writing a namespace discoverer in Golang is going down the Gopher
 > hole. For instance, Golang has the annoying habit of interfering with
 > switching certain namespaces (such as mount namespaces) because it often runs
 > multiple OS threads and switches go routines from OS thread to another OS
@@ -61,7 +81,7 @@ network interfaces, processes, filesystem mounts, et cetera.
 Linux namespaces are somewhat peculiar, as shown in this diagram – please keep
 in mind that all element names depicted below are **not** valid `lxkns` types:
 
-![Linux kernel namespaces](_images/linux-namespaces.png)
+![Linux kernel namespaces](_images/linux-namespaces.svg)
 
 - Linux kernal **namespaces have no names**; the term "namespace" originally
   derives from the first Linux namespace type implemented ever: [mount
@@ -122,7 +142,7 @@ qualification.
   _and_ input parameters, that is, `net:[4026531905]`. After all, that's what
   all the well-established tools like `lsns` do.
 
-- `lxkns.species` defines two functions through which half-baked inode numbers
+- `species` defines two functions through which half-baked inode numbers
   enter the namespace ID universe:
   - `IDwithType(s string) (id NamespaceID, t NamespaceType)` parses a textual
     namespace representation and then returns the full ID and type of
@@ -170,10 +190,12 @@ namespace of an OS thread isn't possible after the Golang runtime has started**
 namespace”](https://stackoverflow.com/q/25704661)). This can be achieved by
 using, for instance, the [`gons` package](https://github.com/thediveo/gons).
 
-However, in some situations switching mount namespaces might not be necessary at
+However, in many situations switching mount namespaces is not be necessary at
 all: instead, simply access files in a different mount namespaces via the
 [procfs root "wormholes"](https://github.com/TheDiveO/procfsroot)
-(thediveo/procfsroot) using ordinary file I/O system calls.
+(thediveo/procfsroot) using ordinary file I/O system calls. And if there happens
+to be no process at hand, then simply call the [mountineers](mountineers) to our
+rescue.
 
 ### PID Namespaces
 
@@ -220,15 +242,14 @@ child namespaces thereof.
 
 ## Linux Namespace Representation in lxkns
 
-`lxkns.model` represents the namespace concepts we've just learned. It
-represents them using four interfaces, each interface grouping related aspects
-of namespaces.
+`model` represents the namespace concepts we've just learned. It represents them
+using four interfaces, each interface grouping related aspects of namespaces.
 
 > [!NOTE] Not all types of namespaces offer all interfaces. That is, only
 > hierarchical "PID" and "user" namespaces provide the `Hierarchy` interface,
 > and only "user" namespaces offer the fourth `Ownership` interface.
 
-![lxkns namespaces](_images/lxkns-namespaces.png)
+![lxkns namespaces](_images/lxkns-namespaces.svg)
 
 - `Namespace`: this interface gives access to the properties common to all
   Linux kernel namespaces, as well as to what we additionally discovered and
@@ -252,7 +273,7 @@ namespaces usually have processes "attached" to them. Not least is the `proc`
 filesystem an important place to discover namespaces. `lxkns` automatically
 discovers the tree of processes, and the links between processes and namespaces.
 
-![Processes and Namespaces](_images/lxkns-processes.png)
+![Processes and Namespaces](_images/lxkns-processes.svg)
 
 To reduce interlinking, each `Namespace` only references those topmost
 processes in the process tree which are associated to it: the so-called
@@ -275,6 +296,12 @@ after the container's initial process has been kicked off.
 > pid, user, uts, and time. There is no way for a process not to be associated
 > with exactly 7 (8) namespaces, one of each type.
 
+Finally, a process might be associated with a container.
+
+> [!WARNING] **lxkns** only associates the initial process of a container with
+> its container. It does **no** associate any child processes of an initial
+> container process with the container.
+
 ## PID Translation Map
 
 Another special feature of `lxkns` is translating a PID from one “PID”
@@ -290,7 +317,7 @@ namespace, as well as in all the parent “PID” namespaces is stored in the
 us the PIDs, but not the namespaces. We also need the "PID" namespaces
 hieararchy in order to understand which PIDs belongs to which "PID" namespaces.
 
-![PID map](_images/pid-map.png)
+![PID map](_images/pid-map.svg)
 
 The PID translation map introduces the concept of a PID being only meaningful in
 the context of its "PID" namespace as type `NamespacedPID`. Ignoring how to
@@ -308,3 +335,26 @@ _namespace-to_&gt; tuples with their corresponding _PID-to's_.
 A `Translate()` operation then looks up the specified namespaced PID, getting
 the corresponding process' list of namespaced PIDs. It then returns the PID
 matching the destination "PID" namespace.
+
+## Containers!
+
+As Linux-kernel namespaces are often used as some of the technical underpinnings
+of containers, relating namespaces to containers via processes might prove quite
+helpful.
+
+![containers and more](_images/lxkns-containers.svg)
+
+There can be only at most one `Container` per process. In particular, the
+process then is the initial process started for this container. **lxkns** does
+not relate child processes inside a container to their "embracing" container.
+
+Each and every container is associated with its managing `ContainerEngine`.
+
+Additionally, containers might be organized into `Group`s. Examples of groups
+are (Docker) composer projects, Kubernetes pods, et cetera. As groups typically
+are not first-class elements for container engines **lxkns** uses so-called
+"[decorators](deco)" to discover and recover different [types (and
+flavors)](typesflavors) of container group memberships, usually from container
+labels. If necessary, applications integrating the **lxkns** module can easily
+bring in their own decorators via a simple plug-in mechanism (leveraging
+[thediveo/go-plugger](https://github.com/thediveo/go-plugger)).

@@ -16,6 +16,7 @@ import React from 'react'
 
 import clsx from 'clsx'
 import { makeStyles, Tooltip } from '@material-ui/core'
+import DoubleArrowIcon from '@material-ui/icons/DoubleArrow'
 import { NamespaceIcon } from 'icons/Namespace'
 import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'
@@ -40,6 +41,9 @@ const useStyles = makeStyles((theme) => ({
     fdref: {
     },
     bindmounted: {
+    },
+    bmsep: {
+        paddingLeft: '0.2em',
     },
     blinky: {
         position: 'relative',
@@ -131,8 +135,15 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
     const classes = useStyles()
 
     const isProcfdPath = namespace.reference &&
-        namespace.reference.startsWith('/proc/') &&
-        namespace.reference.includes('/fd/')
+        namespace.reference[0].startsWith('/proc/') &&
+        namespace.reference[0].includes('/fd/')
+
+    const ref = (namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
+        ? namespace.reference.slice(1) : (namespace.reference || []))
+        .map((refpath, idx) => [
+            idx > 0 ? <DoubleArrowIcon fontSize="inherit" className={classes.bmsep} /> : undefined,
+            <span className="bindmount">{refpath}</span>,
+        ]).flat()
 
     return (
         (!namespace.reference &&
@@ -147,14 +158,14 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <span className={clsx(classes.namespaceReference, classes.fdref, className)}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
+                    <span className="bindmount">"{namespace.reference[0]}"</span>
                 </span>
             </Tooltip>
         ) || (
             <Tooltip title={`bind-mounted ${namespace.type} namespace`}>
                 <span className={clsx(classes.namespaceReference, classes.bindmounted, className)}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference}"</span>
+                    {ref}
                 </span>
             </Tooltip>
         )

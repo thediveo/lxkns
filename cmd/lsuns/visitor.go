@@ -22,10 +22,10 @@ import (
 	"os/user"
 	"reflect"
 
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -38,7 +38,7 @@ type UserNSVisitor struct {
 
 // Roots returns the given topmost hierarchical user namespaces sorted.
 func (v *UserNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	userroots := lxkns.SortNamespaces(roots.Interface().([]model.Namespace))
+	userroots := discover.SortNamespaces(roots.Interface().([]model.Namespace))
 	count := len(userroots)
 	children = make([]reflect.Value, count)
 	for idx := 0; idx < count; idx++ {
@@ -78,7 +78,7 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 	label = v.Label(node)
 	// Children of this user namespace...
 	if hns, ok := node.Interface().(model.Hierarchy); ok {
-		children = reflect.ValueOf(lxkns.SortChildNamespaces(hns.Children()))
+		children = reflect.ValueOf(discover.SortChildNamespaces(hns.Children()))
 	}
 	// Owned (non-user) namespaces...
 	if v.Details {
@@ -93,7 +93,7 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 					// safeguard in case the model would change anytime later.
 					continue
 				}
-				nslist := lxkns.SortedNamespaces(ownedns[nstype])
+				nslist := discover.SortedNamespaces(ownedns[nstype])
 				for _, ns := range nslist {
 					if !filter.Filter(ns) {
 						continue

@@ -1,11 +1,12 @@
 # Containers
 
 While namespace discovery truely is kernel-space territory it often is helpful
-to correlate the discovered namespaces with user-space artefacts, and containers
-in particular. Without doubt, containers are a dominant showcase of namespace
-technology.
+to correlate the discovered namespaces with user-space artefacts – and
+containers in particular. Without doubt, containers are a dominant showcase of
+namespace technology.
 
-The container-related part of **lxkns'** discovery information model has on offer:
+The container-related part of the **lxkns** discovery information model has on
+offer:
 
 - **containers** (as was to be expected),
 - their managing container **engines**,
@@ -41,8 +42,10 @@ sibling project:
 - Docker
 - containerd
 
-Further container engine types can be added, preferably via the whalewatcher
-project.
+> [!TIP] Applications can easily add their own containerizers (via so-called
+> "watchers") to the lxkns service and the CLI tools, extending them via the
+> `go-plugger` mechanism. Please see `cmd/internal/pkg/engines/moby/moby.go` for
+> a good example.
 
 ## Decorators
 
@@ -62,3 +65,9 @@ plugin management (but only using statically compiled-in plugins).
   - [containerd CRI
     annotations](https://github.com/containerd/containerd/tree/main/pkg/cri),
     based on CRI-specific container labels.
+
+> [!TIP] Applications using the `lxkns` module directly can seamlessly add their
+> own decorators. They simply need to register them as "plugins" using the
+> `go-plugger` mechanism. Please refer to the existing decorators in
+> `decorator/` for details, such as `decorator/composer/decorator.go` as a good
+> starter example.

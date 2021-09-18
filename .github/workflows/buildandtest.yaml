@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        go: ['1.16', '1.14']
+        go: ['1.17', '1.16', '1.15']
     steps:
     - name: Set up Go ${{matrix.go}}
       uses: actions/setup-go@v1
@@ -25,8 +25,11 @@ jobs:
     - name: Get dependencies
       run: go get -v -t -d ./...
 
-    - name: Test Go packages
-      run: sudo go test -v ./... && go test -v ./...
+    - name: Test Go packages as root
+      run: go test -v -exec sudo ./...
+      
+    - name: Test Go packages as ordinary user
+      run: go test -v ./...
 
   testwebapp:
     name: Test web ui of lxkns service

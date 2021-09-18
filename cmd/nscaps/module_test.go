@@ -15,14 +15,12 @@
 package main
 
 import (
-	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	rxtst "github.com/thediveo/gons/reexec/testing"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
@@ -41,7 +39,7 @@ var targetcmd *testbasher.TestCommand
 var tpid model.PIDType
 var tuserid, tnsid species.NamespaceID
 
-var allns *lxkns.DiscoveryResult
+var allns *discover.Result
 
 var _ = BeforeSuite(func() {
 	procscripts.Common(nstest.NamespaceUtilsScript)
@@ -74,7 +72,7 @@ read
 	tuserid = nstest.CmdDecodeNSId(targetcmd)
 	tnsid = nstest.CmdDecodeNSId(targetcmd)
 
-	allns = lxkns.Discover(lxkns.WithStandardDiscovery())
+	allns = discover.Namespaces(discover.WithStandardDiscovery())
 })
 
 var _ = AfterSuite(func() {
@@ -101,14 +99,6 @@ var _ = BeforeEach(func() {
 var _ = AfterEach(func() {
 	osExit = oldexit
 })
-
-func TestMain(m *testing.M) {
-	// Ensure that the registered handler is run in the re-executed child.
-	// This won't trigger the handler while we're in the parent. We're using
-	// gons' very special coverage profiling support for re-execution.
-	mm := &rxtst.M{M: m}
-	os.Exit(mm.Run())
-}
 
 func TestNscapsCmd(t *testing.T) {
 	style.PrepareForTest()

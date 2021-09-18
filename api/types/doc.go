@@ -3,7 +3,7 @@
 Package types defines the common types for (un)marshalling elements of the lxkns
 information model from/to JSON.
 
-    * PIDMap wraps lxkns.PIDMap
+    * PIDMap wraps model.PIDMap
     * ProcessTable wraps model.ProcessTable
     * (Process wraps model.Process, but is not intended for direct consumption)
 
@@ -12,9 +12,9 @@ Discovery Results
 Most lxkns API users probably want to simply marshal and unmarshal discovery
 results without any hassle. So, here we go:
 
-To marshall a given lxkns.DiscoveryResult in a service:
+To marshall a given discover.Result in a service:
 
-    allns := lxkns.Discover(lxkns.StandardDiscovery())
+    allns := discover.Namespaces(discover.StandardDiscovery())
     err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
 
 And then to unmarshall a discovery result into "allns" when consuming a
@@ -26,7 +26,7 @@ discovery service:
 
 Process Table
 
-Process Tables of type lxkns.ProcessTable are un/marshalled from/to JSON with
+Process Tables of type model.ProcessTable are un/marshalled from/to JSON with
 the help of the ProcessTable type from this package.
 
 Because the Linux architecture closely couples processes and namespaces, all
@@ -48,14 +48,14 @@ ID and type; all other information is missing (zero values).
 
 PID Maps for Translating PIDs between PID Namespaces
 
-PID maps of type lxkns.PIDMap are un/marshalled from/to JSON with the help of
+PID maps of type model.PIDMap are un/marshalled from/to JSON with the help of
 the PIDMap type from this package.
 
-To marshal an lxkns.PIDMap, create a wrapper object ("Digital Twin") and marshal
+To marshal an model.PIDMap, create a wrapper object ("Digital Twin") and marshal
 the wrapper as you need:
 
     // This is one way to get a PID map to be marshalled next.
-    pidmap := lxkns.NewPIDMap(lxkns.Discovery(lxkns.FullDiscovery))
+    pidmap := model.NewPIDMap(discover.Discovery(discover.FullDiscovery))
 
     // Wrap the PID map and then marshal it...
     out, err := json.Marshal(NewPIDMap(WithPIDMap(allpidmap)))
@@ -68,7 +68,7 @@ PID map anyway).
 
     pm := NewPIDMap()
     err := json.Unmarshal(out, &pm)
-    pidmap := pm.PIDMap // access wrapped lxkns.PIDMap
+    pidmap := pm.PIDMap // access wrapped model.PIDMap
 
 */
 package types

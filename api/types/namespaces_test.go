@@ -29,10 +29,10 @@ import (
 
 	. "github.com/thediveo/lxkns/nstest/gmodel"
 
-	"github.com/ory/dockertest"
-	"github.com/thediveo/lxkns"
+	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
@@ -46,11 +46,11 @@ import (
 var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var (
-	allns      *lxkns.DiscoveryResult
+	allns      *discover.Result
 	scripts    = testbasher.Basher{}
 	scriptscmd *testbasher.TestCommand
 	userns     model.Namespace
-	usernames  lxkns.UidUsernameMap
+	usernames  discover.UidUsernameMap
 
 	cizer       containerizer.Containerizer
 	cizercancel context.CancelFunc
@@ -111,11 +111,11 @@ read # wait for test to proceed()
 	usernsid := nstest.CmdDecodeNSId(scriptscmd)
 
 	// "nearly-all-ns" and ... containerz!
-	allns = lxkns.Discover(
-		lxkns.WithStandardDiscovery(),
-		lxkns.NotFromFds(), lxkns.NotFromBindmounts(),
-		lxkns.WithMounts(),
-		lxkns.WithContainerizer(cizer))
+	allns = discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.NotFromFds(), discover.NotFromBindmounts(),
+		discover.WithMounts(),
+		discover.WithContainerizer(cizer))
 
 	// basic checks that discovery worked as expected; we're here to test the
 	// (un)marshalling, not discovery.
@@ -130,7 +130,7 @@ read # wait for test to proceed()
 	// namespaces. We're expecting here that the user name discovery has been
 	// tested in its own defining module and thus use its results as-is for
 	// simplicity.
-	usernames = lxkns.DiscoverUserNames(allns.Namespaces)
+	usernames = discover.DiscoverUserNames(allns.Namespaces)
 })
 
 var _ = AfterSuite(func() {
@@ -162,18 +162,24 @@ func childlist(hns model.Hierarchy) string {
 	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
 }
 
-func refifnotempty(ref string) string {
-	if ref == "" {
+// returns a "reference:ref," string to insert into a JSON object serialization,
+// if the specified reference isn't empty.
+func refifnotempty(ref model.NamespaceRef) string {
+	if len(ref) == 0 {
 		return ""
 	}
-	return `"reference": "` + ref + `",`
+	b, err := json.Marshal(ref)
+	if err != nil {
+		panic(err)
+	}
+	return `"reference": ` + string(b) + `,`
 }
 
 var _ = Describe("namespaces JSON", func() {
 
 	It("always gets a Namespace from the dictionary", func() {
 		d := NewNamespacesDict(nil)
-		uns := namespaces.New(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
+		uns := namespaces.NewWithSimpleRef(species.CLONE_NEWUSER, species.NamespaceIDfromInode(123), "/foobar")
 		d.AllNamespaces[model.UserNS][uns.ID()] = uns
 
 		ns := d.Get(uns.ID(), uns.Type())
@@ -198,7 +204,7 @@ var _ = Describe("namespaces JSON", func() {
 				"nsid": %d,
 				"type": "net",
 				"owner": %d,
-				"reference": %q,
+				"reference": [%q],
 				"leaders": %s,
 				"ealdorman": %d
 			}`,

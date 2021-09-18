@@ -22,11 +22,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
+	"github.com/thediveo/lxkns/discover"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes
@@ -37,9 +37,11 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	allns := lxkns.Discover(
-		lxkns.WithStandardDiscovery(),
-		lxkns.WithContainerizer(containerizer))
+	allns := discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(containerizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 	var j []byte
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.
@@ -96,13 +98,9 @@ func newRootCmd() (rootCmd *cobra.Command) {
 }
 
 func main() {
-	// For some discovery methods this app must be forked and re-executed; the
-	// call to reexec.CheckAction() will automatically handle this situation
-	// and then never return when in re-execution.
-	reexec.CheckAction()
-	// Otherwise, this is cobra boilerplate documentation, except for the
-	// missing call to fmt.Println(err) which in the original boilerplate is
-	// just plain wrong: it renders the error message twice, see also:
+	// This is cobra boilerplate documentation, except for the missing call to
+	// fmt.Println(err) which in the original boilerplate is just plain wrong:
+	// it renders the error message twice, see also:
 	// https://github.com/spf13/cobra/issues/304
 	if err := newRootCmd().Execute(); err != nil {
 		os.Exit(1)

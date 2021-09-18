@@ -22,7 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/internal/pidmap"
 	"github.com/thediveo/lxkns/model"
@@ -36,8 +36,8 @@ var _ = Describe("PIDMap twin", func() {
 			[{"pid": 666,"nsid": 1},{"pid": 1,"nsid": 2}],
 			[{"pid": 777,"nsid": 1}]
 		]`
-		rootpidns   = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(1), "")
-		pidns2      = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(2), "")
+		rootpidns   = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(1), nil)
+		pidns2      = namespaces.New(species.CLONE_NEWPID, species.NamespaceIDfromInode(2), nil)
 		proc666pids = model.NamespacedPIDs{
 			model.NamespacedPID{PID: 666, PIDNS: rootpidns},
 			model.NamespacedPID{PID: 1, PIDNS: pidns2},
@@ -51,13 +51,13 @@ var _ = Describe("PIDMap twin", func() {
 	)
 
 	var (
-		allns     *lxkns.DiscoveryResult
+		allns     *discover.Result
 		allpidmap model.PIDMapper
 	)
 
 	BeforeEach(func() {
-		allns = lxkns.Discover(lxkns.WithStandardDiscovery())
-		allpidmap = lxkns.NewPIDMap(allns)
+		allns = discover.Namespaces(discover.WithStandardDiscovery())
+		allpidmap = discover.NewPIDMap(allns)
 	})
 
 	Describe("JSON un/marshaller", func() {
@@ -67,7 +67,7 @@ var _ = Describe("PIDMap twin", func() {
 			Expect(pmt.PIDMap).NotTo(BeNil())
 			Expect(pmt.PIDns).NotTo(BeNil())
 
-			pidmap := lxkns.NewPIDMap(allns)
+			pidmap := discover.NewPIDMap(allns)
 			pmt = NewPIDMap(WithPIDMap(pidmap))
 			Expect(pmt.PIDMap).To(Equal(pidmap))
 

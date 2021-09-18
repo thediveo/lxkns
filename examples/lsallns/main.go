@@ -24,11 +24,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/gons/reexec"
 	"github.com/thediveo/klo"
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
@@ -47,7 +47,7 @@ type NamespaceRow struct {
 
 // dumpresult takes discovery results, extracts the required fields, and then
 // dumps the extracted data to stdout in a neat ASCII table.
-func dumpresult(result *lxkns.DiscoveryResult) error {
+func dumpresult(result *discover.Result) error {
 	// Prepare output list from the discovery results. For this, we iterate
 	// over all types of namespaces, because the discovery results contain the
 	// namespaces organized by type of namespace.
@@ -67,9 +67,9 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 				if proc.Container != nil {
 					item.ContainerName = proc.Container.Name
 				}
-				item.Comment = proc.CpuCgroup
-			} else if ns.Ref() != "" {
-				item.Comment = "bound:" + ns.Ref()
+				item.Comment = "cgroup:" + proc.CpuCgroup
+			} else if ref := ns.Ref(); len(ref) != 0 {
+				item.Comment = "bound:" + ns.Ref().String()
 			}
 			list = append(list, item)
 		}
@@ -95,7 +95,7 @@ func dumpresult(result *lxkns.DiscoveryResult) error {
 // from a file (or stdin). It then dumps the discovery results in a neat ASCII
 // table to stdout.
 func lsallns(cmd *cobra.Command, _ []string) error {
-	var result *lxkns.DiscoveryResult
+	var result *discover.Result
 	if input, _ := cmd.PersistentFlags().GetString("input"); input != "" {
 		var r io.Reader
 		if input == "-" {
@@ -124,8 +124,11 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
 		// Run a full namespace discovery without mount point discovery, but
 		// with containers.
-		result = lxkns.Discover(
-			lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+		result = discover.Namespaces(
+			discover.WithStandardDiscovery(),
+			discover.WithContainerizer(cizer),
+			discover.WithPIDMapper(), // recommended when using WithContainerizer.
+		)
 	}
 	return dumpresult(result)
 }
@@ -148,13 +151,9 @@ func newRootCmd() (rootCmd *cobra.Command) {
 }
 
 func main() {
-	// For some discovery methods this app must be forked and re-executed; the
-	// call to reexec.CheckAction() will automatically handle this situation
-	// and then never return when in re-execution.
-	reexec.CheckAction()
-	// Otherwise, this is cobra boilerplate documentation, except for the
-	// missing call to fmt.Println(err) which in the original boilerplate is
-	// just plain wrong: it renders the error message twice, see also:
+	// This is cobra boilerplate documentation, except for the missing call to
+	// fmt.Println(err) which in the original boilerplate is just plain wrong:
+	// it renders the error message twice, see also:
 	// https://github.com/spf13/cobra/issues/304
 	if err := newRootCmd().Execute(); err != nil {
 		os.Exit(1)

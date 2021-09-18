@@ -49,7 +49,7 @@ func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
 			"BeSameNamespace must be passed a model.Namespace, not a %T", matcher.expected)
 	}
 	match := sameIDType(actualns, expectedns) &&
-		actualns.Ref() == expectedns.Ref() &&
+		sameRef(actualns.Ref(), expectedns.Ref()) &&
 		sameIDType(actualns.Owner(), expectedns.Owner()) &&
 		sameLeaders(actualns.LeaderPIDs(), expectedns.LeaderPIDs())
 	if match {
@@ -133,6 +133,19 @@ func sameChildren(l1, l2 []model.Hierarchy) bool {
 			}
 		}
 		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+// sameRef returns true if both namespace references are identical.
+func sameRef(r1, r2 model.NamespaceRef) bool {
+	if len(r1) != len(r2) {
+		return false
+	}
+	for idx, rp1 := range r1 {
+		if rp1 != r2[idx] {
 			return false
 		}
 	}

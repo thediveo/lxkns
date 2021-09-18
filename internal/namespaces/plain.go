@@ -20,7 +20,7 @@ type PlainNamespace struct {
 	nstype    species.NamespaceType
 	ownernsid species.NamespaceID
 	owner     model.Ownership
-	ref       string
+	ref       model.NamespaceRef
 	leaders   []*model.Process
 }
 
@@ -46,16 +46,17 @@ func (pns *PlainNamespace) Type() species.NamespaceType { return pns.nstype }
 // user namespace.
 func (pns *PlainNamespace) Owner() model.Ownership { return pns.owner }
 
-// Ref returns a filesystem path suitable for referencing this namespace. A
-// zero ref indicates that there is no reference path available: this is the
-// case for "hidden" PID and user namespaces sandwiched in between PID or user
-// namespaces where reference paths are available, because these other
-// namespaces have processes joined to them, or are either bind-mounted or
-// fd-referenced. Hidden PID namespaces can appear only when there is no
-// process in any of their child namespaces and the child PID namespace(s) is
-// bind-mounted or fd-references (the parent PID namespace is then kept alive
-// because the child PID namespaces are kept alive).
-func (pns *PlainNamespace) Ref() string { return pns.ref }
+// Ref returns a filesystem path (or sequence of paths, see NamespaceRef for
+// details) suitable for referencing this namespace. A zero ref indicates
+// that there is no reference path available: this is the case for "hidden"
+// PID and user namespaces sandwiched in between PID or user namespaces
+// where reference paths are available, because these other namespaces have
+// processes joined to them, or are either bind-mounted or fd-referenced.
+// Hidden PID namespaces can appear only when there is no process in any of
+// their child namespaces and the child PID namespace(s) is bind-mounted or
+// fd-references (the parent PID namespace is then kept alive because the
+// child PID namespaces are kept alive).
+func (pns *PlainNamespace) Ref() model.NamespaceRef { return pns.ref }
 
 // Leaders returns an unsorted list of Process-es which are joined to this
 // namespace and which are the topmost processes in the process tree still
@@ -156,7 +157,7 @@ func (pns *PlainNamespace) AddLeader(proc *model.Process) {
 }
 
 // SetRef sets a filesystem path to reference this namespace.
-func (pns *PlainNamespace) SetRef(ref string) {
+func (pns *PlainNamespace) SetRef(ref model.NamespaceRef) {
 	pns.ref = ref
 }
 

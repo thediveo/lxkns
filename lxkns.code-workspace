@@ -2,17 +2,15 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "web"
 		}
 	],
 	"settings": {
 		"go.lintTool": "golangci-lint",
 		"liveServer.settings.multiRootWorkspaceName": "lxkns",
 		"plantuml.diagramsRoot": "puml",
-		"plantuml.exportFormat": "png",
+		"plantuml.exportFormat": "svg",
 		"plantuml.exportOutDir": "docs/_images",
-		"plantuml.exportSubFolder": false
+		"plantuml.exportSubFolder": false,
+		"go.testFlags": ["-v"]
 	}
 }

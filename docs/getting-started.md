@@ -4,11 +4,12 @@ To quickly start discovering Linux-kernel namespaces and nosing around, we
 recommend to deploy the **containerized lxkns service**, because it features a
 nice web-based UI.
 
-> [!NOTE] Make sure you have Docker and `docker-compose` installed, as well as
-> the Go tools.
+![lxkns teaser](_images/teaser.png)
 
-1. do `make deploy` in the top-level of the repository.
-2. navigate your web browser to [http://localhost:5010](http://localhost:5010),
+1. make sure you have Docker and `docker-compose` installed, as well as the Go
+   tools and build essentials (namely, `make`).
+2. do `make deploy` in the top-level of the repository. Then wait...
+3. navigate your web browser to [http://localhost:5010](http://localhost:5010),
    where you should be greeted by the [lxkns web app](getting-around).
 
 > [!NOTE] `make deploy` builds and starts a Docker composer project. In case you

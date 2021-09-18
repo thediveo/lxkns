@@ -123,6 +123,7 @@ var _ = Describe("Namespaces", func() {
 		oref, closer, err := ref.OpenTypedReference()
 		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
+		Expect(closer).NotTo(Panic())
 		Expect(oref.(*TypedNamespaceFd)).To(BeIdenticalTo(ref))
 
 		fref := &NamespaceFile{*os.Stdout}
@@ -133,6 +134,7 @@ var _ = Describe("Namespaces", func() {
 		oref, closer, err = fref.OpenTypedReference()
 		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
+		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
 
 		fnull := null()
@@ -142,6 +144,7 @@ var _ = Describe("Namespaces", func() {
 		oref, closer, err = tfref.OpenTypedReference()
 		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
+		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
 
 		fdref := NamespaceFd(0)
@@ -153,6 +156,7 @@ var _ = Describe("Namespaces", func() {
 		oref, closer, err = fdref.OpenTypedReference()
 		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
+		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
 
 		Errxpect(NewTypedNamespacePath("foobar", 0).OpenTypedReference()).To(
@@ -162,6 +166,7 @@ var _ = Describe("Namespaces", func() {
 		pref, closer, err := NewTypedNamespacePath("/proc/self/ns/net", 0).OpenTypedReference()
 		Expect(err).To(Succeed())
 		Expect(closer).NotTo(BeNil())
+		Expect(closer).NotTo(Panic())
 		Expect(pref).NotTo(BeNil())
 		closer()
 	})

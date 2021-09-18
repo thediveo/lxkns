@@ -16,18 +16,14 @@ package model
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/thediveo/go-mntinfo"
-	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/species"
 )
 
 // scanCgroups scans all processes for their control groups; it scans only on a
@@ -52,8 +48,9 @@ var cgrouptypes = []string{"cpu", "freezer"}
 func (p ProcessTable) scanFridges() {
 	// First determine the list of unique cgroup freezer paths, as not every
 	// process will have its own personal freezer and we can thus avoid reading
-	// the same states over and over again as well as sending the same freezer
-	// path multiple times to the potentially re-executed action.
+	// the same states over and over again via the PID 1 wormhole (well, the
+	// wormhole doesn't matter here, just hammering the VFS over and over again
+	// without real need).
 	fridges := map[string]bool{} // maps unique paths to freezer states
 	for _, proc := range p {
 		fridges[proc.FridgeCgroup] = false
@@ -64,26 +61,10 @@ func (p ProcessTable) scanFridges() {
 		fridgepaths[idx] = fridgepath
 		idx++
 	}
-	// Now read the freezer states, but switch into the initial mount namespace
-	// first if necessary...
-	var frozens []bool
-	initialns, ierr := ops.NewTypedNamespacePath("/proc/1/ns/mnt", species.CLONE_NEWNS).ID()
-	myns, myerr := ops.NewTypedNamespacePath("/proc/self/ns/mnt", species.CLONE_NEWNS).ID()
-	if ierr == nil && myerr == nil && myns != initialns {
-		// Nota bene: no shenangiens possible and thus necessary when it comes
-		// to user namespaces: either we're in the same initial user namespace
-		// or it is game over anyway.
-		if err := reexec.RunReexecAction(
-			"discover-fridges",
-			reexec.Namespaces([]reexec.Namespace{{Type: "mnt", Path: "/proc/1/ns/mnt"}}),
-			reexec.Param(fridgepaths),
-			reexec.Result(&frozens),
-		); err != nil {
-			log.Errorf("could not determine fridge states in mnt:[%d]: %s", initialns.Ino, err.Error())
-		}
-	} else {
-		frozens = fridgeStates(fridgepaths)
-	}
+	// Now read the freezer states ... via the initial mount namespace because
+	// we can safely assume that there we have the proper full cgroup glory
+	// mounted to.
+	frozens := fridgeStates(fridgepaths)
 	// ...and finally distribute the freezer states into the appropriate process
 	// objects. As there is no stable iteration order over the map between
 	// cgroup paths and freezer states we now propagate the states into the map,
@@ -98,24 +79,6 @@ func (p ProcessTable) scanFridges() {
 	}
 }
 
-// Register discoverFridges() as an action for re-execution.
-func init() {
-	reexec.Register("discover-fridges", discoverFridges)
-}
-
-// discoverFridges is the reexec action run in a separate mount namespace (in
-// particular, the initial mount namespace) in order to gather the freezer
-// states of all cgroup "fridges".
-func discoverFridges() {
-	var fridgepaths []string
-	if err := json.NewDecoder(os.Stdin).Decode(&fridgepaths); err != nil {
-		panic(err.Error())
-	}
-	if err := json.NewEncoder(os.Stdout).Encode(fridgeStates(fridgepaths)); err != nil {
-		panic(err.Error())
-	}
-}
-
 // fridgeStates determines the (effective) freezer states for the cgroup paths
 // specified. It needs to be run in the initial mount namespace in order to have
 // full view on the cgroup freezer hierarchy, as otherwise the freezer states
@@ -123,7 +86,7 @@ func discoverFridges() {
 // auto-discovered cgroups hierarchy root, albeit usually specified as (pseudo)
 // absolute hierarchy paths (due to some ancient Linux kernel penguin foo).
 func fridgeStates(fridgepaths []string) (frozens []bool) {
-	fridgeroot, unified := fridgeRoot()
+	fridgeroot, unified := fridgeRoot(1) // cgroups mounted in initial mount namespace with PID 1.
 	frozens = make([]bool, len(fridgepaths))
 	if unified {
 		// ...me not trusting Golang's toolchain to correctly optimizing the
@@ -186,9 +149,9 @@ func frozenV1(fridgepath string) (frozen bool) {
 // We first try to find the specified cgroup v1 controllers if available and
 // only then fall back to the unified cgroups v2 hierarchy.
 //
-// Note: the cgroup path(s) returned is (are) relative to the cgroups roots in
-// the mount namespace of the **current** process, even as they start with "/"
-// (at least when discovered inside the initial pid+cgroup namespaces).
+// Note: the cgroup path(s) returned is (are) relative to the cgroups root, even
+// as they always start with "/" (for some reason, or other). And they are
+// subject to the current cgroup namespace, but not any mount namespace.
 func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	paths = make([]string, len(controllertypes))
 	cgroup, err := os.Open(fmt.Sprintf("/proc/%d/cgroup", pid))
@@ -246,26 +209,28 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	return
 }
 
-// fridgeRoot determines the root of the cgroup freezer hierarchy (in the
-// current mount namespace). For cgroups v1 this usually is its own hierarchy,
-// for cgroups v2 this is the unified hierarchy.
-func fridgeRoot() (root string, unified bool) {
+// fridgeRoot determines the root of the cgroup freezer hierarchy in the mount
+// namespace to which the specified process is attached. For cgroups v1 this
+// usually is its own hierarchy, for cgroups v2 this is the unified hierarchy.
+// The root path returned addresses the hierarchy root via the specified
+// process' root mount namespace "wormhole" (/proc/[PID]/root/...).
+func fridgeRoot(pid PIDType) (root string, unified bool) {
 	// First search for a cgroups v1 freezer hierarchy, because a v2 unified
 	// hierarchy might also be present ... now don't let us worry about some
 	// software already using the v2 freezer in a hybrid configuration (argh).
-	for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
+	for _, mountinfo := range mntinfo.MountsOfType(int(pid), "cgroup") {
 		for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
 			if sopt == "freezer" {
-				root = mountinfo.MountPoint
+				root = "/proc/" + strconv.FormatInt(int64(pid), 10) + "/root" + mountinfo.MountPoint
 				return
 			}
 		}
 	}
 	// ...otherwise, there must be a cgroups v2 unified hierarchy.
-	mountinfo := mntinfo.MountsOfType(-1, "cgroup2")
+	mountinfo := mntinfo.MountsOfType(int(pid), "cgroup2")
 	if len(mountinfo) > 0 {
 		unified = true
-		root = mountinfo[0].MountPoint
+		root = "/proc/" + strconv.FormatInt(int64(pid), 10) + "/root" + mountinfo[0].MountPoint
 	}
 	return
 }

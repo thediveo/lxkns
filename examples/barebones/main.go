@@ -20,29 +20,33 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/gons/reexec"
-	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
 func main() {
-	reexec.CheckAction() // must be called before a standard discovery
-
-	// Set up a Docker engine-connected containerizer
+	// Set up a Docker engine-connected containerizer and wait for it to
+	// synchronize.
 	moby, err := moby.New("", nil)
 	if err != nil {
 		panic(err)
 	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
 
+	<-moby.Ready()
+
 	// Run the discovery, including containerization.
-	result := lxkns.Discover(
-		lxkns.WithStandardDiscovery(), lxkns.WithContainerizer(cizer))
+	result := discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.WithContainerizer(cizer),
+		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+	)
 
 	for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
 		for _, ns := range result.SortedNamespaces(nsidx) {

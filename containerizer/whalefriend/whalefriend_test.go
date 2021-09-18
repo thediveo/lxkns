@@ -19,7 +19,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"

@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-next-line MD022 -->
 # Linux kernel Namespaces
 <img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
 
@@ -11,10 +12,10 @@
 
 `lxkns` is a Golang package for discovering Linux kernel namespaces as well as
 mount points in mount namespaces. It then relates them to containers, where
-possible. In every nook and cranny of your Linux hosts.
+possible. In (almost) every nook and cranny of your Linux hosts.
 
-Discovery can be operated as a stand-alone REST service (both web UI and JSON
-discovery results) or integrated into system diagnosis tools that need an
+This discovery can be operated as a stand-alone REST service with additional web
+UI. Or it can be integrated into system diagnosis tools that need an
 unobstructed view on Linux-kernel namespaces.
 
 For mount namespaces, lxkns finds mount points even in process-less mount
@@ -25,6 +26,10 @@ consideration.
 
 Take a look at the comprehensive [user (and developer)
 manual](https://thediveo.github.io/lxkns).
+
+> Please check [Important Changes](https://thediveo.github.io/lxkns#/changelog),
+> especially if you have been used the API in the past, and not only the
+> service.
 
 Or, watch the short overview video how to find your way around discovery web
 frontend:

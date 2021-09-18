@@ -15,7 +15,8 @@
   - [composer](https://github.com/compose-spec/compose-spec) project-aware (such
     as [Docker compose](https://github.com/docker/compose) and
     [nerdctl](https://github.com/containerd/nerdctl)).
-  - [Kubernetes](https://kubernetes.io) pod aware, without any k8s API access.
+  - [Kubernetes](https://kubernetes.io) pod-aware, without any need for k8s API
+    access.
 
 - [discovers the the freezer state](cgroup) and (freezer) cgroup controller path
   information for the processes attached to namespaces (transparently supports

@@ -188,7 +188,7 @@ read # wait for test to proceed()
 			locked = strings.Contains(string(debug.Stack()), ", locked to thread]")
 			// Finally record the network namespace after the visit; we'll later
 			// check that we're back in the process' network namespace.
-			afterID, err = NamespacePath("/proc/self/ns/net").ID()
+			afterID, err = NamespacePath(fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).ID()
 		}()
 		// Wait for Visit to complete on separate go routine with a throw-away
 		// OS thread.

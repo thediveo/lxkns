@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/log"

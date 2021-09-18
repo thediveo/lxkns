@@ -17,7 +17,7 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/thediveo/lxkns"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/mounts"
 	"github.com/thediveo/lxkns/species"
 )
@@ -25,7 +25,7 @@ import (
 // NamespacedMountMap is a JSON marshallable map from mount namespace
 // identifiers (inode numbers only) to their respective mount path maps. The
 // mount path maps further reference mount points.
-type NamespacedMountMap lxkns.NamespacedMountPathMap
+type NamespacedMountMap discover.NamespacedMountPathMap
 
 // MarshalJSON emits an object (map/dictionary) of mount namespace identifiers
 // (inode numbers only) with their corresponding mount path maps.

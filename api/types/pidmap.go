@@ -25,26 +25,26 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// PIDMap is the (Digital) Twin of an lxkns.PIDMap and can be marshalled and
+// PIDMap is the (Digital) Twin of an model.PIDMap and can be marshalled and
 // unmarshalled to and from JSON. Nota bene: PIDMap is a small object, so it
 // should simply be passed around by value.
 //
 //
-// To marshal from an existing lxkns.PIDMap:
+// To marshal from an existing model.PIDMap:
 //
 //   pm := NewPIDMap(WithPIDMap(mypidmap))
 //   out, err := json.Marshal(pm)
 //
-// To unmarshal into a fresh lxkns.PIDMap, not caring about PID namespace
+// To unmarshal into a fresh model.PIDMap, not caring about PID namespace
 // details beyond PID namespace IDs, simply call NewPIDMap() without any
 // options:
 //
 //  pm := NewPIDMap()
 //
 // On purpose, the external JSON representation of a PIDMap is reduced compared
-// to an lxkns.PIDMap: this optimizes the transfer size by marshalling only the
-// absolutely necessary information necessary to recreate an lxkns.PIDMap on
-// unmarshalling. In contrast, the process-internal lxkns.PIDMap trades memory
+// to an model.PIDMap: this optimizes the transfer size by marshalling only the
+// absolutely necessary information necessary to recreate an model.PIDMap on
+// unmarshalling. In contrast, the process-internal model.PIDMap trades memory
 // consumption for performance, in oder to speed up translating PIDs between
 // different PID namespaces.
 type PIDMap struct {
@@ -56,8 +56,8 @@ type PIDMap struct {
 	PIDns model.NamespaceMap
 }
 
-// NewPIDMap creates a new twin of either an existing lxkns.PIDMap or
-// allocates a new and empty lxkns.PIDMap.
+// NewPIDMap creates a new twin of either an existing model.PIDMap or
+// allocates a new and empty model.PIDMap.
 func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 	pidmap := PIDMap{}
 	for _, opt := range opts {
@@ -78,7 +78,7 @@ func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 // NewPIDMap().
 type NewPIDMapOption func(newpidmap *PIDMap)
 
-// WithPIDMap configures a new PIDMap to wrap an existing lxkns.PIDMap; either
+// WithPIDMap configures a new PIDMap to wrap an existing model.PIDMap; either
 // for marshalling an existing PIDMap or to unmarshal into a pre-allocated
 // PIDMap.
 func WithPIDMap(pidmap model.PIDMapper) NewPIDMapOption {
@@ -163,7 +163,7 @@ func (pidmap *PIDMap) UnmarshalJSON(data []byte) error {
 			pidnsid := species.NamespaceIDfromInode(nspid.NamespaceID)
 			pidns, ok := pidmap.PIDns[pidnsid]
 			if !ok {
-				pidns = namespaces.New(species.CLONE_NEWPID, pidnsid, "")
+				pidns = namespaces.New(species.CLONE_NEWPID, pidnsid, nil)
 				pidmap.PIDns[pidnsid] = pidns
 			}
 			nspids[idx] = model.NamespacedPID{
