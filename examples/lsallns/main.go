@@ -86,8 +86,7 @@ func dumpresult(result *discover.Result) error {
 	if err != nil {
 		return err
 	}
-	table.Fprint(os.Stdout, list)
-	return nil
+	return table.Fprint(os.Stdout, list)
 }
 
 // lsallns works on the given CLI flags to decide whether to run its own
@@ -101,11 +100,11 @@ func lsallns(cmd *cobra.Command, _ []string) error {
 		if input == "-" {
 			r = os.Stdin
 		} else {
-			f, err := os.Open(input)
+			f, err := os.Open(input) // #nosec G304
 			if err != nil {
 				return err
 			}
-			defer f.Close()
+			defer func() { _ = f.Close() }()
 			r = f
 		}
 		dr := apitypes.NewDiscoveryResult()

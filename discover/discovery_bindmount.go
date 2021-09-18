@@ -56,7 +56,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	total := 0
 	// In order to avoid multiple visits to the same namespace, keep track of
 	// which mount namespaces not to visit again.
-	visitedmntns := map[species.NamespaceID]bool{}
+	visitedmntns := map[species.NamespaceID]struct{}{}
 	// Now initialize a backlog with the mount namespaces we know so far,
 	// because we need to visit them in order to potentially discover more
 	// bind-mounted namespaces. These will then be added to the backlog if not
@@ -110,7 +110,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		}
 		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
 			mntns.ID().Ino, mntns.Ref().String())
-		visitedmntns[mntns.ID()] = true
+		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
@@ -140,32 +140,24 @@ func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 		var ownernsid species.NamespaceID
 		path, err := mnteer.Resolve(bindmount.MountPoint)
 		if err != nil {
-			log.Errorf("cannot resolve reference %s: %s", bindmount.MountPoint, err.Error())
+			log.Errorf("cannot resolve reference %s: %s",
+				bindmount.MountPoint, err.Error())
+			continue
 		}
 		log.Debugf("mount point for %s at %s", bindmount.Root, path)
-		// Get the type of namespace, but ignore the inode number, because it
-		// lacks the dev ID for a complete namespace ID.
-		_, nstype := species.IDwithType(bindmount.Root)
-		// Make sure to get the full namespace ID, not just the inode number.
+		// Get the type and ID of the bind-mounted namespace. IDwithType now
+		// always returns a complete ID consisting of dev number and inode
+		// number, even though the specified string lacks the dev number (which
+		// IDwithType) will get from elsewhere.
+		nsid, nstype := species.IDwithType(bindmount.Root)
+		// Also collect information about the relation to the owning user space.
 		ns := ops.NamespacePath(path)
-		nsid, err := ns.ID()
-		if err != nil {
-			// Ouch, we could not correctly get the namespace ID, so we log a
-			// warning.
-			log.Warnf("cannot read ID of namespace with reference: %s", err.Error())
-			// And then we do some animal magic to come up at least with what
-			// might be the namespace ID and type...
-			if nsidr, nstyper := species.IDwithType(bindmount.Root); nsidr != species.NoneID && nstyper != 0 {
-				nsid = nsidr
-				nstype = nstyper
-			}
-		}
-		// Also collect the information about the relation to the owning user
-		// space.
 		if usernsref, err := ns.User(); err == nil {
 			ownernsid, _ = usernsref.ID()
 			_ = usernsref.(io.Closer).Close() // do not leak.
 		} else {
+			// log an error, but otherwise ignore the missing ownership in order
+			// to create an albeit incomplete namespace entry.
 			log.Errorf(err.Error())
 		}
 		ownedbindmounts = append(ownedbindmounts, BindmountedNamespaceInfo{

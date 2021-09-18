@@ -218,7 +218,7 @@ func (m *Mountineer) OpenFile(name string, flag int, perm os.FileMode) (*os.File
 	if err != nil {
 		return nil, err
 	}
-	return os.OpenFile(pathname, flag, perm)
+	return os.OpenFile(pathname, flag, perm) // #nosec G304
 }
 
 // ReadFile reads all contents of the named file, returning it as a byte slice.
@@ -227,7 +227,7 @@ func (m *Mountineer) ReadFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ioutil.ReadFile(pathname)
+	return ioutil.ReadFile(pathname) // #nosec G304
 }
 
 // Resolve resolves a pathname inside the open mount namespace to a pathname

@@ -1,6 +1,6 @@
 /*
 
-package discover discovers Linux kernel namespaces of types cgroup, ipc, mount,
+Package discover discovers Linux kernel namespaces of types cgroup, ipc, mount,
 net, pid, time, user, and uts. This package discovers namespaces not only when
 processes have joined them, but also when namespaces have been bind-mounted or
 are only referenced anymore by process file descriptors or within a hierarchy

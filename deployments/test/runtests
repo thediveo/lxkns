@@ -2,7 +2,7 @@
 set -e
 TIMEOUT=3m
 echo "starting tests... 🦗 🦗 🦗"
-echo "PHASE I: as non-root user 😇"
-su luser -c "echo building... && go test -v -timeout ${TIMEOUT} && echo 🔨🔨🔨 testing... && go test -v -timeout ${TIMEOUT} ./..."
-echo "PHASE II: as root 🤪"
-echo building... && go test -v -timeout ${TIMEOUT} && echo 🔨🔨🔨 testing... && go test -v -timeout ${TIMEOUT} ./...
+echo "PHASE I: as root 🤪"
+go test -v -timeout ${TIMEOUT} -exec sudo ./...
+echo "PHASE II: as non-root user 😇"
+go test -v -timeout ${TIMEOUT} ./...

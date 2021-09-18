@@ -124,7 +124,7 @@ func nspid(proc *model.Process, procroot string) (pids []model.PIDType) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	scanner := bufio.NewScanner(f)
 	// Scan through the process status information until we arrive at the
 	// sought-after "NSpid:" field. That's the only field interesting to us.
