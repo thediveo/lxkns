@@ -33,7 +33,7 @@ import (
 func resolveOwnership(nstype species.NamespaceType, _ string, result *Result) {
 	if !result.Options.DiscoverOwnership || nstype == species.CLONE_NEWUSER {
 		if !result.Options.DiscoverOwnership {
-			log.Infof("skipping discovery of %s namespaces ownership", nstype.Name())
+			log.Infof("skipping discovery of %s namespace ownerships", nstype.Name())
 		}
 		return
 	}

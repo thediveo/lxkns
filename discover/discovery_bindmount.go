@@ -56,7 +56,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	total := 0
 	// In order to avoid multiple visits to the same namespace, keep track of
 	// which mount namespaces not to visit again.
-	visitedmntns := map[species.NamespaceID]bool{}
+	visitedmntns := map[species.NamespaceID]struct{}{}
 	// Now initialize a backlog with the mount namespaces we know so far,
 	// because we need to visit them in order to potentially discover more
 	// bind-mounted namespaces. These will then be added to the backlog if not
@@ -110,7 +110,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		}
 		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
 			mntns.ID().Ino, mntns.Ref().String())
-		visitedmntns[mntns.ID()] = true
+		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
