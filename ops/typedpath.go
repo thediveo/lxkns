@@ -94,7 +94,7 @@ func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.R
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
-	return openref, func() { openref.Close() }, nil
+	return openref, func() { _ = openref.Close() }, nil
 }
 
 // Ensures that TypedNamespacePath implements the Relation interface.

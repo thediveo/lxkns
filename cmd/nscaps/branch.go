@@ -315,7 +315,7 @@ func processEuid(proc *model.Process) int {
 	if err != nil {
 		return -1
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	scanner := bufio.NewScanner(f)
 	// Scan through the procfess status information until we arrive at the
 	// "Uid:" field.

@@ -38,7 +38,7 @@ func processEffectiveCaps(pid model.PIDType) (b []byte) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return statusEffectiveCaps(f)
 }
 

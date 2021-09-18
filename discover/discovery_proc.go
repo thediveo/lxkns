@@ -70,7 +70,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		// to yet another goroutine, something which really doesn't help us
 		// here. Please note that we need the open fd further below in case we
 		// need to discover ownership.
-		f, err := os.Open(nsref)
+		f, err := os.Open(nsref) // #nosec G304
 		if err != nil {
 			continue
 		}
@@ -80,7 +80,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		nsf, _ := ops.NewTypedNamespaceFile(f, nstype)
 		nsid, err := nsf.ID()
 		if err != nil {
-			nsf.Close() // ...don't leak!
+			_ = nsf.Close() // ...don't leak!
 			continue
 		}
 		ns, ok := nsmap[nsid]
@@ -110,7 +110,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			ns.(namespaces.NamespaceConfigurer).DetectOwner(nsf)
 		}
 		// Don't leak... And no, defer won't help us here.
-		nsf.Close()
+		_ = nsf.Close()
 	}
 	// Now that we know which namespaces are existing with processes joined to
 	// them, let's find out the leader processes in these namespaces...

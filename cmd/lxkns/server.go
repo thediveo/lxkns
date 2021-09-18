@@ -170,7 +170,7 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		httpError(w, err)
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	fi, err := f.Stat()
 	if err != nil {
 		httpError(w, err)

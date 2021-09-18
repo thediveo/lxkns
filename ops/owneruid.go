@@ -39,7 +39,7 @@ func ownerUID(ref relations.Relation, fd int) (int, error) {
 	var uid uint32 = ^uint32(0) - 42
 	_, _, errno := unix.Syscall(
 		unix.SYS_IOCTL, uintptr(fd),
-		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid)))
+		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid))) // #nosec G103
 	if errno != 0 {
 		return 0, newInvalidNamespaceError(ref, errors.New(errno.Error()))
 	}
