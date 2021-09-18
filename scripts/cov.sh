@@ -14,7 +14,7 @@ fi
 go-acc --covermode atomic -o coverage.out ./... -- -v
 # Second, run the tests now again, but this tome as root; this will skip some
 # other tests, but run the missing ones that need to be run as root.
-sudo env "PATH=$PATH" go-acc --covermode atomic -o $(pwd)/coverage-root.out ./... -- -v
+go-acc --covermode atomic -o $(pwd)/coverage-root.out ./... -- -v -exec sudo
 tail -n +2 coverage-root.out >> coverage.out
 go tool cover -html coverage.out -o coverage.html
 # xdg-open coverage.html

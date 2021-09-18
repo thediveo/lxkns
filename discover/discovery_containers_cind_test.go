@@ -22,7 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gstruct"
+	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	cdengine "github.com/thediveo/whalewatcher/engineclient/containerd"
@@ -100,9 +100,9 @@ var _ = Describe("Discovering containers in containers", func() {
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).To(Or(
 			BeNil(),
-			gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+			Not(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Cmdline": ConsistOf("sleep", ContainSubstring("1000")),
-			})))
+			})))))
 
 		By("looking for the sleepy container, now with a PID mapper")
 		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer), WithPIDMapper())
