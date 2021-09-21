@@ -62,13 +62,22 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 			continue
 		}
 		go func(w *engineplugin.NamedWatcher) {
+			// Oh, well: time.After is kind of hard to use without small leaks.
+			// Now, a 5s timer will be GC'ed after 5s anyway, but let's do it
+			// properly for once and all, to get the proper habit. For more
+			// background information, please see, for instance:
+			// https://www.arangodb.com/2020/09/a-story-of-a-memory-leak-in-go-how-to-properly-use-time-after/
+			wecker := time.NewTimer(5 * time.Second)
 			select {
 			case <-w.Ready():
+				if !wecker.Stop() { // drain the timer, if necessary.
+					<-wecker.C
+				}
 				idctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				log.Infof("synchronized to %s engine with ID %s at API %s",
 					w.Name, w.ID(idctx), w.API())
 				cancel() // ensure to quickly release cancel
-			case <-time.After(5 * time.Second):
+			case <-wecker.C:
 				log.Warnf("%s engine still offline for API %s ... still trying in background",
 					w.Name, w.API())
 			}
