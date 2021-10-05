@@ -4,11 +4,15 @@ set -e
 if ! command -v goreportcard-cli; then
     PATH="$(go env GOPATH)/bin:$PATH"
     if ! command -v goreportcard-cli; then
-        # Don't touch our local module dependencies, so run installation from
-        # somewhere else...
-        (cd /tmp && go get -v github.com/gojp/goreportcard)
-        (cd $(go env GOPATH)/src/github.com/gojp/goreportcard && make install)
-        (cd /tmp && go get -v github.com/gojp/goreportcard/cmd/goreportcard-cli)
+        rm -rf /tmp/goreportcard || true
+        git clone https://github.com/gojp/goreportcard.git /tmp/goreportcard
+        (cd /tmp/goreportcard && make install && go install ./cmd/goreportcard-cli)
+        rm -rf /tmp/goreportcard || true
+        # Install a somewhat recent ineffassign over the totally outdated one
+        # that goreportcard still insists of infecting the system with.
+        (cd /tmp && go get -u github.com/gordonklaus/ineffassign)
+        # Install the missing misspell, oh well...
+        (cd /tmp && go get -u github.com/client9/misspell/cmd/misspell)
     fi
 fi
 
