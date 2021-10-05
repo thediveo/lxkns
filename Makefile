@@ -29,33 +29,33 @@ testcontaineropts := \
 
 .PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify
 
-help:
-	@echo "available targets: clean, citestapp, coverage, deploy, undeploy, install, test, report, buildapp, startapp"
+help: ## list available targets
+	@# Shamelessly stolen from Gomega's Makefile
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-clean:
+clean: ## cleans up build and testing artefacts
 	rm -f $(tools)
 	rm -f coverage.html coverage.out coverage-root.out
 	rm -f coverage.txt coverage-root.txt
 
-coverage:
+coverage: ## runs tests with code coverage
 	scripts/cov.sh
 
-deploy:
+deploy: ## deploys lxkns service on host port 5010
 	@echo "deploying version" $${GIT_VERSION}
 	$(GOGEN)
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build --build-arg GIT_VERSION=$(GIT_VERSION)
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
-undeploy:
+undeploy: ## removes any deployed lxkns service
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
 
-install:
+install: ## installs lxkns commands
 	$(GOGEN)
 	go install -v ./cmd/... ./examples/lsallns
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
-# runs all tests in a container
-test:
+test: ## runs all tests in test containers
 	$(GOGEN)
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
@@ -67,7 +67,7 @@ test:
 # builds a static webapp and the lxkns service, then runs the service and the
 # webapp unit and end-to-end tests, and finally stops the lxkns service after
 # the tests have run.
-citestapp:
+citestapp: ## builds and tests lxkns with static web UI
 	@sudo /bin/true
 	@$(GOGEN)
 	@cd web/lxkns && yarn build:dev
@@ -87,16 +87,16 @@ citestapp:
 	timeout 10s tail --pid=$$LXKNSPID -f /dev/null && \
 	exit $$STATUS
 
-report:
+report: ## runs goreportcard
 	@./scripts/goreportcard.sh
 
-buildapp:
+buildapp: ## builds web UI app
 	@echo "building version" $${GIT_VERSION}
 	@cd web/lxkns && yarn build
 
-startapp:
+startapp: ## starts web UI app for development
 	@echo "starting version" $${GIT_VERSION}
 	@cd web/lxkns && yarn start
 
-docsify:
+docsify: ## serves docsified docs on host port(s) 3030 and 3031
 	@docsify serve -p 3030 -P 3031 docs
