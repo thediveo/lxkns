@@ -47,7 +47,16 @@
     "websocket-extensions": "^0.1.4"
   },
   "resolutions": {
-    "chokidar": "^3.5.0"
+    "browserslist": "^4.16.5",
+    "chokidar": "^3.5.0",
+    "immer": "^9.0.6",
+    "set-value": "^4.1.0",
+    "svgo": "^2.7.0",
+    "ssri": "^8.0.0",
+    "tar": "^6.1.10",
+    "tmpl": "^1.0.5",
+    "trim": "^1.0.0",
+    "url-parse": "^1.5.3"
   },
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=$(git describe) PORT=3030 react-scripts start",
