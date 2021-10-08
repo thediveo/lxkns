@@ -31,8 +31,8 @@ COPY ops/ ./ops/
 COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
-RUN go build -v -o /lxkns ./cmd/lxkns && \
-    go build -v -o /mntnssandbox ./cmd/mntnssandbox && \
+RUN go build -v -ldflags "-s -w" -o /lxkns ./cmd/lxkns && \
+    go build -v -ldflags "-s -w" -o /mntnssandbox ./cmd/mntnssandbox && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
