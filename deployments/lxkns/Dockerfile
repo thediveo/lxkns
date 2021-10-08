@@ -1,14 +1,17 @@
-# Please note that the Alpine version also controls the Golang version for the
-# golang images.
-ARG ALPINE_VERSION=3.13
+# Requires Docker buildx in order to correctly produce the final image with the
+# extended file attributes for capabilities still intact.
+
+ARG ALPINE_VERSION=3.14
+ARG ALPINE_PATCH=2
+ARG GO_VERSION=1.17.2
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
 # start with the gcc and header stuff, which is kind of base builder image stuff
 # anyway.
-FROM golang:alpine${ALPINE_VERSION} AS builder
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 WORKDIR /src
-RUN apk add --no-cache --update-cache gcc musl-dev
+RUN apk add --no-cache --update-cache gcc musl-dev libcap
 # We now try to cache only the dependencies in a separate layer, so we can speed
 # up things in case the dependencies do not change. This then reduces the amount
 # of fetching and compiling required when compiling the final binary later.
@@ -28,7 +31,10 @@ COPY ops/ ./ops/
 COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
-RUN go build -v -o /lxkns ./cmd/lxkns && go build -v -o /mntnssandbox ./cmd/mntnssandbox
+RUN go build -v -o /lxkns ./cmd/lxkns && \
+    go build -v -o /mntnssandbox ./cmd/mntnssandbox && \
+    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
+    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
 # 2nd stage: builds the lxkns web client react application.
 FROM node:16-alpine AS reactor
@@ -49,13 +55,8 @@ RUN yarn imagebuild
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
-FROM alpine:${ALPINE_VERSION}
+FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH}
 COPY --from=builder /lxkns /mntnssandbox /
-RUN apk add --no-cache \
-        libcap && \
-    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
-    setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox && \
-    apk del --no-cache libcap
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 ENV PATH /
 USER 65534

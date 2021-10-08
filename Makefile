@@ -44,7 +44,7 @@ coverage: ## runs tests with code coverage
 deploy: ## deploys lxkns service on host port 5010
 	@echo "deploying version" $${GIT_VERSION}
 	$(GOGEN)
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml build --build-arg GIT_VERSION=$(GIT_VERSION)
+	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy: ## removes any deployed lxkns service
