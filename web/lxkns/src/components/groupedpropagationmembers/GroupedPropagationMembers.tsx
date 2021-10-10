@@ -14,7 +14,7 @@
 
 import React from 'react'
 
-import { makeStyles } from '@material-ui/core'
+import makeStyles from '@mui/styles/makeStyles';
 import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
 import { MountpointPath } from 'components/mountpointpath'
 import { NamespaceInfo } from 'components/namespaceinfo'

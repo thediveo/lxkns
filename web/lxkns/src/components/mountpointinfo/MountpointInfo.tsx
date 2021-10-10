@@ -15,9 +15,10 @@
 import React from 'react'
 
 import { MountPoint } from 'models/lxkns/mount'
-import { IconButton, makeStyles, Tooltip } from '@material-ui/core'
+import { IconButton, Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { filesystemTypeLink } from './fslinks'
-import MenuBookIcon from '@material-ui/icons/MenuBook'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { MountpointPath } from 'components/mountpointpath'
 import { GroupedPropagationMembers } from 'components/groupedpropagationmembers/GroupedPropagationMembers'
 import { NamespaceMap } from 'models/lxkns/model'
@@ -30,7 +31,7 @@ const useStyle = makeStyles((theme) => ({
         display: 'grid',
         gridTemplateColumns: 'auto 1fr',
         columnGap: theme.spacing(2),
-        rowGap: theme.spacing(1) / 2,
+        rowGap: theme.spacing(0.5),
     },
     propname: {
         gridColumn: '1/2',

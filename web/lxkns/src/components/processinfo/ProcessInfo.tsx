@@ -14,8 +14,10 @@
 
 import clsx from 'clsx'
 
-import { Pause, PlayArrow } from '@material-ui/icons'
-import { makeStyles, Tooltip } from '@material-ui/core'
+import { Pause, PlayArrow } from '@mui/icons-material'
+import { Tooltip } from '@mui/material';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'

@@ -14,10 +14,11 @@
 
 import React, { useState } from 'react'
 
-import MenuIcon from '@material-ui/icons/Menu'
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
-import ChevronRightIcon from '@material-ui/icons/ChevronRight'
-import { AppBar, Divider, IconButton, makeStyles, SwipeableDrawer, Toolbar, useTheme } from '@material-ui/core'
+import MenuIcon from '@mui/icons-material/Menu'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import { AppBar, Divider, IconButton, SwipeableDrawer, Toolbar, useTheme } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import clsx from 'clsx'
 
 
@@ -82,13 +83,13 @@ export interface AppBarDrawerProps {
      */
     drawer?: (drawerCloser: drawerCloser) => React.ReactNode
     /**
-     * optionally sets the width of the drawer (in pixels). Defaults to 240
-     * pixels if unspecified.
+     * optionally sets the width in pixels of the drawer. Defaults to 240 pixels
+     * if unspecified.
      */
     drawerwidth?: number
     /** CSS style class name(s) for drawer. */
     drawerClassName?: string
-    /** touch area width for swiping the drawer open. */
+    /** touch area width in pixels for swiping the drawer open. */
     swipeAreaWidth?: number
 }
 
@@ -139,7 +140,7 @@ const AppBarDrawer = ({
     const theme = useTheme()
     const classes = useStyles({ drawerWidth: drawerWidth })
 
-    return (<>
+    return <>
         <AppBar position="static">
             <Toolbar>
                 <IconButton
@@ -148,7 +149,7 @@ const AppBarDrawer = ({
                     color="inherit"
                     aria-label="menu"
                     onClick={toggleDrawer}
-                >
+                    size="large">
                     <MenuIcon />
                 </IconButton>
 
@@ -170,14 +171,14 @@ const AppBarDrawer = ({
             <div className={classes.drawerHeader}>
                 {drawertitle &&
                     <span className={classes.spacer}>{(typeof drawertitle === 'function' && drawertitle()) || drawertitle}</span>}
-                <IconButton onClick={closeDrawer}>
+                <IconButton onClick={closeDrawer} size="large">
                     {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                 </IconButton>
             </div>
             <Divider />
             {drawer && drawer(closeDrawer)}
         </SwipeableDrawer>
-    </>)
+    </>;
 }
 
 export default AppBarDrawer

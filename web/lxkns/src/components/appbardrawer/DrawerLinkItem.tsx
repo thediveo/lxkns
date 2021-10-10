@@ -15,7 +15,7 @@
 import React from 'react'
 import { useLocation, Link } from "react-router-dom"
 
-import { Avatar, ListItem, ListItemAvatar, ListItemIcon, Typography } from '@material-ui/core'
+import { Avatar, ListItem, ListItemAvatar, ListItemIcon, Typography } from '@mui/material'
 
 export interface DrawerLinkItemProps {
     /** 

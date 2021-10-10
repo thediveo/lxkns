@@ -15,11 +15,13 @@
 import React from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 
-import { Box, Button, Divider, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
+import { Box, Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/muimarkdown/ChapterSkeleton'
-import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@material-ui/icons'
+import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
 
 const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
@@ -46,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
         marginLeft: `calc(100% - 24px - 6px - ${navigatorBorder}px - ${navigatorLeftPadding}px)`,
         paddingLeft: `${navigatorLeftPadding + 3}px`,
         background: theme.palette.background.paper,
-        border: `${navigatorBorder}px solid ${theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
+        border: `${navigatorBorder}px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
         borderRight: 0,
         borderRadius: '42em',
         borderTopRightRadius: 0,
@@ -60,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
         // to set a non-transparent color which is appropriately darkened (or
         // lightened, depending on theme type).
         '&:hover': {
-            backgroundColor: theme.palette.type === 'light' ? 'rgb(245, 245, 245)' : 'rgb(10, 10, 10)',
+            backgroundColor: theme.palette.mode === 'light' ? 'rgb(245, 245, 245)' : 'rgb(10, 10, 10)',
         },
     },
     padding: {
@@ -69,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
 
         '& > hr': {
             marginTop: theme.spacing(navigatorFooterSpacing),
-            marginBottom: theme.spacing(navigatorFooterSpacing) - 6,
+            marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
         },
         '& > button.prev': {
             float: 'left',
@@ -78,7 +80,7 @@ const useStyles = makeStyles((theme) => ({
             float: 'right',
         },
         '& > button.prev, & > button.next': {
-            marginBottom: theme.spacing(navigatorFooterSpacing) - 6,
+            marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
         },
     },
     markdown: {

@@ -12,11 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Dialog, DialogContent, DialogTitle, IconButton, makeStyles } from '@material-ui/core'
+import { Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
 import { MountPoint } from 'models/lxkns/mount'
 import React, { useContext, useState } from 'react'
-import CloseIcon from '@material-ui/icons/Close'
+import CloseIcon from '@mui/icons-material/Close'
 import { ReadonlyIcon } from 'icons/Readonly'
 import { NamespaceMap } from 'models/lxkns/model'
 
@@ -104,7 +105,7 @@ export const MountpointInfoModalProvider = ({
                             aria-label="close"
                             className={classes.close}
                             onClick={handleClose}
-                        >
+                            size="large">
                             <CloseIcon />
                         </IconButton>
                     </DialogTitle>
@@ -114,7 +115,7 @@ export const MountpointInfoModalProvider = ({
                 </Dialog>
             }
         </MountpointInfoModalContext.Provider>
-    )
+    );
 }
 
 export default MountpointInfoModalProvider

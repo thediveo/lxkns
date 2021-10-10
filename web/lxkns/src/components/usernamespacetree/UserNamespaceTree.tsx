@@ -14,11 +14,11 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import ChevronRightIcon from '@material-ui/icons/ChevronRight'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
-import Typography from '@material-ui/core/Typography'
-import TreeView from '@material-ui/lab/TreeView'
+import Typography from '@mui/material/Typography'
+import TreeView from '@mui/lab/TreeView'
 
 import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'

@@ -14,8 +14,9 @@
 
 import React from 'react'
 
-import { makeStyles, Theme, Typography } from '@material-ui/core'
-import { Skeleton } from '@material-ui/lab'
+import { Theme, Typography } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { Skeleton } from '@mui/material';
 
 
 interface chapterSkeletonStyleProps {

@@ -2,7 +2,7 @@
 // minus the iframe-related elements not necessary in this context.
 
 import React from 'react';
-import useScrollTrigger from '@material-ui/core/useScrollTrigger';
+import useScrollTrigger from '@mui/material/useScrollTrigger';
 import PropTypes from 'prop-types';
 
 const ElevationScroll = (props) => {

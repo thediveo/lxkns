@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
+import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@mui/material/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 
@@ -23,7 +23,7 @@ import { cloneDeep, merge as mergeDeep } from 'lodash'
 //
 // See also:
 // https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
-declare module '@material-ui/core/styles/createPalette' {
+declare module '@mui/material/styles/createPalette' {
     interface Palette {
         // namespace badge background colors
         namespace: {

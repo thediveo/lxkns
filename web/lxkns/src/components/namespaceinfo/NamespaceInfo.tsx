@@ -14,14 +14,14 @@
 
 import React from 'react'
 
-import { Person } from '@material-ui/icons'
+import { Person } from '@mui/icons-material'
 
 import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
 import { Namespace, NamespaceType } from 'models/lxkns'
 
-import { makeStyles } from '@material-ui/core'
+import makeStyles from '@mui/styles/makeStyles';
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
 import clsx from 'clsx'

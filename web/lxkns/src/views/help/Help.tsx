@@ -19,8 +19,9 @@ import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
-import { Box, makeStyles } from '@material-ui/core'
-import { Card } from '@material-ui/core'
+import { Box } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { Card } from '@mui/material'
 import { Atom, Provider } from 'jotai'
 import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom } from 'views/settings'
 

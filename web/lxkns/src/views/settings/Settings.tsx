@@ -18,9 +18,22 @@ import { useAtom } from 'jotai'
 import { localStorageAtom } from 'utils/persistentsettings'
 
 import {
-    Box, Card, Divider, Grid, List, ListItem, ListItemSecondaryAction, ListItemText,
-    makeStyles, MenuItem, Select, Switch as Toggle, Typography
-} from '@material-ui/core'
+    Box,
+    Card,
+    Divider,
+    Grid,
+    List,
+    ListItem,
+    ListItemSecondaryAction,
+    ListItemText,
+    MenuItem,
+    Select,
+    Switch as Toggle,
+    Typography,
+} from '@mui/material';
+
+
+import makeStyles from '@mui/styles/makeStyles';
 
 
 const themeKey = 'lxkns.theme'
@@ -40,7 +53,7 @@ export const expandInitiallyAtom = localStorageAtom(expandInitiallyKey, true)
 
 const useStyles = makeStyles((theme) => ({
     settings: {
-        width: `calc(100% - ${theme.spacing(2) * 2}px)`,
+        width: `calc(100% - calc(${theme.spacing(2)} * 2))`,
         margin: theme.spacing(2),
 
         '& .MuiCard-root + .MuiTypography-subtitle1': {
@@ -72,7 +85,7 @@ export const Settings = () => {
                 className={classes.settings}
                 container
                 direction="row"
-                justify="center"
+                justifyContent="center"
             >
                 <Grid
                     direction="column"
@@ -145,7 +158,7 @@ export const Settings = () => {
                 </Grid>
             </Grid>
         </Box>
-    )
+    );
 }
 
 export default Settings

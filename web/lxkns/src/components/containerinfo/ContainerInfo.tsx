@@ -14,8 +14,8 @@
 
 import clsx from 'clsx'
 
-import { makeStyles } from '@material-ui/core'
-import { Pause } from '@material-ui/icons'
+import makeStyles from '@mui/styles/makeStyles';
+import { Pause } from '@mui/icons-material'
 
 import { Container, containerGroup } from 'models/lxkns'
 import { ContainerTypeIcon } from 'utils/containericon'

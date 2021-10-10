@@ -15,15 +15,16 @@
 import React from 'react'
 
 import clsx from 'clsx'
-import { TreeItem } from '@material-ui/lab'
+import { TreeItem } from '@mui/lab'
 import { NamespaceProcessTreeDetailComponentProps, NamespaceProcessTreeTreeDetails } from 'components/namespaceprocesstree'
 import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace, NamespaceMap } from 'models/lxkns'
-import { Button, lighten, makeStyles, Tooltip } from '@material-ui/core'
+import { Button, lighten, Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
 import { useMountpointInfoModal } from 'components/mountpointinfomodal'
-import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined'
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined'
 import PeerIcon from 'icons/propagation/Peer'
 import SlaveIcon from 'icons/propagation/Slave'
 import UnbindableIcon from 'icons/propagation/Unbindable'

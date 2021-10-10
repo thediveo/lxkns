@@ -15,8 +15,9 @@
 import React from 'react'
 
 import clsx from 'clsx'
-import { makeStyles, Tooltip } from '@material-ui/core'
-import DoubleArrowIcon from '@material-ui/icons/DoubleArrow'
+import { Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow'
 import { NamespaceIcon } from 'icons/Namespace'
 import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'

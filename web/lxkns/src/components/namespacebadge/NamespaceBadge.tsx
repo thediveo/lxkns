@@ -15,11 +15,12 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import Tooltip from '@material-ui/core/Tooltip'
+import Tooltip from '@mui/material/Tooltip'
 
 import { Namespace } from 'models/lxkns'
 
-import { darken, fade, lighten, makeStyles, Theme } from '@material-ui/core'
+import { darken, alpha, lighten, Theme } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
 
 
@@ -37,11 +38,11 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // achieve a dashed border; for this reason we return an object with background
 // and backgroundColor instead of just a background CSS property value string.
 const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
-    const color = shared ? fade(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
+    const color = shared ? alpha(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
     const change = shared ? 0.6 : 0.4
     return {
         background: dashedBorder(
-            theme.palette.type === 'light' ? darken(color, change) : lighten(color, change),
+            theme.palette.mode === 'light' ? darken(color, change) : lighten(color, change),
             color),
         backgroundColor: color,
     }

@@ -16,17 +16,18 @@ import React, { useState } from 'react'
 
 import { useAtom } from 'jotai'
 
-import { Button, CircularProgress, Fade, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
-import RefreshIcon from '@material-ui/icons/Refresh'
-import SyncIcon from '@material-ui/icons/Sync'
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled'
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import { Button, CircularProgress, Fade, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import RefreshIcon from '@mui/icons-material/Refresh'
+import SyncIcon from '@mui/icons-material/Sync'
+import SyncDisabledIcon from '@mui/icons-material/SyncDisabled'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from 'components/discovery'
 import useId from 'hooks/id'
 
 
-const defaultThrobberThreshold = 500 /* ms */
+const defaultThrobberThreshold = 500/* ms */
 
 export interface RefresherInterval {
     /** 
@@ -166,9 +167,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         <div className={classes.refresher}>
             <Tooltip title="refresh">
                 <div className={classes.wrapper}>
-                    <IconButton color="inherit"
-                        onClick={() => setRefreshing(true)}
-                    ><RefreshIcon /></IconButton>
+                    <IconButton color="inherit" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
                     {refreshing &&
                         <Fade
                             in={true}
@@ -212,7 +211,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                 ))}
             </Menu>
         </div>
-    )
+    );
 }
 
 export default Refresher

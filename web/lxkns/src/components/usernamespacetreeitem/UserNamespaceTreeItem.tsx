@@ -15,14 +15,14 @@
 import React from 'react'
 import { useAtom } from 'jotai'
 
-import TreeItem from '@material-ui/lab/TreeItem'
+import TreeItem from '@mui/lab/TreeItem'
 import { OwnerIcon } from 'icons/Owner'
 
 import { ProcessInfo } from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
 import { showSharedNamespacesAtom } from 'views/settings'
-import { makeStyles } from '@material-ui/core'
+import makeStyles from '@mui/styles/makeStyles';
 import { NamespaceBadge } from 'components/namespacebadge'
 
 // Return the ealdormen processes attached to namespaces owned by the specified

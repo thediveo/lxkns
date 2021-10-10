@@ -19,11 +19,16 @@ import { MDXProvider } from '@mdx-js/react'
 
 import {
     Divider,
-    Table, TableBody, TableCell, TableHead, TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
     Typography,
-    makeStyles,
-    lighten
-} from '@material-ui/core'
+    lighten,
+} from '@mui/material';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import { ChapterSkeleton } from './ChapterSkeleton'
 
@@ -140,7 +145,7 @@ const useStyles = makeStyles((theme) => ({
         color: theme.palette.text.primary,
         // ...and now for the details...
         '& .MuiTypography-h1, & .MuiTypography-h2, & .MuiTypography-h3, & .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6, & .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
-            color: theme.palette.type === 'light'
+            color: theme.palette.mode === 'light'
                 ? theme.palette.primary.main
                 : theme.palette.primary.light,
         },
@@ -160,7 +165,7 @@ const useStyles = makeStyles((theme) => ({
         },
         '& .MuiTypography-body2': {
             margin: theme.spacing(2),
-            borderLeft: `${theme.spacing(1)}px solid ${theme.palette.primary.main}`,
+            borderLeft: `${theme.spacing(1)} solid ${theme.palette.primary.main}`,
             paddingLeft: theme.spacing(1),
         },
         '& .MuiSvgIcon-root.icon': {
@@ -168,15 +173,15 @@ const useStyles = makeStyles((theme) => ({
             fontSize: 'calc(100% + 2px)',
             border: `1px solid ${theme.palette.text.disabled}`,
             padding: 1,
-            borderRadius: theme.spacing(1) / 2,
+            borderRadius: theme.spacing(0.5),
         },
         '& a:link': {
-            color: theme.palette.type === 'light'
+            color: theme.palette.mode === 'light'
                 ? theme.palette.primary.main
                 : theme.palette.primary.light
         },
         '& a:visited': {
-            color: theme.palette.type === 'light'
+            color: theme.palette.mode === 'light'
                 ? theme.palette.primary.dark
                 : lighten(theme.palette.primary.light, 0.3)
         },

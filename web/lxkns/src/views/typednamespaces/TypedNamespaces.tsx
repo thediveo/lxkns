@@ -19,7 +19,7 @@ import { Discovery, NamespaceType } from 'models/lxkns'
 import { Action } from 'app/treeaction'
 import { NamespaceProcessTree } from 'components/namespaceprocesstree'
 import { MountTreeDetailer } from 'components/mounttree'
-import { Box } from '@material-ui/core'
+import { Box } from '@mui/material'
 
 
 export interface TypedNamespacesProps {

@@ -20,20 +20,33 @@ import { SnackbarProvider } from 'notistack'
 
 import { Provider as StateProvider, useAtom } from 'jotai'
 
-import CssBaseline from '@material-ui/core/CssBaseline'
-import Badge from '@material-ui/core/Badge'
-import Typography from '@material-ui/core/Typography'
-import IconButton from '@material-ui/core/IconButton'
-import Tooltip from '@material-ui/core/Tooltip'
-import List from '@material-ui/core/List'
-import { Box, createMuiTheme, Divider, fade, makeStyles, Theme, ThemeProvider, useMediaQuery, useTheme } from '@material-ui/core'
+import CssBaseline from '@mui/material/CssBaseline'
+import Badge from '@mui/material/Badge'
+import Typography from '@mui/material/Typography'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import List from '@mui/material/List'
+import {
+    Box,
+    createTheme,
+    Divider,
+    alpha,
+    Theme,
+    ThemeProvider,
+    StyledEngineProvider,
+    useMediaQuery,
+    useTheme,
+    adaptV4Theme,
+} from '@mui/material';
 
-import TuneIcon from '@material-ui/icons/Tune'
-import HelpIcon from '@material-ui/icons/Help'
-import HomeIcon from '@material-ui/icons/Home'
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import ChevronRightIcon from '@material-ui/icons/ChevronRight'
-import InfoIcon from '@material-ui/icons/Info'
+import makeStyles from '@mui/styles/makeStyles';
+
+import TuneIcon from '@mui/icons-material/Tune'
+import HelpIcon from '@mui/icons-material/Help'
+import HomeIcon from '@mui/icons-material/Home'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import InfoIcon from '@mui/icons-material/Info'
 
 import Discovery, { useDiscovery } from 'components/discovery'
 import Refresher from 'components/refresher'
@@ -50,6 +63,13 @@ import { AllNamespaces } from 'views/allnamespaces'
 import { TypedNamespaces } from 'views/typednamespaces'
 
 import { basename } from 'utils/basename'
+
+
+declare module '@mui/styles/defaultTheme' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface DefaultTheme extends Theme {}
+}
+
 
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
@@ -107,9 +127,9 @@ const views: viewItem[][] = [
 
 
 const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
-    theme.palette.type === 'light'
-        ? fade(theme.palette.primary[el], f)
-        : fade(theme.palette.primary[el], 1 - f)
+    theme.palette.mode === 'light'
+        ? alpha(theme.palette.primary[el], f)
+        : alpha(theme.palette.primary[el], 1 - f)
 )
 
 const useStyles = makeStyles((theme) => ({
@@ -162,7 +182,7 @@ const LxknsApp = () => {
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <AppBarDrawer
                 drawerwidth={300}
-                swipeAreaWidth={theme.spacing(1)}
+                swipeAreaWidth={Number(theme.spacing(1))}
                 drawerClassName={classes.drawer}
                 title={<>
                     <Badge badgeContent={count} color="secondary">
@@ -171,14 +191,12 @@ const LxknsApp = () => {
                 </>}
                 tools={() => <>
                     <Tooltip key="collapseall" title="expand only top-level namespace(s)">
-                        <IconButton color="inherit"
-                            onClick={() => setTreeAction(COLLAPSEALL)}>
+                        <IconButton color="inherit" onClick={() => setTreeAction(COLLAPSEALL)} size="large">
                             <ChevronRightIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip key="expandall" title="expand all">
-                        <IconButton color="inherit"
-                            onClick={() => setTreeAction(EXPANDALL)}>
+                        <IconButton color="inherit" onClick={() => setTreeAction(EXPANDALL)} size="large">
                             <ExpandMoreIcon />
                         </IconButton>
                     </Tooltip>
@@ -220,7 +238,8 @@ const LxknsApp = () => {
                     <Route path="/"><AllNamespaces discovery={discovery} action={treeaction} /></Route>
                 </Switch>
             </Box>
-        </Box>)
+        </Box>
+    );
 }
 
 // Wrap the Lxkns app component into a theme provider that switches between
@@ -233,24 +252,27 @@ const ThemedApp = () => {
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
-    const appTheme = React.useMemo(() => createMuiTheme(
-        {
-            palette: {
-                type: themeType,
-            },
+    // FIXME: MUIv5
+    const appTheme = React.useMemo(() => createTheme(adaptV4Theme(lxknsLightTheme)), [themeType])
+    /*
+    const appTheme = React.useMemo(() => createTheme({
+        palette: {
+            mode: themeType,
         },
-        themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
-    ), [themeType])
+    }, themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme)), [themeType])
+    */
 
     return (
-        <ThemeProvider theme={appTheme}>
-            <CssBaseline />
-            <SnackbarProvider maxSnack={3}>
-                <Discovery />
-                    <LxknsApp />
-            </SnackbarProvider>
-        </ThemeProvider>
-    )
+        <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={appTheme}>
+                <CssBaseline />
+                <SnackbarProvider maxSnack={3}>
+                    <Discovery />
+                        <LxknsApp />
+                </SnackbarProvider>
+            </ThemeProvider>
+        </StyledEngineProvider>
+    );
 }
 
 // Finally, the exported App component wraps the themed app component into a

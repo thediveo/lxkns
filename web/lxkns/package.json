@@ -17,6 +17,8 @@
     "@svgr/babel-plugin-remove-jsx-attribute": "^5.4.0",
     "@svgr/cli": "^5.5.0",
     "@svgr/core": "^5.5.0",
+    "@svgr/plugin-jsx": "^5.5.0",
+    "@svgr/plugin-svgo": "^5.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.0",
@@ -35,7 +37,7 @@
     "jotai": "^1.2.2",
     "material-ui-confirm": "^2.1.1",
     "md5": "^2.3.0",
-    "mdi-material-ui": "^6.22.0",
+    "mdi-material-ui": "^7.0.0",
     "mdx-loader": "^3.0.2",
     "node-forge": "^0.10.0",
     "notistack": "^1.0.0",
@@ -57,7 +59,6 @@
     "chokidar": "^3.5.0",
     "immer": "^9.0.6",
     "set-value": "^4.1.0",
-    "svgo": "^2.7.0",
     "ssri": "^8.0.0",
     "tar": "^6.1.10",
     "tmpl": "^1.0.5",
@@ -110,6 +111,7 @@
     "@cypress/webpack-dev-server": "^1.4.0",
     "cypress": "^8.0.0",
     "p-defer": "^4.0.0",
-    "react-styleguidist": "^11.1.0"
+    "react-styleguidist": "^11.1.0",
+    "svgo": "^2.7.0"
   }
 }

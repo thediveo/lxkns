@@ -14,7 +14,7 @@
 
 import React from 'react'
 
-import { Box } from '@material-ui/core'
+import { Box } from '@mui/material'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { SmartA } from 'components/smarta'
 
