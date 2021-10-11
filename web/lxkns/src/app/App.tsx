@@ -244,14 +244,14 @@ const ThemedApp = () => {
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
     const [theme] = useAtom(themeAtom)
-    const themeType = theme === THEME_USERPREF
+    const themeMode = theme === THEME_USERPREF
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
         const appTheme = React.useMemo(() => createTheme(
             {
                 palette: {
-                    mode: themeType,
+                    mode: themeMode,
                     primary: {
                         main: '#3f51b5',
                     },
@@ -260,8 +260,8 @@ const ThemedApp = () => {
                     },
                 },
             },
-            themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
-        ), [themeType])
+            themeMode === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
+        ), [themeMode])
 
     return (
         <StyledEngineProvider injectFirst>

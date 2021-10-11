@@ -13,8 +13,8 @@
 // under the License.
 
 import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@mui/material/colors'
+import { Theme } from '@mui/material/styles'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
-
 
 // We augment the existing Material-UI theme with new elements for uniform color
 // styling of lxkns UI elements beyond the predefined Material UI elements. This
@@ -23,7 +23,8 @@ import { cloneDeep, merge as mergeDeep } from 'lodash'
 //
 // See also:
 // https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
-declare module '@mui/material/styles/createPalette' {
+declare module '@mui/material/styles' {
+
     interface Palette {
         // namespace badge background colors
         namespace: {
@@ -45,7 +46,7 @@ declare module '@mui/material/styles/createPalette' {
         fstype: string, // filesystem type
         init1: string, // PID1 icon
     }
-    // allow configuration using `createMuiTheme`
+    // allow configuration using `createTheme`
     interface PaletteOptions {
         namespace?: {
             cgroup?: string,
