@@ -36,10 +36,9 @@ import {
     StyledEngineProvider,
     useMediaQuery,
     useTheme,
-    adaptV4Theme,
-} from '@mui/material';
+} from '@mui/material'
 
-import makeStyles from '@mui/styles/makeStyles';
+import makeStyles from '@mui/styles/makeStyles'
 
 import TuneIcon from '@mui/icons-material/Tune'
 import HelpIcon from '@mui/icons-material/Help'
@@ -66,8 +65,8 @@ import { basename } from 'utils/basename'
 
 
 declare module '@mui/styles/defaultTheme' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface DefaultTheme extends Theme {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface DefaultTheme extends Theme { }
 }
 
 
@@ -252,15 +251,20 @@ const ThemedApp = () => {
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
-    // FIXME: MUIv5
-    const appTheme = React.useMemo(() => createTheme(adaptV4Theme(lxknsLightTheme)), [themeType])
-    /*
-    const appTheme = React.useMemo(() => createTheme({
-        palette: {
-            mode: themeType,
-        },
-    }, themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme)), [themeType])
-    */
+        const appTheme = React.useMemo(() => createTheme(
+            {
+                palette: {
+                    mode: themeType,
+                    primary: {
+                        main: '#3f51b5',
+                    },
+                    secondary: {
+                        main: '#f50057',
+                    },
+                },
+            },
+            themeType === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
+        ), [themeType])
 
     return (
         <StyledEngineProvider injectFirst>
@@ -268,7 +272,7 @@ const ThemedApp = () => {
                 <CssBaseline />
                 <SnackbarProvider maxSnack={3}>
                     <Discovery />
-                        <LxknsApp />
+                    <LxknsApp />
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>

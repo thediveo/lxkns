@@ -12,8 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import { Person, SvgIconComponent, Timer } from '@mui/icons-material'
 
 import CgroupNamespace from 'icons/namespaces/Cgroup'
@@ -24,8 +22,6 @@ import PIDNamespace from 'icons/namespaces/PID'
 import UTSNamespace from 'icons/namespaces/UTS'
 
 import { NamespaceType } from 'models/lxkns'
-import { SvgIconProps } from '@mui/material'
-
 
 // Maps Linux-kernel namespace types to icons and tooltip information.
 export interface NamespaceTypeInfo {

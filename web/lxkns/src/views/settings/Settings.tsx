@@ -28,6 +28,7 @@ import {
     ListItemText,
     MenuItem,
     Select,
+    SelectChangeEvent,
     Switch as Toggle,
     Typography,
 } from '@mui/material';
@@ -75,7 +76,7 @@ export const Settings = () => {
     const [showSharedNamespaces, setShowSharedNamespaces] = useAtom(showSharedNamespacesAtom)
     const [expandInitially, setExpandInitially] = useAtom(expandInitiallyAtom)
 
-    const handleThemeChange = (event: React.ChangeEvent<{ value: number }>) => {
+    const handleThemeChange = (event: SelectChangeEvent<number>) => {
         setTheme(event.target.value)
     }
 

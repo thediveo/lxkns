@@ -84,7 +84,7 @@ const useStyles = makeStyles((theme) => ({
         fontSize: '70%', // why, CSS, oh why???
         border: `1px solid ${theme.palette.text.disabled}`,
         padding: 1,
-        borderRadius: theme.spacing(1) / 2,
+        borderRadius: theme.spacing(0.5),
 
         '& > .MuiSvgIcon-root': {
             verticalAlign: 'middle',
