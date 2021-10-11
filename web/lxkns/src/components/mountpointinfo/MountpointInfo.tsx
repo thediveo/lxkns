@@ -15,8 +15,7 @@
 import React from 'react'
 
 import { MountPoint } from 'models/lxkns/mount'
-import { IconButton, Tooltip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { IconButton, styled, Tooltip } from '@mui/material'
 import { filesystemTypeLink } from './fslinks'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { MountpointPath } from 'components/mountpointpath'
@@ -26,42 +25,41 @@ import { MountpointRoot } from 'components/mountpointroot'
 import { NamespaceInfo } from 'components/namespaceinfo'
 
 
-const useStyle = makeStyles((theme) => ({
-    props: {
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr',
-        columnGap: theme.spacing(2),
-        rowGap: theme.spacing(0.5),
-    },
-    propname: {
-        gridColumn: '1/2',
-        whiteSpace: 'nowrap',
-        alignSelf: 'baseline',
-        lineHeight: theme.typography.body1.lineHeight,
-    },
-    propvalue: {
-        gridColumn: '2/3',
-        fontWeight: theme.typography.fontWeightLight,
-        alignSelf: 'baseline',
-        lineHeight: theme.typography.body1.lineHeight,
-    },
-    fullwidthpropvalue: {
-        gridColumn: '1/3',
-    },
-    mountpathtitle: {
-        fontSize: '120%',
-        fontWeight: theme.typography.fontWeightLight,
-        marginBottom: theme.spacing(1),
-    },
-    extdoc: {
-        position: 'relative',
-        width: 0,
-        height: 0,
-        '& > *': {
-            position: 'absolute',
-            top: 'calc(-50% + 0.2ex)',
-        }
-    },
+const MountPathTitle = styled('div')(({ theme }) => ({
+    fontSize: '120%',
+    fontWeight: theme.typography.fontWeightLight,
+    marginBottom: theme.spacing(1),
+}))
+
+const MountProperties = styled('div')(({ theme }) => ({
+    display: 'grid',
+    gridTemplateColumns: 'auto 1fr',
+    columnGap: theme.spacing(2),
+    rowGap: theme.spacing(0.5),
+}))
+
+const ExternalDocumentation = styled('span')(({ theme }) => ({
+    position: 'relative',
+    width: 0,
+    height: 0,
+    '& > *': {
+        position: 'absolute',
+        top: 'calc(-50% + 0.2ex)',
+    }
+}))
+
+const PropertyName = styled('div')(({ theme }) => ({
+    gridColumn: '1/2',
+    whiteSpace: 'nowrap',
+    alignSelf: 'baseline',
+    lineHeight: theme.typography.body1.lineHeight,
+}))
+
+const PropertyValue = styled('div')(({ theme }) => ({
+    gridColumn: '2/3',
+    fontWeight: theme.typography.fontWeightLight,
+    alignSelf: 'baseline',
+    lineHeight: theme.typography.body1.lineHeight,
 }))
 
 
@@ -74,12 +72,9 @@ interface NameValueRowProps {
  * Renders a single key-value grid row.
  */
 const NameValueRow = ({ name, value }: NameValueRowProps) => {
-
-    const classes = useStyle()
-
     return <>
-        <div className={classes.propname}>{name}:</div>
-        <div className={classes.propvalue}>{value}</div>
+        <PropertyName>{name}:</PropertyName>
+        <PropertyValue>{value}</PropertyValue>
     </>
 }
 
@@ -108,8 +103,6 @@ export interface MountpointInfoProps {
  * Renders detail information about a specific mount point.
  */
 export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) => {
-
-    const classes = useStyle()
 
     const options = mountpoint.mountoptions
         .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
@@ -160,10 +153,10 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
         .filter(member => member !== mountpoint && member.mastergroup === mountpoint.peergroup)
 
     return <>
-        <div className={classes.mountpathtitle}>
+        <MountPathTitle>
             <MountpointPath drum="always" plainpath={true} mountpoint={mountpoint} />
-        </div>
-        <div className={classes.props}>
+        </MountPathTitle>
+        <MountProperties>
             <NameValueRow
                 name={'mount namespace'}
                 value={<NamespaceInfo shortprocess={true} namespace={mountpoint.mountnamespace} />}
@@ -171,7 +164,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
             <NameValueRow name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
             <NameValueRow name="filesystem type" value={<>
                 {mountpoint.fstype}
-                &nbsp;<span className={classes.extdoc}>
+                &nbsp;<ExternalDocumentation>
                     <Tooltip title="open external filesystem documentation">
                         <IconButton
                             color="primary"
@@ -184,7 +177,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
                             <MenuBookIcon />
                         </IconButton>
                     </Tooltip>
-                </span>
+                </ExternalDocumentation>
             </>}
             />
             <NameValueRow name="root" value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />} />
@@ -207,7 +200,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
             <NameValueRow name="ID" value={mountpoint.mountid} />
             <NameValueRow name="parent ID" value={parent} />
             <NameValueRow name="tags" value={tags} />
-        </div>
+        </MountProperties>
     </>
 }
 

@@ -14,8 +14,9 @@
 
 import React from 'react'
 
+import { styled } from '@mui/material'
+
 import LaunchIcon from '@mui/icons-material/Launch'
-import { styled } from '@mui/styles';
 
 
 const NixWieWegHier = styled('span')(({ theme }) => ({

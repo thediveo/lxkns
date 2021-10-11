@@ -19,8 +19,8 @@ import { TreeItem } from '@mui/lab'
 import { NamespaceProcessTreeDetailComponentProps, NamespaceProcessTreeTreeDetails } from 'components/namespaceprocesstree'
 import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace, NamespaceMap } from 'models/lxkns'
-import { Button, lighten, Tooltip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Button, lighten, styled, Tooltip } from '@mui/material'
+
 import ChildrenIcon from 'icons/Children'
 import FilesystemtypeIcon from 'icons/Filesystemtype'
 import { useMountpointInfoModal } from 'components/mountpointinfomodal'
@@ -31,68 +31,77 @@ import UnbindableIcon from 'icons/propagation/Unbindable'
 import ReadonlyIcon from 'icons/Readonly'
 
 
-const useStyles = makeStyles((theme) => ({
-    mounttreedetails: {
+const mpHidden = 'mountpoint-hidden'
+
+const Label = styled('span')(({ theme }) => ({
+    whiteSpace: 'nowrap',
+    fontWeight: theme.typography.fontWeightLight,
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'baseline',
+        position: 'relative',
+        top: '0.3ex',
     },
-    label: {
-        whiteSpace: 'nowrap',
+
+    [`&.${mpHidden}`]: {
         fontWeight: theme.typography.fontWeightLight,
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'baseline',
-            position: 'relative',
-            top: '0.3ex',
-        },
+        color: theme.palette.text.disabled,
     },
-    mountpointpath: {
-        fontWeight: theme.typography.fontWeightLight,
-        borderRadius: '0.3ex',
-        marginRight: '0.5em',
+}))
+
+const Count = styled('span')(({ theme }) => ({
+    marginRight: '0.5em',
+}))
+
+const ReadOnly = styled('span')(({ theme }) => ({
+    color: theme.palette.fstype,
+    marginRight: '0.3em',
+}))
+
+const FsType = styled('span')(({ theme }) => ({
+    color: theme.palette.fstype,
+}))
+
+const MoreButton = styled(Button)(({ theme }) => ({
+    marginLeft: '0.5em',
+    paddingTop: 0,
+    paddingBottom: 0,
+    '&.MuiButton-root': {
+        minWidth: 0,
     },
-    rootpath: {
+}))
+
+const mppRoot = 'mountpoint-root-path'
+
+const MountPointPath = styled('span')(({ theme }) => ({
+    fontWeight: theme.typography.fontWeightLight,
+    borderRadius: '0.3ex',
+    marginRight: '0.5em',
+
+    [`&.${mppRoot}`]: {
         fontWeight: theme.typography.fontWeightBold,
         padding: '0 0.2em',
         background: lighten(theme.palette.namespace.mnt, 0.2),
     },
-    hiddenmountpoint: {
-        fontWeight: theme.typography.fontWeightLight,
-        color: theme.palette.text.disabled,
-        '& $mountpointpath': {
-            textDecoration: 'line-through solid',
-        },
-    },
-    notamountpoint: {
-        fontWeight: theme.typography.fontWeightLight,
-        fontStyle: 'italic',
-        marginLeft: '0.2em',
-        marginRight: '0.7em',
-        '&$mountpointpath': {
-            border: 'none',
-            background: 'none',
-        }
-    },
-    childcount: {
-        marginRight: '0.5em',
-    },
-    ro: {
-        color: theme.palette.fstype,
-        marginRight: '0.3em',
-    },
-    fstype: {
-        color: theme.palette.fstype,
-    },
-    propmode: {
-        marginLeft: '0.5em',
-        color: theme.palette.fstype,
-    },
-    more: {
-        marginLeft: '0.5em',
-        paddingTop: 0,
-        paddingBottom: 0,
-        '&.MuiButton-root': {
-            minWidth: 0,
-        },
+
+    [`.${mpHidden} &`]: {
+        textDecoration: 'line-through solid',
     },
 }))
+
+const NotAMountpoint = styled(MountPointPath)(({ theme }) => ({
+    fontStyle: 'italic',
+    marginLeft: '0.2em',
+    marginRight: '0.7em',
+    border: 'none',
+    background: 'none',
+}))
+
+const PropagationMode = styled(MountPointPath)(({ theme }) => ({
+    marginLeft: '0.5em',
+    color: theme.palette.fstype,
+    textDecoration: 'none !important',
+}))
+
 
 // Reduce function returning the sum of all mount points in for this mount path
 // as well as for all its child mount paths.
@@ -116,9 +125,6 @@ interface MountPointLabelProps {
 
 // Renders a mount point tree label with information about a mount point.
 const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelProps) => {
-
-    const classes = useStyles()
-
     const tooltip = `${mountpoint.hidden ? 'overmounted ' : ''}${unescapeMountPath(mountpoint.mountpoint)}`
 
     const setMountpoint = useMountpointInfoModal()
@@ -126,15 +132,15 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
     const propagationmodes = [
         mountpoint.tags['shared'] &&
         <Tooltip key="shared" title="propagation between peers and to slaves">
-            <span className={classes.propmode} ><PeerIcon fontSize="inherit" />&nbsp;({mountpoint.tags['shared']})</span>
+            <PropagationMode><PeerIcon fontSize="inherit" />&nbsp;({mountpoint.tags['shared']})</PropagationMode>
         </Tooltip>,
         mountpoint.tags['master'] &&
         <Tooltip key="master" title="propagation from master(s)">
-            <span className={classes.propmode} ><SlaveIcon fontSize="inherit" />&nbsp;({mountpoint.tags['master']})</span>
+            <PropagationMode><SlaveIcon fontSize="inherit" />&nbsp;({mountpoint.tags['master']})</PropagationMode>
         </Tooltip>,
         mountpoint.tags['unbindable'] &&
         <Tooltip key="unbindable" title="unbindable mount point">
-            <span className={classes.propmode} ><UnbindableIcon fontSize="inherit" /></span>
+            <PropagationMode><UnbindableIcon fontSize="inherit" /></PropagationMode>
         </Tooltip>,
     ].filter(propmode => propmode)
 
@@ -144,28 +150,26 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
     }
 
     return (
-        <span className={clsx(classes.label, mountpoint.hidden && classes.hiddenmountpoint)}>
+        <Label className={clsx(mountpoint.hidden && mpHidden)}>
             <Tooltip title={tooltip}>
-                <span>
-                    <span className={clsx(classes.mountpointpath, tail === '/' && classes.rootpath)}>{unescapeMountPath(tail)}</span>
-                </span>
+                <MountPointPath className={clsx(tail === '/' && mppRoot)}>{unescapeMountPath(tail)}</MountPointPath>
             </Tooltip>
             {!mountpoint.hidden && childmountcount > 0 &&
-                <span className={classes.childcount}>[<ChildrenIcon fontSize="inherit" />&nbsp;{childmountcount}]</span>}
+                <Count>[<ChildrenIcon fontSize="inherit" />&nbsp;{childmountcount}]</Count>}
             {mountpoint.mountoptions.includes('ro') &&
                 <Tooltip title="read-only">
-                    <span className={classes.ro}><ReadonlyIcon fontSize="inherit" />&nbsp;</span>
+                    <ReadOnly><ReadonlyIcon fontSize="inherit" />&nbsp;</ReadOnly>
                 </Tooltip>}
             <Tooltip title={`filesystem type «${mountpoint.fstype}»`}>
-                <span className={classes.fstype}>
+                <FsType>
                     <FilesystemtypeIcon fontSize="inherit" />&#8239;{mountpoint.fstype}
-                </span>
+                </FsType>
             </Tooltip>
             {propagationmodes}
             <Tooltip title="mountpoint details">
-                <Button className={classes.more} onClick={handleMore}>···</Button>
+                <MoreButton onClick={handleMore}>···</MoreButton>
             </Tooltip>
-        </span>
+        </Label>
     )
 }
 
@@ -181,15 +185,12 @@ interface MountPathLabelProps {
  * path (tail) and the number of mount points(!) below this (fake) mount path.
  */
 const MountPathLabel = ({ tail, childmountcount }: MountPathLabelProps) => {
-
-    const classes = useStyles()
-
     return (
-        <span className={classes.label}>
+        <Label>
             <FolderOutlinedIcon fontSize="inherit" color="disabled" />
-            <span className={clsx(classes.notamountpoint, classes.mountpointpath)}>{tail}</span>
+            <NotAMountpoint>{tail}</NotAMountpoint>
             [<ChildrenIcon fontSize="inherit" />&#8239;{childmountcount}]
-        </span>
+        </Label>
     )
 }
 
@@ -213,11 +214,8 @@ interface MountPathTreeItemProps {
  * are always rendered only under the last mount point item.
  */
 const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeItemProps) => {
-
-    const classes = useStyles()
-
     const path = mountpath.path
-    const tail = path.substr(parentpath.length)
+    const tail = path.substring(parentpath.length)
     const prefix = path === '/' ? path : path + "/"
 
     const childmountcount = countChildMounts(mountpath)
@@ -240,7 +238,6 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         // of all child mount path nodes.
         return (
             <TreeItem
-                className={classes.mounttreedetails}
                 nodeId={`${namespace.nsid}-${path}`}
                 label={<MountPathLabel tail={tail} childmountcount={childmountcount} />}
             >
@@ -252,7 +249,6 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         .sort(compareMounts)
         .map((mountpoint, idx) =>
             <TreeItem
-                className={classes.mounttreedetails}
                 key={mountpoint.mountid}
                 nodeId={`${namespace.nsid}-${path}-${mountpoint.mountid}`}
                 label={<MountPointLabel mountpoint={mountpoint} tail={tail} childmountcount={childmountcount} />}
@@ -287,9 +283,9 @@ const expandAll = (namespaces: NamespaceMap) => Object.values(namespaces)
     .map(ns => ns.mountpaths
         ? Object.values(ns.mountpaths)
             .map(mountpath => mountpath.mounts
-                    .filter(mountpoint => mountpoint.children.length > 0 && mountpoint.children.length <= 50)
-                    .map(mountpoint => `${ns.nsid}-${mountpoint.mountpoint}-${mountpoint.mountid}`)
-                ).flat()
+                .filter(mountpoint => mountpoint.children.length > 0 && mountpoint.children.length <= 50)
+                .map(mountpoint => `${ns.nsid}-${mountpoint.mountpoint}-${mountpoint.mountid}`)
+            ).flat()
         : [])
     .flat()
 

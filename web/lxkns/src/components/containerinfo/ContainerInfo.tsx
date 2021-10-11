@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { styled } from '@mui/material'
 import { Pause } from '@mui/icons-material'
 
 import { Container, containerGroup } from 'models/lxkns'
@@ -20,7 +21,6 @@ import { ContainerTypeIcon } from 'utils/containericon'
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/Pod'
 import IEAppIcon from 'icons/containers/IEApp'
-import { styled } from '@mui/styles'
 
 
 const ContainerInformation = styled('span')(({ theme }) => ({

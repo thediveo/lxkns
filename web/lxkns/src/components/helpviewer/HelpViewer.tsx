@@ -15,9 +15,7 @@
 import React from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 
-import { Box, Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
-
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/muimarkdown/ChapterSkeleton'
@@ -27,70 +25,67 @@ const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
 const navigatorFooterSpacing = 3 // spacing(x)
 
-const useStyles = makeStyles((theme) => ({
-    canvas: {
-        overflow: 'auto', // let there be shcrollbarrs!
-    },
-    navigator: {
-        zIndex: 2,
-        position: 'sticky', // within the .view, not the viewport :)
-        top: theme.spacing(2),
-        left: 0,
-        // make the touch ripple fit in snuggly; we need to keep enough height
-        // for everything, including the border (times 2) and icons are:
-        // - 24px high
-        // - small buttons have a 3px padding (*2)
-        height: `calc(24px + ${(navigatorBorder + 2) * 2}px + 2 * 3px)`,
-        // icons are:
-        // - 24px wide, 
-        // - small icon buttons have a 3px padding (*2),
-        // - 1px border (*1, only "left side"!)
-        marginLeft: `calc(100% - 24px - 6px - ${navigatorBorder}px - ${navigatorLeftPadding}px)`,
-        paddingLeft: `${navigatorLeftPadding + 3}px`,
-        background: theme.palette.background.paper,
-        border: `${navigatorBorder}px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
-        borderRight: 0,
-        borderRadius: '42em',
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 0,
-        '& .MuiSvgIcon-root': { position: 'relative', left: '-2px' },
-        '& .MuiTouchRipple-root': { left: '-1px' },
+const HelpCanvas = styled('div')(({ theme }) => ({
+    overflow: 'auto', // let there be shcrollbarrs!
+}))
 
-        // Material UI's icon button on hover slightly darkens the background
-        // using an alpha of 0.04; now, that would make any text under the toc
-        // button suddenly shine through ... and we don't want that. So we need
-        // to set a non-transparent color which is appropriately darkened (or
-        // lightened, depending on theme type).
-        '&:hover': {
-            backgroundColor: theme.palette.mode === 'light' ? 'rgb(245, 245, 245)' : 'rgb(10, 10, 10)',
-        },
-    },
-    padding: {
-        marginLeft: theme.spacing(2),
-        marginRight: theme.spacing(2),
+const NavigatorButton = styled(IconButton)(({ theme }) => ({
+    zIndex: 2,
+    position: 'sticky', // within the .view, not the viewport :)
+    top: theme.spacing(2),
+    left: 0,
+    // make the touch ripple fit in snuggly; we need to keep enough height
+    // for everything, including the border (times 2) and icons are:
+    // - 24px high
+    // - small buttons have a 3px padding (*2)
+    height: `calc(24px + ${(navigatorBorder + 2) * 2}px + 2 * 3px)`,
+    // icons are:
+    // - 24px wide, 
+    // - small icon buttons have a 3px padding (*2),
+    // - 1px border (*1, only "left side"!)
+    marginLeft: `calc(100% - 24px - 6px - ${navigatorBorder}px - ${navigatorLeftPadding}px)`,
+    paddingLeft: `${navigatorLeftPadding + 3}px`,
+    background: theme.palette.background.paper,
+    border: `${navigatorBorder}px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
+    borderRight: 0,
+    borderRadius: '42em',
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    '& .MuiSvgIcon-root': { position: 'relative', left: '-2px' },
+    '& .MuiTouchRipple-root': { left: '-1px' },
 
-        '& > hr': {
-            marginTop: theme.spacing(navigatorFooterSpacing),
-            marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
-        },
-        '& > button.prev': {
-            float: 'left',
-        },
-        '& > button.next': {
-            float: 'right',
-        },
-        '& > button.prev, & > button.next': {
-            marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
-        },
+    // Material UI's icon button on hover slightly darkens the background
+    // using an alpha of 0.04; now, that would make any text under the toc
+    // button suddenly shine through ... and we don't want that. So we need
+    // to set a non-transparent color which is appropriately darkened (or
+    // lightened, depending on theme type).
+    '&:hover': {
+        backgroundColor: theme.palette.mode === 'light' ? 'rgb(245, 245, 245)' : 'rgb(10, 10, 10)',
     },
-    markdown: {
-        // Compensate for the height of the sticky toc navigator button.
-        marginTop: '-24px',
+}))
+
+const Markdowner = styled(MuiMarkdown)(({ theme }) => ({
+    // Compensate for the height of the sticky toc navigator button.
+    marginTop: '-24px',
+}))
+
+const Padding = styled('div')(({ theme }) => ({
+    marginLeft: theme.spacing(2),
+    marginRight: theme.spacing(2),
+
+    '& > hr': {
+        marginTop: theme.spacing(navigatorFooterSpacing),
+        marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
     },
-    fallback: {
-        // Compensate for the height of the sticky toc navigator button.
-        marginTop: '-24px',
-    }
+    '& > button.prev': {
+        float: 'left',
+    },
+    '& > button.next': {
+        float: 'right',
+    },
+    '& > button.prev, & > button.next': {
+        marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
+    },
 }))
 
 /**
@@ -187,13 +182,7 @@ export interface HelpViewerProps {
  * > dive into it.
  */
 export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style }: HelpViewerProps) => {
-
-    const classes = useStyles()
-
-    // for using the component constructure in JSX versus component instances,
-    // please see: https://stackoverflow.com/a/31815634/
-    const MDX = markdowner || MuiMarkdown
-
+    // Determine the help chapter to show on the basis of the current route.
     const m = useRouteMatch((baseroute || '') + '/:chapter')
     const currentChapterIndex = (m && m.params['chapter'] && findChapter(m.params['chapter'], chapters)) || 0
 
@@ -240,20 +229,19 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         setAnchorEl(null);
     }
 
-    return <div className={classes.canvas} style={style}>
+    return <HelpCanvas style={style}>
         {/* 
             the ToC navigation/navigator button is sticky, but of course in the
             *outer* "canvas" div. In consequence, the outer canvas must not
             overflow! Instead, the inner markdown area must overflow and scroll.
         */}
         <Tooltip title="open table of contents">
-            <IconButton
-                className={classes.navigator}
+            <NavigatorButton
                 size="small"
                 onClick={handleIconClick}
             >
                 <TocIcon />
-            </IconButton>
+            </NavigatorButton>
         </Tooltip>
         <Menu
             id="help-viewer-menu"
@@ -272,12 +260,12 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 </MenuItem>
             ))}
         </Menu>
-        <div className={classes.padding}>
-            <MDX
-                className={classes.markdown}
+        <Padding>
+            <Markdowner
+                as={markdowner || MuiMarkdown}
                 mdx={chapters[currentChapterIndex].chapter}
                 fallback={
-                    <Box className={classes.fallback} m={1}>
+                    <Box sx={{ marginTop: '-24px' }} m={1}>
                         <ChapterSkeleton />
                     </Box>
                 }
@@ -286,9 +274,9 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
             <Divider />
             <ChapterButton chapterIndex={currentChapterIndex - 1} />
             <ChapterButton chapterIndex={currentChapterIndex + 1} />
-            <div style={{clear: 'both'}}></div>
-        </div>
-    </div>
+            <div style={{ clear: 'both' }}></div>
+        </Padding>
+    </HelpCanvas>
 }
 
 export default HelpViewer
