@@ -36,9 +36,8 @@ import {
     StyledEngineProvider,
     useMediaQuery,
     useTheme,
+    styled,
 } from '@mui/material'
-
-import makeStyles from '@mui/styles/makeStyles'
 
 import TuneIcon from '@mui/icons-material/Tune'
 import HelpIcon from '@mui/icons-material/Help'
@@ -69,7 +68,10 @@ declare module '@mui/styles/defaultTheme' {
     interface DefaultTheme extends Theme { }
 }
 
-
+/**
+ * Describes properties of an individual sidebar view item, such as its icon to
+ * show, label, and the route path it applies to.
+ */
 interface viewItem {
     icon: JSX.Element /** drawer item icon */
     label: string /** drawer item label */
@@ -124,25 +126,22 @@ const views: viewItem[][] = [
     ]
 ]
 
-
 const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
     theme.palette.mode === 'light'
         ? alpha(theme.palette.primary[el], f)
         : alpha(theme.palette.primary[el], 1 - f)
 )
 
-const useStyles = makeStyles((theme) => ({
-    drawer: {
-        '& .MuiListItem-root.Mui-selected, & .MuiListItem-root.Mui-selected:hover': {
-            backgroundColor: themedFade(theme, 'dark', 0.2),
-        },
-        '& .MuiListItem-root:hover': {
-            backgroundColor: themedFade(theme, 'dark', 0.05),
-        },
-        '& .MuiListItemIcon-root .MuiSvgIcon-root': {
-            color: theme.palette.primary.light,
-        }
-    }
+const LxknsAppBarDrawer = styled(AppBarDrawer)(({theme}) => ({
+    '& .MuiListItem-root.Mui-selected, & .MuiListItem-root.Mui-selected:hover': {
+        backgroundColor: themedFade(theme, 'dark', 0.2),
+    },
+    '& .MuiListItem-root:hover': {
+        backgroundColor: themedFade(theme, 'dark', 0.05),
+    },
+    '& .MuiListItemIcon-root .MuiSvgIcon-root': {
+        color: theme.palette.primary.light,
+    },
 }))
 
 /**
@@ -155,7 +154,6 @@ const useStyles = makeStyles((theme) => ({
  */
 const LxknsApp = () => {
 
-    const classes = useStyles()
     const theme = useTheme()
 
     const [treeaction, setTreeAction] = useTreeAction()
@@ -179,10 +177,9 @@ const LxknsApp = () => {
 
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
-            <AppBarDrawer
+            <LxknsAppBarDrawer
                 drawerwidth={300}
                 swipeAreaWidth={Number(theme.spacing(1))}
-                drawerClassName={classes.drawer}
                 title={<>
                     <Badge badgeContent={count} color="secondary">
                         <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>

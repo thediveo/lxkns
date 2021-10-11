@@ -70,9 +70,9 @@ declare module '@mui/material/styles/createPalette' {
 
 // The (basic) light theme parts specific to lxkns.
 export const lxknsLightTheme = {
-    overrides: {
+    components: {
         MuiCssBaseline: {
-            '@global': {
+            styleOverrides: {
                 // Please note: now automatic translation into class names is
                 // off, so don't forget the prefix dots on CSS class names.
                 '.namespacetree': {
@@ -120,9 +120,9 @@ export const lxknsLightTheme = {
 export const lxknsDarkTheme = mergeDeep(
     cloneDeep(lxknsLightTheme),
     {
-        overrides: {
+        components: {
             MuiCssBaseline: {
-                '@global': {
+                styleOverrides: {
                     '.namespacetree': {
                         '& .namespace .controlledprocess .MuiTreeItem-content::before': {
                             color: grey[600],
