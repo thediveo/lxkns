@@ -10,7 +10,6 @@
     "@mui/icons-material": "^5.0.3",
     "@mui/lab": "^5.0.0-alpha.50",
     "@mui/material": "^5.0.3",
-    "@mui/styles": "^5.0.1",
     "@svgr/babel-plugin-remove-jsx-attribute": "^5.4.0",
     "@svgr/cli": "^5.5.0",
     "@svgr/core": "^5.5.0",

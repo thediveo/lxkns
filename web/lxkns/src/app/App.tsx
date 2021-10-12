@@ -63,11 +63,6 @@ import { TypedNamespaces } from 'views/typednamespaces'
 import { basename } from 'utils/basename'
 
 
-declare module '@mui/styles/defaultTheme' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DefaultTheme extends Theme { }
-}
-
 /**
  * Describes properties of an individual sidebar view item, such as its icon to
  * show, label, and the route path it applies to.

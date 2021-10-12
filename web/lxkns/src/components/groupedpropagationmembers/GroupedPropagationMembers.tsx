@@ -14,10 +14,10 @@
 
 import React from 'react'
 
-import { styled } from '@mui/styles'
 import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
 import { MountpointPath } from 'components/mountpointpath'
 import { NamespaceInfo } from 'components/namespaceinfo'
+import { styled } from '@mui/material'
 
 
 const MountPathGroup = styled('div')(({ theme }) => ({
