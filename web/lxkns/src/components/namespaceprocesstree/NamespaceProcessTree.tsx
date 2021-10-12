@@ -141,7 +141,7 @@ const NamespaceTreeItem = (
         label={<NamespaceInfo namespace={namespace} />}
     >{[
         ...procs.concat(childnamespaces),
-        ...(DetailsFactory ? [<DetailsFactory namespace={namespace} />] : [])
+        ...(DetailsFactory ? [<DetailsFactory key="42" namespace={namespace} />] : [])
     ]}</TreeItem>
 }
 

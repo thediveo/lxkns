@@ -238,6 +238,7 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         // of all child mount path nodes.
         return (
             <TreeItem
+                key={`${namespace.nsid}-${path}`}
                 nodeId={`${namespace.nsid}-${path}`}
                 label={<MountPathLabel tail={tail} childmountcount={childmountcount} />}
             >

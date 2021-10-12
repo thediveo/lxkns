@@ -29,12 +29,10 @@ import {
     MenuItem,
     Select,
     SelectChangeEvent,
+    styled,
     Switch as Toggle,
     Typography,
 } from '@mui/material';
-
-
-import makeStyles from '@mui/styles/makeStyles';
 
 
 const themeKey = 'lxkns.theme'
@@ -52,24 +50,20 @@ export const showSharedNamespacesAtom = localStorageAtom(showSharedNamespacesKey
 export const expandInitiallyAtom = localStorageAtom(expandInitiallyKey, true)
 
 
-const useStyles = makeStyles((theme) => ({
-    settings: {
-        width: `calc(100% - calc(${theme.spacing(2)} * 2))`,
-        margin: theme.spacing(2),
+const SettingsGrid = styled(Grid)(({ theme }) => ({
+    width: `calc(100% - calc(${theme.spacing(2)} * 2))`,
+    margin: theme.spacing(2),
 
-        '& .MuiCard-root + .MuiTypography-subtitle1': {
-            marginTop: theme.spacing(4),
-        },
+    '& .MuiCard-root + .MuiTypography-subtitle1': {
+        marginTop: theme.spacing(4),
     },
 }))
+
 
 /**
  * Renders the "settings" page (view) of the lxkns client browser app.
  */
 export const Settings = () => {
-
-    const classes = useStyles()
-
     // Tons of settings to play around with...
     const [theme, setTheme] = useAtom(themeAtom)
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
@@ -82,13 +76,9 @@ export const Settings = () => {
 
     return (
         <Box m={1} overflow="auto">
-            <Grid
-                className={classes.settings}
-                container
-                direction="row"
-                justifyContent="center"
-            >
+            <SettingsGrid container direction="row" justifyContent="center">
                 <Grid
+                    container
                     direction="column"
                     style={{ minWidth: '35em', maxWidth: '60em' }}
                 >
@@ -126,8 +116,8 @@ export const Settings = () => {
                                 <ListItemText
                                     primary="Show shared non-user namespaces"
                                     secondary={showSharedNamespaces
-                                        ? 'all namespaces for a leader process'
-                                        : 'namespaces different from parent leader process'}
+                                        ? 'all namespaces a leader process is attached to'
+                                        : 'only namespaces different from parent leader process'}
                                 />
                                 <ListItemSecondaryAction>
                                     <Toggle
@@ -157,7 +147,7 @@ export const Settings = () => {
                     </Card>
 
                 </Grid>
-            </Grid>
+            </SettingsGrid>
         </Box>
     );
 }

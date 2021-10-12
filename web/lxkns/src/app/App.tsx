@@ -132,7 +132,7 @@ const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
         : alpha(theme.palette.primary[el], 1 - f)
 )
 
-const LxknsAppBarDrawer = styled(AppBarDrawer)(({theme}) => ({
+const LxknsAppBarDrawer = styled(AppBarDrawer)(({ theme }) => ({
     '& .MuiListItem-root.Mui-selected, & .MuiListItem-root.Mui-selected:hover': {
         backgroundColor: themedFade(theme, 'dark', 0.2),
     },
@@ -248,20 +248,20 @@ const ThemedApp = () => {
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
-        const appTheme = React.useMemo(() => createTheme(
-            {
-                palette: {
-                    mode: themeMode,
-                    primary: {
-                        main: '#3f51b5',
-                    },
-                    secondary: {
-                        main: '#f50057',
-                    },
+    const appTheme = React.useMemo(() => createTheme(
+        {
+            palette: {
+                mode: themeMode,
+                primary: {
+                    main: '#3f51b5',
+                },
+                secondary: {
+                    main: '#f50057',
                 },
             },
-            themeMode === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
-        ), [themeMode])
+        },
+        themeMode === 'dark' ? lxknsDarkTheme : lxknsLightTheme,
+    ), [themeMode])
 
     return (
         <StyledEngineProvider injectFirst>

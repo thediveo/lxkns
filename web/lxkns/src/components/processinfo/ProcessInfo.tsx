@@ -15,9 +15,7 @@
 import clsx from 'clsx'
 
 import { Pause, PlayArrow } from '@mui/icons-material'
-import { Tooltip } from '@mui/material';
-
-import makeStyles from '@mui/styles/makeStyles';
+import { styled, Tooltip } from '@mui/material'
 
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
@@ -26,65 +24,65 @@ import { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
 
 
-const useStyles = makeStyles((theme) => ({
-    // The whole component as such...
-    processInfo: {
-        fontWeight: theme.typography.fontWeightLight,
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        '& .MuiSvgIcon-root': {
-            marginRight: '0.15em',
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.2ex',
-            color: theme.palette.process,
-        },
-        '& .init1': {
-            color: theme.palette.init1,
-        },
-        '&$shortInfo *': {
-            color: theme.palette.text.disabled,
-        }
-    },
-    containerInfo: {
-        marginRight: '0.5em',
-    },
-    shortInfo: {
-    },
-    processName: {
-        fontStyle: 'italic',
+const piShort = "short-processinfo"
+
+const ProcessInformation = styled('span')(({ theme }) => ({
+    fontWeight: theme.typography.fontWeightLight,
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    '& .MuiSvgIcon-root': {
+        marginRight: '0.15em',
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.2ex',
         color: theme.palette.process,
-        '&::before': {
-            content: '"«"',
-            fontStyle: 'normal',
-        },
-        '&::after': {
-            content: '"»"',
-            fontStyle: 'normal',
-            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
-        },
     },
-    pid: {
+    '& .init1': {
+        color: theme.palette.init1,
     },
-    cgroupInfo: {
-        marginLeft: '0.5em',
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.1ex',
-            color: theme.palette.cgroup,
-        },
-    },
-    cgroupIcon: {
-        '&.MuiSvgIcon-root + .MuiSvgIcon-root': {
-            marginLeft: '-0.2em',
-        }
-    },
-    cgroupPath: {
-        color: theme.palette.cgroup,
-        '&::before': { content: '"«"' },
-        '&::after': { content: '"»"' },
+    [`&.${piShort} *`]: {
+        color: theme.palette.text.disabled,
     }
+}))
+
+const ContainerInformation = styled(ContainerInfo)(({ theme }) => ({
+    marginRight: '0.5em',
+}))
+
+const CgroupInfo = styled('span')(({ theme }) => ({
+    marginLeft: '0.5em',
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.1ex',
+        color: theme.palette.cgroup,
+    },
+}))
+
+const CgroupIcon = styled(CgroupNamespace)(({ theme }) => ({
+    '&.MuiSvgIcon-root + .MuiSvgIcon-root': {
+        marginLeft: '-0.2em',
+    }
+}))
+
+const CgroupPath = styled('span')(({ theme }) => ({
+    color: theme.palette.cgroup,
+    '&::before': { content: '"«"' },
+    '&::after': { content: '"»"' },
+}))
+
+const ProcessName = styled('span')(({ theme }) => ({
+    fontStyle: 'italic',
+    color: theme.palette.process,
+    '&::before': {
+        content: '"«"',
+        fontStyle: 'normal',
+    },
+    '&::after': {
+        content: '"»"',
+        fontStyle: 'normal',
+        paddingLeft: '0.1em', // avoid italics overlapping with guillemet
+    },
 }))
 
 /**
@@ -117,29 +115,26 @@ export interface ProcessInfoProps {
  * contexts, such as a single process tree node.
  */
 export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
-
-    const classes = useStyles()
-
     const fridge = process.fridgefrozen ?
         <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
 
     return !!process && (
-        <span className={clsx(classes.processInfo, className, short && classes.shortInfo)}>
-            {process.container && <ContainerInfo container={process.container} className={classes.containerInfo} />}
+        <ProcessInformation className={clsx(className, short && piShort)}>
+            {process.container && <ContainerInformation container={process.container} />}
             <Tooltip title="process"><>
                 {process.pid === 1 ? <Init1Icon className="init1" fontSize="inherit" /> : <ProcessIcon fontSize="inherit" />}
-                <span className={classes.processName}>{process.name}</span>
-                &nbsp;<span className={classes.pid}>({process.pid})</span>
+                <ProcessName>{process.name}</ProcessName>
+                &nbsp;<span>({process.pid})</span>
             </></Tooltip>
             {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container && (
                 <Tooltip title="control-group path" className="cgroupinfo">
-                    <span className={clsx(classes.cgroupInfo, className)}>
-                        <CgroupNamespace className={classes.cgroupIcon} fontSize="inherit" />
+                    <CgroupInfo className={className}>
+                        <CgroupIcon fontSize="inherit" />
                         {fridge}
-                        <span className={classes.cgroupPath}>{process.cpucgroup}</span>
-                    </span>
+                        <CgroupPath>{process.cpucgroup}</CgroupPath>
+                    </CgroupInfo>
                 </Tooltip>)}
-        </span>
+        </ProcessInformation>
     )
 }
 
