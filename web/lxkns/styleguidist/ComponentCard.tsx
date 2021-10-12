@@ -14,57 +14,58 @@
 
 import React from 'react'
 import clsx from 'clsx'
+import { Card, styled } from '@mui/material'
 
-import { Card, makeStyles } from '@material-ui/core'
 
-const useStyles = makeStyles((theme) => ({
-    card: {
-        display: 'grid',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        backgroundColor: theme.palette.background.default,
+const cocoParagraph = "paragraph"
 
-        '&.paragraph': {
-            marginBottom: '2ex',
-        },
+const CompoCard = styled(Card)(({ theme }) => ({
+    display: 'grid',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    backgroundColor: theme.palette.background.default,
 
-        gridTemplateColumns: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
-        gridTemplateRows: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
-        gridTemplateAreas: '"topleft top topright" "middleleft content middleright" "bottomleft bottom bottomright"',
+    [`&.${cocoParagraph}`]: {
+        marginBottom: '2ex',
+    },
 
-        '& > .top': { 
-            gridArea: 'top',
-            borderBottom: '1px dashed #ccc',
-        },
+    gridTemplateColumns: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
+    gridTemplateRows: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
+    gridTemplateAreas: '"topleft top topright" "middleleft content middleright" "bottomleft bottom bottomright"',
 
-        '& > .bottom': { 
-            gridArea: 'bottom',
-            borderTop: '1px dashed #ccc',
-        },
+    '& > .top': { 
+        gridArea: 'top',
+        borderBottom: '1px dashed #ccc',
+    },
 
-        '& > .left': {
-            gridArea: 'middleleft',
-            borderRight: '1px dashed #ccc',
-        },
+    '& > .bottom': { 
+        gridArea: 'bottom',
+        borderTop: '1px dashed #ccc',
+    },
 
-        '& > .right': { 
-            gridArea: 'middleright',
-            borderLeft: '1px dashed #ccc',
-        },
+    '& > .left': {
+        gridArea: 'middleleft',
+        borderRight: '1px dashed #ccc',
+    },
 
-        '& > .content': {
-            gridArea: 'content',
-            background: theme.palette.background.paper,
-        },
+    '& > .right': { 
+        gridArea: 'middleright',
+        borderLeft: '1px dashed #ccc',
+    },
 
-        '& > .top.left': { gridArea: 'topleft' },
-        '& > .top.right': { gridArea: 'topright' },
-        '& > .bottom.left': { gridArea: 'bottomleft' },
-        '& > .bottom.right': { gridArea: 'bottomright' },
+    '& > .content': {
+        gridArea: 'content',
+        background: theme.palette.background.paper,
+    },
 
-        '& + &': { marginTop: theme.spacing(2) }
-    }
+    '& > .top.left': { gridArea: 'topleft' },
+    '& > .top.right': { gridArea: 'topright' },
+    '& > .bottom.left': { gridArea: 'bottomleft' },
+    '& > .bottom.right': { gridArea: 'bottomright' },
+
+    '& + &': { marginTop: theme.spacing(2) }
 }))
+
 
 export interface ComponentCardProps {
     /** optional maximal width of the children. */
@@ -93,15 +94,12 @@ export interface ComponentCardProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const ComponentCard = ({children, maxwidth, paragraph}: ComponentCardProps) => {
-    
-    const classes = useStyles()
-
     return (
-        <Card className={clsx(classes.card, paragraph)}>
+        <CompoCard className={clsx(paragraph && cocoParagraph)}>
             <div className="top left"/><div className="top"/><div className="top right"/>
             <div className="left"/><div className="content" style={{maxWidth: maxwidth}}>{children}</div><div className="right"/>
             <div className="bottom left"/><div className="bottom"/><div className="bottom right"/>
-        </Card>
+        </CompoCard>
     )
 }
 
