@@ -29,8 +29,8 @@ const CompoCard = styled(Card)(({ theme }) => ({
         marginBottom: '2ex',
     },
 
-    gridTemplateColumns: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
-    gridTemplateRows: `${theme.spacing(2)}px auto minmax(${theme.spacing(2)}px, 1fr)`,
+    gridTemplateColumns: `${theme.spacing(2)} auto minmax(${theme.spacing(2)}, 1fr)`,
+    gridTemplateRows: `${theme.spacing(2)} auto minmax(${theme.spacing(2)}, 1fr)`,
     gridTemplateAreas: '"topleft top topright" "middleleft content middleright" "bottomleft bottom bottomright"',
 
     '& > .top': { 

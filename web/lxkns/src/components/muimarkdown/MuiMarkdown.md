@@ -54,18 +54,12 @@ This component has basic support for light and dark theming.
 ```tsx
 import { ComponentCard } from "styleguidist/ComponentCard";
 import MinExampleMDX from "!babel-loader!mdx-loader!./example/minexample.mdx";
-import { createMuiTheme, ThemeProvider, makeStyles } from "@material-ui/core";
-import { styles } from "@material-ui/core/Typography/Typography";
+import { createTheme, ThemeProvider, makeStyles } from "@mui/material";
 
 const themes = [
-  createMuiTheme({ palette: { type: "light" } }),
-  createMuiTheme({ palette: { type: "dark" } }),
+  createTheme({ palette: { mode: "light" } }),
+  createTheme({ palette: { mode: "dark" } }),
 ];
-
-const T = () => {
-  const typo = makeStyles(styles, {name: 'MuiTypography'})()
-  return null
-};
 
 <>
   {themes.map((theme, idx) => (

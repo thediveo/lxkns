@@ -4,11 +4,11 @@
 
 ```tsx
 import { BrowserRouter as Router } from "react-router-dom";
-import { Badge, Box, IconButton, List, Typography } from "@material-ui/core";
+import { Badge, Box, IconButton, List, Typography } from "@mui/material";
 import { DrawerLinkItem } from "components/appbardrawer";
-import HomeIcon from "@material-ui/icons/Home";
-import AnnouncementIcon from "@material-ui/icons/Announcement";
-import CachedIcon from "@material-ui/icons/Cached";
+import HomeIcon from "@mui/icons-material/Home";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
+import CachedIcon from "@mui/icons-material/Cached";
 
 <Box
   id="appbardrawerexampleroot"

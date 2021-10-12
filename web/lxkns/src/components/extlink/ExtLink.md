@@ -1,5 +1,5 @@
 ```tsx
-import { Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
 
 <Typography variant="body1">
   Here is some text linking to the
