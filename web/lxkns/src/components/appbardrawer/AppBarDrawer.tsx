@@ -26,7 +26,7 @@ const defaultDrawerWidth = 240
 // We need some styling for the AppBar in order to correctly flex the title so
 // it takes up the available space and pushes the app bar tools to the right.
 // The drawer width can be parameterized; for this we need to define the
-// properties getting passed later to the useStyles() returned by makeStyles(). 
+// properties getting passed later to styled() 
 interface SwipeableDrawerStyleProps {
     theme?: Theme,
     /** width of app drawer in pixels */

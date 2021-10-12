@@ -149,7 +149,7 @@ export const Settings = () => {
                 </Grid>
             </SettingsGrid>
         </Box>
-    );
+    )
 }
 
 export default Settings

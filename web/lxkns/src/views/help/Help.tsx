@@ -19,8 +19,7 @@ import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
 import { Namespace } from 'models/lxkns'
-import { Box } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, styled } from '@mui/material'
 import { Card } from '@mui/material'
 import { Atom, Provider } from 'jotai'
 import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom } from 'views/settings'
@@ -77,26 +76,24 @@ const Example = ({ children, maxWidth, states }: ExampleProps) => (
     </Provider>
 )
 
-const useStyles = makeStyles((theme) => ({
-    iconbox: {
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        fontSize: '70%', // why, CSS, oh why???
-        border: `1px solid ${theme.palette.text.disabled}`,
-        padding: 1,
-        borderRadius: theme.spacing(0.5),
 
-        '& > .MuiSvgIcon-root': {
-            verticalAlign: 'middle',
-            fontSize: 'calc(100% + 2px)',
-        },
-    }
+const IconBox = styled('span')(({ theme }) => ({
+    display: 'inline-block',
+    verticalAlign: 'middle',
+    fontSize: '70%', // why, CSS, oh why???
+    border: `1px solid ${theme.palette.text.disabled}`,
+    padding: 1,
+    borderRadius: theme.spacing(0.5),
+
+    '& > .MuiSvgIcon-root': {
+        verticalAlign: 'middle',
+        fontSize: 'calc(100% + 2px)',
+    },
 }))
 
-const BoxedIcons = ({ children }: { children: React.ReactNode }) => {
-    const classes = useStyles()
 
-    return <span className={classes.iconbox}>{children}</span>
+const BoxedIcons = ({ children }: { children: React.ReactNode }) => {
+    return <IconBox>{children}</IconBox>
 }
 
 const NamespaceExample = ({ type, initial, shared }) =>
