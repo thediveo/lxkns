@@ -13,7 +13,6 @@
 // under the License.
 
 import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@mui/material/colors'
-import { Theme } from '@mui/material/styles'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 // We augment the existing Material-UI theme with new elements for uniform color

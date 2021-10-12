@@ -14,67 +14,31 @@
 
 import React from 'react'
 
-import clsx from 'clsx'
-import { Tooltip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled, Theme, Tooltip } from '@mui/material'
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow'
 import { NamespaceIcon } from 'icons/Namespace'
 import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'
 
 import { Namespace } from 'models/lxkns'
+import { keyframes } from '@mui/system'
 
 
-const useStyles = makeStyles((theme) => ({
-    namespaceReference: {
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        fontStyle: 'italic',
-        fontWeight: theme.typography.fontWeightLight,
-        color: theme.palette.nsref,
-        '& .MuiSvgIcon-root': {
-            marginRight: '0.15em',
-            verticalAlign: 'middle',
-        },
-    },
-    intermediate: {
-    },
-    fdref: {
-    },
-    bindmounted: {
-    },
-    bmsep: {
-        paddingLeft: '0.2em',
-    },
-    blinky: {
-        position: 'relative',
+const NamespaceReference = styled('span')(({ theme }) => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    fontStyle: 'italic',
+    fontWeight: theme.typography.fontWeightLight,
+    color: theme.palette.nsref,
+    '& .MuiSvgIcon-root': {
+        marginRight: '0.15em',
         verticalAlign: 'middle',
-        width: '1.1em',
-        height: '100%',
-        animationPlayState: 'paused',
-        '& .normal': {
-            position: 'absolute',
-            top: '.2ex',
-            left: 0,
-        },
-        '& .angry': {
-            position: 'absolute',
-            top: '.2ex',
-            left: 0,
-            opacity: 0,
-        },
-        '&:hover': {
-            animationPlayState: 'running',
-            animation: '$blinkymoves 2s ease infinite',
-        },
-        '&:hover .normal': {
-            opacity: 0,
-        },
-        '&:hover .angry': {
-            opacity: 1,
-        },
     },
-    '@keyframes blinkymoves': [
+}))
+
+// Define "Blinky"'s moves when the mouse pointer hovers over it...
+const blinkyMoves = (theme: Theme) =>
+    [
         { transform: 'translate(0, 0)' },
         { transform: 'translate(0, -.75ex) rotate3d(1, 0, 0, 30deg)' },
         { transform: 'translate(-.75ex, -.75ex) skew(10deg)' },
@@ -97,6 +61,38 @@ const useStyles = makeStyles((theme) => ({
             color: !((keyframeno / 3) & 1) ? '#2121de' : theme.palette.nsref,
         },
     }), {})
+
+const Blinky = styled(NamespaceReference)(({ theme }) => ({
+    position: 'relative',
+    verticalAlign: 'middle',
+    width: '1.1em',
+    height: '100%',
+    animationPlayState: 'paused',
+    '& .normal': {
+        position: 'absolute',
+        top: '.2ex',
+        left: 0,
+    },
+    '& .angry': {
+        position: 'absolute',
+        top: '.2ex',
+        left: 0,
+        opacity: 0,
+    },
+    '&:hover': {
+        animationPlayState: 'running',
+        animation: `${keyframes(blinkyMoves(theme))} 2s ease infinite`,
+    },
+    '&:hover .normal': {
+        opacity: 0,
+    },
+    '&:hover .angry': {
+        opacity: 1,
+    },
+}))
+
+const PathsSeparator = styled(DoubleArrowIcon)(({ theme }) => ({
+    paddingLeft: '0.2em',
 }))
 
 
@@ -133,8 +129,6 @@ export interface NamespaceRefProps {
  * namespaces thus don't have their own explicit reference, so no path.
  */
 export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
-    const classes = useStyles()
-
     const isProcfdPath = namespace.reference &&
         namespace.reference[0].startsWith('/proc/') &&
         namespace.reference[0].includes('/fd/')
@@ -142,32 +136,32 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
     const ref = (namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
         ? namespace.reference.slice(1) : (namespace.reference || []))
         .map((refpath, idx) => [
-            idx > 0 ? <DoubleArrowIcon fontSize="inherit" className={classes.bmsep} /> : undefined,
-            <span className="bindmount">{refpath}</span>,
+            idx > 0 ? <PathsSeparator key={`pathssep-${idx}`} fontSize="inherit" /> : undefined,
+            <span key={idx} className="bindmount">{refpath}</span>,
         ]).flat()
 
     return (
         (!namespace.reference &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
-                <span className={clsx(classes.namespaceReference, classes.intermediate, classes.blinky, className)}>
+                <Blinky className={className}>
                     &nbsp;
                     <GhostIcon className="normal" fontSize="inherit" />
                     <AngryghostIcon className="angry" fontSize="inherit" />
-                </span>
+                </Blinky>
             </Tooltip>
         ) || (isProcfdPath &&
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
-                <span className={clsx(classes.namespaceReference, classes.fdref, className)}>
+                <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
                     <span className="bindmount">"{namespace.reference[0]}"</span>
-                </span>
+                </NamespaceReference>
             </Tooltip>
         ) || (
             <Tooltip title={`bind-mounted ${namespace.type} namespace`}>
-                <span className={clsx(classes.namespaceReference, classes.bindmounted, className)}>
+                <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
                     {ref}
-                </span>
+                </NamespaceReference>
             </Tooltip>
         )
     )
