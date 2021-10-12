@@ -95,6 +95,10 @@ export const lxknsLightTheme = {
         },
     },
     palette: {
+        background: {
+            default: '#fafafa', // restore v4 palette
+            paper: '#fff',
+        },
         namespace: {
             cgroup: red[50],
             ipc: lime[50],
@@ -132,6 +136,10 @@ export const lxknsDarkTheme = mergeDeep(
             },
         },
         palette: {
+            background: {
+                default: '#303030', // restore v4 palette
+                paper: '#424242',
+            },
             primary: {
                 main: indigo[400],
                 light: indigo[300],
