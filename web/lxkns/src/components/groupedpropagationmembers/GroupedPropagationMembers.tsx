@@ -14,24 +14,23 @@
 
 import React from 'react'
 
-import { makeStyles } from '@material-ui/core'
 import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
 import { MountpointPath } from 'components/mountpointpath'
 import { NamespaceInfo } from 'components/namespaceinfo'
+import { styled } from '@mui/material'
 
 
-const useStyle = makeStyles((theme) => ({
-    mountpathgroup: {
-        '& + &': {
-            marginTop: theme.spacing(1),
-        }
+const MountPathGroup = styled('div')(({ theme }) => ({
+    '& + &': {
+        marginTop: theme.spacing(1),
     },
-    namespacedmountpaths: {
-        listStyleType: 'none',
-        margin: 0,
-        paddingLeft: theme.spacing(3),
-        '& > li': {
-        },
+}))
+
+const NamespacedMountPaths = styled('ul')(({ theme }) => ({
+    listStyleType: 'none',
+    margin: 0,
+    paddingLeft: theme.spacing(3),
+    '& > li': {
     },
 }))
 
@@ -48,9 +47,6 @@ export interface GroupedPropagationMembersProps {
  * identifiers, that is, by their inode numbers.
  */
 export const GroupedPropagationMembers = ({ members }: GroupedPropagationMembersProps) => {
-
-    const classes = useStyle()
-
     // We use an object as our map (or dictionary): indexed by mount namespace
     // identifier we then map to the list of mount points belonging to that
     // particular mount namespace. As for the code: reduce() to the rescue,
@@ -69,9 +65,9 @@ export const GroupedPropagationMembers = ({ members }: GroupedPropagationMembers
         .sort((group1, group2) => group1[0].mountnamespace.nsid - group2[0].mountnamespace.nsid)
         .map(group => {
             const mountns = group[0].mountnamespace
-            return <div key={mountns.nsid} className={classes.mountpathgroup}>
+            return <MountPathGroup key={mountns.nsid}>
                 <NamespaceInfo shortprocess={true} namespace={mountns} />
-                <ul className={classes.namespacedmountpaths}>
+                <NamespacedMountPaths>
                     {group
                         .sort(compareMountPeers)
                         .map(peermountpoint =>
@@ -79,8 +75,8 @@ export const GroupedPropagationMembers = ({ members }: GroupedPropagationMembers
                                 <MountpointPath showid="hidden" mountpoint={peermountpoint} />
                             </li>)
                     }
-                </ul>
-            </div>
+                </NamespacedMountPaths>
+            </MountPathGroup>
         })
     }</>
 }

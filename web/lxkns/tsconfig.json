@@ -28,7 +28,7 @@
     ],
   },
   "include": [
-    "src",
-    "styleguidist"
+    "src/",
+    "styleguidist/"
   ]
 }

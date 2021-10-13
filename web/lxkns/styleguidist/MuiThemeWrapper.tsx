@@ -22,16 +22,15 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
 
-import { createMuiTheme, ThemeProvider } from '@material-ui/core'
-import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline'
 
 import { lxknsLightTheme } from 'app/appstyles'
+import { createTheme, ScopedCssBaseline, ThemeProvider } from '@mui/material'
 
 
-const lightTheme = createMuiTheme(
+const lightTheme = createTheme(
     {
         palette: {
-            type: 'light',
+            mode: 'light',
         },
     },
     lxknsLightTheme,

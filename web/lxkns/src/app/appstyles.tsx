@@ -12,9 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@material-ui/core/colors'
+import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@mui/material/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
-
 
 // We augment the existing Material-UI theme with new elements for uniform color
 // styling of lxkns UI elements beyond the predefined Material UI elements. This
@@ -23,7 +22,8 @@ import { cloneDeep, merge as mergeDeep } from 'lodash'
 //
 // See also:
 // https://medium.com/javascript-in-plain-english/extend-material-ui-theme-in-typescript-a462e207131f
-declare module '@material-ui/core/styles/createPalette' {
+declare module '@mui/material/styles' {
+
     interface Palette {
         // namespace badge background colors
         namespace: {
@@ -45,7 +45,7 @@ declare module '@material-ui/core/styles/createPalette' {
         fstype: string, // filesystem type
         init1: string, // PID1 icon
     }
-    // allow configuration using `createMuiTheme`
+    // allow configuration using `createTheme`
     interface PaletteOptions {
         namespace?: {
             cgroup?: string,
@@ -70,9 +70,9 @@ declare module '@material-ui/core/styles/createPalette' {
 
 // The (basic) light theme parts specific to lxkns.
 export const lxknsLightTheme = {
-    overrides: {
+    components: {
         MuiCssBaseline: {
-            '@global': {
+            styleOverrides: {
                 // Please note: now automatic translation into class names is
                 // off, so don't forget the prefix dots on CSS class names.
                 '.namespacetree': {
@@ -95,6 +95,10 @@ export const lxknsLightTheme = {
         },
     },
     palette: {
+        background: {
+            default: '#fafafa', // restore v4 palette
+            paper: '#fff',
+        },
         namespace: {
             cgroup: red[50],
             ipc: lime[50],
@@ -120,9 +124,9 @@ export const lxknsLightTheme = {
 export const lxknsDarkTheme = mergeDeep(
     cloneDeep(lxknsLightTheme),
     {
-        overrides: {
+        components: {
             MuiCssBaseline: {
-                '@global': {
+                styleOverrides: {
                     '.namespacetree': {
                         '& .namespace .controlledprocess .MuiTreeItem-content::before': {
                             color: grey[600],
@@ -132,6 +136,10 @@ export const lxknsDarkTheme = mergeDeep(
             },
         },
         palette: {
+            background: {
+                default: '#303030', // restore v4 palette
+                paper: '#424242',
+            },
             primary: {
                 main: indigo[400],
                 light: indigo[300],

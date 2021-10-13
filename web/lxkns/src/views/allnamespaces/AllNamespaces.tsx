@@ -17,7 +17,7 @@ import React from 'react'
 import { Discovery } from 'models/lxkns'
 import { Action } from 'app/treeaction'
 import { UserNamespaceTree } from 'components/usernamespacetree'
-import { Box } from '@material-ui/core'
+import { Box } from '@mui/material'
 
 
 export interface AllNamespacesProps {

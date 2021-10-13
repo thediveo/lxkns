@@ -16,12 +16,12 @@ import React, { useEffect, useMemo, useState, useRef } from 'react'
 
 import { useAtom } from 'jotai'
 
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import ChevronRightIcon from '@material-ui/icons/ChevronRight'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
-import Typography from '@material-ui/core/Typography'
-import TreeView from '@material-ui/lab/TreeView'
-import TreeItem from '@material-ui/lab/TreeItem'
+import Typography from '@mui/material/Typography'
+import TreeView from '@mui/lab/TreeView'
+import TreeItem from '@mui/lab/TreeItem'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
@@ -141,7 +141,7 @@ const NamespaceTreeItem = (
         label={<NamespaceInfo namespace={namespace} />}
     >{[
         ...procs.concat(childnamespaces),
-        ...(DetailsFactory ? [<DetailsFactory namespace={namespace} />] : [])
+        ...(DetailsFactory ? [<DetailsFactory key="42" namespace={namespace} />] : [])
     ]}</TreeItem>
 }
 

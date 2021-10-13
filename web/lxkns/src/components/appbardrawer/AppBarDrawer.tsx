@@ -14,11 +14,10 @@
 
 import React, { useState } from 'react'
 
-import MenuIcon from '@material-ui/icons/Menu'
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
-import ChevronRightIcon from '@material-ui/icons/ChevronRight'
-import { AppBar, Divider, IconButton, makeStyles, SwipeableDrawer, Toolbar, useTheme } from '@material-ui/core'
-import clsx from 'clsx'
+import MenuIcon from '@mui/icons-material/Menu'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, Theme, Toolbar, useTheme } from '@mui/material'
 
 
 // Width of drawer.
@@ -27,32 +26,37 @@ const defaultDrawerWidth = 240
 // We need some styling for the AppBar in order to correctly flex the title so
 // it takes up the available space and pushes the app bar tools to the right.
 // The drawer width can be parameterized; for this we need to define the
-// properties getting passed later to the useStyles() returned by makeStyles(). 
-interface StyleProps {
+// properties getting passed later to styled() 
+interface SwipeableDrawerStyleProps {
+    theme?: Theme,
     /** width of app drawer in pixels */
-    drawerWidth: number,
+    drawerwidth?: number,
 }
 
-const useStyles = makeStyles((theme) => ({
-    menuButton: { marginRight: theme.spacing(2) },
-    drawer: {
-        width: (props: StyleProps) => (props.drawerWidth || defaultDrawerWidth),
-        flexShrink: 0,
+const ToolbarActionButton = styled(IconButton)(({ theme }) => ({
+    marginRight: theme.spacing(2),
+}))
 
-        '& .MuiListSubheader-root': {
-            background: theme.palette.background.paper,
-        },
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    ...theme.mixins.toolbar, // necessary for content to be below app bar
+    justifyContent: 'flex-end',
+}))
+
+const SwappyDrawer = styled(SwipeableDrawer)(({ theme, drawerwidth }: SwipeableDrawerStyleProps) => ({
+    width: drawerwidth || defaultDrawerWidth,
+    flexShrink: 0,
+
+    '& .MuiDrawer-paper': {
+        width: drawerwidth || defaultDrawerWidth,
     },
-    drawerHeader: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: theme.spacing(0, 1),
-        ...theme.mixins.toolbar, // necessary for content to be below app bar
-        justifyContent: 'flex-end',
+
+    '& .MuiListSubheader-root': {
+        background: theme.palette.background.paper,
     },
-    drawerPaper: { width: (props: StyleProps) => (props.drawerWidth || defaultDrawerWidth) },
-    spacer: { flexGrow: 1 },
 }))
 
 /**
@@ -82,13 +86,13 @@ export interface AppBarDrawerProps {
      */
     drawer?: (drawerCloser: drawerCloser) => React.ReactNode
     /**
-     * optionally sets the width of the drawer (in pixels). Defaults to 240
-     * pixels if unspecified.
+     * optionally sets the width in pixels of the drawer. Defaults to 240 pixels
+     * if unspecified.
      */
     drawerwidth?: number
     /** CSS style class name(s) for drawer. */
     drawerClassName?: string
-    /** touch area width for swiping the drawer open. */
+    /** touch area width in pixels for swiping the drawer open. */
     swipeAreaWidth?: number
 }
 
@@ -118,11 +122,11 @@ export interface AppBarDrawerProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 const AppBarDrawer = ({
-    title, 
-    tools, 
-    drawertitle, 
-    drawer, 
-    drawerwidth: drawerWidth, 
+    title,
+    tools,
+    drawertitle,
+    drawer,
+    drawerwidth,
     drawerClassName,
     swipeAreaWidth,
 }: AppBarDrawerProps) => {
@@ -137,47 +141,45 @@ const AppBarDrawer = ({
     const toggleDrawer = () => { setDrawerOpen(!drawerOpen) }
 
     const theme = useTheme()
-    const classes = useStyles({ drawerWidth: drawerWidth })
 
-    return (<>
+    return <>
         <AppBar position="static">
             <Toolbar>
-                <IconButton
+                <ToolbarActionButton
                     edge="start"
-                    className={classes.menuButton}
                     color="inherit"
                     aria-label="menu"
                     onClick={toggleDrawer}
-                >
+                    size="large">
                     <MenuIcon />
-                </IconButton>
+                </ToolbarActionButton>
 
                 {title && ((typeof title === 'function' && title()) || title)}
 
-                <span className={classes.spacer} />
+                <Box component="span" sx={{ flexGrow: 1 }}/>
 
                 {tools && ((typeof tools === 'function' && tools()) || tools)}
             </Toolbar>
         </AppBar>
-        <SwipeableDrawer
-            className={clsx(classes.drawer, drawerClassName)}
-            classes={{ paper: classes.drawerPaper }}
-            swipeAreaWidth={swipeAreaWidth}
+        <SwappyDrawer
+            className={drawerClassName}
+            swipeAreaWidth={swipeAreaWidth || 20}
+            drawerwidth={drawerwidth}
             open={drawerOpen}
             onOpen={openDrawer}
             onClose={closeDrawer}
         >
-            <div className={classes.drawerHeader}>
+            <DrawerHeader>
                 {drawertitle &&
-                    <span className={classes.spacer}>{(typeof drawertitle === 'function' && drawertitle()) || drawertitle}</span>}
-                <IconButton onClick={closeDrawer}>
+                    <Box component="span" sx={{ flexGrow: 1 }}>{(typeof drawertitle === 'function' && drawertitle()) || drawertitle}</Box>}
+                <IconButton onClick={closeDrawer} size="large">
                     {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                 </IconButton>
-            </div>
+            </DrawerHeader>
             <Divider />
             {drawer && drawer(closeDrawer)}
-        </SwipeableDrawer>
-    </>)
+        </SwappyDrawer>
+    </>;
 }
 
 export default AppBarDrawer

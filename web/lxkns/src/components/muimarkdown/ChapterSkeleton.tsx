@@ -14,23 +14,22 @@
 
 import React from 'react'
 
-import { makeStyles, Theme, Typography } from '@material-ui/core'
-import { Skeleton } from '@material-ui/lab'
+import { Skeleton, styled, Theme, Typography } from '@mui/material'
 
 
 interface chapterSkeletonStyleProps {
+    theme?: Theme
     rem: number
 }
 
-const useStyles = makeStyles<Theme, chapterSkeletonStyleProps>({
-    skeleton: {
-        width: props => `${props.rem}rem`,
-        '& > :nth-child(1)': { width: props => `${props.rem*0.55}rem` },
-        '& > :nth-child(2)': { width: props => `${props.rem*0.9}rem` },
-        '& > :nth-child(3)': { width: props => `${props.rem}rem` },
-        '& > :nth-child(4)': { width: props => `${props.rem*0.7}rem` },
-    }
-})
+const ChSkeleton = styled('div')(({ theme, rem }: chapterSkeletonStyleProps) => ({
+    width: `${rem}rem`,
+    '& > :nth-child(1)': { width: `${rem*0.55}rem` },
+    '& > :nth-child(2)': { width: `${rem*0.9}rem` },
+    '& > :nth-child(3)': { width: `${rem}rem` },
+    '& > :nth-child(4)': { width: `${rem*0.7}rem` },
+}))
+
 
 export interface ChapterSkeletonProps {
     /** width of skeleton in 'rem'. */
@@ -42,13 +41,10 @@ export interface ChapterSkeletonProps {
  * modules are getting lazily loaded.
  */
 export const ChapterSkeleton = ({ rem }: ChapterSkeletonProps) => {
-
-    const classes = useStyles({rem: rem || 15})
-
-    return (<div className={classes.skeleton}>
+    return <ChSkeleton rem={rem || 15}>
         <Typography variant="h4"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
-    </div>)
+    </ChSkeleton>
 }

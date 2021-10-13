@@ -14,65 +14,68 @@
 
 import React from 'react'
 
-import { Person } from '@material-ui/icons'
+import { Person } from '@mui/icons-material'
 
 import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
 import { Namespace, NamespaceType } from 'models/lxkns'
 
-import { makeStyles } from '@material-ui/core'
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
 import clsx from 'clsx'
 import ChildrenIcon from 'icons/Children'
+import { styled } from '@mui/material'
 
 
-// Component styling...
-const useStyles = makeStyles((theme) => ({
-    namespace: {
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        verticalAlign: 'middle',
-    },
-    shared: {
+const namespaceShared = "shared-namespace"
+
+const NamespaceInformation = styled('span')(({ theme }) => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    verticalAlign: 'middle',
+
+    [`&.${namespaceShared}`]: {
         color: `${theme.palette.text.disabled} !important`,
     },
-    containerInfo: {
-        marginLeft: '0.5em',
-    },
-    procInfo: {
-        marginLeft: '0.5em',
-    },
-    pathInfo: {
-        marginLeft: '0.5em',
-    },
-    userchildrenInfo: {
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        marginLeft: '0.5em',
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.1ex',
-        },
-    },
-    ownerInfo: {
-        fontWeight: theme.typography.fontWeightLight,
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.1ex',
-        },
-        '&.root .MuiSvgIcon-root': { color: theme.palette.ownerroot },
-    },
-    ownerName: {
-        color: theme.palette.ownername,
-        '&.root': { color: theme.palette.ownerroot },
-        '&::before': { content: '"«"' },
-        '&::after': { content: '"»"' },
+}))
+
+const PathInformation = styled(NamespaceRef)(({ theme }) => ({
+    marginLeft: '0.5em',
+}))
+
+const UserChildrenInfo = styled('span')(({ theme }) => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    marginLeft: '0.5em',
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.1ex',
     },
 }))
+
+const OwnerInformation = styled('span')(({ theme }) => ({
+    fontWeight: theme.typography.fontWeightLight,
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.1ex',
+    },
+    '&.root .MuiSvgIcon-root': { color: theme.palette.ownerroot },
+}))
+
+const OwnerName = styled('span')(({ theme }) => ({
+    color: theme.palette.ownername,
+    '&.root': { color: theme.palette.ownerroot },
+    '&::before': { content: '"«"' },
+    '&::after': { content: '"»"' },
+}))
+
+const ProcessInformation = styled(ProcessInfo)(({ theme }) => ({
+    marginLeft: '0.5em',
+}))
+
 
 // Reduce function returning the (recursive) sum of children and grand-children
 // plus this namespace itself.
@@ -104,18 +107,14 @@ export interface NamespaceInfoProps {
 export const NamespaceInfo = ({
     namespace, noprocess, shortprocess, shared, className
 }: NamespaceInfoProps) => {
-
-    const classes = useStyles()
-
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID. Unless the process information is to be suppressed.
     const procinfo = namespace.ealdorman
         && (!noprocess || shortprocess)
-        && <ProcessInfo
+        && <ProcessInformation
             process={namespace.ealdorman}
             short={shortprocess}
-            className={classes.procInfo}
         />
 
     // If there isn't any process attached to this namespace, prepare
@@ -124,38 +123,38 @@ export const NamespaceInfo = ({
     // hierarchy without any other references to them anymore beyond the
     // parent-child references.
     const pathinfo = !namespace.ealdorman &&
-        <NamespaceRef namespace={namespace} className={classes.pathInfo} />
+        <PathInformation namespace={namespace} />
 
     // For user namespaces also prepare ownership information: the user name as
     // well as the UID of the Linux user "owning" the user namespace.
     const ownedbyroot = namespace['user-name'] === 'root' && 'root'
     const ownerinfo = namespace.type === NamespaceType.user &&
         'user-id' in namespace &&
-        <span className={clsx(classes.ownerInfo, ownedbyroot)}>
+        <OwnerInformation className={clsx(ownedbyroot)}>
             owned by {
                 namespace['user-id'] ? <Person fontSize="inherit" /> : <Rude fontSize="inherit" />
             } UID {namespace['user-id']}
             {namespace['user-name'] && <>
                 {' '}
-                <span className={clsx(classes.ownerName, ownedbyroot)}>
+                <OwnerName className={clsx(ownedbyroot)}>
                     {namespace['user-name']}
-                </span>
+                </OwnerName>
             </>}
-        </span>
+        </OwnerInformation>
 
     // For PID and user namespaces determine the total number of children and
     // grandchildren.
     const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
         namespace.children.length > 0 &&
-        <span className={classes.userchildrenInfo}>
+        <UserChildrenInfo>
             [<ChildrenIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]
-        </span>
+        </UserChildrenInfo>
 
     return (
-        <span className={clsx(classes.namespace, namespace.type, shared && classes.shared, className)}>
+        <NamespaceInformation className={clsx(namespace.type, shared && namespaceShared, className)}>
             <NamespaceBadge namespace={namespace} shared={shared} />
             {childrenCount}
             {procinfo || pathinfo} {ownerinfo}
-        </span>
+        </NamespaceInformation>
     )
 }

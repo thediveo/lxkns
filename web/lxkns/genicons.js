@@ -74,7 +74,7 @@ glob.sync(path.join(sourcedir, '**/*.svg'))
                     false)
                 return typeScriptTpl.ast`${comment}
 import * as React from 'react'
-import { SvgIcon, SvgIconProps } from '@material-ui/core'
+import { SvgIcon, SvgIconProps } from '@mui/material'
 
 export const ${componentName} = (props: SvgIconProps) => ${wrappedJSX}
 

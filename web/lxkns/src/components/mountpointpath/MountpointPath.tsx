@@ -15,25 +15,27 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import { makeStyles } from '@material-ui/core'
+import { styled } from '@mui/material'
 
 import { MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
 import MountIcon from 'icons/namespaces/Mount'
 
 
-const useStyles = makeStyles((theme) => ({
-    mountpointpath: {
-        display: 'inline-block',
+const mpHidden = 'mountpointpath-hidden'
+
+const MpPath = styled('span')(({ theme }) => ({
+    display: 'inline-block',
+    position: 'relative',
+    
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'baseline',
         position: 'relative',
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'baseline',
-            position: 'relative',
-            top: '0.3ex',
-            marginRight: '0.3em',
-        }
+        top: '0.3ex',
+        marginRight: '0.3em',
     },
-    hidden: {
+
+    [`&.${mpHidden}`]: {
         color: theme.palette.text.disabled,
         '& > span': {
             textDecoration: 'line-through solid',
@@ -75,24 +77,20 @@ export const MountpointPath = ({
     showid,
     className
 }: MountpointPathProps) => {
-
-    const classes = useStyles()
-
     drum = drum || 'hidden'
 
     const drumicon =
         (mountpoint.hidden && drum !== 'never' && <HiddenmountIcon fontSize="inherit" />)
         || (!mountpoint.hidden && drum !== 'never' && drum !== 'hidden' && <MountIcon fontSize="inherit" />)
 
-    return <span className={clsx(
+    return <MpPath className={clsx(
         className,
-        classes.mountpointpath,
-        mountpoint.hidden && !plainpath && classes.hidden)}
+        mountpoint.hidden && !plainpath && mpHidden)}
     >
         {drumicon}
         <span>{unescapeMountPath(tail || mountpoint.mountpoint)}</span>
         {(showid === 'always' || (showid === 'hidden' && mountpoint.hidden)) && ` (${mountpoint.mountid})`}
-    </span>
+    </MpPath>
 }
 
 export default MountpointPath

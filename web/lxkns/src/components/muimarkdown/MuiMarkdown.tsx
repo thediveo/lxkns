@@ -13,17 +13,20 @@
 // under the License.
 
 import React, { memo } from 'react'
-import clsx from 'clsx'
 
 import { MDXProvider } from '@mdx-js/react'
 
 import {
     Divider,
-    Table, TableBody, TableCell, TableHead, TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
     Typography,
-    makeStyles,
-    lighten
-} from '@material-ui/core'
+    lighten,
+    styled,
+} from '@mui/material'
 
 import { ChapterSkeleton } from './ChapterSkeleton'
 
@@ -133,60 +136,58 @@ const MuiComponents = {
 // Styles Material-UIs typography elements inside am MDX context to our hearts'
 // desires. Additionally styles some Mui components, such as Mui SVG icons to
 // fit into the overall styling.
-const useStyles = makeStyles((theme) => ({
-    markdown: {
-        // Make sure to properly reset the text color according to the primary
-        // text color.
-        color: theme.palette.text.primary,
-        // ...and now for the details...
-        '& .MuiTypography-h1, & .MuiTypography-h2, & .MuiTypography-h3, & .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6, & .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
-            color: theme.palette.type === 'light'
-                ? theme.palette.primary.main
-                : theme.palette.primary.light,
-        },
-        '& .MuiTypography-h4:first-of-type': {
-            marginTop: theme.spacing(1),
-        },
-        '& .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6': {
-            marginTop: theme.spacing(3),
-            marginBottom: theme.spacing(2),
-        },
-        '& .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
-            marginTop: theme.spacing(2),
-            marginBottom: theme.spacing(1),
-        },
-        '& .MuiTypography-body1 + .MuiTypography-body1': {
-            marginTop: theme.spacing(1),
-        },
-        '& .MuiTypography-body2': {
-            margin: theme.spacing(2),
-            borderLeft: `${theme.spacing(1)}px solid ${theme.palette.primary.main}`,
-            paddingLeft: theme.spacing(1),
-        },
-        '& .MuiSvgIcon-root.icon': {
-            verticalAlign: 'middle',
-            fontSize: 'calc(100% + 2px)',
-            border: `1px solid ${theme.palette.text.disabled}`,
-            padding: 1,
-            borderRadius: theme.spacing(1) / 2,
-        },
-        '& a:link': {
-            color: theme.palette.type === 'light'
-                ? theme.palette.primary.main
-                : theme.palette.primary.light
-        },
-        '& a:visited': {
-            color: theme.palette.type === 'light'
-                ? theme.palette.primary.dark
-                : lighten(theme.palette.primary.light, 0.3)
-        },
-        '& a:hover, & a:active': {
-            color: theme.palette.secondary.main
-        },
-        '& code': {
-            fontFamily: 'Roboto Mono',
-        }
-    }
+const MarkdownArea = styled('div')(({ theme }) => ({
+    // Make sure to properly reset the text color according to the primary
+    // text color.
+    color: theme.palette.text.primary,
+    // ...and now for the details...
+    '& .MuiTypography-h1, & .MuiTypography-h2, & .MuiTypography-h3, & .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6, & .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
+        color: theme.palette.mode === 'light'
+            ? theme.palette.primary.main
+            : theme.palette.primary.light,
+    },
+    '& .MuiTypography-h4:first-of-type': {
+        marginTop: theme.spacing(1),
+    },
+    '& .MuiTypography-h4, & .MuiTypography-h5, & .MuiTypography-h6': {
+        marginTop: theme.spacing(3),
+        marginBottom: theme.spacing(2),
+    },
+    '& .MuiTypography-subtitle1, & .MuiTypography-subtitle2': {
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(1),
+    },
+    '& .MuiTypography-body1 + .MuiTypography-body1': {
+        marginTop: theme.spacing(1),
+    },
+    '& .MuiTypography-body2': {
+        margin: theme.spacing(2),
+        borderLeft: `${theme.spacing(1)} solid ${theme.palette.primary.main}`,
+        paddingLeft: theme.spacing(1),
+    },
+    '& .MuiSvgIcon-root.icon': {
+        verticalAlign: 'middle',
+        fontSize: 'calc(100% + 2px)',
+        border: `1px solid ${theme.palette.text.disabled}`,
+        padding: 1,
+        borderRadius: theme.spacing(0.5),
+    },
+    '& a:link': {
+        color: theme.palette.mode === 'light'
+            ? theme.palette.primary.main
+            : theme.palette.primary.light
+    },
+    '& a:visited': {
+        color: theme.palette.mode === 'light'
+            ? theme.palette.primary.dark
+            : lighten(theme.palette.primary.light, 0.3)
+    },
+    '& a:hover, & a:active': {
+        color: theme.palette.secondary.main
+    },
+    '& code': {
+        fontFamily: 'Roboto Mono',
+    },
 }))
 
 
@@ -222,19 +223,14 @@ export interface MuiMarkdownProps {
  * Please see the [`HelpViewer`](#helpviewer) component for a no-frills help
  * document viewer with multiple chapter support and chapter navigation.
  */
-export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => {
-
-    const classes = useStyles()
-
-    return (
-        <React.Suspense fallback={fallback || <ChapterSkeleton />}>
-            <MDXProvider components={{ ...MuiComponents, ...shortcodes }}>
-                <div className={clsx(className, classes.markdown)}>
-                    <Mdx />
-                </div>
-            </MDXProvider>
-        </React.Suspense>
-    )
-}
+export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => (
+    <React.Suspense fallback={fallback || <ChapterSkeleton />}>
+        <MDXProvider components={{ ...MuiComponents, ...shortcodes }}>
+            <MarkdownArea className={className}>
+                <Mdx />
+            </MarkdownArea>
+        </MDXProvider>
+    </React.Suspense>
+)
 
 export default MuiMarkdown

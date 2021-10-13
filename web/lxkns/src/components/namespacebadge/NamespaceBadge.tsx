@@ -15,11 +15,11 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import Tooltip from '@material-ui/core/Tooltip'
+import Tooltip from '@mui/material/Tooltip'
 
 import { Namespace } from 'models/lxkns'
 
-import { darken, fade, lighten, makeStyles, Theme } from '@material-ui/core'
+import { darken, alpha, lighten, Theme, styled } from '@mui/material'
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
 
 
@@ -37,99 +37,75 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // achieve a dashed border; for this reason we return an object with background
 // and backgroundColor instead of just a background CSS property value string.
 const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
-    const color = shared ? fade(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
+    const color = shared ? alpha(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
     const change = shared ? 0.6 : 0.4
     return {
         background: dashedBorder(
-            theme.palette.type === 'light' ? darken(color, change) : lighten(color, change),
+            theme.palette.mode === 'light' ? darken(color, change) : lighten(color, change),
             color),
         backgroundColor: color,
     }
 }
 
-const useStyles = makeStyles((theme) => ({
-    namespaceBadge: {
-        minWidth: '11.5em',
-        verticalAlign: 'middle',
+const namespaceShared = "shared-namespace"
+const namespaceInitial = "initial-namespace"
 
-        display: 'inline-flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-
-        marginTop: '0.2ex',
-        marginBottom: '0.2ex',
-        paddingLeft: '0.2em',
-        paddingRight: '0.2em',
-        paddingTop: '0.2ex',
-        borderRadius: '0.2em',
-
-        // type icon placement...
-        '& .MuiSvgIcon-root': {
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.05ex',
-        },
+const styles = (nstype: string, theme: Theme, mixin?) => ({
+    [`&.${nstype}`]: {
+        backgroundColor: theme.palette.namespace[nstype],
+        ...mixin,
+    },
+    [`&.${nstype}.${namespaceInitial}`]: {
+        ...themedDashedBorder(nstype, theme),
 
     },
-    shared: {
+    [`&.${nstype}.${namespaceShared}`]: {
+        ...themedDashedBorder(nstype, theme, 'shared'),
+    },
+})
+
+const Badge = styled('span')(({ theme }) => ({
+    minWidth: '11.5em',
+    verticalAlign: 'middle',
+
+    display: 'inline-flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
+    marginTop: '0.2ex',
+    marginBottom: '0.2ex',
+    paddingLeft: '0.2em',
+    paddingRight: '0.2em',
+    paddingTop: '0.2ex',
+    borderRadius: '0.2em',
+
+    // type icon placement...
+    '& .MuiSvgIcon-root': {
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.05ex',
+    },
+
+    [`&.${namespaceShared}`]: {
         color: theme.palette.text.disabled,
         fontWeight: theme.typography.fontWeightLight,
     },
-    // ...and now for the namespace-type specific styling.
-    cgroup: {
-        backgroundColor: theme.palette.namespace.cgroup,
-    },
-    ipc: {
-        backgroundColor: theme.palette.namespace.ipc,
-    },
-    mnt: {
-        backgroundColor: theme.palette.namespace.mnt,
-    },
-    net: {
-        backgroundColor: theme.palette.namespace.net,
-    },
-    pid: {
-        backgroundColor: theme.palette.namespace.pid,
-    },
-    user: {
+
+    // ...and now for the namespace-type specific styling. Initial namespaces
+    // get a dashed border, with the dash color derived from the badge
+    // background color.
+    ...styles('cgroup', theme),
+    ...styles('ipc', theme),
+    ...styles('mnt', theme),
+    ...styles('net', theme),
+    ...styles('pid', theme),
+    ...styles('user', theme, {
         width: '9.5em',
         textAlign: 'center',
-        backgroundColor: theme.palette.namespace.user,
         fontWeight: 'bold',
-    },
-    uts: {
-        backgroundColor: theme.palette.namespace.uts,
-    },
-    time: {
-        backgroundColor: theme.palette.namespace.time,
-    },
-    // initial namespaces get a dashed border, with the dash color derived from
-    // the badge background color.
-    initialNamespace: {
-        '&$cgroup': themedDashedBorder('cgroup', theme),
-        '&$cgroup$shared': themedDashedBorder('cgroup', theme, 'shared'),
-
-        '&$ipc': themedDashedBorder('ipc', theme),
-        '&$ipc$shared': themedDashedBorder('ipc', theme, 'shared'),
-
-        '&$mnt': themedDashedBorder('mnt', theme),
-        '&$mnt$shared': themedDashedBorder('mnt', theme, 'shared'),
-
-        '&$net': themedDashedBorder('net', theme),
-        '&$net$shared': themedDashedBorder('net', theme, 'shared'),
-
-        '&$pid': themedDashedBorder('pid', theme),
-        '&$pid$shared': themedDashedBorder('pid', theme, 'shared'),
-
-        '&$user': themedDashedBorder('user', theme),
-        '&$user$shared': themedDashedBorder('user', theme, 'shared'),
-
-        '&$uts': themedDashedBorder('uts', theme),
-        '&$uts$shared': themedDashedBorder('uts', theme, 'shared'),
-
-        '&$time': themedDashedBorder('time', theme),
-        '&$time$shared': themedDashedBorder('time', theme, 'shared'),
-    },
+    }),
+    ...styles('uts', theme),
+    ...styles('time', theme),
 }))
 
 
@@ -154,9 +130,6 @@ export interface NamespaceBadgeProps {
  * border.
  */
 export const NamespaceBadge = ({ namespace, tooltipprefix, shared, className }: NamespaceBadgeProps) => {
-
-    const classes = useStyles()
-
     // Ouch ... Tooltip won't display its tooltip on a <> child, but
     // instead we have to use a <span> to make it work as expected...
 
@@ -165,17 +138,16 @@ export const NamespaceBadge = ({ namespace, tooltipprefix, shared, className }: 
     // https://github.com/facebook/create-react-app/issues/8687 ... which still
     // is open.
     return (
-        <Tooltip title={`${tooltipprefix ? tooltipprefix + ' ': ''}${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial': ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
-            <span className={clsx(
-                classes.namespaceBadge,
-                classes[namespace.type],
-                shared && classes.shared,
+        <Tooltip title={`${tooltipprefix ? tooltipprefix + ' ' : ''}${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial' : ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
+            <Badge className={clsx(
+                namespace.type,
+                shared && namespaceShared,
                 className,
-                namespace.initial && classes.initialNamespace
+                namespace.initial && namespaceInitial
             )}>
                 <NamespaceIcon type={namespace.type} fontSize="inherit" />
                 {namespace.type}:[{namespace.nsid}]
-            </span>
+            </Badge>
         </Tooltip>
     )
 }

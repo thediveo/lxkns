@@ -2,7 +2,7 @@ Click on the button to show a modal information dialog with mount point details.
 
 ```tsx
 import { ComponentCard } from "styleguidist/ComponentCard";
-import { Button } from "@material-ui/core";
+import { Button } from "@mui/material";
 import {
   MountpointInfoModalProvider,
   useMountpointInfoModal,
