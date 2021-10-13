@@ -107,6 +107,9 @@ export interface NamespaceInfoProps {
 export const NamespaceInfo = ({
     namespace, noprocess, shortprocess, shared, className
 }: NamespaceInfoProps) => {
+    if (!namespace) {
+        return <></>
+    }
     // If there is a leader process joined to this namespace, then prepare some
     // process information to be rendered alongside with the namespace type and
     // ID. Unless the process information is to be suppressed.
