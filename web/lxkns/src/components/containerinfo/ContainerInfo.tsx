@@ -12,10 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import clsx from 'clsx'
-
-import { makeStyles } from '@material-ui/core'
-import { Pause } from '@material-ui/icons'
+import { styled } from '@mui/material'
+import { Pause } from '@mui/icons-material'
 
 import { Container, containerGroup } from 'models/lxkns'
 import { ContainerTypeIcon } from 'utils/containericon'
@@ -25,49 +23,50 @@ import PodIcon from 'icons/containers/Pod'
 import IEAppIcon from 'icons/containers/IEApp'
 
 
-const useStyles = makeStyles((theme) => ({
-    // The whole component as such...
-    containerInfo: {
-        fontWeight: theme.typography.fontWeightLight,
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        '& .MuiSvgIcon-root': {
-            marginRight: '0.15em',
-            verticalAlign: 'text-top',
-            position: 'relative',
-            top: '0.2ex',
-            color: [theme.palette.container, '!important'],
-        },
-    },
-    containerName: {
-        fontStyle: 'italic',
+const ContainerInformation = styled('span')(({ theme }) => ({
+    fontWeight: theme.typography.fontWeightLight,
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    '& .MuiSvgIcon-root': {
+        marginRight: '0.15em',
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.2ex',
         color: theme.palette.container,
-        '&::before': {
-            content: '"«"',
-            fontStyle: 'normal',
-        },
-        '&::after': {
-            content: '"»"',
-            fontStyle: 'normal',
-            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
-        },
-    },
-    groupInfo: {
-        marginLeft: '0.5em',
-    },
-    groupName: {
-        color: theme.palette.container,
-        '&::before': {
-            content: '"«"',
-            fontStyle: 'normal',
-        },
-        '&::after': {
-            content: '"»"',
-            fontStyle: 'normal',
-            paddingLeft: '0.1em', // avoid italics overlapping with guillemet
-        },
     },
 }))
+
+const ContainerName = styled('span')(({ theme }) => ({
+    fontStyle: 'italic',
+    color: theme.palette.container,
+    '&::before': {
+        content: '"«"',
+        fontStyle: 'normal',
+    },
+    '&::after': {
+        content: '"»"',
+        fontStyle: 'normal',
+        paddingLeft: '0.1em', // avoid italics overlapping with guillemet
+    },
+}))
+
+const GroupInfo = styled('span')(({ theme }) => ({
+    paddingLeft: '0.4em',
+}))
+
+const GroupName = styled('span')(({ theme }) => ({
+    color: theme.palette.container,
+    '&::before': {
+        content: '"«"',
+        fontStyle: 'normal',
+    },
+    '&::after': {
+        content: '"»"',
+        fontStyle: 'normal',
+        paddingLeft: '0.1em', // avoid italics overlapping with guillemet
+    },
+}))
+
 
 /**
  * The `ContainerInfo` component expects only a single property: the container to
@@ -85,8 +84,6 @@ export interface ContainerInfoProps {
  * container as well as an optional group.
  */
 export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
-
-    const classes = useStyles()
 
     const ContainerIcon = ContainerTypeIcon(container)
 
@@ -108,16 +105,14 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
     const paused = container.paused && <Pause fontSize="inherit" />
 
     return !!container && (
-        <span className={clsx(classes.containerInfo, className)}>
+        <ContainerInformation className={className}>
             <ContainerIcon fontSize="inherit" />
             {paused}
-            <span className={classes.containerName}>
-                {container.name}
-            </span>
-            {groupicon && <span className={classes.groupInfo}>
-                in {groupicon}<span className={classes.groupName}>{groupname}</span>
-            </span>}
-        </span>
+            <ContainerName>{container.name}</ContainerName>
+            {groupicon && 
+                <GroupInfo>in {groupicon}<GroupName>{groupname}</GroupName></GroupInfo>
+            }
+        </ContainerInformation>
     )
 }
 

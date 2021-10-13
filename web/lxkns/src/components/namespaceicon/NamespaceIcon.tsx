@@ -14,7 +14,7 @@
 
 import React from 'react'
 
-import { SvgIconProps } from '@material-ui/core'
+import { SvgIconProps } from '@mui/material'
 
 import { NamespaceType, } from "models/lxkns"
 import { namespaceTypeInfo } from './iconmap'

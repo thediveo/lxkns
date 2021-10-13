@@ -16,17 +16,17 @@ import React, { useState } from 'react'
 
 import { useAtom } from 'jotai'
 
-import { Button, CircularProgress, Fade, IconButton, makeStyles, Menu, MenuItem, Tooltip } from '@material-ui/core'
-import RefreshIcon from '@material-ui/icons/Refresh'
-import SyncIcon from '@material-ui/icons/Sync'
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled'
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import { Button, CircularProgress, Fade, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh'
+import SyncIcon from '@mui/icons-material/Sync'
+import SyncDisabledIcon from '@mui/icons-material/SyncDisabled'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from 'components/discovery'
 import useId from 'hooks/id'
 
 
-const defaultThrobberThreshold = 500 /* ms */
+const defaultThrobberThreshold = 500/* ms */
 
 export interface RefresherInterval {
     /** 
@@ -74,27 +74,28 @@ const intervalToLabel = (interval: number) => {
     return t.join(' ')
 }
 
-// Progress indicator appearing around the refresh button.
-const useStyles = makeStyles((theme) => ({
-    refresher: {
-        display: 'inline-flex', // keep buttons in line; this is soo ugly
-    },
-    wrapper: {
-        margin: theme.spacing(1),
-        position: 'relative',
-    },
-    discoveryprogress: {
-        color: theme.palette.secondary.main,
-        position: 'absolute',
-        top: 8,
-        left: 8,
-        zIndex: 1,
-    },
-    interval: {
-        margin: '8px 0',
-        borderRadius: '42em',
-    }
+const Refreshee = styled('div')(({ theme }) => ({
+    display: 'inline-flex', // keep buttons in line; this is soo ugly
 }))
+
+const Wrapper = styled('div')(({ theme }) => ({
+    margin: theme.spacing(1),
+    position: 'relative',
+}))
+
+const Progress = styled(CircularProgress)(({ theme }) => ({
+    color: theme.palette.secondary.main,
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 1,
+}))
+
+const IntervalButton = styled(Button)(({ theme }) => ({
+    margin: '8px 0',
+    borderRadius: '42em',
+}))
+
 
 export interface RefresherProps {
     /** 
@@ -125,7 +126,6 @@ export interface RefresherProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
-    const classes = useStyles()
     const menuId = useId('refreshermenu')
 
     // Refresh interval and status (is a refresh ongoing?).
@@ -163,26 +163,23 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         : "auto-refresh off"
 
     return (
-        <div className={classes.refresher}>
+        <Refreshee>
             <Tooltip title="refresh">
-                <div className={classes.wrapper}>
-                    <IconButton color="inherit"
-                        onClick={() => setRefreshing(true)}
-                    ><RefreshIcon /></IconButton>
+                <Wrapper>
+                    <IconButton color="inherit" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
                     {refreshing &&
                         <Fade
                             in={true}
                             style={{ transitionDelay: `${throbberThreshold || defaultThrobberThreshold}ms` }}
                             unmountOnExit
                         >
-                            <CircularProgress size={32} className={classes.discoveryprogress} />
+                            <Progress size={32} />
                         </Fade>
                     }
-                </div>
+                </Wrapper>
             </Tooltip>
             <Tooltip title={intervalTitle}>
-                <Button
-                    className={classes.interval}
+                <IntervalButton
                     aria-haspopup="true"
                     aria-controls={menuId}
                     onClick={handleIntervalButtonClick}
@@ -191,7 +188,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                 >
                     {refreshInterval !== null ? <SyncIcon /> : <SyncDisabledIcon />}
                     <ExpandMoreIcon />
-                </Button>
+                </IntervalButton>
             </Tooltip>
             <Menu
                 id={menuId}
@@ -211,8 +208,8 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                     </MenuItem>
                 ))}
             </Menu>
-        </div>
-    )
+        </Refreshee>
+    );
 }
 
 export default Refresher

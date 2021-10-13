@@ -12,42 +12,43 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Dialog, DialogContent, DialogTitle, IconButton, makeStyles } from '@material-ui/core'
+import { Dialog, DialogContent, DialogTitle, IconButton, styled } from '@mui/material'
 import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
 import { MountPoint } from 'models/lxkns/mount'
 import React, { useContext, useState } from 'react'
-import CloseIcon from '@material-ui/icons/Close'
+import CloseIcon from '@mui/icons-material/Close'
 import { ReadonlyIcon } from 'icons/Readonly'
 import { NamespaceMap } from 'models/lxkns/model'
 
 
-const useStyles = makeStyles((theme) => ({
-    dialog: {
-        marginLeft: 0,
-        marginRight: 0,
+const MountpointDialog = styled(Dialog)(({ theme }) => ({
+    marginLeft: 0,
+    marginRight: 0,
+}))
+
+const MountpointDialogTitle = styled(DialogTitle)(({ theme }) => ({
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    '& .MuiSvgIcon-root': {
+        position: 'relative',
+        verticalAlign: 'baseline',
+        top: '0.3ex',
     },
-    close: {
-        position: 'absolute',
-        right: theme.spacing(1),
-        top: theme.spacing(1),
-        color: theme.palette.grey[500],
-    },
-    title: {
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(2),
-        '& .MuiSvgIcon-root': {
-            position: 'relative',
-            verticalAlign: 'baseline',
-            top: '0.3ex',
-        },
-    },
-    content: {
-        margin: 0,
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(2),
-        fontFamily: theme.typography.fontFamily,
-        fontSize: theme.typography.body1.fontSize,
-    },
+}))
+
+const CloseButton = styled(IconButton)(({ theme }) => ({
+    position: 'absolute',
+    right: theme.spacing(1),
+    top: theme.spacing(1),
+    color: theme.palette.grey[500],
+}))
+
+const Contents = styled(DialogContent)(({ theme }) => ({
+    margin: 0,
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    fontFamily: theme.typography.fontFamily,
+    fontSize: theme.typography.body1.fontSize,
 }))
 
 
@@ -75,9 +76,6 @@ export const MountpointInfoModalProvider = ({
     children,
     namespaces
 }: MountpointInfoModalProviderProps) => {
-
-    const classes = useStyles()
-
     const [mountpoint, setMountpoint] = useState(null as MountPoint)
 
     const handleClose = () => {
@@ -88,33 +86,31 @@ export const MountpointInfoModalProvider = ({
         <MountpointInfoModalContext.Provider value={setMountpoint}>
             {children}
             {mountpoint &&
-                <Dialog
-                    className={classes.dialog}
+                <MountpointDialog
                     fullWidth
                     maxWidth={false}
                     scroll="paper"
                     open={!!mountpoint}
                     onClose={handleClose}
                 >
-                    <DialogTitle className={classes.title}>
+                    <MountpointDialogTitle>
                         {mountpoint.mountoptions.includes('ro') && <><ReadonlyIcon fontSize="inherit" />&nbsp;</>}
                         {mountpoint.hidden && 'Hidden '}
                         Mount Point
-                        <IconButton
+                        <CloseButton
                             aria-label="close"
-                            className={classes.close}
                             onClick={handleClose}
-                        >
+                            size="large">
                             <CloseIcon />
-                        </IconButton>
-                    </DialogTitle>
-                    <DialogContent dividers className={classes.content}>
+                        </CloseButton>
+                    </MountpointDialogTitle>
+                    <Contents dividers>
                         <MountpointInfo mountpoint={mountpoint} namespaces={namespaces} />
-                    </DialogContent>
-                </Dialog>
+                    </Contents>
+                </MountpointDialog>
             }
         </MountpointInfoModalContext.Provider>
-    )
+    );
 }
 
 export default MountpointInfoModalProvider

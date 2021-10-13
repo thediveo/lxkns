@@ -15,15 +15,15 @@
 import React from 'react'
 import { useAtom } from 'jotai'
 
-import TreeItem from '@material-ui/lab/TreeItem'
+import TreeItem from '@mui/lab/TreeItem'
 import { OwnerIcon } from 'icons/Owner'
 
 import { ProcessInfo } from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
 import { showSharedNamespacesAtom } from 'views/settings'
-import { makeStyles } from '@material-ui/core'
 import { NamespaceBadge } from 'components/namespacebadge'
+import { styled } from '@mui/material'
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.
@@ -44,18 +44,17 @@ export const uniqueProcsOfTenants = (usernamespace: Namespace, showSharedNamespa
     return Object.values(uniqueprocs)
 }
 
-const useStyle = makeStyles((theme) => ({
-    owninguserns: {
-        paddingLeft: '0.5em',
-        color: theme.palette.text.disabled,
+const OwningUserNamespace = styled('span')(({ theme }) => ({
+    paddingLeft: '0.5em',
+    color: theme.palette.text.disabled,
 
-        '& .MuiSvgIcon-root': {
-            fontSize: 'inherit',
-            verticalAlign: 'middle',
-            marginRight: '0.1em',
-        },
-    }
+    '& .MuiSvgIcon-root': {
+        fontSize: 'inherit',
+        verticalAlign: 'middle',
+        marginRight: '0.1em',
+    },
 }))
+
 
 export interface UserNamespaceTreeItemProps {
     /** user namespace object */
@@ -65,9 +64,6 @@ export interface UserNamespaceTreeItemProps {
 // Component UserNamespaceTreeItem renders a user namespace tree item, as well
 // as the owned non-user namespaces and child user namespaces.
 export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespaceTreeItemProps) => {
-
-    const classes = useStyle()
-
     const [showSharedNamespaces] = useAtom(showSharedNamespacesAtom)
 
     // Generally speaking, we now separate the "tenants" into bind-mounted
@@ -122,13 +118,13 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
                             {procns.ealdorman === proc
                                 && procns.owner && procns.type !== NamespaceType.user
                                 && procns.owner !== usernamespace
-                                && <span className={classes.owninguserns}>
+                                && <OwningUserNamespace>
                                     <OwnerIcon fontSize="inherit" />&nbsp;
                                     <NamespaceBadge
                                         namespace={procns.owner}
                                         tooltipprefix="different owning"
                                     />
-                                </span>}
+                                </OwningUserNamespace>}
                         </>}
                     />)
                 }

@@ -14,31 +14,30 @@
 
 import React from 'react'
 
-import { makeStyles } from '@material-ui/core'
-import LaunchIcon from '@material-ui/icons/Launch'
+import { styled } from '@mui/material'
+
+import LaunchIcon from '@mui/icons-material/Launch'
 
 
-const useStyles = makeStyles((theme) => ({
-    extlink: {
-        // In order to avoid line wraps immediately after the external link
-        // icon, wrap (sic!) into a non-wrapping span...
-        whiteSpace: 'nowrap',
-        // ...and then allow the link text to wrap again.
-        '& a': {
-            whiteSpace: 'normal',
-        },
-        // Resize and reposition the external link icon so it fits into the
-        // overall text flow and size.
-        '& .MuiSvgIcon-root': {
-            fontSize: 'inherit',
-            verticalAlign: 'middle',
-        },
-        '& .MuiSvgIcon-root.before': {
-            marginRight: '0.1em',
-        },
-        '& .MuiSvgIcon-root.after': {
-            marginLeft: '0.1em',
-        },
+const NixWieWegHier = styled('span')(({ theme }) => ({
+    // In order to avoid line wraps immediately after the external link
+    // icon, wrap (sic!) into a non-wrapping span...
+    whiteSpace: 'nowrap',
+    // ...and then allow the link text to wrap again.
+    '& a': {
+        whiteSpace: 'normal',
+    },
+    // Resize and reposition the external link icon so it fits into the
+    // overall text flow and size.
+    '& .MuiSvgIcon-root': {
+        fontSize: 'inherit',
+        verticalAlign: 'middle',
+    },
+    '& .MuiSvgIcon-root.before': {
+        marginRight: '0.1em',
+    },
+    '& .MuiSvgIcon-root.after': {
+        marginLeft: '0.1em',
     },
 }))
 
@@ -61,19 +60,14 @@ export interface ExtLinkProps {
  * in order to avoid granting the new browsing context access to your single
  * page app and leaking referrer information.
  */
-export const ExtLink = ({ href, iconposition, children }: ExtLinkProps) => {
-
-    const classes = useStyles()
-
-    return (
-        <span className={classes.extlink}>
-            {iconposition !== 'after' && <LaunchIcon className="before" />}<a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-            >{children}</a>{iconposition === 'after' && <LaunchIcon className="after" />}
-        </span>
-    )
-}
+export const ExtLink = ({ href, iconposition, children }: ExtLinkProps) => (
+    <NixWieWegHier>
+        {iconposition !== 'after' && <LaunchIcon className="before" />}<a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+        >{children}</a>{iconposition === 'after' && <LaunchIcon className="after" />}
+    </NixWieWegHier>
+)
 
 export default ExtLink

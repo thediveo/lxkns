@@ -1,0 +1,47 @@
+ignore:
+
+    # Barking up the wrong tree..
+    - vulnerability: CVE-2002-1647 # weburl, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2009-4590 # php, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2009-4591 # sql engine, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2009-4592 # php, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2011-0220 # apfel bonjour, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2013-1779 # drupal, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2014-2980 # gnustep, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2017-7297 # rancher, not docker
+      package:
+        type: go-module
+    - vulnerability: CVE-2017-18589 # rust, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2020-7663 # ruby, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2020-7753 # component/trim, not Trott/trim
+      package:
+        type: npm
+    - vulnerability: CVE-2021-29940 # rust, not npm package
+      package:
+        type: npm
+
+    # Invalid
+    - vulnerability: CVE-2021-20066 # see https://github.com/jsdom/jsdom/issues/3124
+      package:
+        type: npm
+
+    # Beyond fixing...
+    - vulnerability: CVE-2004-2761 # no fix for MD5

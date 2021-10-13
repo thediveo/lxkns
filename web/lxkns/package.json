@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.4.1",
+    "@emotion/styled": "^11.3.0",
     "@fontsource/roboto": "^4.2.0",
     "@fontsource/roboto-mono": "^4.2.0",
-    "@material-ui/core": "^4.12.2",
-    "@material-ui/icons": "^4.9.1",
-    "@material-ui/lab": "^4.0.0-alpha.56",
+    "@mui/icons-material": "^5.0.3",
+    "@mui/lab": "^5.0.0-alpha.50",
+    "@mui/material": "^5.0.3",
     "@svgr/babel-plugin-remove-jsx-attribute": "^5.4.0",
     "@svgr/cli": "^5.5.0",
     "@svgr/core": "^5.5.0",
+    "@svgr/plugin-jsx": "^5.5.0",
+    "@svgr/plugin-svgo": "^5.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.0",
@@ -29,10 +33,9 @@
     "jotai": "^1.2.2",
     "material-ui-confirm": "^2.1.1",
     "md5": "^2.3.0",
-    "mdi-material-ui": "^6.22.0",
     "mdx-loader": "^3.0.2",
     "node-forge": "^0.10.0",
-    "notistack": "^1.0.0",
+    "notistack": "^2.0.2",
     "react": "^17.0.2",
     "react-docgen-typescript": "^2.0.0",
     "react-dom": "^17.0.2",
@@ -41,13 +44,21 @@
     "react-transition-group": "^4.4.1",
     "ts-loader": "^8.0.15",
     "ts-node": "^9.1.1",
-    "typescript": "^4.0.3",
+    "typescript": "4.3.5",
     "url-loader": "^4.1.1",
     "use-error-boundary": "^2.0.4",
     "websocket-extensions": "^0.1.4"
   },
   "resolutions": {
-    "chokidar": "^3.5.0"
+    "browserslist": "^4.16.5",
+    "chokidar": "^3.5.0",
+    "immer": "^9.0.6",
+    "set-value": "^4.1.0",
+    "ssri": "^8.0.0",
+    "tar": "^6.1.10",
+    "tmpl": "^1.0.5",
+    "trim": "^1.0.0",
+    "url-parse": "^1.5.3"
   },
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=$(git describe) PORT=3030 react-scripts start",
@@ -64,6 +75,9 @@
   "babel": {
     "presets": [
       "babel-preset-react-app"
+    ],
+    "plugins": [
+      ["@babel/plugin-proposal-private-property-in-object", { "loose": true }]
     ]
   },
   "eslintConfig": {
@@ -95,6 +109,7 @@
     "@cypress/webpack-dev-server": "^1.4.0",
     "cypress": "^8.0.0",
     "p-defer": "^4.0.0",
-    "react-styleguidist": "^11.1.0"
+    "react-styleguidist": "^11.1.0",
+    "svgo": "^2.7.0"
   }
 }
