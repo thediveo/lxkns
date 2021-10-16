@@ -18,7 +18,7 @@ import { useHistory, useRouteMatch } from 'react-router-dom'
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
-import { ChapterSkeleton } from 'components/muimarkdown/ChapterSkeleton'
+import { ChapterSkeleton } from 'components/chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
 
 const navigatorBorder = 1 // px
@@ -266,7 +266,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 mdx={chapters[currentChapterIndex].chapter}
                 fallback={
                     <Box sx={{ marginTop: '-24px' }} m={1}>
-                        <ChapterSkeleton />
+                        <ChapterSkeleton sx={{width: '15rem'}}/>
                     </Box>
                 }
                 shortcodes={shortcodes}

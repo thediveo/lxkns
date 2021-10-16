@@ -26,27 +26,6 @@ const LazyExampleMDX = React.lazy(
 );
 ```
 
-### Fallback Chapter Skeleton
-
-An additional fallback chapter "skeleton" is also available in order to allow
-customizing wrappers of this component to also style the skeleton to some
-extend, if necessary.
-
-```tsx static
-import { ChapterSkeleton } from "components/muimarkdown/ChapterSkeleton";
-```
-
-The width of this skeleton can be set via its `rem=` property.
-
-```tsx
-import { ComponentCard } from "styleguidist/ComponentCard";
-import { ChapterSkeleton } from "components/muimarkdown/ChapterSkeleton";
-
-<ComponentCard>
-  <ChapterSkeleton rem="20" />
-</ComponentCard>;
-```
-
 ### Light/Dark Themes Support
 
 This component has basic support for light and dark theming.

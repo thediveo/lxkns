@@ -28,7 +28,7 @@ import {
     styled,
 } from '@mui/material'
 
-import { ChapterSkeleton } from './ChapterSkeleton'
+import { ChapterSkeleton } from 'components/chapterskeleton'
 
 
 // Defines how to map the components emitted by MDX onto Material-UI components,
