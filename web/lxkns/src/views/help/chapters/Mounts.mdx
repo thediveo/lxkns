@@ -54,9 +54,9 @@ identifier.
 
 | Symbol | Meaning |
 | --- | --- |
-| <PeerIcon/> | mount events propagate between "peer" mounts and/or unidirectional to "slave" mounts. |
+| <PeerIcon/> | mount events propagate between "peer" mounts, all well as unidirectional to "slave" mounts – but any mount events under the slave mounts won't ever propagate back. |
 | <SlaveIcon/> | mount events propagate from "master" mounts to this slave mount, but any mount events under this slave mount never propagate back. |
-| <UnbindableIcon/> | this mount point cannot be bind-mounted (used in other bind mounts). It can be overmounted, though. |
+| <UnbindableIcon/> | this mount point cannot be bind-mounted (that is, it cannot be used in other bind mounts). It can still be overmounted, though. |
 
 ### Mount Point Details
 
