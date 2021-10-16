@@ -219,10 +219,9 @@ const LxknsApp = () => {
                     <Route exact path="/settings"><Settings /></Route>
                     <Route exact path="/about"><About /></Route>
                     <Route path="/help"><Help /></Route>
-                    <Route
-                        exact path={
-                            views.map(group => group.filter(viewitem => !!viewitem.type))
-                                .flat().map(viewitem => viewitem.path)}
+                    <Route exact path={
+                        views.map(group => group.filter(viewitem => !!viewitem.type))
+                            .flat().map(viewitem => viewitem.path)}
                     >
                         <TypedNamespaces discovery={discovery} action={treeaction} />
                     </Route>
@@ -245,15 +244,6 @@ const ThemedApp = () => {
     const appTheme = React.useMemo(() => createTheme(
         {
             components: {
-                MuiCssBaseline: {
-                    styleOverrides: {
-                        body: {
-                            fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
-                            lineHeight: 1.43,
-                            letterSpacing: '0.01071em',
-                        },
-                    },
-                },
                 MuiSelect: {
                     defaultProps: {
                         variant: 'standard', // MUI v4 default.

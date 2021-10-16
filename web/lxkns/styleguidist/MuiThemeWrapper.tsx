@@ -30,15 +30,6 @@ import { createTheme, ScopedCssBaseline, ThemeProvider } from '@mui/material'
 const lightTheme = createTheme(
     {
         components: {
-            MuiScopedCssBaseline: {
-                styleOverrides: {
-                    root: {
-                        fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
-                        lineHeight: 1.43,
-                        letterSpacing: '0.01071em',
-                    },
-                },
-            },
             MuiSelect: {
                 defaultProps: {
                     variant: 'standard', // MUI v4 default.

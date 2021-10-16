@@ -179,7 +179,7 @@ const AppBarDrawer = ({
             <Divider />
             {drawer && drawer(closeDrawer)}
         </SwappyDrawer>
-    </>;
+    </>
 }
 
 export default AppBarDrawer
