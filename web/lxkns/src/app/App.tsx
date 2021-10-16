@@ -236,7 +236,6 @@ const LxknsApp = () => {
 // Wrap the Lxkns app component into a theme provider that switches between
 // light and dark themes depending on theme type configuration state.
 const ThemedApp = () => {
-
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
     const [theme] = useAtom(themeAtom)
     const themeMode = theme === THEME_USERPREF
@@ -245,6 +244,22 @@ const ThemedApp = () => {
 
     const appTheme = React.useMemo(() => createTheme(
         {
+            components: {
+                MuiCssBaseline: {
+                    styleOverrides: {
+                        body: {
+                            fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
+                            lineHeight: 1.43,
+                            letterSpacing: '0.01071em',
+                        },
+                    },
+                },
+                MuiSelect: {
+                    defaultProps: {
+                        variant: 'standard', // MUI v4 default.
+                    },
+                },
+            },
             palette: {
                 mode: themeMode,
                 primary: {
@@ -268,7 +283,7 @@ const ThemedApp = () => {
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>
-    );
+    )
 }
 
 // Finally, the exported App component wraps the themed app component into a
