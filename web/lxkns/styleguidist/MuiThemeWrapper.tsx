@@ -29,6 +29,13 @@ import { createTheme, ScopedCssBaseline, ThemeProvider } from '@mui/material'
 
 const lightTheme = createTheme(
     {
+        components: {
+            MuiSelect: {
+                defaultProps: {
+                    variant: 'standard', // MUI v4 default.
+                },
+            },
+        },
         palette: {
             mode: 'light',
         },

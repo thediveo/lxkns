@@ -102,7 +102,10 @@ export const Settings = () => {
                     <Card>
                         <List>
                             <ListItem>
-                                <ListItemText primary="Show system processes" />
+                                <ListItemText
+                                    primary="Show system processes"
+                                    secondary={(showSystemProcesses ? 'from' : 'hide') + ' /system.slice, /init.scope, /user.slice'}
+                                />
                                 <ListItemSecondaryAction>
                                     <Toggle
                                         checked={showSystemProcesses}

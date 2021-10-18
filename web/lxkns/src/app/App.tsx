@@ -219,10 +219,9 @@ const LxknsApp = () => {
                     <Route exact path="/settings"><Settings /></Route>
                     <Route exact path="/about"><About /></Route>
                     <Route path="/help"><Help /></Route>
-                    <Route
-                        exact path={
-                            views.map(group => group.filter(viewitem => !!viewitem.type))
-                                .flat().map(viewitem => viewitem.path)}
+                    <Route exact path={
+                        views.map(group => group.filter(viewitem => !!viewitem.type))
+                            .flat().map(viewitem => viewitem.path)}
                     >
                         <TypedNamespaces discovery={discovery} action={treeaction} />
                     </Route>
@@ -236,7 +235,6 @@ const LxknsApp = () => {
 // Wrap the Lxkns app component into a theme provider that switches between
 // light and dark themes depending on theme type configuration state.
 const ThemedApp = () => {
-
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
     const [theme] = useAtom(themeAtom)
     const themeMode = theme === THEME_USERPREF
@@ -245,6 +243,13 @@ const ThemedApp = () => {
 
     const appTheme = React.useMemo(() => createTheme(
         {
+            components: {
+                MuiSelect: {
+                    defaultProps: {
+                        variant: 'standard', // MUI v4 default.
+                    },
+                },
+            },
             palette: {
                 mode: themeMode,
                 primary: {
@@ -268,7 +273,7 @@ const ThemedApp = () => {
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>
-    );
+    )
 }
 
 // Finally, the exported App component wraps the themed app component into a

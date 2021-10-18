@@ -20,7 +20,7 @@ describe('ChapterSkeleton', () => {
 
     it('renders', () => {
         mount(
-            <ChapterSkeleton rem={10} />
+            <ChapterSkeleton sx={{width: '10rem'}} />
         )
         cy.waitForReact()
         cy.get('.MuiTypography-h4')

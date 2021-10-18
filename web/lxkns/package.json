@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.15.4",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@fontsource/roboto": "^4.2.0",
     "@fontsource/roboto-mono": "^4.2.0",
-    "@mui/icons-material": "^5.0.3",
-    "@mui/lab": "^5.0.0-alpha.50",
-    "@mui/material": "^5.0.3",
+    "@mui/icons-material": "^5.0.4",
+    "@mui/lab": "^5.0.0-alpha.51",
+    "@mui/material": "^5.0.4",
     "@svgr/babel-plugin-remove-jsx-attribute": "^5.4.0",
     "@svgr/cli": "^5.5.0",
     "@svgr/core": "^5.5.0",
@@ -77,7 +78,12 @@
       "babel-preset-react-app"
     ],
     "plugins": [
-      ["@babel/plugin-proposal-private-property-in-object", { "loose": true }]
+      [
+        "@babel/plugin-proposal-private-property-in-object",
+        {
+          "loose": true
+        }
+      ]
     ]
   },
   "eslintConfig": {
