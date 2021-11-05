@@ -15,12 +15,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package discover
 
 import (
+	"fmt"
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/internal/namespaces"
@@ -91,6 +95,8 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 					}
 				}
 
+			} else {
+				log.Warnf("already known: %s:[%d]", ns.Type().Name(), ns.ID().Ino)
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
@@ -109,12 +115,12 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 			continue // We already visited you ... next one!
 		}
 		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
-			mntns.ID().Ino, mntns.Ref().String())
+			mntns.ID().Ino, refString(mntns, result))
 		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
-			log.Errorf("cannot open mnt:[%d] (%s) for VFS operations: %s",
+			log.Errorf("cannot open mnt:[%d] (reference: %s) for VFS operations: %s",
 				mntns.ID().Ino, mntns.Ref().String(), err)
 			continue
 		}
@@ -123,6 +129,28 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		updateNamespaces(ownedbindmounts)
 	}
 	log.Infof("found %s", plural.Elements(total, "bind-mounted namespaces"))
+}
+
+// refString returns a printable namespace reference, additionally resolving
+// /proc-based reference elements to the names of their corresponding processes,
+// if found in the additionally specified process table (from the discovery
+// result).
+func refString(mntns model.Namespace, r *Result) string {
+	refs := mntns.Ref()
+	s := []string{}
+	for _, ref := range refs {
+		if strings.HasPrefix(ref, "/proc/") {
+			if f := strings.SplitN(ref, "/", 4); len(f) >= 3 {
+				if pid, err := strconv.ParseUint(f[2], 10, 32); err == nil {
+					if proc := r.Processes[model.PIDType(pid)]; proc != nil {
+						s = append(s, fmt.Sprintf("%s[=%s]", ref, proc.Name))
+					}
+				}
+			}
+		}
+		s = append(s, ref)
+	}
+	return strings.Join(s, "»")
 }
 
 // Returns a list of bind-mounted namespaces for process with PID, including

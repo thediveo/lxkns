@@ -17,6 +17,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package discover
@@ -63,7 +64,7 @@ func discoverFromMountinfo(_ species.NamespaceType, _ string, result *Result) {
 			continue
 		}
 		log.Debugf("reading mount point information from bind-mounted mnt:[%d] at %s...",
-			mountns.ID().Ino, mountns.Ref().String())
+			mountns.ID().Ino, refString(mountns, result))
 		// Warp speed Mr Sulu, through the proc root wormhole!
 		mountpoints := mntinfo.MountsOfPid(int(mnteer.PID()))
 		mnteer.Close()

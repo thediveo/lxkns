@@ -72,11 +72,14 @@ func (pns *PlainNamespace) Ealdorman() (p *model.Process) {
 	// Sorting most probably will be more expensive than a single run through
 	// the list, so take it easy without the sort package.
 	for _, proc := range pns.leaders {
-		if p == nil {
+		switch {
+		case p == nil:
+			// Start with first leader as our initial guess.
 			p = proc
-		} else if proc.Starttime < p.Starttime {
+		case proc.Starttime < p.Starttime:
+			// A more senior (=older, based on start time) leader always win.
 			p = proc
-		} else if proc.Starttime == p.Starttime && proc.PID < p.PID {
+		case proc.Starttime == p.Starttime && proc.PID < p.PID:
 			// Ensure stable results in case two processes have the exactly
 			// same start time, as will be the case for the initial process 1
 			// and kthredd 2. Otherwise, as the list of leader PIDs isn't
