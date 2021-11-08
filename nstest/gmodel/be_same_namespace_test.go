@@ -19,7 +19,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
@@ -59,7 +58,7 @@ var _ = Describe("Namespace", func() {
 
 	It("matches namespaces", func() {
 		Expect(nil).To(BeSameNamespace(nil))
-		Errxpect(BeSameNamespace("bar").Match(userns1)).To(HaveOccurred())
+		Expect(BeSameNamespace("bar").Match(userns1)).Error().To(HaveOccurred())
 
 		// ID, Type, and ref path must be checked
 		Expect(userns1).NotTo(BeSameNamespace(initproc.Namespaces[model.NetNS]))
@@ -111,10 +110,10 @@ var _ = Describe("Namespace", func() {
 	})
 
 	It("handles errors", func() {
-		Errxpect(BeSameNamespace(userns1).Match("bar")).To(
+		Expect(BeSameNamespace(userns1).Match("bar")).Error().To(
 			MatchError(MatchRegexp(`expects a model.Namespace, not a string`)))
 
-		Errxpect(BeSameNamespace("foo").Match(userns1)).To(
+		Expect(BeSameNamespace("foo").Match(userns1)).Error().To(
 			MatchError(MatchRegexp(`must be passed a model.Namespace, not a string`)))
 	})
 

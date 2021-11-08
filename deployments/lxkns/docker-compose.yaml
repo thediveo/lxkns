@@ -9,6 +9,7 @@ services:
         command:
             - "/lxkns"
             - "--initialcgroup"
+            - "--debug"
             - "--docker=unix:///proc/1/root/run/docker.sock"
             - "--containerd=/proc/1/root/run/containerd/containerd.sock"
         ports:

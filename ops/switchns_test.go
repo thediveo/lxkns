@@ -23,7 +23,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
@@ -47,7 +46,7 @@ var _ opener.Opener = (*brokenref)(nil)
 var _ = Describe("Set Namespaces", func() {
 
 	It("Go()es with errors", func() {
-		Errxpect(Go(func() {}, NamespacePath("foobar"))).To(
+		Expect(Go(func() {}, NamespacePath("foobar"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
 	})
 
@@ -56,31 +55,31 @@ var _ = Describe("Set Namespaces", func() {
 			Skip("don't be roode.")
 		}
 
-		Errxpect(Go(func() {}, NamespacePath("/proc/1/ns/pid"))).To(
+		Expect(Go(func() {}, NamespacePath("/proc/1/ns/pid"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path`)))
 
-		Errxpect(Go(func() {}, NamespacePath("/proc/self/ns/pid"))).To(
+		Expect(Go(func() {}, NamespacePath("/proc/self/ns/pid"))).Error().To(
 			MatchError(MatchRegexp(`cannot enter namespace path .+, operation not permitted`)))
 	})
 
 	It("Execute()s with errors", func() {
-		Errxpect(Execute(func() interface{} { return nil }, NamespacePath("foobar"))).To(HaveOccurred())
+		Expect(Execute(func() interface{} { return nil }, NamespacePath("foobar"))).Error().To(HaveOccurred())
 	})
 
 	It("Visit()s with errors", func() {
-		Errxpect(Visit(func() {}, NamespacePath("foobar"))).To(
+		Expect(Visit(func() {}, NamespacePath("foobar"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
 
-		Errxpect(Visit(func() {}, NamespacePath("doc.go"))).To(
+		Expect(Visit(func() {}, NamespacePath("doc.go"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace.+NS_GET_NSTYPE.+ioctl`)))
 
-		Errxpect(Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)))).To(
+		Expect(Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)))).Error().To(
 			MatchError(MatchRegexp(`cannot determine type`)))
 
-		Errxpect(Visit(func() {}, NamespacePath("/proc/self/ns/mnt"))).To(
+		Expect(Visit(func() {}, NamespacePath("/proc/self/ns/mnt"))).Error().To(
 			MatchError(MatchRegexp(`cannot enter namespace, (operation not permitted|invalid argument)`)))
 
-		Errxpect(Visit(func() {}, &brokenref{NamespacePath("/proc/self/ns/net")})).To(
+		Expect(Visit(func() {}, &brokenref{NamespacePath("/proc/self/ns/net")})).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, broken reference`)))
 	})
 

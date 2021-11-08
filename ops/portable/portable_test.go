@@ -20,7 +20,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -29,12 +28,12 @@ var _ = Describe("portable reference", func() {
 
 	It("does not Open() a zero portable reference", func() {
 		portref := PortableReference{}
-		Errxpect(portref.Open()).To(HaveOccurred())
+		Expect(portref.Open()).Error().To(HaveOccurred())
 	})
 
 	It("does not Open() an invalid path", func() {
 		portref := PortableReference{Path: "/foobar"}
-		Errxpect(portref.Open()).To(HaveOccurred())
+		Expect(portref.Open()).Error().To(HaveOccurred())
 	})
 
 	It("does not Open() something which isn't a namespace at all", func() {
@@ -42,7 +41,7 @@ var _ = Describe("portable reference", func() {
 			Path: "/proc/self/ns",
 			Type: species.CLONE_NEWNS,
 		}
-		Errxpect(portref.Open()).To(MatchError(MatchRegexp(`NS_GET_TYPE`)))
+		Expect(portref.Open()).Error().To(MatchError(MatchRegexp(`NS_GET_TYPE`)))
 	})
 
 	It("does not Open() wrong type of namespace", func() {
@@ -50,7 +49,7 @@ var _ = Describe("portable reference", func() {
 			Path: "/proc/self/ns/net",
 			Type: species.CLONE_NEWNS,
 		}
-		Errxpect(portref.Open()).To(MatchError(MatchRegexp(`type mismatch.+expected mnt.+got net`)))
+		Expect(portref.Open()).Error().To(MatchError(MatchRegexp(`type mismatch.+expected mnt.+got net`)))
 	})
 
 	It("does not Open() wrong namespace ID", func() {
@@ -58,7 +57,7 @@ var _ = Describe("portable reference", func() {
 			Path: "/proc/self/ns/net",
 			ID:   species.NamespaceIDfromInode(666),
 		}
-		Errxpect(portref.Open()).To(MatchError(MatchRegexp(
+		Expect(portref.Open()).Error().To(MatchError(MatchRegexp(
 			fmt.Sprintf(`ID mismatch.+expected :\[666\].+got :\[%d\]`, mynetnsid.Ino))))
 	})
 
@@ -68,14 +67,14 @@ var _ = Describe("portable reference", func() {
 			PID:       -1,
 			Starttime: 0,
 		}
-		Errxpect(portref.Open()).To(MatchError(`process PID -1 is gone`))
+		Expect(portref.Open()).Error().To(MatchError(`process PID -1 is gone`))
 		proc := model.NewProcess(model.PIDType(os.Getpid()))
 		portref = PortableReference{
 			Path:      "/proc/self/ns/net",
 			PID:       proc.PID,
 			Starttime: 0,
 		}
-		Errxpect(portref.Open()).To(MatchError(MatchRegexp(`process PID [[:digit:]]+ is gone`)))
+		Expect(portref.Open()).Error().To(MatchError(MatchRegexp(`process PID [[:digit:]]+ is gone`)))
 	})
 
 	It("Open()s with only the namespace ID given", func() {

@@ -22,7 +22,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
@@ -32,12 +31,12 @@ import (
 var _ = Describe("mountineer", func() {
 
 	It("does not accept empty references", func() {
-		Errxpect(New(nil, nil)).To(HaveOccurred())
-		Errxpect(New([]string{""}, nil)).To(HaveOccurred())
-		Errxpect(New([]string{"foobar"}, nil)).To(HaveOccurred())
-		Errxpect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).To(HaveOccurred())
-		Errxpect(New([]string{"/proc/self"}, nil)).To(HaveOccurred())
-		Errxpect(New([]string{"/proc/self/"}, nil)).To(HaveOccurred())
+		Expect(New(nil, nil)).Error().To(HaveOccurred())
+		Expect(New([]string{""}, nil)).Error().To(HaveOccurred())
+		Expect(New([]string{"foobar"}, nil)).Error().To(HaveOccurred())
+		Expect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).Error().To(HaveOccurred())
+		Expect(New([]string{"/proc/self"}, nil)).Error().To(HaveOccurred())
+		Expect(New([]string{"/proc/self/"}, nil)).Error().To(HaveOccurred())
 	})
 
 	It("resolves paths", func() {
@@ -60,7 +59,7 @@ var _ = Describe("mountineer", func() {
 		f, err := m.Open("mountineer_test.go")
 		Expect(err).NotTo(HaveOccurred())
 		f.Close()
-		Errxpect(m.Open("foobar.go")).To(HaveOccurred())
+		Expect(m.Open("foobar.go")).Error().To(HaveOccurred())
 	})
 
 	It("opens a mount namespace path in initial context", func() {
