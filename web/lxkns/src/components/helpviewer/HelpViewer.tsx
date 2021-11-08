@@ -18,7 +18,7 @@ import { useHistory, useRouteMatch } from 'react-router-dom'
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
-import { ChapterSkeleton } from 'components/muimarkdown/ChapterSkeleton'
+import { ChapterSkeleton } from 'components/chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
 
 const navigatorBorder = 1 // px
@@ -41,10 +41,10 @@ const NavigatorButton = styled(IconButton)(({ theme }) => ({
     height: `calc(24px + ${(navigatorBorder + 2) * 2}px + 2 * 3px)`,
     // icons are:
     // - 24px wide, 
-    // - small icon buttons have a 3px padding (*2),
+    // - small icon buttons have a 5px padding (*2) in MUIv5,
     // - 1px border (*1, only "left side"!)
-    marginLeft: `calc(100% - 24px - 6px - ${navigatorBorder}px - ${navigatorLeftPadding}px)`,
-    paddingLeft: `${navigatorLeftPadding + 3}px`,
+    marginLeft: `calc(100% - 24px - 10px - ${navigatorBorder}px - ${navigatorLeftPadding}px)`,
+    paddingLeft: `${navigatorLeftPadding + 4}px`,
     background: theme.palette.background.paper,
     border: `${navigatorBorder}px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'}`,
     borderRight: 0,
@@ -75,7 +75,7 @@ const Padding = styled('div')(({ theme }) => ({
 
     '& > hr': {
         marginTop: theme.spacing(navigatorFooterSpacing),
-        marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
+        marginBottom: parseInt(theme.spacing(navigatorFooterSpacing)) - 6 /* button top/bottom padding */,
     },
     '& > button.prev': {
         float: 'left',
@@ -84,7 +84,7 @@ const Padding = styled('div')(({ theme }) => ({
         float: 'right',
     },
     '& > button.prev, & > button.next': {
-        marginBottom: Number(theme.spacing(navigatorFooterSpacing)) - 6,
+        marginBottom: parseInt(theme.spacing(navigatorFooterSpacing)) - 6 /* button top/bottom padding */,
     },
 }))
 
@@ -266,7 +266,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 mdx={chapters[currentChapterIndex].chapter}
                 fallback={
                     <Box sx={{ marginTop: '-24px' }} m={1}>
-                        <ChapterSkeleton />
+                        <ChapterSkeleton sx={{width: '15rem'}}/>
                     </Box>
                 }
                 shortcodes={shortcodes}

@@ -26,6 +26,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package discover
@@ -57,7 +58,9 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	// For all processes (but not tasks/threads) listed in /proc try to gather
-	// the namespaces of a given type they use.
+	// the namespaces of a given type they use. Reminder: result.Processes is a
+	// map, so Go will happily iterate it in whatever random sequence it just
+	// takes a fancy of.
 	for pid, proc := range result.Processes {
 		// Discover the namespace instance of the specified type which this
 		// particular process has joined. Please note that namespace
@@ -85,14 +88,17 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		}
 		ns, ok := nsmap[nsid]
 		if !ok {
-			// Only add a namespace we haven't yet seen. And yes, we don't
-			// give a reference here, as we want to use a reference from a
-			// leader process, and not of some child process deep down the
-			// hierarchy, which might not even live for long (as sad as this
-			// might be).
+			// Only add a namespace we haven't yet seen. And yes, we don't give
+			// a (file system-based) reference here, as we want to use a
+			// reference from a leader process, and not of some child process
+			// deep down the hierarchy, which might not even live for long (as
+			// sad as this might be).
 			ns = namespaces.New(nstype, nsid, nil)
 			nsmap[nsid] = ns
-			log.Debugf("found namespace %s at %s", ns.(model.NamespaceStringer).TypeIDString(), nsref)
+			log.Debugf("found namespace %s at %s[=%s]",
+				ns.(model.NamespaceStringer).TypeIDString(),
+				nsref,
+				proc.Name)
 			total++
 		}
 		// To speed up finding the process leaders in a specific namespace, we
@@ -132,20 +138,21 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		// the topmost process in the process tree which is still joined to
 		// the same namespace as the namespace of the process from which we
 		// started our quest.
-		p := proc
-		parentp := p.Parent
-		for parentp != nil && parentp.Namespaces[nstypeidx] == p.Namespaces[nstypeidx] {
-			p = parentp
-			parentp = p.Parent
+		leaderproc := proc
+		parentproc := leaderproc.Parent
+		for parentproc != nil && parentproc.Namespaces[nstypeidx] == leaderproc.Namespaces[nstypeidx] {
+			leaderproc = parentproc
+			parentproc = leaderproc.Parent
 		}
-		p.Namespaces[nstypeidx].(namespaces.NamespaceConfigurer).AddLeader(p)
+		ns := leaderproc.Namespaces[nstypeidx]
+		ns.(namespaces.NamespaceConfigurer).AddLeader(leaderproc)
 	}
 	// Try to set namespace references which we hope to be as long-lived as
 	// possible; so we prefer the most senior leader process: the ealdorman.
 	for _, ns := range nsmap {
-		if senior := ns.Ealdorman(); senior != nil {
+		if ealdorman := ns.Ealdorman(); ealdorman != nil {
 			ns.(namespaces.NamespaceConfigurer).SetRef(
-				model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/%s", senior.PID, nstypename)})
+				model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/%s", ealdorman.PID, nstypename)})
 		}
 	}
 

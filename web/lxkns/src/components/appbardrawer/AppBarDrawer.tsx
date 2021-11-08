@@ -143,7 +143,7 @@ const AppBarDrawer = ({
     const theme = useTheme()
 
     return <>
-        <AppBar position="static">
+        <AppBar position="static" elevation={0}>
             <Toolbar>
                 <ToolbarActionButton
                     edge="start"
@@ -179,7 +179,7 @@ const AppBarDrawer = ({
             <Divider />
             {drawer && drawer(closeDrawer)}
         </SwappyDrawer>
-    </>;
+    </>
 }
 
 export default AppBarDrawer

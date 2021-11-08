@@ -15,36 +15,37 @@
 import React from 'react'
 
 import { Skeleton, styled, Theme, Typography } from '@mui/material'
+import { SxProps } from '@mui/system'
 
-
-interface chapterSkeletonStyleProps {
-    theme?: Theme
-    rem: number
-}
-
-const ChSkeleton = styled('div')(({ theme, rem }: chapterSkeletonStyleProps) => ({
-    width: `${rem}rem`,
-    '& > :nth-child(1)': { width: `${rem*0.55}rem` },
-    '& > :nth-child(2)': { width: `${rem*0.9}rem` },
-    '& > :nth-child(3)': { width: `${rem}rem` },
-    '& > :nth-child(4)': { width: `${rem*0.7}rem` },
+const Bones = styled('div')(({ theme }) => ({
+    width: '100%',
+    '& > h4:nth-of-type(1)': { width: '55%' },
+    '& > p:nth-of-type(1)': { width: '90%' },
+    '& > p:nth-of-type(2)': { width: '100%' },
+    '& > p:nth-of-type(3)': { width: '70%' },
 }))
 
 
 export interface ChapterSkeletonProps {
-    /** width of skeleton in 'rem'. */
-    rem?: number
+    /**
+     * The MUI system prop that allows defining system overrides as well as
+     * additional CSS styles.
+     */
+    sx?: SxProps<Theme>
 }
 
 /**
- * Renders a simple chapter-like skeleton to be used as a fallback while MDX
- * modules are getting lazily loaded.
+ * Renders a simple chapter-like text skeleton. It can be used as a fallback
+ * display while MDX modules are getting lazily loaded, so users don't see just
+ * a blank screen, but instead get some visual feedback of a pending operation.
  */
-export const ChapterSkeleton = ({ rem }: ChapterSkeletonProps) => {
-    return <ChSkeleton rem={rem || 15}>
+export const ChapterSkeleton = ({sx}: ChapterSkeletonProps) => {
+    return <Bones sx={sx}>
         <Typography variant="h4"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
         <Typography variant="body1"><Skeleton animation="wave" /></Typography>
-    </ChSkeleton>
+    </Bones>
 }
+
+export default ChapterSkeleton

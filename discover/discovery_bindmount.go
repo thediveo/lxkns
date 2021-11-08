@@ -15,12 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package discover
 
 import (
+	"fmt"
 	"io"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/internal/namespaces"
@@ -65,6 +70,21 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	for _, mntns := range result.Namespaces[model.MountNS] {
 		mountnsBacklog = append(mountnsBacklog, mntns)
 	}
+	// Iterating over the map of mount namespaces results in non-deterministic
+	// order. Normally, this wouldn't be of any concern to us ... but
+	// unfortunately, in our case there's a catch and that's due to mount point
+	// propagation between mount namespaces. In particular, as Docker
+	// bind-mounts the network namespaces of the containers it manages into a
+	// place where they propagate to certain other mount namespaces, when the
+	// ealdorman container process switches into a different network namespace
+	// we thus end up with a randomly choosen bind-mount path. By sorting the
+	// mount namespaces by their IDs, we end up with the initial mount namespace
+	// always being first and thus the first one to turn up bind-mounted Docker
+	// network namespaces without container processes. This way, we're ensuring
+	// stability of network namespace references.
+	sort.Slice(mountnsBacklog, func(i, j int) bool {
+		return mountnsBacklog[i].ID().Dev < mountnsBacklog[j].ID().Dev
+	})
 
 	// Helper function which adds namespaces not yet known to the discovery
 	// result. We keep this inline in order to allow the helper to access the
@@ -90,7 +110,6 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 						mountnsBacklog = append(mountnsBacklog, ns)
 					}
 				}
-
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
@@ -109,12 +128,12 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 			continue // We already visited you ... next one!
 		}
 		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
-			mntns.ID().Ino, mntns.Ref().String())
+			mntns.ID().Ino, refString(mntns, result))
 		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
-			log.Errorf("cannot open mnt:[%d] (%s) for VFS operations: %s",
+			log.Errorf("cannot open mnt:[%d] (reference: %s) for VFS operations: %s",
 				mntns.ID().Ino, mntns.Ref().String(), err)
 			continue
 		}
@@ -123,6 +142,28 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		updateNamespaces(ownedbindmounts)
 	}
 	log.Infof("found %s", plural.Elements(total, "bind-mounted namespaces"))
+}
+
+// refString returns a printable namespace reference, additionally resolving
+// /proc-based reference elements to the names of their corresponding processes,
+// if found in the additionally specified process table (from the discovery
+// result).
+func refString(mntns model.Namespace, r *Result) string {
+	refs := mntns.Ref()
+	s := []string{}
+	for _, ref := range refs {
+		if strings.HasPrefix(ref, "/proc/") {
+			if f := strings.SplitN(ref, "/", 4); len(f) >= 3 {
+				if pid, err := strconv.ParseUint(f[2], 10, 32); err == nil {
+					if proc := r.Processes[model.PIDType(pid)]; proc != nil {
+						s = append(s, fmt.Sprintf("%s[=%s]", ref, proc.Name))
+					}
+				}
+			}
+		}
+		s = append(s, ref)
+	}
+	return strings.Join(s, "»")
 }
 
 // Returns a list of bind-mounted namespaces for process with PID, including

@@ -20,7 +20,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/errxpect"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/testbasher"
 )
@@ -28,12 +27,12 @@ import (
 var _ = Describe("mountineer", func() {
 
 	It("returns error for non-existing sandbox binary", func() {
-		Errxpect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).To(MatchError(
+		Expect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).Error().To(MatchError(
 			MatchRegexp(`cannot start pause process: .* /not-existing: no such file or directory`)))
 	})
 
 	It("returns sandbox errors", func() {
-		Errxpect(newPauseProcess("/proc/self/exe", "/proc/self/non-existing", "")).To(MatchError(
+		Expect(newPauseProcess("/proc/self/exe", "/proc/self/non-existing", "")).Error().To(MatchError(
 			MatchRegexp(`invalid mount namespace reference .* No such file or directory`)))
 	})
 
