@@ -22,7 +22,7 @@ require (
 	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
 	github.com/thediveo/go-plugger v0.10.0
 	github.com/thediveo/klo v1.0.1
-	github.com/thediveo/procfsroot v0.1.1
+	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.4
 	github.com/thediveo/whalewatcher v0.4.10
 	golang.org/x/sys v0.0.0-20211107104306-e0b2ad06fe42
