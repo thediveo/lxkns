@@ -23,6 +23,7 @@ package discover
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -69,6 +70,21 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	for _, mntns := range result.Namespaces[model.MountNS] {
 		mountnsBacklog = append(mountnsBacklog, mntns)
 	}
+	// Iterating over the map of mount namespaces results in non-deterministic
+	// order. Normally, this wouldn't be of any concern to us ... but
+	// unfortunately, in our case there's a catch and that's due to mount point
+	// propagation between mount namespaces. In particular, as Docker
+	// bind-mounts the network namespaces of the containers it manages into a
+	// place where they propagate to certain other mount namespaces, when the
+	// ealdorman container process switches into a different network namespace
+	// we thus end up with a randomly choosen bind-mount path. By sorting the
+	// mount namespaces by their IDs, we end up with the initial mount namespace
+	// always being first and thus the first one to turn up bind-mounted Docker
+	// network namespaces without container processes. This way, we're ensuring
+	// stability of network namespace references.
+	sort.Slice(mountnsBacklog, func(i, j int) bool {
+		return mountnsBacklog[i].ID().Dev < mountnsBacklog[j].ID().Dev
+	})
 
 	// Helper function which adds namespaces not yet known to the discovery
 	// result. We keep this inline in order to allow the helper to access the
@@ -94,9 +110,6 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 						mountnsBacklog = append(mountnsBacklog, ns)
 					}
 				}
-
-			} else {
-				log.Warnf("already known: %s:[%d]", ns.Type().Name(), ns.ID().Ino)
 			}
 			// Set the owning user namespace, but only if this ain't ;) a
 			// user namespace and we actually got a owner namespace ID.
