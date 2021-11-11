@@ -25,7 +25,7 @@ import (
 	"regexp"
 )
 
-const semVerPattern = `(\d+\.\d+\.\d(-\d+(-[a-z0-9]+))?)`
+const semVerPattern = `(\d+\.\d+\.\d+(-\d+(-[a-z0-9]+))?)`
 
 var versionExtractor = regexp.MustCompile(`^v` + semVerPattern + `\n?$`)
 var branchVersionExtractor = regexp.MustCompile(`^release/v` + semVerPattern + `\n?$`)
