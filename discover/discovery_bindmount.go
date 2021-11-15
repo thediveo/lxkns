@@ -77,7 +77,7 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	// bind-mounts the network namespaces of the containers it manages into a
 	// place where they propagate to certain other mount namespaces, when the
 	// ealdorman container process switches into a different network namespace
-	// we thus end up with a randomly choosen bind-mount path. By sorting the
+	// we thus end up with a randomly chosen bind-mount path. By sorting the
 	// mount namespaces by their IDs, we end up with the initial mount namespace
 	// always being first and thus the first one to turn up bind-mounted Docker
 	// network namespaces without container processes. This way, we're ensuring

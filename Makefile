@@ -4,10 +4,9 @@ GOPATH = $(shell go env GOPATH)
 GIT_VERSION = $(shell git describe 2>/dev/null || echo "v0.0.0")
 GOGEN = go generate .
 
-# Go version to use when building the test containers; start with a version
-# 1.14+ first to get better testbasher diagnosis in case a test script runs
-# into trouble.
-goversion = 1.16 1.15
+# Go version to use when building the test containers; see README.md for
+# supported versions strategy.
+goversion = 1.17 1.16
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 

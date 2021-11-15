@@ -37,6 +37,12 @@ frontend:
 [![lxkns web
 app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
+## Notes
+
+`lxkns` supports versions of Go that are noted by the [Go release
+policy](https://golang.org/doc/devel/release.html#policy), that is, major
+versions _N_ and _N_-1.
+
 ## ⚖️ Copyright and License
 
 `lxkns` is Copyright 2020‒21 Harald Albrecht, and licensed under the Apache

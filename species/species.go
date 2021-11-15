@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package species
@@ -49,7 +50,7 @@ const (
 	CLONE_NEWUSER   = NamespaceType(unix.CLONE_NEWUSER)
 	CLONE_NEWPID    = NamespaceType(unix.CLONE_NEWPID)
 	CLONE_NEWNET    = NamespaceType(unix.CLONE_NEWNET)
-	CLONE_NEWTIME   = NamespaceType(cloneNewtime)
+	CLONE_NEWTIME   = NamespaceType(unix.CLONE_NEWTIME)
 )
 
 // NaNS identifies an invalid namespace type.
