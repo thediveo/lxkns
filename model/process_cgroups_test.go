@@ -16,7 +16,6 @@ package model
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,7 +86,7 @@ var _ = Describe("cgrouping", func() {
 		}
 		Expect(fridgeroot).NotTo(BeZero(), "detecting freezer cgroup root")
 
-		freezercgname := fmt.Sprintf("lxkns%d", rand.Intn(100000)+100000)
+		freezercgname := fmt.Sprintf("lxkns%d", os.Getpid())
 
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
@@ -95,7 +94,7 @@ var _ = Describe("cgrouping", func() {
 set -e
 CTRL=%s
 CGROUPSV2=%t
-sleep 1d &
+sleep 2m &
 PID=$!
 # create new freezer controller and put the sleep task under its control,
 # then freeze it.
