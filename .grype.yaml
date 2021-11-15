@@ -1,5 +1,10 @@
 ignore:
 
+    # fixed in replacement packages...
+    - vulnerability: CVE-2021-23424 # ansi-html-community resolution
+      package:
+        type: npm
+
     # Barking up the wrong tree..
     - vulnerability: CVE-2002-1647 # weburl, not npm package
       package:
@@ -22,7 +27,10 @@ ignore:
     - vulnerability: CVE-2014-2980 # gnustep, not npm package
       package:
         type: npm
-    - vulnerability: CVE-2017-7297 # rancher, not docker
+    - vulnerability: CVE-2015-5237 # C, not Go module
+      package:
+        type: go-module
+    - vulnerability: CVE-2017-7297 # rancher, not at all docker
       package:
         type: go-module
     - vulnerability: CVE-2017-18589 # rust, not npm package
@@ -43,5 +51,11 @@ ignore:
       package:
         type: npm
 
+    # Invalid in context of CRA tool
+    - vulnerability: CVE-2021-33587 # see https://github.com/facebook/create-react-app/issues/11174
+      package:
+        type: npm
+
     # Beyond fixing...
     - vulnerability: CVE-2004-2761 # no fix for MD5
+
