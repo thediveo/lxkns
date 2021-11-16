@@ -20,6 +20,7 @@
   * [Container Types/Flavors](typesflavors)
   * [Decorations](deco)
   * [Mountineers](mountineers)
+  * [Gomega Matchers](matchers)
   * [Lab Notes](lab-notes)
 * [CLI Tools](cli)
 * [mntnssandbox](mntnssandbox)

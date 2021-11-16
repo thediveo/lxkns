@@ -23,30 +23,30 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-// HaveName succeeds if actual is a model.Container or *model.Container and the
-// container matches the specified name or ID.
-func HaveName(nameid string) types.GomegaMatcher {
+// HaveContainerName succeeds if actual is a model.Container or *model.Container
+// and the container matches the specified name or ID.
+func HaveContainerName(nameid string) types.GomegaMatcher {
 	return withContainer(
 		Or(
 			HaveField("Name", Equal(nameid)),
 			HaveField("ID", Equal(nameid))))
 }
 
-// HaveNameAndType succeeds if actual is a model.Container or *model.Container
-// and the container matches the specified name or ID, as well as the specified
-// type or flavor.
-func HaveNameAndType(nameid string, typ string) types.GomegaMatcher {
+// HaveContainerNameAndType succeeds if actual is a model.Container or
+// *model.Container and the container matches the specified name or ID, as well
+// as the specified type or flavor.
+func HaveContainerNameAndType(nameid string, typ string) types.GomegaMatcher {
 	return withContainer(
 		And(
-			HaveName(nameid),
+			HaveContainerName(nameid),
 			Or(
 				HaveField("Type", Equal(typ)),
 				HaveField("Flavor", Equal(typ)))))
 }
 
-// HaveGroup succeeds if actual is a model.Container or *model.Container and the
-// container is in a group with the specified name.
-func HaveNamedGroup(name string) types.GomegaMatcher {
+// BeInNamedGroup succeeds if actual is a model.Container or *model.Container
+// and the container is in a group with the specified name.
+func BeInNamedGroup(name string) types.GomegaMatcher {
 	return withContainer(
 		HaveField("Groups", ContainElement(
 			gstruct.PointTo(HaveField("Name", name)))))
@@ -69,8 +69,7 @@ func HaveNamedAndTypedGroup(name string, typ string) types.GomegaMatcher {
 // BePaused succeeds if actual is a model.Container or *model.Container and the
 // container is paused.
 func BePaused() types.GomegaMatcher {
-	return withContainer(
-		HaveField("Paused", BeTrue()))
+	return withContainer(HaveField("Paused", BeTrue()))
 }
 
 // withContainer returns a matcher that transforms actual into a container value

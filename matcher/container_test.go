@@ -34,32 +34,32 @@ var container = model.Container{
 var _ = Describe("container", func() {
 
 	It("doesn't match something else", func() {
-		Expect(HaveName("42").Match(42)).Error().To(
+		Expect(HaveContainerName("42").Match(42)).Error().To(
 			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got int")))
 	})
 
 	It("matches container by name or ID", func() {
-		Expect(container).NotTo(HaveName("rumpelpumpel"))
+		Expect(container).NotTo(HaveContainerName("rumpelpumpel"))
 
-		Expect(container).To(HaveName(container.Name))
-		Expect(container).To(HaveName(container.ID))
+		Expect(container).To(HaveContainerName(container.Name))
+		Expect(container).To(HaveContainerName(container.ID))
 
-		Expect(&container).To(HaveName(container.Name))
+		Expect(&container).To(HaveContainerName(container.Name))
 	})
 
 	It("matches container by name/ID and type/flavor", func() {
-		Expect(container).NotTo(HaveNameAndType(container.Name, "rumpelpumpel"))
+		Expect(container).NotTo(HaveContainerNameAndType(container.Name, "rumpelpumpel"))
 
-		Expect(container).To(HaveNameAndType(container.Name, container.Type))
-		Expect(container).To(HaveNameAndType(container.Name, container.Flavor))
+		Expect(container).To(HaveContainerNameAndType(container.Name, container.Type))
+		Expect(container).To(HaveContainerNameAndType(container.Name, container.Flavor))
 
-		Expect(&container).To(HaveNameAndType(container.Name, container.Type))
+		Expect(&container).To(HaveContainerNameAndType(container.Name, container.Type))
 	})
 
 	It("matches container by named group", func() {
-		Expect(container).NotTo(HaveNamedGroup("iwo"))
+		Expect(container).NotTo(BeInNamedGroup("iwo"))
 
-		Expect(container).To(HaveNamedGroup(container.Groups[0].Name))
+		Expect(container).To(BeInNamedGroup(container.Groups[0].Name))
 	})
 
 	It("matches container by named group and type/flavor", func() {

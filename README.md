@@ -41,7 +41,7 @@ app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watc
 
 `lxkns` supports versions of Go that are noted by the [Go release
 policy](https://golang.org/doc/devel/release.html#policy), that is, major
-versions _N_ and _N_-1.
+versions _N_ and _N_-1 (where _N_ is the current major version).
 
 ## ⚖️ Copyright and License
 

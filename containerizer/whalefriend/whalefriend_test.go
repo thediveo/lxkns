@@ -26,6 +26,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/lxkns/matcher"
 )
 
 const sleepyname = "pompous_pm"
@@ -49,6 +50,7 @@ var _ = Describe("ContainerEngine", func() {
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
+		_ = pool.RemoveContainerByName(sleepyname)
 		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "busybox",
 			Tag:        "latest",
@@ -60,7 +62,7 @@ var _ = Describe("ContainerEngine", func() {
 		if err != nil && nodockerre.MatchString(err.Error()) {
 			Skip("Docker not available")
 		}
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), "container %q", sleepyname)
 		Eventually(func() bool {
 			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
 			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
@@ -85,7 +87,7 @@ var _ = Describe("ContainerEngine", func() {
 
 		// wait for the watcher to have completed its initial synchronization
 		// with its container engine...
-		<-dockerw.Ready()
+		Eventually(dockerw.Ready(), "5s", "100ms").Should(BeClosed())
 		// ...then wait for it to have also picked up the paused state of our
 		// test container (better safe than sorry in this case).
 		Eventually(func() bool {
@@ -93,8 +95,7 @@ var _ = Describe("ContainerEngine", func() {
 		}).Should(BeTrue())
 
 		cntrs := cew.Containers(ctx, nil, nil)
-		Expect(cntrs).To(ContainElement(
-			WithTransform(func(c *model.Container) string { return c.Name }, Equal(sleepyname))))
+		Expect(cntrs).To(ContainElement(HaveContainerName(sleepyname)))
 
 		var c *model.Container
 		for _, cntr := range cntrs {
