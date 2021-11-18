@@ -26,7 +26,7 @@ import (
 // HaveContainerName succeeds if actual is a model.Container or *model.Container
 // and the container matches the specified name or ID.
 func HaveContainerName(nameid string) types.GomegaMatcher {
-	return withContainer(
+	return withContainer("HaveContainerName",
 		Or(
 			HaveField("Name", Equal(nameid)),
 			HaveField("ID", Equal(nameid))))
@@ -36,7 +36,7 @@ func HaveContainerName(nameid string) types.GomegaMatcher {
 // *model.Container and the container matches the specified name or ID, as well
 // as the specified type or flavor.
 func HaveContainerNameAndType(nameid string, typ string) types.GomegaMatcher {
-	return withContainer(
+	return withContainer("HaveContainerNameAndType",
 		And(
 			HaveContainerName(nameid),
 			Or(
@@ -47,7 +47,7 @@ func HaveContainerNameAndType(nameid string, typ string) types.GomegaMatcher {
 // BeInNamedGroup succeeds if actual is a model.Container or *model.Container
 // and the container is in a group with the specified name.
 func BeInNamedGroup(name string) types.GomegaMatcher {
-	return withContainer(
+	return withContainer("BeInNamedGroup",
 		HaveField("Groups", ContainElement(
 			gstruct.PointTo(HaveField("Name", name)))))
 }
@@ -56,7 +56,7 @@ func BeInNamedGroup(name string) types.GomegaMatcher {
 // *model.Container and the container is in a group with the specified name and
 // type or flavor.
 func HaveNamedAndTypedGroup(name string, typ string) types.GomegaMatcher {
-	return withContainer(
+	return withContainer("HaveNamedAndTypedGroup",
 		HaveField("Groups", ContainElement(
 			gstruct.PointTo(
 				And(
@@ -69,12 +69,12 @@ func HaveNamedAndTypedGroup(name string, typ string) types.GomegaMatcher {
 // BePaused succeeds if actual is a model.Container or *model.Container and the
 // container is paused.
 func BePaused() types.GomegaMatcher {
-	return withContainer(HaveField("Paused", BeTrue()))
+	return withContainer("BePaused", HaveField("Paused", BeTrue()))
 }
 
 // withContainer returns a matcher that transforms actual into a container value
 // and then applied the specified matcher.
-func withContainer(matcher types.GomegaMatcher) types.GomegaMatcher {
+func withContainer(name string, matcher types.GomegaMatcher) types.GomegaMatcher {
 	return WithTransform(func(actual interface{}) (model.Container, error) {
 		switch container := actual.(type) {
 		case model.Container:
@@ -83,7 +83,8 @@ func withContainer(matcher types.GomegaMatcher) types.GomegaMatcher {
 			return *container, nil
 		default:
 			return model.Container{}, fmt.Errorf(
-				"HaveName expects a model.Container or *model.Container, but got %T", actual)
+				"%s expects a model.Container or *model.Container, but got %T",
+				name, actual)
 		}
 	}, matcher)
 }
