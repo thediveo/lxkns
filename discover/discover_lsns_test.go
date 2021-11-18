@@ -65,7 +65,9 @@ func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	if err = tostr(fields["user"], &e.User); err != nil {
 		return
 	}
-	err = tostr(fields["command"], &e.Command)
+	if cmd := fields["command"]; cmd != nil { // might be missing sometimes?!
+		err = tostr(fields["command"], &e.Command)
+	}
 	return
 }
 
