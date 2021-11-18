@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package openapispec
+package industrialedge
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestNamespaceTypes(t *testing.T) {
+func TestIEDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/api/openapi-spec package")
+	RunSpecs(t, "lxkns/decorator/industrialedge package")
 }

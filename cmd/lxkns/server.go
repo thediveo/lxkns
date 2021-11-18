@@ -64,8 +64,8 @@ var (
 // within that static directory are used to serve the SPA in the given static
 // directory.
 type appHandler struct {
-	staticPath string
-	indexPath  string
+	staticPath string // file system path to static assets (directory)
+	indexName  string // name of index file, such as "index.html"
 }
 
 // httpError writes a normalized HTTP error message and HTTP status code given
@@ -109,7 +109,12 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		httpError(w, err)
 		return
 	}
+	h.serveIndex(uriPath, w, r)
+}
 
+// serveIndex serves the index file, rewriting the index file on-the-fly to
+// refer to the correct base name.
+func (h appHandler) serveIndex(uriPath string, w http.ResponseWriter, r *http.Request) {
 	// determine the base path to the SPA as seen by clients. Here, we don't
 	// want to rely on "magic" signatures in paths but instead rely on the first
 	// reverse proxy correctly setting some HTTP request header. So, we're in
@@ -165,7 +170,7 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Grab the index.html's contents into a string as we need to modify it
 	// on-the-fly based on where we deem the base path to be. And finally serve
 	// the updated contents.
-	f, err := os.Open(filepath.Join(h.staticPath, h.indexPath))
+	f, err := os.Open(filepath.Join(h.staticPath, h.indexName))
 	if err != nil {
 		httpError(w, err)
 		return
@@ -210,7 +215,7 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 	r.HandleFunc("/api/pidmap", GetPIDMapHandler).Methods("GET")
 	r.PathPrefix("/api").HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNotFound) })
 
-	spa := appHandler{staticPath: "web/lxkns/build", indexPath: "index.html"}
+	spa := appHandler{staticPath: "web/lxkns/build", indexName: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
 	server = &http.Server{Handler: r}

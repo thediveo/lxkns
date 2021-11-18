@@ -71,6 +71,12 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 		}
 		path = ns.Ref()[0]
 	}
+	return portref.openPath(path)
+}
+
+// openPath does the heavy lifting of opening the namespace, specified by its
+// path.
+func (portref PortableReference) openPath(path string) (rel relations.Relation, closer func(), err error) {
 	// Before we run further checks, we have to open the namespace first, so
 	// that it cannot get destroyed anymore as long as we keep the fd open that
 	// is referencing it.
@@ -81,7 +87,7 @@ func (portref PortableReference) Open() (rel relations.Relation, closer func(), 
 	// Ensure to properly close the open namespace reference in case we fail
 	// down below somewhere while deep in the cross-checks.
 	defer func() {
-		if err != nil && nsf != nil {
+		if err != nil { // here we already know that nsf won't be nil.
 			_ = nsf.Close()
 		}
 	}()

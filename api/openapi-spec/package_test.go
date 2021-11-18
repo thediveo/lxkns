@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package industrialedge
+package openapispec
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestIEDecorator(t *testing.T) {
+func TestOpenApiSpec(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/decorator/industrialEdge package")
+	RunSpecs(t, "lxkns/api/openapi-spec package")
 }

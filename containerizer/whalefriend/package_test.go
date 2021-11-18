@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestContainerizerWhalewatcher(t *testing.T) {
+func TestContainerizerWhalefriend(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/containerizer/mobyfriend package")
+	RunSpecs(t, "lxkns/containerizer/whalefriend package")
 }
