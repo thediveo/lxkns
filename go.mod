@@ -25,7 +25,7 @@ require (
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.4
-	github.com/thediveo/whalewatcher v0.4.11
+	github.com/thediveo/whalewatcher v0.4.12
 	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
