@@ -46,7 +46,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
     justifyContent: 'flex-end',
 }))
 
-const SwappyDrawer = styled(SwipeableDrawer)(({ theme, drawerwidth }: SwipeableDrawerStyleProps) => ({
+const SwappyDrawer = styled(SwipeableDrawer)<SwipeableDrawerStyleProps>(({ theme, drawerwidth }: SwipeableDrawerStyleProps) => ({
     width: drawerwidth || defaultDrawerWidth,
     flexShrink: 0,
 

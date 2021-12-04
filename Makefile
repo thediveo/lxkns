@@ -26,7 +26,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify
+.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify scan
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -99,3 +99,8 @@ startapp: ## starts web UI app for development
 
 docsify: ## serves docsified docs on host port(s) 3030 and 3031
 	@docsify serve -p 3030 -P 3031 docs
+
+scan: ## scans the repository for CVEs
+	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
+	syft dir:. -o json > $$BOMFILE && \
+	grype sbom:$$BOMFILE

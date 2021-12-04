@@ -6,7 +6,7 @@ require (
 	github.com/PaesslerAG/gval v1.1.2 // indirect
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd v1.5.8
-	github.com/getkin/kin-openapi v0.82.0
+	github.com/getkin/kin-openapi v0.85.0
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -14,8 +14,7 @@ require (
 	github.com/muesli/termenv v0.9.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
-	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/ory/dockertest/v3 v3.8.0
+	github.com/ory/dockertest/v3 v3.8.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/thediveo/enumflag v0.10.1
@@ -26,7 +25,7 @@ require (
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.4
 	github.com/thediveo/whalewatcher v0.4.12
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
+	golang.org/x/sys v0.0.0-20211204120058-94396e421777
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/client-go v0.22.4 // indirect
