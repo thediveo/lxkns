@@ -35,7 +35,7 @@ glob.sync(path.join(sourcedir, '**/*.svg'))
         const dsticon = path.join(destdir, path.relative(sourcedir, srcicon))
             .replace(/\.svg$/, '.tsx')
         console.log(srcicon, '-->', dsticon)
-        svgicon = fs.readFileSync(srcicon)
+        var svgicon = fs.readFileSync(srcicon)
         const tsxicon = svgr.sync(svgicon, {
             dimensions: false,
             typescript: true,
