@@ -17,11 +17,11 @@ package model
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	g "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestNamespaceTypes(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/model package")
+	RegisterFailHandler(g.Fail)
+	g.RunSpecs(t, "lxkns/model package")
 }

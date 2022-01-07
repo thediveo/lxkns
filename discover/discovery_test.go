@@ -19,7 +19,7 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

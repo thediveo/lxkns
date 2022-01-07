@@ -19,20 +19,20 @@ import (
 	"sort"
 	"strconv"
 
-	. "github.com/onsi/ginkgo"
+	g "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Process", func() {
+var _ = g.Describe("Process", func() {
 
-	It("stringifies", func() {
+	g.It("stringifies", func() {
 		var p *Process
 		Expect(p.String()).To(MatchRegexp(`<nil>`))
 
 		Expect(NewProcess(1)).To(MatchRegexp(`PID 1.+PPID 0`))
 	})
 
-	It("rejects invalid /proc/[PID] status lines", func() {
+	g.It("rejects invalid /proc/[PID] status lines", func() {
 		// Test various invalid field combinations
 		for _, badstat := range []string{
 			"42",
@@ -53,15 +53,15 @@ var _ = Describe("Process", func() {
 		}
 	})
 
-	It("cannot be created for non-existing process/PID", func() {
+	g.It("cannot be created for non-existing process/PID", func() {
 		Expect(NewProcess(0)).To(BeNil())
 	})
 
-	It("skips broken process stat", func() {
+	g.It("skips broken process stat", func() {
 		Expect(NewProcessInProcfs(1, "test/proctable/kaputt")).To(BeNil())
 	})
 
-	It("properties are read from /proc/[PID]", func() {
+	g.It("properties are read from /proc/[PID]", func() {
 		pid := PIDType(os.Getpid())
 		me := NewProcess(pid)
 		Expect(me).NotTo(BeNil())
@@ -69,14 +69,14 @@ var _ = Describe("Process", func() {
 		Expect(me.PPID).To(Equal(PIDType(os.Getppid())))
 	})
 
-	It("validates it exists or exits", func() {
+	g.It("validates it exists or exits", func() {
 		me := NewProcess(PIDType(os.Getpid()))
 		Expect(me.Valid()).To(BeTrue())
 		me.PID = PIDType(1)
 		Expect(me.Valid()).NotTo(BeTrue())
 	})
 
-	It("stringifies descriptive properties", func() {
+	g.It("stringifies descriptive properties", func() {
 		me := NewProcess(PIDType(os.Getpid()))
 		s := me.String()
 		const startre = `(^|\s|[[:punct:]])`
@@ -86,7 +86,7 @@ var _ = Describe("Process", func() {
 		Expect(s).To(MatchRegexp(startre + me.Name + endre))
 	})
 
-	It("gets basename and command line", func() {
+	g.It("gets basename and command line", func() {
 		proc42 := NewProcessInProcfs(PIDType(42), "test/proctable/proc")
 		Expect(proc42.Cmdline).To(HaveLen(3))
 		Expect(proc42.Basename()).To(Equal("mumble.exe"))
@@ -97,23 +97,23 @@ var _ = Describe("Process", func() {
 		Expect(proc667.Basename()).To(Equal("mumble.exe"))
 	})
 
-	It("falls back on process name", func() {
+	g.It("falls back on process name", func() {
 		// Please note that our synthetic PID 1 has no command line, but only
 		// a process name in its stat file.
 		proc1 := NewProcessInProcfs(PIDType(1), "test/proctable/proc")
 		Expect(proc1.Basename()).To(Equal("init"))
 	})
 
-	It("synthesizes basename if all else fails", func() {
+	g.It("synthesizes basename if all else fails", func() {
 		proc := NewProcessInProcfs(PIDType(666), "test/proctable/kaputt")
 		Expect(proc.Basename()).To(Equal("process (666)"))
 	})
 
 })
 
-var _ = Describe("ProcessTable", func() {
+var _ = g.Describe("ProcessTable", func() {
 
-	It("reads synthetic /proc", func() {
+	g.It("reads synthetic /proc", func() {
 		pt := NewProcessTableFromProcfs(false, "test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
@@ -126,11 +126,11 @@ var _ = Describe("ProcessTable", func() {
 		Expect(proc1.Children[0]).To(BeIdenticalTo(proc42))
 	})
 
-	It("returns nil for inaccessible /proc", func() {
+	g.It("returns nil for inaccessible /proc", func() {
 		Expect(NewProcessTableFromProcfs(false, "test/nirvana")).To(BeNil())
 	})
 
-	It("gathers from real /proc", func() {
+	g.It("gathers from real /proc", func() {
 		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		proc := pt[PIDType(os.Getpid())]
@@ -141,9 +141,9 @@ var _ = Describe("ProcessTable", func() {
 
 })
 
-var _ = Describe("ProcessListByPID", func() {
+var _ = g.Describe("ProcessListByPID", func() {
 
-	It("sorts Process lists", func() {
+	g.It("sorts Process lists", func() {
 		p1 := &Process{PID: 1, Name: "foo"}
 		p42 := &Process{PID: 42, Name: "bar"}
 		pls := [][]*Process{
