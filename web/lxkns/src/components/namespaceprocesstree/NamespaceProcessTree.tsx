@@ -259,7 +259,7 @@ export const NamespaceProcessTree = ({
         // state lateron. First, we select a suitable filter depending on the
         // type of namespaces to be rendered and the setting for expanding
         // "top-level" namespace nodes.
-        const expansionCandidateFilter: (Namespace) => boolean
+        const expansionCandidateFilter: (ns: Namespace) => boolean
             = expandInitially
                 ? (ns: Namespace) => ns.type === nstype
                 : ((nstype === 'user' || nstype === 'pid')
