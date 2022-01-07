@@ -17,7 +17,7 @@ package types
 import (
 	"encoding/json"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 
@@ -133,12 +133,8 @@ var _ = Describe("container model JSON", func() {
 			BeIdenticalTo(cmu.Containers.Containers[uint(c2.PID)].Groups[0]))
 		cs := cmu.Containers.ContainerSlice()
 		Expect(cs).To(ConsistOf(
-			PointTo(MatchFields(IgnoreExtras, Fields{
-				"ID": Equal(c1.ID),
-			})),
-			PointTo(MatchFields(IgnoreExtras, Fields{
-				"ID": Equal(c2.ID),
-			})),
+			PointTo(HaveField("ID", Equal(c1.ID))),
+			PointTo(HaveField("ID", Equal(c2.ID))),
 		))
 	})
 

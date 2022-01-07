@@ -20,16 +20,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	g "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/testbasher"
 )
 
-var _ = Describe("Freezer", func() {
+var _ = g.Describe("Freezer", func() {
 
-	It("reads v1 freezer state", func() {
+	g.It("reads v1 freezer state", func() {
 		Expect(frozenV1("test/cgroupies/v1")).To(BeFalse())
 		Expect(frozenV1("test/cgroupies/v1/thawed")).To(BeFalse())
 		Expect(frozenV1("test/cgroupies/v1/somethingelse")).To(BeFalse())
@@ -37,7 +37,7 @@ var _ = Describe("Freezer", func() {
 		Expect(frozenV1("test/cgroupies/v1/frozen")).To(BeTrue())
 	})
 
-	It("reads v2 freezer state", func() {
+	g.It("reads v2 freezer state", func() {
 		Expect(frozenV2("test/cgroupies/v2")).To(BeFalse())
 		Expect(frozenV2("test/cgroupies/v2/thawed")).To(BeFalse())
 		Expect(frozenV2("test/cgroupies/v2/gnawed")).To(BeFalse())
@@ -46,9 +46,9 @@ var _ = Describe("Freezer", func() {
 
 })
 
-var _ = Describe("cgrouping", func() {
+var _ = g.Describe("cgrouping", func() {
 
-	It("finds control groups of processes", func() {
+	g.It("finds control groups of processes", func() {
 		procs := NewProcessTable(false)
 		Expect(procs).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
 			"CpuCgroup":    Not(BeEmpty()),
@@ -56,11 +56,11 @@ var _ = Describe("cgrouping", func() {
 		}))))
 	})
 
-	It("gets fridge status", func() {
+	g.It("gets fridge status", func() {
 		// since we're going to mess around with control groups, we need to be
 		// root (well, simplified constraint).
 		if os.Geteuid() != 0 {
-			Skip("needs root")
+			g.Skip("needs root")
 		}
 		// Pick up the path of the freezer v1 cgroup root; this allows this test
 		// to automatically adjust. However it requires that when we run inside

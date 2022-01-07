@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"

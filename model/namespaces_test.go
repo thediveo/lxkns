@@ -15,14 +15,14 @@
 package model
 
 import (
-	. "github.com/onsi/ginkgo"
+	g "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/species"
 )
 
-var _ = Describe("model", func() {
+var _ = g.Describe("model", func() {
 
-	It("TypeIndex() fails for invalid kernel namespace type", func() {
+	g.It("TypeIndex() fails for invalid kernel namespace type", func() {
 		Expect(TypeIndex(species.CLONE_NEWCGROUP | species.CLONE_NEWNET)).To(
 			Equal(NamespaceTypeIndex(-1)))
 	})
