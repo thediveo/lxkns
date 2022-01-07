@@ -170,8 +170,8 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 	// Extract the Parent PID (field 4). Please note that we've chopped off
 	// two fields, and array indices start at 0: so the index is 3 less than
 	// the field number.
-	ppid, err := strconv.Atoi(fields[4-3])
-	if err != nil || ppid < 0 {
+	ppid, err := strconv.ParseUint(fields[4-3], 10, 32)
+	if err != nil {
 		return nil
 	}
 	proc.PPID = PIDType(ppid)
