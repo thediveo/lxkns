@@ -13,7 +13,7 @@
 // under the License.
 
 import React from 'react'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
@@ -174,7 +174,7 @@ export interface HelpViewerProps {
  * > area of the help viewer that is allowed to overflow and thus shows scroll
  * > bars. And it's not possible to use "position: absolute" as this would
  * > position the ToC button absolute with respect to the complete viewport, but
- * > not the component we've stuck into... 🥴
+ * > not the component we've been stuck into... 🥴
  * >
  * > See also [CSS Position Sticky – How It Really
  * > Works!](https://medium.com/@elad/css-position-sticky-how-it-really-works-54cd01dc2d46)
@@ -183,11 +183,10 @@ export interface HelpViewerProps {
  */
 export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style }: HelpViewerProps) => {
     // Determine the help chapter to show on the basis of the current route.
-    const m = useRouteMatch((baseroute || '') + '/:chapter')
+    const m = useMatch((baseroute || '') + '/:chapter')
     const currentChapterIndex = (m && m.params['chapter'] && findChapter(m.params['chapter'], chapters)) || 0
 
-    // We need to change history when navigating to a new chapter ;)
-    const history = useHistory()
+    const navigate = useNavigate()
 
     // Renders a chapter button linking to a specific chapter, or nothing if the
     // chapter index is out of range. Changes the route when clicked (taking the
@@ -203,7 +202,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
             className={next ? 'next' : 'prev'}
             startIcon={!next && <ChevronLeft />}
             endIcon={next && <ChevronRight />}
-            onClick={() => history.push(`${baseroute || '/'}/${slugify(chapters[chapterIndex])}`)}
+            onClick={() => navigate(`${baseroute || '/'}/${slugify(chapters[chapterIndex])}`)}
         >
             {chapters[chapterIndex].title}
         </Button>)
@@ -220,7 +219,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
 
     // close popup menu, change route...
     const handleMenuItemClick = (event, index) => {
-        history.push(`${baseroute || '/'}/${slugify(chapters[index])}`)
+        navigate(`${baseroute || '/'}/${slugify(chapters[index])}`)
         setAnchorEl(null);
     }
 

@@ -13,7 +13,7 @@
 // under the License.
 
 import React from 'react'
-import { BrowserRouter as Router, Switch, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
 import { CypressHistorySupport } from 'cypress-react-router'
 
 import { SnackbarProvider } from 'notistack'
@@ -215,18 +215,19 @@ const LxknsApp = () => {
                 }
             />
             <Box m={0} flex={1} overflow="auto">
-                <Switch>
-                    <Route exact path="/settings"><Settings /></Route>
-                    <Route exact path="/about"><About /></Route>
-                    <Route path="/help"><Help /></Route>
-                    <Route exact path={
-                        views.map(group => group.filter(viewitem => !!viewitem.type))
-                            .flat().map(viewitem => viewitem.path)}
-                    >
-                        <TypedNamespaces discovery={discovery} action={treeaction} />
-                    </Route>
-                    <Route path="/"><AllNamespaces discovery={discovery} action={treeaction} /></Route>
-                </Switch>
+                <Routes>
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/help/*" element={<Help />} />
+                    {views.map(group => group.filter(viewitem => !!viewitem.type))
+                        .flat().map(viewitem =>
+                            <Route
+                                key={viewitem.path}
+                                path={viewitem.path}
+                                element={<TypedNamespaces discovery={discovery} action={treeaction} />} />
+                        )}
+                    <Route path="/" element={<AllNamespaces discovery={discovery} action={treeaction} />} />
+                </Routes>
             </Box>
         </Box>
     );
