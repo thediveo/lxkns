@@ -26,16 +26,18 @@ import (
 
 var (
 	ce1 = model.ContainerEngine{
-		ID:   "ce1",
-		Type: "typeA",
-		API:  "/foo",
-		PID:  42,
+		ID:      "ce1",
+		Type:    "typeA",
+		Version: "123",
+		API:     "/foo",
+		PID:     42,
 	}
 	ce2 = model.ContainerEngine{
-		ID:   "ce2",
-		Type: "typeB",
-		API:  "/bar",
-		PID:  666,
+		ID:      "ce2",
+		Type:    "typeB",
+		Version: "456",
+		API:     "/bar",
+		PID:     666,
 	}
 	g1 = model.Group{
 		Name:   "groupies",
@@ -149,6 +151,7 @@ var _ = Describe("container model JSON", func() {
 		],
 		"id": "ce1",
 		"type": "typeA",
+		"version": "123",
 		"api": "/foo",
 		"pid": 42
 	},
@@ -158,6 +161,7 @@ var _ = Describe("container model JSON", func() {
 		],
 		"id": "ce2",
 		"type": "typeB",
+		"version": "456",
 		"api": "/bar",
 		"pid": 666
 	}
