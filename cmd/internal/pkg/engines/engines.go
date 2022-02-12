@@ -62,6 +62,11 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 			continue
 		}
 		go func(w *engineplugin.NamedWatcher) {
+			idctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			engID := w.ID(idctx)
+			log.Infof("%s engine with ID %s has version: %s",
+				w.Name, engID, w.Version(idctx))
+			cancel() // ensure to quickly release cancel
 			// Oh, well: time.After is kind of hard to use without small leaks.
 			// Now, a 5s timer will be GC'ed after 5s anyway, but let's do it
 			// properly for once and all, to get the proper habit. For more
@@ -73,10 +78,8 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 				if !wecker.Stop() { // drain the timer, if necessary.
 					<-wecker.C
 				}
-				idctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				log.Infof("synchronized to %s engine with ID %s at API %s",
-					w.Name, w.ID(idctx), w.API())
-				cancel() // ensure to quickly release cancel
+					w.Name, engID, w.API())
 			case <-wecker.C:
 				log.Warnf("%s engine still offline for API %s ... still trying in background",
 					w.Name, w.API())

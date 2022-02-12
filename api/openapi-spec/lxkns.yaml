@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.18.0
+    version: 0.21.0
     description: |-
         Discover Linux-kernel namespaces, almost everywhere in a Linux host. Also look
         for mount points and their hierarchy, as well as for containers.
@@ -907,6 +907,7 @@ components:
             required:
                 - id
                 - type
+                - version
                 - api
                 - pid
                 - containers
@@ -917,6 +918,9 @@ components:
                     type: string
                 type:
                     description: 'Engine type identifier, such as "containerd.io", et cetera.'
+                    type: string
+                version:
+                    description: 'Engine version information.'
                     type: string
                 api:
                     description: Engine API path.

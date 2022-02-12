@@ -51,10 +51,11 @@ func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containe
 // ContainerEngine and the ContainerEngine also aware of its Containers.
 func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []*model.Container {
 	eng := &model.ContainerEngine{
-		ID:   engine.ID(ctx),
-		Type: engine.Type(),
-		API:  engine.API(),
-		PID:  model.PIDType(engine.PID()),
+		ID:      engine.ID(ctx),
+		Type:    engine.Type(),
+		Version: engine.Version(ctx),
+		API:     engine.API(),
+		PID:     model.PIDType(engine.PID()),
 	}
 	for _, projname := range append(engine.Portfolio().Names(), "") {
 		project := engine.Portfolio().Project(projname)
