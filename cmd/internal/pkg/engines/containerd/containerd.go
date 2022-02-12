@@ -33,7 +33,7 @@ func init() {
 		},
 	})
 	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "controlgroup",
+		Name:  "containerd",
 		Group: "cli",
 		Symbols: []plugger.Symbol{
 			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ContainerdSetupCLI},
