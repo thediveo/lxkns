@@ -35,12 +35,12 @@ describe('lxkns app', () => {
     })
 
     it('shows about', () => {
-        cy.historyPush('/about')
+        cy.routerNavigate('/about')
         cy.react('About').contains('Version')
     })
 
     it('lends a helping hand', () => {
-        cy.historyPush('/help')
+        cy.routerNavigate('/help')
         cy.react('HelpViewer').contains('The information in this help')
     })
 
