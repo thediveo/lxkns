@@ -42,7 +42,7 @@ func init() {
 
 // Decorate decorates the discovered Docker (and nerdctl) containers with
 // composer groups, where applicable.
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	total := 0
 	for _, engine := range engines {
 		// Projects do not span multiple container engines inside the same host,

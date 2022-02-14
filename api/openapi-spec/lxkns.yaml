@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.21.0
+    version: 0.22.0
     description: |-
         Discover Linux-kernel namespaces, almost everywhere in a Linux host. Also look
         for mount points and their hierarchy, as well as for containers.
@@ -648,6 +648,10 @@ components:
                 with-mounts:
                     description: true if mount namespace'd mount paths with mount points were discovered.
                     type: boolean
+                labels:
+                    description: |-
+                        Dictionary of key=value pairs passed to decorators to optionally control the
+                        decoration of discovered containers.
             example:
                 skipped-procs: false
                 skipped-tasks: false

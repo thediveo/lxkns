@@ -41,7 +41,7 @@ func init() {
 
 // Decorate decorates the discovered Docker containers with pod groups, where
 // applicable.
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	total := 0
 	for _, engine := range engines {
 		// If it "ain't no" containerd, skip it, as we're looking specifically

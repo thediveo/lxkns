@@ -137,7 +137,9 @@ func init() {
 // namespaces, as well the process table/tree on which the discovery bases at
 // least in part.
 func Namespaces(options ...DiscoveryOption) *Result {
-	opts := DiscoverOpts{}
+	opts := DiscoverOpts{
+		Labels: map[string]string{},
+	}
 	for _, opt := range options {
 		opt(&opts)
 	}

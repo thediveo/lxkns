@@ -24,4 +24,6 @@ const PluginGroup = "lxkns/plugingroup/decorator"
 // labels, et cetera. Instead of passing in all containers as a flat list, the
 // containers are implicitly specified through their responsible container
 // engines in order to allow Decorators to apply engine-specific optimizations.
-type Decorate func(engines []*model.ContainerEngine)
+// The decoration can optionally be controlled for supporting decorators through
+// labels (key-value pairs) specified as part of the discovery process.
+type Decorate func(engines []*model.ContainerEngine, labels map[string]string)
