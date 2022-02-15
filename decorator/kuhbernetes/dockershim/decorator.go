@@ -55,7 +55,7 @@ func validate(s string, re *regexp.Regexp, maxlen int) bool {
 
 // Decorate decorates the discovered Docker containers with pod groups, where
 // applicable.
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	total := 0
 	for _, engine := range engines {
 		// Pods cannot span container engines ;)

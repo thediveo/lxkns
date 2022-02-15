@@ -33,13 +33,14 @@ type DiscoverOpts struct {
 	// If zero, defaults to discovering all namespaces.
 	NamespaceTypes species.NamespaceType `json:"-"`
 
-	ScanProcs            bool `json:"from-procs"`      // Scan processes for attached namespaces.
-	ScanFds              bool `json:"from-fds"`        // Scan open file descriptors for namespaces.
-	ScanBindmounts       bool `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
-	DiscoverHierarchy    bool `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
-	DiscoverOwnership    bool `json:"with-ownership"`  // Discover the ownership of non-user namespaces.
-	DiscoverFreezerState bool `json:"with-freezer"`    // Discover the cgroup freezer state of processes.
-	DiscoverMounts       bool `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
+	ScanProcs            bool              `json:"from-procs"`      // Scan processes for attached namespaces.
+	ScanFds              bool              `json:"from-fds"`        // Scan open file descriptors for namespaces.
+	ScanBindmounts       bool              `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
+	DiscoverHierarchy    bool              `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
+	DiscoverOwnership    bool              `json:"with-ownership"`  // Discover the ownership of non-user namespaces.
+	DiscoverFreezerState bool              `json:"with-freezer"`    // Discover the cgroup freezer state of processes.
+	DiscoverMounts       bool              `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
+	Labels               map[string]string `json:"labels"`          // Pass options (in form of labels) to decorators
 
 	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
 
@@ -68,6 +69,7 @@ func WithStandardDiscovery() DiscoveryOption {
 		o.DiscoverOwnership = true
 		o.DiscoverFreezerState = true
 		o.withPIDmap = false
+		o.Labels = map[string]string{}
 	}
 }
 
@@ -163,6 +165,22 @@ func WithMounts() DiscoveryOption {
 // visibility.
 func WithoutMounts() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.DiscoverMounts = false }
+}
+
+// WithLabel adds a key-value pair to the discovery options.
+func WithLabel(key, value string) DiscoveryOption {
+	return func(o *DiscoverOpts) {
+		o.Labels[key] = value
+	}
+}
+
+// WithLabel adds a map of key-value pair to the discovery options.
+func WithLabels(labels map[string]string) DiscoveryOption {
+	return func(o *DiscoverOpts) {
+		for key, value := range labels {
+			o.Labels[key] = value
+		}
+	}
 }
 
 // WithContainerizer opts for discovery of containers related to namespaces,

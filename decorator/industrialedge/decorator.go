@@ -56,7 +56,7 @@ func init() {
 
 // Decorate decorates the discovered Docker containers with Industrial Edge app
 // project flavor, where applicable.
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	for _, engine := range engines {
 		// If there's an IE runtime container, then decorate it with its special
 		// flavor, so UI tools might choose to display a dedicated icon for easy

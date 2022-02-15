@@ -63,6 +63,15 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 			continue
 		}
 		for _, container := range project.Containers() {
+			// Ouch! Make sure to clone the Labels map and not simply pass it
+			// directly on to the lxkns container objects. Otherwise decorators
+			// adding labels would modify the labels shared through the
+			// underlying container label source. So, clone the labels
+			// (top-level only) and then happy decorating.
+			clonedLabels := model.Labels{}
+			for k, v := range container.Labels {
+				clonedLabels[k] = v
+			}
 			cntr := &model.Container{
 				ID:     container.ID,
 				Name:   container.Name,
@@ -70,7 +79,7 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 				Flavor: eng.Type,
 				PID:    model.PIDType(container.PID),
 				Paused: container.Paused,
-				Labels: container.Labels,
+				Labels: clonedLabels,
 				Engine: eng,
 			}
 			eng.AddContainer(cntr)
