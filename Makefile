@@ -1,8 +1,9 @@
 # Where to install the CLI tool binaries to
 PREFIX ?= /usr/local
 GOPATH = $(shell go env GOPATH)
-GIT_VERSION = $(shell git describe 2>/dev/null || echo "v0.0.0")
 GOGEN = go generate .
+
+GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!="") print m[1]}' defs_version.go
 
 # Go version to use when building the test containers; see README.md for
 # supported versions strategy.
@@ -41,8 +42,8 @@ coverage: ## runs tests with code coverage
 	scripts/cov.sh
 
 deploy: ## deploys lxkns service on host port 5010
-	@echo "deploying version" $${GIT_VERSION}
 	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
 	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
@@ -90,12 +91,16 @@ report: ## runs goreportcard
 	@./scripts/goreportcard.sh
 
 buildapp: ## builds web UI app
-	@echo "building version" $${GIT_VERSION}
-	@cd web/lxkns && yarn build
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	@echo "building version" $(GIT_VERSION)
+	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn build
 
 startapp: ## starts web UI app for development
-	@echo "starting version" $${GIT_VERSION}
-	@cd web/lxkns && yarn start
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	@echo "starting version" $(GIT_VERSION)
+	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn start
 
 docsify: ## serves docsified docs on host port(s) 3030 and 3031
 	@docsify serve -p 3030 -P 3031 docs
