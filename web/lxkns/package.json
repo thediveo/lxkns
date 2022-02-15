@@ -69,9 +69,9 @@
     "url-parse": "^1.5.3"
   },
   "scripts": {
-    "start": "REACT_APP_GIT_VERSION=$(git describe) PORT=3030 react-scripts start",
-    "build": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build",
-    "build:dev": "REACT_APP_GIT_VERSION=$(git describe) react-scripts build --profile",
+    "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} PORT=3030 react-scripts start",
+    "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} react-scripts build",
+    "build:dev": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} react-scripts build --profile",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION react-scripts build",
     "icons": "node genicons",
     "cypress": "NODE_ENV=test cypress open",

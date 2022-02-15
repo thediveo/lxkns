@@ -37,6 +37,7 @@ var _ = Describe("discovery result JSON", func() {
 			"with-ownership": true,
 			"with-freezer": true,
 			"with-mounts": true,
+			"labels": {},
 			"scanned-namespace-types": [
 			  "time",
 			  "mnt",

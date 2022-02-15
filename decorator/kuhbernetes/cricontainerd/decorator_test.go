@@ -114,7 +114,7 @@ var _ = Describe("Decorates containerd pod containers", func() {
 
 		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
 		Expect(allcontainers).NotTo(BeEmpty())
-		Decorate([]*model.ContainerEngine{allcontainers[0].Engine})
+		Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
 
 		containers := make([]*model.Container, 0, len(names))
 		for _, container := range allcontainers {
