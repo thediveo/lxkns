@@ -6,7 +6,7 @@ require github.com/opencontainers/runc v1.1.0 // indirect
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.5.9
+	github.com/containerd/containerd v1.5.10
 	github.com/getkin/kin-openapi v0.89.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
