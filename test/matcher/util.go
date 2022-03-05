@@ -23,8 +23,8 @@ import (
 )
 
 // withContainer returns a matcher that transforms actual into a container value
-// and then applied the specified matcher.
-func withContainer(name string, matcher types.GomegaMatcher) types.GomegaMatcher {
+// and then applies the specified matcher.
+func withContainer(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
 	return o.WithTransform(func(actual interface{}) (model.Container, error) {
 		switch container := actual.(type) {
 		case model.Container:
@@ -34,7 +34,24 @@ func withContainer(name string, matcher types.GomegaMatcher) types.GomegaMatcher
 		default:
 			return model.Container{}, fmt.Errorf(
 				"%s expects a model.Container or *model.Container, but got %T",
-				name, actual)
+				matcherName, actual)
+		}
+	}, matcher)
+}
+
+// withPod returns a matcher that transforms actual into a (pod) group value and
+// then applies the specified matcher.
+func withPod(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
+	return o.WithTransform(func(actual interface{}) (model.Group, error) {
+		switch group := actual.(type) {
+		case model.Group:
+			return group, nil
+		case *model.Group:
+			return *group, nil
+		default:
+			return model.Group{}, fmt.Errorf(
+				"%s expects a model.Group or *model.Group, but got %T",
+				matcherName, actual)
 		}
 	}, matcher)
 }

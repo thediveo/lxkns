@@ -19,30 +19,33 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/lxkns/test/matcher"
 )
 
-var names = map[string]struct{}{
-	"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10): {},
-	"pompous_pm" + strconv.FormatInt(GinkgoRandomSeed(), 10):   {},
-}
+var _ = Describe("Decorates composer projects", Ordered, func() {
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+	var names = map[string]struct{}{
+		"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10): {},
+		"pompous_pm" + strconv.FormatInt(GinkgoRandomSeed(), 10):   {},
+	}
 
-var _ = Describe("Decorates composer projects", func() {
+	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
 	var pool *dockertest.Pool
 	var sleepies []*dockertest.Resource
 	var docksock string
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -79,11 +82,12 @@ var _ = Describe("Decorates composer projects", func() {
 				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
 				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
 				return c.State.Running
-			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
+			}).WithTimeout(5*time.Second).WithPolling(100*time.Millisecond).
+				Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
 	})
 
-	AfterEach(func() {
+	AfterAll(func() {
 		for _, sleepy := range sleepies {
 			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 		}
@@ -113,10 +117,8 @@ var _ = Describe("Decorates composer projects", func() {
 		Expect(containers).To(HaveLen(len(names)))
 
 		for _, container := range containers {
-			g := container.Group(ComposerGroupType)
-			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(ComposerGroupType))
-			Expect(g.Containers).To(ConsistOf(container))
+			Expect(container).To(BeInAGroup(WithType(ComposerGroupType)))
+			Expect(container.Group(ComposerGroupType).Containers).To(ConsistOf(container))
 		}
 	})
 

@@ -26,7 +26,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/lxkns/matcher"
+	. "github.com/thediveo/lxkns/test/matcher"
 )
 
 const sleepyname = "pompous_pm"
@@ -95,7 +95,7 @@ var _ = Describe("ContainerEngine", func() {
 		}).Should(BeTrue())
 
 		cntrs := cew.Containers(ctx, nil, nil)
-		Expect(cntrs).To(ContainElement(HaveContainerName(sleepyname)))
+		Expect(cntrs).To(ContainElement(WithName(sleepyname)))
 
 		var c *model.Container
 		for _, cntr := range cntrs {

@@ -15,35 +15,23 @@
 package matcher
 
 import (
-	"fmt"
-
-	. "github.com/onsi/gomega"
+	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
-	"github.com/thediveo/lxkns/model"
 )
 
-// HavePodName succeeds if actual is a model.Group or *model.Group and the
-// groups is a Kubernetes/k8s pod of the specified namespace/name.
-func HavePodName(namespacedname string) types.GomegaMatcher {
-	return WithTransform(func(actual interface{}) (model.Group, error) {
-		switch group := actual.(type) {
-		case model.Group:
-			return group, nil
-		case *model.Group:
-			return *group, nil
-		default:
-			return model.Group{}, fmt.Errorf(
-				"HaveNamedPod expects a model.Group or *model.Group, but got %T", actual)
-		}
-	}, And(
-		HaveField("Name", namespacedname),
-		HaveField("Type", Equal(kuhbernetes.PodGroupType))))
+// BeAPod succeeds if actual is a model.Group or a *model.Group and also
+// satisfies all specified option matchers.
+func BeAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
+	return withPod("BeAPod", o.SatisfyAll(
+		o.HaveField("Type", kuhbernetes.PodGroupType),
+		o.SatisfyAll(opts...)))
 }
 
-// BelongToNamedPod succeeds if actual is a model.Container or *model.Container
-// and the container is grouped by a Kubernetes/k8s pod.
-func BelongToNamedPod(namespacedname string) types.GomegaMatcher {
+// BeInAPod succeeds if actual is a model.Container or *model.Container and the
+// container is grouped by a Kubernetes/k8s pod.
+func BeInAPod(namespacedname string) types.GomegaMatcher {
 	return withContainer("BeInNamedPod",
-		HaveField("Groups", ContainElement(HavePodName(namespacedname))))
+		o.HaveField("Groups",
+			o.ContainElement(BeAPod(WithName(namespacedname)))))
 }

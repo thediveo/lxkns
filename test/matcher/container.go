@@ -17,6 +17,7 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
+	"github.com/thediveo/whalewatcher/engineclient/moby"
 	wm "github.com/thediveo/whalewatcher/test/matcher"
 )
 
@@ -35,12 +36,25 @@ func WithName(nameid string) types.GomegaMatcher {
 // WithType succeeds if actual has Type and Flavor fields and the specified
 // typeflavor matches at least one of these fields.
 func WithType(typeflavor string) types.GomegaMatcher {
-	return o.SatisfyAny(o.HaveField("Type", typeflavor), o.HaveField("Flavor", typeflavor))
+	return o.SatisfyAny(o.HaveField("Type", typeflavor), wm.HaveOptionalField("Flavor", typeflavor))
 }
 
-// BeInGroup succeeds if actual has a Groups field and the specified options all
-// succeed on one of the elements from the Groups field.
-func BeInGroup(opts ...types.GomegaMatcher) types.GomegaMatcher {
+// WithFlavor succeeds if actual has a Flavor field and the specified flavor
+// matches this field.
+func WithFlavor(flavor string) types.GomegaMatcher {
+	return o.SatisfyAny(o.HaveField("Flavor", flavor))
+}
+
+// BeADockerContainer succeeds if actual is a Docker container and all options
+// also succeed.
+func BeADockerContainer(opts ...types.GomegaMatcher) types.GomegaMatcher {
+	return withContainer("BeADockerContainer",
+		o.SatisfyAll(WithType(moby.Type), o.SatisfyAll(opts...)))
+}
+
+// BeInAGroup succeeds if actual has a Groups field and the specified options
+// all succeed on one of the elements from the Groups field.
+func BeInAGroup(opts ...types.GomegaMatcher) types.GomegaMatcher {
 	return withContainer("WithinGroup",
 		o.HaveField("Groups", o.ContainElement(o.SatisfyAll(opts...))))
 }

@@ -34,6 +34,8 @@ var container = model.Container{
 var _ = Describe("container", func() {
 
 	It("doesn't match something else", func() {
+		Expect(BeADockerContainer().Match(nil)).Error().To(
+			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got <nil>")))
 		Expect(BeAContainer().Match(42)).Error().To(
 			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got int")))
 	})
@@ -61,18 +63,18 @@ var _ = Describe("container", func() {
 	})
 
 	It("matches container by named group", func() {
-		Expect(container).NotTo(BeInGroup(WithName("iwo")))
+		Expect(container).NotTo(BeInAGroup(WithName("iwo")))
 
-		Expect(container).To(BeInGroup(WithName(container.Groups[0].Name)))
+		Expect(container).To(BeInAGroup(WithName(container.Groups[0].Name)))
 	})
 
 	It("matches container by named group and type/flavor", func() {
-		Expect(container).NotTo(BeInGroup(
+		Expect(container).NotTo(BeInAGroup(
 			WithName(container.Groups[0].Name), WithType("iwo")))
 
-		Expect(container).To(BeInGroup(
+		Expect(container).To(BeInAGroup(
 			WithName(container.Groups[0].Name), WithType(container.Groups[0].Type)))
-		Expect(container).To(BeInGroup(
+		Expect(container).To(BeInAGroup(
 			WithName(container.Groups[0].Name), WithType(container.Groups[0].Flavor)))
 	})
 

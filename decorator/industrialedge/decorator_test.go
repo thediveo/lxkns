@@ -21,7 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
+	. "github.com/thediveo/lxkns/test/matcher"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
@@ -31,23 +31,23 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var names = map[string]struct {
-	projectname string
-}{
-	"edgy_emil":              {projectname: "foobar_project"},
-	"furious_freddy":         {projectname: "foobar_project"},
-	edgeRuntimeContainerName: {},
-}
+var _ = Describe("Decorates composer projects", Ordered, func() {
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+	var names = map[string]struct {
+		projectname string
+	}{
+		"edgy_emil":              {projectname: "foobar_project"},
+		"furious_freddy":         {projectname: "foobar_project"},
+		edgeRuntimeContainerName: {},
+	}
 
-var _ = Describe("Decorates composer projects", func() {
+	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
 	var pool *dockertest.Pool
 	var sleepies []*dockertest.Resource
 	var docksock string
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -93,7 +93,7 @@ var _ = Describe("Decorates composer projects", func() {
 		}
 	})
 
-	AfterEach(func() {
+	AfterAll(func() {
 		for _, sleepy := range sleepies {
 			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 		}
@@ -123,19 +123,15 @@ var _ = Describe("Decorates composer projects", func() {
 		}
 		Expect(containers).To(HaveLen(len(names)))
 
-		Expect(containers).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
-			"Name":   Equal(edgeRuntimeContainerName),
-			"Flavor": Equal(IndustrialEdgeRuntimeFlavor),
-		}))))
+		Expect(containers).To(ContainElement(BeAContainer(
+			WithName(edgeRuntimeContainerName), WithFlavor(IndustrialEdgeRuntimeFlavor))))
 
 		for _, container := range containers {
 			if names[container.Name].projectname == "" {
 				continue
 			}
-			g := container.Group(composer.ComposerGroupType)
-			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(composer.ComposerGroupType))
-			Expect(g.Flavor).To(Equal(IndustrialEdgeAppFlavor))
+			Expect(container).To(BeInAGroup(
+				WithType(composer.ComposerGroupType), WithFlavor(IndustrialEdgeAppFlavor)))
 		}
 	})
 
