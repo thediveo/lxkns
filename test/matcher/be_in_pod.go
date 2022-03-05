@@ -17,21 +17,12 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 )
 
-// BeAPod succeeds if actual is a model.Group or a *model.Group and also
-// satisfies all specified option matchers.
-func BeAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
-	return withPod("BeAPod", o.SatisfyAll(
-		o.HaveField("Type", kuhbernetes.PodGroupType),
-		o.SatisfyAll(opts...)))
-}
-
 // BeInAPod succeeds if actual is a model.Container or *model.Container and the
-// container is grouped by a Kubernetes/k8s pod.
-func BeInAPod(namespacedname string) types.GomegaMatcher {
-	return withContainer("BeInNamedPod",
+// container is grouped by a Kubernetes/k8s pod, and the options also succeed.
+func BeInAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
+	return withContainer("BeInAPod",
 		o.HaveField("Groups",
-			o.ContainElement(BeAPod(WithName(namespacedname)))))
+			o.ContainElement(BeAPod(opts...))))
 }
