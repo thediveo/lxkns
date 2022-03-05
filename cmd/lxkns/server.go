@@ -54,6 +54,10 @@ const OriginalUrlHeader = "X-Forwarded-Uri"
 // empty element.
 var baseRe = regexp.MustCompile(`(<base href=").*?("\s*/>)`)
 
+// singleLineRe matches problematic white space in strings that are going to be
+// logged, as to avoid user input trying to mimic (in)valid log entries.
+var singleLineRe = regexp.MustCompile(`(\r)|(\n)|(\t)|(\v)|(\f)`)
+
 var (
 	once   sync.Once
 	server *http.Server
@@ -97,8 +101,12 @@ func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// simply use http.FileServer to serve the existing static file; please
 		// note that http.FileServer.ServeHTTP correctly sanitizes r.URL.Path
 		// itself before trying to serve the filesystem resource, so it is kept
-		// inside h.staticPath.
-		log.Debugf("serving static resource %s", uriPath)
+		// inside h.staticPath. However, at least some static code analysis
+		// scanners still go berserk, so we sanitize further -- can we consider
+		// it boosterism?
+		log.Debugfn(func() string {
+			return "serving static resource " + singleLineRe.ReplaceAllString(uriPath, `\?`)
+		})
 		http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 		return
 	} else if err != nil && !os.IsNotExist(err) {

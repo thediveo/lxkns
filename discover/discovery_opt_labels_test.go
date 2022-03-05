@@ -1,4 +1,4 @@
-// Copyright 2021 Harald Albrecht.
+// Copyright 2022 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,55 +12,74 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build linux
-// +build linux
-
 package discover
 
 import (
 	"context"
 	"os"
-	"regexp"
-	"strconv"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
+	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/decorator/composer"
+	"github.com/thediveo/lxkns/decorator"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
-var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)
+const testlabelname = "decorator-discovery-label-test"
+const testlabelvalue = "test-value"
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+func init() {
+	plugger.RegisterPlugin(&plugger.PluginSpec{
+		Name:  "decorator-label-test",
+		Group: decorator.PluginGroup,
+		Symbols: []plugger.Symbol{
+			decorator.Decorate(Decorate),
+		},
+	})
+}
 
-var _ = Describe("Discover containers", func() {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
+	for _, engine := range engines {
+		for _, c := range engine.Containers {
+			c.Labels[testlabelname] = labels[testlabelname]
+		}
+	}
+}
+
+var _ = Describe("decorator discovery labels", Ordered, func() {
+
+	const name = "decorator-test-container"
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
 	var docksock string
 
-	BeforeEach(func() {
-		// We cannot discover the initial container process running as root when
-		// we're not root too.
-		if os.Geteuid() != 0 {
-			Skip("needs root")
+	BeforeAll(func() {
+		// In case we're run as root we use a procfs wormhole so we can access
+		// the Docker socket even from a test container without mounting it
+		// explicitly into the test container.
+		if os.Geteuid() == 0 {
+			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
-		docksock = "unix:///proc/1/root/run/docker.sock"
 
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
+		_ = pool.RemoveContainerByName(name)
+		Eventually(func() error {
+			_, err := pool.Client.InspectContainer(name)
+			return err
+		}, "5s", "100ms").Should(HaveOccurred())
 		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "busybox",
 			Tag:        "latest",
-			Name:       sleepyname,
+			Name:       name,
 			Cmd:        []string{"/bin/sleep", "120s"},
-			Labels: map[string]string{
-				composer.ComposerProjectLabel: "lxkns-project",
-			},
+			Labels:     map[string]string{},
 		})
 		// Skip test in case Docker is not accessible.
 		if err != nil && nodockerre.MatchString(err.Error()) {
@@ -74,12 +93,11 @@ var _ = Describe("Discover containers", func() {
 		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 	})
 
-	AfterEach(func() {
+	AfterAll(func() {
 		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 	})
 
-	It("finds containers and relates them with their initial processes", func() {
-		By("spinning up a Docker watcher")
+	It("passes discovery labels to decorators", func() {
 		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -87,23 +105,22 @@ var _ = Describe("Discover containers", func() {
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()
-		Eventually(mw.Ready()).Should(BeClosed(), "dockerd watcher failed to synchronize")
 
-		By("looking for the sleepy container")
-		allns := Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
-		sleepy := allns.Containers.FirstWithName(sleepyname)
-		Expect(sleepy).NotTo(BeNil())
-		Expect(sleepy.PID).NotTo(BeZero())
-		Expect(allns.Processes).To(HaveKey(sleepy.PID))
-		Expect(sleepy.Process).NotTo(BeNil())
-		Expect(sleepy.Process.Container).To(Equal(sleepy))
+		<-mw.Ready()
 
-		g := sleepy.Group(composer.ComposerGroupType)
-		Expect(g).NotTo(BeNil())
-		Expect(g.Type).To(Equal(composer.ComposerGroupType))
-		Expect(g.Name).To(Equal("lxkns-project"))
-		Expect(g.Containers).To(HaveLen(1))
-		Expect(g.Containers).To(ConsistOf(sleepy))
+		allns := Namespaces(
+			WithStandardDiscovery(),
+			WithLabel(testlabelname, testlabelvalue),
+			WithContainerizer(cizer))
+		Expect(allns.Containers).To(ContainElement(
+			HaveValue(HaveField("Labels", HaveKeyWithValue(testlabelname, testlabelvalue)))))
+
+		allns = Namespaces(
+			WithStandardDiscovery(),
+			WithContainerizer(cizer))
+		Expect(allns.Containers).NotTo(ContainElement(
+			HaveValue(HaveField("Labels", HaveKeyWithValue(testlabelname, testlabelvalue)))))
+
 	})
 
 })

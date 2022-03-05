@@ -30,9 +30,6 @@ ignore:
     - vulnerability: CVE-2015-5237 # C, not Go module
       package:
         type: go-module
-    - vulnerability: CVE-2017-7297 # rancher, not at all docker
-      package:
-        type: go-module
     - vulnerability: CVE-2017-18589 # rust, not npm package
       package:
         type: npm

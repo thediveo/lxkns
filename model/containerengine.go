@@ -24,6 +24,8 @@ type ContainerEngine struct {
 	// Identifier of the type of container engine, such as "docker.com",
 	// "containerd.io", et cetera.
 	Type string `json:"type"`
+	// Container engine version information.
+	Version string `json:"version"`
 	// Container engine API path (in initial mount namespace).
 	API string `json:"api"`
 	// Container engine PID, if known. Otherwise, zero.

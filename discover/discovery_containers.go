@@ -88,6 +88,6 @@ func discoverContainers(result *Result) {
 	// Run registered Decorators on discovered containers.
 	decorators := plugger.New(decorator.PluginGroup)
 	for _, decorateur := range decorators.Func("Decorate") {
-		decorateur.(decorator.Decorate)(engines)
+		decorateur.(decorator.Decorate)(engines, result.Options.Labels)
 	}
 }
