@@ -8,7 +8,7 @@ jobs:
 
   buildandtest:
     name: Build and Test on Go ${{matrix.go}}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         go: ['1.17', '1.16']
@@ -33,9 +33,18 @@ jobs:
 
   testwebapp:
     name: Test web ui of lxkns service
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: buildandtest
+    strategy:
+      matrix:
+        go: ['1.17']
     steps:
+    - name: Set up Go ${{matrix.go}}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{matrix.go}}
+      id: go
+
     - name: Check out code
       uses: actions/checkout@v2
       with:

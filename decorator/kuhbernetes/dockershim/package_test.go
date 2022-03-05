@@ -16,6 +16,7 @@ package dockershim
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,5 +24,7 @@ import (
 
 func TestK8sDockershimDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
+	_, reporterConfig := GinkgoConfiguration()
+	reporterConfig.SlowSpecThreshold = 30 * time.Second
 	RunSpecs(t, "lxkns/decorator/kuhbernetes/dockershim package")
 }

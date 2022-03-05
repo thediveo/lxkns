@@ -12,19 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package cricontainerd
+package matcher
 
 import (
 	"testing"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-func TestK8sContainerdDecorator(t *testing.T) {
+func TestMatcher(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, reporterConfig := GinkgoConfiguration()
-	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
+	RunSpecs(t, "lxkns/test/matcher package")
 }

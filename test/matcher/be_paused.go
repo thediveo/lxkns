@@ -1,4 +1,4 @@
-// Copyright 2020 Harald Albrecht.
+// Copyright 2021 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,19 +12,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package cricontainerd
+package matcher
 
 import (
-	"testing"
-	"time"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	o "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
-func TestK8sContainerdDecorator(t *testing.T) {
-	RegisterFailHandler(Fail)
-	_, reporterConfig := GinkgoConfiguration()
-	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
+// BePaused succeeds if actual is a model.Container or *model.Container and the
+// container is paused.
+func BePaused() types.GomegaMatcher {
+	return withContainer("BePaused", o.HaveField("Paused", o.BeTrue()))
 }

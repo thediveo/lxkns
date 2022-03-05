@@ -19,36 +19,39 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/lxkns/test/matcher"
 )
 
-var names = map[string]bool{
-	"k8s_foo_foopod_foons_123uid_1": true,
-	"k8s_bar_foopod_foons_123uid_1": true,
-	"k8s_POD_foopod_foons_123uid_1": true,
-	"k8s_123":                       false,
-	"k8s_abc-_def_ghi_123_1":        false,
-	"k8s_abc_def-_ghi_123_1":        false,
-	"k8s_abc_def_ghi-_123_1":        false,
-}
+var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
-var _ = Describe("Decorates k8s docker shim containers", func() {
+	var names = map[string]bool{
+		"k8s_foo_foopod_foons_123uid_1": true,
+		"k8s_bar_foopod_foons_123uid_1": true,
+		"k8s_POD_foopod_foons_123uid_1": true,
+		"k8s_123":                       false,
+		"k8s_abc-_def_ghi_123_1":        false,
+		"k8s_abc_def-_ghi_123_1":        false,
+		"k8s_abc_def_ghi-_123_1":        false,
+	}
 
 	var pool *dockertest.Pool
 	var sleepies []*dockertest.Resource
 	var docksock string
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -59,12 +62,15 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
+
+		By("creating fake pod containers")
 		for name := range names {
 			_ = pool.RemoveContainerByName(name)
 			Eventually(func() error {
 				_, err := pool.Client.InspectContainer(name)
 				return err
-			}, "5s", "100ms").Should(HaveOccurred())
+			}).WithTimeout(5 * time.Second).WithPolling(100 * time.Millisecond).
+				Should(HaveOccurred())
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
 				Tag:        "latest",
@@ -79,6 +85,8 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 			Expect(err).NotTo(HaveOccurred())
 			sleepies = append(sleepies, sleepy)
 		}
+
+		By("waiting for all fake containers to be running")
 		// Make sure that all newly created containers are in running state
 		// before we run unit tests which depend on the correct list of
 		// alive(!)=running containers.
@@ -91,7 +99,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		}
 	})
 
-	AfterEach(func() {
+	AfterAll(func() {
 		for _, sleepy := range sleepies {
 			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 		}
@@ -112,6 +120,7 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		Expect(allcontainers).NotTo(BeEmpty())
 		Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
 
+		By("checking for all fakes to be found")
 		containers := make([]*model.Container, 0, len(names))
 		for _, container := range allcontainers {
 			if _, ok := names[container.Name]; ok {
@@ -120,20 +129,20 @@ var _ = Describe("Decorates k8s docker shim containers", func() {
 		}
 		Expect(containers).To(HaveLen(len(names)))
 
+		By("checking for correct decoration")
 		for _, container := range containers {
 			g := container.Group(kuhbernetes.PodGroupType)
 			if !names[container.Name] {
 				Expect(g).To(BeNil(), "non-pod container %s", container.Name)
 				continue
 			}
-			Expect(g).NotTo(BeNil(), "pod container %s", container.Name)
-			Expect(g.Type).To(Equal(kuhbernetes.PodGroupType), container.Name)
+			Expect(g).To(BeAPod(), "pod container %s", container.Name)
 			Expect(g.Containers).To(ContainElement(container), container.Name)
 			Expect(container.Labels[kuhbernetes.PodUidLabel]).To(Equal("123uid"), container.Name)
 			if strings.Contains(container.Name, "_POD_") {
-				Expect(container.Labels).To(HaveKey(kuhbernetes.PodSandboxLabel), container.Name)
+				Expect(container).To(HaveLabel(kuhbernetes.PodSandboxLabel), container.Name)
 			} else {
-				Expect(container.Labels).NotTo(HaveKey(kuhbernetes.PodSandboxLabel), container.Name)
+				Expect(container).NotTo(HaveLabel(kuhbernetes.PodSandboxLabel), container.Name)
 			}
 		}
 	})
