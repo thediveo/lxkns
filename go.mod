@@ -2,12 +2,15 @@ module github.com/thediveo/lxkns
 
 go 1.17
 
-require github.com/opencontainers/runc v1.1.0 // indirect
+require (
+	github.com/moby/sys/signal v0.7.0 // indirect
+	github.com/opencontainers/runc v1.1.0 // indirect
+)
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.5.9
-	github.com/getkin/kin-openapi v0.89.0
+	github.com/containerd/containerd v1.6.1
+	github.com/getkin/kin-openapi v0.90.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
 	github.com/onsi/gomega v1.18.1
@@ -21,15 +24,15 @@ require (
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.6
-	github.com/thediveo/whalewatcher v0.6.0
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+	github.com/thediveo/whalewatcher v0.6.1
+	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
-	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/PaesslerAG/gval v1.1.2 // indirect
@@ -58,7 +61,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.14.2 // indirect
+	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -67,7 +70,7 @@ require (
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/mountinfo v0.6.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
-	github.com/onsi/ginkgo/v2 v2.1.2
+	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
@@ -79,11 +82,11 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	google.golang.org/genproto v0.0.0-20220211171837-173942840c17 // indirect
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	k8s.io/client-go v0.23.3 // indirect
+	k8s.io/client-go v0.23.4 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
