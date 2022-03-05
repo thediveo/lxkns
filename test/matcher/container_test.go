@@ -15,7 +15,7 @@
 package matcher
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
 )
@@ -34,47 +34,46 @@ var container = model.Container{
 var _ = Describe("container", func() {
 
 	It("doesn't match something else", func() {
-		Expect(HaveContainerName("42").Match(42)).Error().To(
+		Expect(BeAContainer().Match(42)).Error().To(
 			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got int")))
 	})
 
-	It("matches container by name or ID", func() {
-		Expect(container).NotTo(HaveContainerName("rumpelpumpel"))
+	It("matches by name or ID", func() {
+		Expect(container).NotTo(BeAContainer(WithName("rumpelpumpel")))
 
-		Expect(container).To(HaveContainerName(container.Name))
-		Expect(container).To(HaveContainerName(container.ID))
+		Expect(container).To(BeAContainer(WithName(container.Name)))
+		Expect(container).To(BeAContainer(WithName(container.ID)))
 
-		Expect(&container).To(HaveContainerName(container.Name))
+		Expect(&container).To(BeAContainer(WithName(container.Name)))
 	})
 
 	It("matches container by name/ID and type/flavor", func() {
-		Expect(container).NotTo(HaveContainerNameAndType(container.Name, "rumpelpumpel"))
+		Expect(container).NotTo(BeAContainer(
+			WithName(container.Name), WithType("rumpelpumpel")))
 
-		Expect(container).To(HaveContainerNameAndType(container.Name, container.Type))
-		Expect(container).To(HaveContainerNameAndType(container.Name, container.Flavor))
+		Expect(container).To(BeAContainer(
+			WithName(container.Name), WithType(container.Type)))
+		Expect(container).To(BeAContainer(
+			WithName(container.Name), WithType(container.Flavor)))
 
-		Expect(&container).To(HaveContainerNameAndType(container.Name, container.Type))
+		Expect(&container).To(BeAContainer(
+			WithName(container.Name), WithType(container.Type)))
 	})
 
 	It("matches container by named group", func() {
-		Expect(container).NotTo(BeInNamedGroup("iwo"))
+		Expect(container).NotTo(BeInGroup(WithName("iwo")))
 
-		Expect(container).To(BeInNamedGroup(container.Groups[0].Name))
+		Expect(container).To(BeInGroup(WithName(container.Groups[0].Name)))
 	})
 
 	It("matches container by named group and type/flavor", func() {
-		Expect(container).NotTo(HaveNamedAndTypedGroup(container.Groups[0].Name, "iwo"))
+		Expect(container).NotTo(BeInGroup(
+			WithName(container.Groups[0].Name), WithType("iwo")))
 
-		Expect(container).To(HaveNamedAndTypedGroup(container.Groups[0].Name, container.Groups[0].Type))
-		Expect(container).To(HaveNamedAndTypedGroup(container.Groups[0].Name, container.Groups[0].Flavor))
-	})
-
-	It("matches a paused container", func() {
-		Expect(container).To(BePaused())
-
-		c := container
-		c.Paused = false
-		Expect(c).NotTo(BePaused())
+		Expect(container).To(BeInGroup(
+			WithName(container.Groups[0].Name), WithType(container.Groups[0].Type)))
+		Expect(container).To(BeInGroup(
+			WithName(container.Groups[0].Name), WithType(container.Groups[0].Flavor)))
 	})
 
 })

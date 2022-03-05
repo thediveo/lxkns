@@ -174,7 +174,7 @@ func WithLabel(key, value string) DiscoveryOption {
 	}
 }
 
-// WithLabel adds a map of key-value pair to the discovery options.
+// WithLabels adds a map of key-value pair to the discovery options.
 func WithLabels(labels map[string]string) DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		for key, value := range labels {
