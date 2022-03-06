@@ -20,7 +20,21 @@ import (
 )
 
 // BeAContainer succeeds if actual is a model.Container or *model.Container and
-// also satisfies all specified option matchers.
+// also satisfies all specified option matchers. A typical use is to use
+// BeAContainer in combination with the "WithX" matchers, such as WithName and
+// WithType. Of course, any other matcher can be specified as an option matcher
+// to BeAContainer as needed.
+//
+//   Expect(c).To(BeAContainer(WithName("foobar"), WithType(moby.Type),
+//       BePaused()))
+//
+// For instance, this makes checking for the presence of certain containers in
+// slices, arrays and maps straightforward, expecting a combination of
+// properties not only of a specific name, but also being part of a particular
+// Kubernetes pod or Composer project.
+//
+//   Expect(containers).To(ContainElement(BeAContainer(
+//       WithName("foobar"), BeInAPod(WithName("default/pod")))))
 func BeAContainer(opts ...types.GomegaMatcher) types.GomegaMatcher {
 	return withContainer("HaveContainer", o.SatisfyAll(opts...))
 }
