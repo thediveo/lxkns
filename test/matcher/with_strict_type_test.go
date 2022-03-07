@@ -1,4 +1,4 @@
-// Copyright 2021 Harald Albrecht.
+// Copyright 2022 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -18,27 +18,31 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/engineclient/moby"
 )
 
-var _ = Describe("BePaused matcher", func() {
+var _ = Describe("WithStrictType matcher", func() {
 
-	var container = model.Container{
-		ID:     "1234567890",
-		Name:   "foo_bar",
-		Type:   "ducker.io",
-		Flavor: "fluffy",
-		Groups: []*model.Group{
-			{Name: "fluffy", Type: "group.io", Flavor: "fluffy.io"},
-		},
-		Paused: true,
-	}
+	It("matches container by type only", func() {
+		var container = model.Container{
+			Type:   moby.Type,
+			Flavor: "moby",
+		}
 
-	It("matches a paused container", func() {
-		Expect(container).To(BePaused())
+		Expect(container).To(WithStrictType(container.Type))
+		Expect(container).NotTo(WithStrictType(container.Flavor))
 
-		c := container
-		c.Paused = false
-		Expect(c).NotTo(BePaused())
+		Expect(container).NotTo(WithStrictType("DOH!"))
+	})
+
+	It("matches group by name", func() {
+		var group = model.Group{
+			Type: "composer",
+		}
+
+		Expect(group).To(WithType(group.Type))
+
+		Expect(group).NotTo(WithName("DOH!"))
 	})
 
 })

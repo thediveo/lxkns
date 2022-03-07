@@ -20,8 +20,10 @@ import (
 	"github.com/thediveo/whalewatcher/engineclient/moby"
 )
 
-// BeADockerContainer succeeds if actual is a Docker container and all options
-// also succeed.
+// BeADockerContainer succeeds if actual is a Docker container and also satisfy
+// all option matchers. For instance:
+//
+//   Expect(c).To(BeADockerContainer(WithName("foobar"), BePaused()))
 func BeADockerContainer(opts ...types.GomegaMatcher) types.GomegaMatcher {
 	return withContainer("BeADockerContainer",
 		o.SatisfyAll(WithType(moby.Type), o.SatisfyAll(opts...)))

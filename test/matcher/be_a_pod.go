@@ -1,4 +1,4 @@
-// Copyright 2022 Harald Albrecht.
+// Copyright 2021 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -17,13 +17,18 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	wm "github.com/thediveo/whalewatcher/test/matcher"
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 )
 
-// WithType succeeds if actual has Type and Flavor fields and the specified
-// typeflavor matches at least one of these fields.
+// BeAPod succeeds if actual is a model.Group or a *model.Group and also
+// satisfies all specified option matchers.
 //
-//   Expect(container).To(BeAContainer(WithType("foo")))
-func WithType(typeflavor string) types.GomegaMatcher {
-	return o.SatisfyAny(o.HaveField("Type", typeflavor), wm.HaveOptionalField("Flavor", typeflavor))
+//   Expect(g).To(BeAPod(WithName("default/pod")))
+//
+// Related: the BeInAPod matchers checks a container to be part of a pod with
+// specific properties.
+func BeAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
+	return withPod("BeAPod", o.SatisfyAll(
+		o.HaveField("Type", kuhbernetes.PodGroupType),
+		o.SatisfyAll(opts...)))
 }

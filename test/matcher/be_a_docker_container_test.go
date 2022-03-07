@@ -21,7 +21,7 @@ import (
 	"github.com/thediveo/whalewatcher/engineclient/moby"
 )
 
-var _ = Describe("BeDockerContainer matcher", func() {
+var _ = Describe("BeADockerContainer matcher", func() {
 
 	var dockerC = model.Container{
 		ID:     "1234567890",

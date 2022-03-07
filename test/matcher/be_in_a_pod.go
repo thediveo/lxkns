@@ -1,4 +1,4 @@
-// Copyright 2022 Harald Albrecht.
+// Copyright 2021 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -19,9 +19,13 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
-// BeInAGroup succeeds if actual has a Groups field and the specified options
-// all succeed on one of the elements from the Groups field.
-func BeInAGroup(opts ...types.GomegaMatcher) types.GomegaMatcher {
-	return withContainer("BeInAGroup",
-		o.HaveField("Groups", o.ContainElement(o.SatisfyAll(opts...))))
+// BeInAPod succeeds if actual is a model.Container or *model.Container and the
+// container is grouped by a Kubernetes/k8s pod for which all the option
+// matchers also succeed.
+//
+//   Expect(c).To(BeInAPod(WithName("default/mypod")))
+func BeInAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
+	return withContainer("BeInAPod",
+		o.HaveField("Groups",
+			o.ContainElement(BeAPod(opts...))))
 }

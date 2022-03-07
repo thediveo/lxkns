@@ -28,10 +28,10 @@ import (
 //   Expect(c).To(BeAContainer(WithName("foobar"), WithType(moby.Type),
 //       BePaused()))
 //
-// For instance, this makes checking for the presence of certain containers in
-// slices, arrays and maps straightforward, expecting a combination of
-// properties not only of a specific name, but also being part of a particular
-// Kubernetes pod or Composer project.
+// Checking for the presence of certain containers in slices, arrays and maps is
+// straightforward: simply list the expected combination of container
+// properties, such as not only a specific name, but also being part of a
+// particular Kubernetes pod or Composer project.
 //
 //   Expect(containers).To(ContainElement(BeAContainer(
 //       WithName("foobar"), BeInAPod(WithName("default/pod")))))

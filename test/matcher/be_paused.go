@@ -21,6 +21,8 @@ import (
 
 // BePaused succeeds if actual is a model.Container or *model.Container and the
 // container is paused.
+//
+//   Expect(c).To(BePaused())
 func BePaused() types.GomegaMatcher {
 	return withContainer("BePaused", o.HaveField("Paused", o.BeTrue()))
 }
