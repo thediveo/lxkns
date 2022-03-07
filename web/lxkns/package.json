@@ -51,7 +51,7 @@
     "websocket-extensions": "^0.1.4"
   },
   "resolutions": {
-    "ansi-html": "https://registry.npmjs.org/ansi-html-community/-/ansi-html-community-0.0.8.tgz",
+    "ansi-html": "^0.0.9",
     "ansi-regex": "^5.0.1",
     "browserslist": "^4.16.5",
     "chokidar": "^3.5.0",

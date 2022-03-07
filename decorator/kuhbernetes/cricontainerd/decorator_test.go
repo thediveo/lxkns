@@ -18,51 +18,53 @@ import (
 	"context"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/containerd/containerd"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/test/containerdtest"
 	"github.com/thediveo/whalewatcher/watcher"
 	cdwatcher "github.com/thediveo/whalewatcher/watcher/containerd"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/lxkns/test/matcher"
 )
 
-var names = map[string]struct {
-	labels map[string]string
-}{
-	"0": {labels: map[string]string{
-		kuhbernetes.PodNamespaceLabel: "foons",
-		kuhbernetes.PodNameLabel:      "foo",
-		containerKindLabel:            "",
-	}},
-	"1": {labels: map[string]string{
-		kuhbernetes.PodNamespaceLabel:     "foons",
-		kuhbernetes.PodNameLabel:          "foo",
-		kuhbernetes.PodContainerNameLabel: "bar",
-	}},
-	"2": {labels: map[string]string{
-		kuhbernetes.PodNamespaceLabel:     "foons",
-		kuhbernetes.PodNameLabel:          "foo",
-		kuhbernetes.PodContainerNameLabel: "gnampf",
-	}},
-}
+var _ = Describe("Decorates containerd pod containers", Ordered, func() {
 
-const cdsock = "/proc/1/root/run/containerd/containerd.sock"
+	var names = map[string]struct {
+		labels map[string]string
+	}{
+		"0": {labels: map[string]string{
+			kuhbernetes.PodNamespaceLabel: "foons",
+			kuhbernetes.PodNameLabel:      "foo",
+			containerKindLabel:            "",
+		}},
+		"1": {labels: map[string]string{
+			kuhbernetes.PodNamespaceLabel:     "foons",
+			kuhbernetes.PodNameLabel:          "foo",
+			kuhbernetes.PodContainerNameLabel: "bar",
+		}},
+		"2": {labels: map[string]string{
+			kuhbernetes.PodNamespaceLabel:     "foons",
+			kuhbernetes.PodNameLabel:          "foo",
+			kuhbernetes.PodContainerNameLabel: "gnampf",
+		}},
+	}
 
-const testref = "docker.io/library/busybox:latest"
+	const cdsock = "/proc/1/root/run/containerd/containerd.sock"
 
-var testargs = []string{"/bin/sleep", "120s"}
+	const testref = "docker.io/library/busybox:latest"
 
-var _ = Describe("Decorates containerd pod containers", func() {
+	var testargs = []string{"/bin/sleep", "120s"}
 
 	var pool *containerdtest.Pool
 	var sleepies []*containerdtest.Container
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -73,6 +75,8 @@ var _ = Describe("Decorates containerd pod containers", func() {
 		var err error
 		pool, err = containerdtest.NewPool(cdsock, "containerd-test")
 		Expect(err).NotTo(HaveOccurred())
+
+		By("creating fake pod containers")
 		for name, config := range names {
 			pool.PurgeID(name)
 			sleepy, err := pool.Run(
@@ -85,17 +89,20 @@ var _ = Describe("Decorates containerd pod containers", func() {
 			Expect(err).NotTo(HaveOccurred(), "container %s", name)
 			sleepies = append(sleepies, sleepy)
 		}
+
+		By("waiting for all fake containers to be running")
 		// Make sure that all newly created containers are in running state
 		// before we run unit tests which depend on the correct list of
 		// alive(!)=running containers.
 		for _, sleepy := range sleepies {
 			Eventually(func() bool {
 				return sleepy.Status() == containerd.Running
-			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.ID())
+			}).WithTimeout(5*time.Second).WithPolling(100*time.Millisecond).
+				Should(BeTrue(), "container %s", sleepy.Container.ID())
 		}
 	})
 
-	AfterEach(func() {
+	AfterAll(func() {
 		for _, sleepy := range sleepies {
 			pool.Purge(sleepy)
 		}
@@ -116,6 +123,7 @@ var _ = Describe("Decorates containerd pod containers", func() {
 		Expect(allcontainers).NotTo(BeEmpty())
 		Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
 
+		By("checking for all fakes to be found")
 		containers := make([]*model.Container, 0, len(names))
 		for _, container := range allcontainers {
 			id := strings.Split(container.ID, "/")
@@ -125,16 +133,16 @@ var _ = Describe("Decorates containerd pod containers", func() {
 		}
 		Expect(containers).To(HaveLen(len(names)))
 
+		By("checking for correct decoration")
 		for _, container := range containers {
 			g := container.Group(kuhbernetes.PodGroupType)
-			Expect(g).NotTo(BeNil())
-			Expect(g.Type).To(Equal(kuhbernetes.PodGroupType))
+			Expect(g).To(BeAPod(), "pod container %s", container.Name)
 			Expect(g.Containers).To(ContainElement(container))
 			id := strings.Split(container.ID, "/")
 			if names[id[1]].labels[kuhbernetes.PodSandboxLabel] != "" {
-				Expect(container.Labels).To(HaveKey(kuhbernetes.PodSandboxLabel))
+				Expect(container).To(HaveLabel(kuhbernetes.PodSandboxLabel))
 			} else {
-				Expect(container.Labels).NotTo(HaveKey(kuhbernetes.PodSandboxLabel))
+				Expect(container).NotTo(HaveLabel(kuhbernetes.PodSandboxLabel))
 			}
 		}
 	})
