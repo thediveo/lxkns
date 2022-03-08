@@ -6,7 +6,6 @@
 	],
 	"settings": {
 		"go.lintTool": "golangci-lint",
-		"liveServer.settings.multiRootWorkspaceName": "lxkns",
 		"plantuml.diagramsRoot": "puml",
 		"plantuml.exportFormat": "svg",
 		"plantuml.exportOutDir": "docs/_images",
