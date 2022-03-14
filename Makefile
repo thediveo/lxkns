@@ -55,7 +55,10 @@ install: ## installs lxkns commands
 	go install -v ./cmd/... ./examples/lsallns
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
-test: ## runs all tests in test containers
+test: ## runs all tests
+	go test -v -p 1 -exec sudo ./... && go test -v -p 1 ./...
+
+testc: ## runs all tests in test containers
 	$(GOGEN)
 	@set -e; for GOVERSION in $(goversion); do \
 		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
