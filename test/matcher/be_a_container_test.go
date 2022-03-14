@@ -23,7 +23,7 @@ import (
 var _ = Describe("BeAContainer matcher", func() {
 
 	It("doesn't match something else", func() {
-		Expect(BeADockerContainer().Match(nil)).Error().To(
+		Expect(BeAContainer().Match(nil)).Error().To(
 			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got <nil>")))
 		Expect(BeAContainer().Match(42)).Error().To(
 			MatchError(ContainSubstring("expects a model.Container or *model.Container, but got int")))

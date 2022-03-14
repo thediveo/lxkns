@@ -15,15 +15,25 @@
 package matcher
 
 import (
-	o "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
-	wm "github.com/thediveo/whalewatcher/test/matcher"
+	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/model"
 )
 
-// WithType succeeds if actual has a Type field and optionally a Flavor field,
-// and the specified typeflavor matches at least one of these fields. If you
-// want to check only for the specific Type but not accept it as a Flavor, then
-// use the WithStrictType matcher instead.
-func WithType(typeflavor string) types.GomegaMatcher {
-	return o.SatisfyAny(o.HaveField("Type", typeflavor), wm.HaveOptionalField("Flavor", typeflavor))
+func ExampleBePaused() {
+	var container = model.Container{
+		ID:     "1234567890",
+		Name:   "foo_bar",
+		Type:   "ducker.io",
+		Flavor: "fluffy",
+		Groups: []*model.Group{
+			{Name: "fluffy", Type: "group.io", Flavor: "fluffy.io"},
+		},
+		Paused: true,
+	}
+	cp := container
+	cp.Paused = false
+
+	Expect(container).To(BePaused())
+	Expect(cp).NotTo(BePaused())
+	//Output:
 }

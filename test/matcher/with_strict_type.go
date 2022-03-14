@@ -21,8 +21,6 @@ import (
 
 // WithStrictType succeeds if actual has a Type field and the specified type
 // matches it.
-//
-//   Expect(container).To(BeAContainer(WithStrictType("foo")))
 func WithStrictType(typ string) types.GomegaMatcher {
 	return o.HaveField("Type", typ)
 }

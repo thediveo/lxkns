@@ -20,15 +20,10 @@ import (
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 )
 
-// BeAPod succeeds if actual is a model.Group or a *model.Group and also
-// satisfies all specified option matchers.
-//
-//   Expect(g).To(BeAPod(WithName("default/pod")))
-//
-// Related: the BeInAPod matchers checks a container to be part of a pod with
-// specific properties.
-func BeAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
-	return withPod("BeAPod", o.SatisfyAll(
+// BeAPod succeeds if actual is a model.Group or a *model.Group with the
+// Kubernetes pod type, and also satisfies all specified option matchers.
+func BeAPod(options ...types.GomegaMatcher) types.GomegaMatcher {
+	return withGroup("BeAPod", o.SatisfyAll(
 		o.HaveField("Type", kuhbernetes.PodGroupType),
-		o.SatisfyAll(opts...)))
+		o.SatisfyAll(options...)))
 }
