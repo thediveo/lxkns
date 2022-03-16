@@ -15,13 +15,25 @@
 package matcher
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
+// Handle fails in examples by printing out the Gomega failure message.
+func stdoutFailures() {
+	RegisterFailHandler(func(message string, _ ...int) {
+		fmt.Println(message)
+	})
+}
+
+// Ensure a fail handler for testable examples is installed.
+func init() { stdoutFailures() }
+
 func TestMatcher(t *testing.T) {
-	RegisterFailHandler(Fail)
+	RegisterFailHandler(Fail) // handle failing Gomega tests correctly in Ginkgo context.
 	RunSpecs(t, "lxkns/test/matcher package")
+	stdoutFailures() // ensure the fail handler for testable examples get reinstalled.
 }
