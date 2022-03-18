@@ -39,9 +39,9 @@ func withContainer(matcherName string, matcher types.GomegaMatcher) types.Gomega
 	}, matcher)
 }
 
-// withPod returns a matcher that transforms actual into a (pod) group value and
+// withGroup returns a matcher that transforms actual into a group value and
 // then applies the specified matcher.
-func withPod(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
+func withGroup(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
 	return o.WithTransform(func(actual interface{}) (model.Group, error) {
 		switch group := actual.(type) {
 		case model.Group:

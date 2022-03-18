@@ -26,5 +26,5 @@ func TestK8sContainerdDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
 	_, reporterConfig := GinkgoConfiguration()
 	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
+	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package", reporterConfig)
 }

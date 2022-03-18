@@ -26,5 +26,5 @@ func TestK8sDockershimDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
 	_, reporterConfig := GinkgoConfiguration()
 	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/dockershim package")
+	RunSpecs(t, "lxkns/decorator/kuhbernetes/dockershim package", reporterConfig)
 }

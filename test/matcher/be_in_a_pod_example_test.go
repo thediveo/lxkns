@@ -15,14 +15,31 @@
 package matcher
 
 import (
-	o "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
+	. "github.com/onsi/gomega"
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/engineclient/moby"
 )
 
-// BeADockerContainer succeeds if actual is a Docker container and also satisfy
-// all its option matchers.
-func BeADockerContainer(options ...types.GomegaMatcher) types.GomegaMatcher {
-	return withContainer("BeADockerContainer",
-		o.SatisfyAll(WithType(moby.Type), o.SatisfyAll(options...)))
+func ExampleBeInAPod() {
+	var container = model.Container{
+		ID:     "1234567890",
+		Name:   "foo_bar",
+		Type:   moby.Type,
+		Flavor: moby.Type,
+		Groups: []*model.Group{
+			{
+				Name:   "space/pod",
+				Type:   kuhbernetes.PodGroupType,
+				Flavor: kuhbernetes.PodGroupType,
+			},
+		},
+	}
+	container.Groups[0].Containers = []*model.Container{&container}
+	pod := container.Groups[0]
+
+	Expect(container).To(BeInAPod())
+	Expect(container).To(BeInAPod(WithName(pod.Name)))
+	Expect(container).NotTo(BeInAPod(WithName("Bielefeld")))
+	//Output:
 }

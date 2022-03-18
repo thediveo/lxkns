@@ -16,6 +16,7 @@ package discover
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,5 +24,7 @@ import (
 
 func TestLinuxKernelNamespaces(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns package")
+	_, reporterConfig := GinkgoConfiguration()
+	reporterConfig.SlowSpecThreshold = 90 * time.Second // ...yes, THAT slow.
+	RunSpecs(t, "lxkns/discover package", reporterConfig)
 }

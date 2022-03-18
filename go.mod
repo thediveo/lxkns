@@ -10,13 +10,13 @@ require (
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd v1.6.1
-	github.com/getkin/kin-openapi v0.90.0
+	github.com/getkin/kin-openapi v0.92.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
 	github.com/onsi/gomega v1.18.1
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/thediveo/enumflag v0.10.1
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
@@ -24,8 +24,8 @@ require (
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.6
-	github.com/thediveo/whalewatcher v0.6.1
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9
+	github.com/thediveo/whalewatcher v0.6.2
+	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -42,9 +42,9 @@ require (
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
-	github.com/docker/cli v20.10.12+incompatible // indirect
-	github.com/docker/distribution v2.8.0+incompatible // indirect
-	github.com/docker/docker v20.10.12+incompatible // indirect
+	github.com/docker/cli v20.10.13+incompatible // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/docker v20.10.13+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.15.0 // indirect
+	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -84,8 +84,8 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
-	google.golang.org/grpc v1.44.0 // indirect
+	google.golang.org/genproto v0.0.0-20220314155709-be9229ee6120 // indirect
+	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	k8s.io/client-go v0.23.4 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
