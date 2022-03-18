@@ -32,7 +32,7 @@
 - the Go API supports not only discovery, but also switching namespaces (OS
   thread switching).
 
-- tested with Go 1.13-1.16.
+- tested with Go 1.16-1.18.
 
 - namespace discovery can be integrated into other applications or run as a
   containerized discovery backend service with REST API and web front-end.
@@ -46,3 +46,5 @@
   rewriting reverse proxy adds `X-Forwarded-Uri` HTTP request headers.
 
 - CLI tools for namespace discovery and analysis.
+
+- Gomega TDD matchers for lxkns information model elements.

@@ -3,9 +3,10 @@
 Developers using the `lxkns` Go API (as opposed to the service REST API) might
 be interested in dedicated [Gomega](https://onsi.github.io/gomega/) support.
 
-The `matcher/` directory contains Gomega matchers for matching container
-names/IDs (and optional their types and flavors), container group memberships,
-and more.
+The [`test/matcher/`
+package](https://pkg.go.dev/github.com/thediveo/lxkns/test/matcher) (godoc
+documentation) provides Gomega matchers for matching container names/IDs (and
+optional their types and flavors), container group memberships, and more.
 
 ```go
 var containers []*model.Container
