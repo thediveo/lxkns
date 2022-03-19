@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -62,32 +63,36 @@ var _ = Describe("mountineer", func() {
 		Expect(m.Open("foobar.go")).Error().To(HaveOccurred())
 	})
 
-	It("opens a mount namespace path in initial context", func() {
-		if os.Getegid() != 0 {
-			// This unit test cannot be run inside a user namespace :(
-			Skip("needs root")
-		}
+	Context("accessing bind-mounted mount namespace", Ordered, func() {
 
-		// This test harness is admittedly involved: we create a new mount
-		// namespace and then bind-mount it. Unfortunately, bind-mounting mount
-		// namespaces is more restricted and tricky than bind-mounting a network
-		// namespace, see also: https://unix.stackexchange.com/a/473819. And we
-		// also want to be able to correctly identify the use of the proper
-		// mount namespace by placing a file into it not visible from the mount
-		// namespace the test runs in.
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
+		bindmountpoint := "/tmp/lxkns-unittest-bindmountpoint"
+		testdata := "/tmp/lxkns-unittest-data"
+		canary := testdata + "/killroy.was.here"
 
-		bm := "/tmp/lxkns-unittest-bindmountpoint"
-		td := "/tmp/lxkns-unittest-data"
-		canary := td + "/killroy.was.here"
+		var cmd *testbasher.TestCommand
 
-		scripts.Common(fmt.Sprintf(`bm=%s
+		BeforeAll(func() {
+			if os.Getegid() != 0 {
+				// This unit test cannot be run inside a user namespace :(
+				Skip("needs root")
+			}
+
+			// This test harness is admittedly involved: we create a new mount
+			// namespace and then bind-mount it. Unfortunately, bind-mounting mount
+			// namespaces is more restricted and tricky than bind-mounting a network
+			// namespace, see also: https://unix.stackexchange.com/a/473819. And we
+			// also want to be able to correctly identify the use of the proper
+			// mount namespace by placing a file into it not visible from the mount
+			// namespace the test runs in.
+			scripts := testbasher.Basher{}
+			defer scripts.Done()
+
+			scripts.Common(fmt.Sprintf(`bm=%s
 td=%s
-canary=%s`, bm, td, canary))
-		scripts.Common(nstest.NamespaceUtilsScript)
+canary=%s`, bindmountpoint, testdata, canary))
+			scripts.Common(nstest.NamespaceUtilsScript)
 
-		scripts.Script("main1", `
+			scripts.Script("main1", `
 umount $bm || /bin/true
 umount $bm || /bin/true
 touch $bm
@@ -116,83 +121,114 @@ umount $td || /bin/true
 rmdir $td
 `)
 
-		scripts.Script("main2", `
+			scripts.Script("main2", `
 unshare -m $stage2
 `)
-		scripts.Script("stage2", `
+			scripts.Script("stage2", `
 mount -t tmpfs -o size=1m tmpfs $td
 touch $canary
 echo $$
 process_namespaceid mnt # prints the "current" mount namespace ID.
 read # wait for test to proceed()
 `)
-		cmd := scripts.Start("main1")
-		defer cmd.Close() // ...just in case of slight panic
-		var dummy string
-		cmd.Decode(&dummy)
 
-		// create new mount namespace, mount a tmpfs into it and create the
-		// canary file.
-		cmd2 := scripts.Start("main2")
-		defer cmd.Close()
-		var pid int
-		cmd2.Decode(&pid)
-		mntnsid := nstest.CmdDecodeNSId(cmd2)
+			By("creating a bind-mounted mount namespace")
+			cmd = scripts.Start("main1")
+			var dummy string
+			cmd.Decode(&dummy)
 
-		// tell the first script to bind-mount the new mount namespace.
-		cmd.Tell(strconv.Itoa(pid))
-		cmd.Decode(&dummy)
+			By("creating a canary file inside the bind-mounted mount namespace")
+			// create new mount namespace, mount a tmpfs into it and create the
+			// canary file.
+			cmd2 := scripts.Start("main2")
+			defer cmd2.Close()
+			var pid int
+			cmd2.Decode(&pid)
+			mntnsid := nstest.CmdDecodeNSId(cmd2)
 
-		// we don't need to keep the second script anymore, as the mount
-		// namespace is now kept alive via the bind-mount.
-		cmd2.Close()
+			// tell the first script to bind-mount the new mount namespace.
+			cmd.Tell(strconv.Itoa(pid))
+			cmd.Decode(&dummy)
 
-		// sanity check that the bind-mount points to the expected mount namespace.
-		bmnsid, err := ops.NamespacePath(bm).ID()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bmnsid).To(Equal(mntnsid))
+			// we don't need to keep the second script anymore, as the mount
+			// namespace is now kept alive via the bind-mount. Note that we're
+			// already defer'ed closing cmd2 anyway.
 
-		// tell the mountineer to sandbox the newly created mount namespace via
-		// the bind-mount reference.
-		m, err := New([]string{bm}, nil)
-		Expect(err).NotTo(HaveOccurred())
-		defer m.Close()
+			By("checking the bind-mounted mount namespace test harness")
+			// sanity check that the bind-mount points to the expected mount namespace.
+			bmnsid, err := ops.NamespacePath(bindmountpoint).ID()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bmnsid).To(Equal(mntnsid))
 
-		// canary must not be visible in this mount namespace
-		Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
+			// canary must not be visible in this mount namespace
+			Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
+		})
 
-		// It must have created a sandbox/pause process.
-		Expect(m.sandbox).NotTo(BeNil())
-		// And the sandbox must not have terminated even if waiting a few
-		// moments.
-		Consistently(func() *os.ProcessState {
-			return m.sandbox.ProcessState
-		}, "1s", "250ms").Should(BeNil())
-		// the contentsroot must be set to the sandbox process.
-		Expect(m.contentsRoot).To(Equal(
-			fmt.Sprintf("/proc/%d/root", m.sandbox.Process.Pid)))
+		AfterAll(func() {
+			if cmd != nil {
+				cmd.Close()
+			}
+		})
 
-		Expect(m.PID()).To(Equal(model.PIDType(m.sandbox.Process.Pid)))
+		When("using a mountineer", func() {
 
-		// Content path resolution must be correct.
-		path, err := m.Resolve(canary)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(path).To(Equal(
-			fmt.Sprintf("/proc/%d/root%s", m.sandbox.Process.Pid, canary)))
+			var m *Mountineer
 
-		f, err := os.Open(path)
-		Expect(err).NotTo(HaveOccurred())
-		f.Close()
+			BeforeAll(func() {
+				// tell the mountineer to sandbox the newly created mount namespace via
+				// the bind-mount reference.
+				var err error
+				m, err = New([]string{bindmountpoint}, nil)
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-		f, err = m.Open(canary)
-		Expect(err).NotTo(HaveOccurred())
-		f.Close()
+			AfterAll(func() {
+				if m != nil {
+					m.Close()
+				}
+			})
 
-		// Correctly stops the sandbox process -- no sandbox leaks, please.
-		m.Close()
-		Eventually(func() *os.ProcessState {
-			return m.sandbox.ProcessState
-		}, "1s", "250ms").ShouldNot(BeNil())
+			It("created a sandbox/pause process that survives", func() {
+				Expect(m.sandbox).NotTo(BeNil())
+				// And the sandbox must not have terminated even if waiting a few
+				// moments.
+				Consistently(func() *os.ProcessState {
+					return m.sandbox.ProcessState
+				}).WithTimeout(3 * time.Second).WithPolling(250 * time.Millisecond).Should(BeNil())
+			})
+
+			It("sets the contentsroot to the sandbox process", func() {
+				Expect(m.contentsRoot).To(Equal(
+					fmt.Sprintf("/proc/%d/root", m.sandbox.Process.Pid)))
+				Expect(m.PID()).To(Equal(model.PIDType(m.sandbox.Process.Pid)))
+			})
+
+			It("correctly resolves and opens a path", func() {
+				path, err := m.Resolve(canary)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(path).To(Equal(
+					fmt.Sprintf("/proc/%d/root%s", m.sandbox.Process.Pid, canary)))
+
+				f, err := os.Open(path)
+				Expect(err).NotTo(HaveOccurred())
+				f.Close()
+
+				f, err = m.Open(canary)
+				Expect(err).NotTo(HaveOccurred())
+				f.Close()
+			})
+
+			It("shuts down correctly and doesn't leak sandboxes", func() {
+				sandbox := m.sandbox
+				m.Close()
+				Eventually(func() *os.ProcessState {
+					return sandbox.ProcessState
+				}).WithTimeout(1 * time.Second).WithPolling(250 * time.Millisecond).ShouldNot(BeNil())
+				Expect(m.sandbox).To(BeNil())
+			})
+
+		})
+
 	})
 
 })
