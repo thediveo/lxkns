@@ -21,17 +21,23 @@ import (
 	"runtime"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 var _ = Describe("portable reference integration", func() {
+
+	AfterEach(func() {
+		Eventually(Goroutines).ShouldNot(HaveLeaked())
+	})
 
 	It("opens portable (network) namespace reference and runs a sub-process in it", func() {
 		// We need to create a new network namespace which we later want to

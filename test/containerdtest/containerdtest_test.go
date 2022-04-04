@@ -16,10 +16,13 @@ package containerdtest
 
 import (
 	"os"
+	"time"
 
 	"github.com/containerd/containerd"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 const testref = "docker.io/library/busybox:latest"
@@ -37,6 +40,10 @@ var _ = Describe("creates and destroys test containers", func() {
 		var err error
 		pool, err = NewPool("/proc/1/root/run/containerd/containerd.sock", "containerd-test")
 		Expect(err).NotTo(HaveOccurred())
+		DeferCleanup(func() {
+			pool.Client.Close()
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
 	})
 
 	It("doesn't fail when purging non-existing container", func() {

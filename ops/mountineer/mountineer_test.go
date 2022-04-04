@@ -20,15 +20,21 @@ import (
 	"path/filepath"
 	"strconv"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 var _ = Describe("mountineer", func() {
+
+	AfterEach(func() {
+		Eventually(Goroutines).ShouldNot(HaveLeaked())
+	})
 
 	It("does not accept empty references", func() {
 		Expect(New(nil, nil)).Error().To(HaveOccurred())

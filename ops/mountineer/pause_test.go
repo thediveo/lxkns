@@ -18,13 +18,19 @@ import (
 	"fmt"
 	"os"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 var _ = Describe("mountineer", func() {
+
+	AfterEach(func() {
+		Eventually(Goroutines).ShouldNot(HaveLeaked())
+	})
 
 	It("returns error for non-existing sandbox binary", func() {
 		Expect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).Error().To(MatchError(
