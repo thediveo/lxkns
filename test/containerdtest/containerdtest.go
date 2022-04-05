@@ -80,8 +80,8 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 			containerd.WithResolver(docker.NewResolver(docker.ResolverOptions{
 				Client: httpclnt,
 			})))
-		httpclnt.CloseIdleConnections()
 	}
+	httpclnt.CloseIdleConnections()
 	if err != nil {
 		return nil, err
 	}

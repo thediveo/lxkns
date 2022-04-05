@@ -22,21 +22,32 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
+var noDockerRE = regexp.MustCompile(`connect: no such file or directory`)
 
 var _ = Describe("Discover containers", func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
@@ -63,7 +74,7 @@ var _ = Describe("Discover containers", func() {
 			},
 		})
 		// Skip test in case Docker is not accessible.
-		if err != nil && nodockerre.MatchString(err.Error()) {
+		if err != nil && noDockerRE.MatchString(err.Error()) {
 			Skip("Docker not available")
 		}
 		Expect(err).NotTo(HaveOccurred())
@@ -72,10 +83,11 @@ var _ = Describe("Discover containers", func() {
 			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
 			return c.State.Running
 		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-	})
 
-	AfterEach(func() {
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		DeferCleanup(func() {
+			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+			pool.Client.HTTPClient.CloseIdleConnections()
+		})
 	})
 
 	It("finds containers and relates them with their initial processes", func() {

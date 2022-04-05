@@ -31,6 +31,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/noleak"
 )
 
 var _ = Describe("Decorates containerd pod containers", Ordered, func() {
@@ -100,17 +101,28 @@ var _ = Describe("Decorates containerd pod containers", Ordered, func() {
 			}).WithTimeout(5*time.Second).WithPolling(100*time.Millisecond).
 				Should(BeTrue(), "container %s", sleepy.Container.ID())
 		}
+		DeferCleanup(func() {
+			for _, sleepy := range sleepies {
+				pool.Purge(sleepy)
+			}
+			pool.Client.Close()
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
 	})
 
-	AfterAll(func() {
-		for _, sleepy := range sleepies {
-			pool.Purge(sleepy)
-		}
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		ignoreGood := Goroutines()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(ignoreGood))
+		})
 	})
 
 	It("decorates k8s pods", func() {
 		mw, err := cdwatcher.New(cdsock, nil)
 		Expect(err).NotTo(HaveOccurred())
+		defer mw.Close()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
