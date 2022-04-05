@@ -98,13 +98,20 @@ func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap
 // Specifying a map of user namespaces allows entering mount namespaces in those
 // situations where the caller has insufficient capabilities itself but has
 // sufficient capabilities in the user namespace owning the mount namespace.
-func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, error) {
+func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, err error) {
 	if len(ref) == 0 {
 		return nil, errors.New("cannot open zero mount namespace reference")
 	}
-	m := &Mountineer{
-		ref: ref,
-	}
+	// Make sure to always clean up in case of an error on our way out. This is
+	// probably one of the rare cases where named return values might do some
+	// good.
+	m = &Mountineer{ref: ref}
+	defer func() {
+		if err != nil {
+			m.Close()
+			m = nil // ensure to never return a mountineer in case of error.
+		}
+	}()
 	// The starting context for mount namespace references is the initial mount
 	// namespace (if it's not in the procfs anyway).
 	pid := model.PIDType(0) // sic! we won't want to kill the init process ;)
@@ -114,21 +121,17 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, err
 		// Sanity check: empty and non-absolute reference paths are considered
 		// invalid.
 		if refpath == "" || refpath[0] != '/' {
-			if m.sandbox != nil {
-				_ = m.sandbox.Process.Kill()
-			}
-			return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+			err = errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+			return
 		}
 		// Sanity check: only a single (=first) reference is allowed to
 		// reference the proc filesystem. Otherwise, we consider any stray proc
 		// filesystem reference to be a violation.
 		if strings.HasPrefix(refpath, "/proc/") {
 			if idx != 0 {
-				if m.sandbox != nil {
-					_ = m.sandbox.Process.Kill()
-				}
-				return nil, errors.New(
-					"invalid mount namespace " + ref[:idx+1].String() + " reference in multi-ref context")
+				err = errors.New("invalid mount namespace " + ref[:idx+1].String() +
+					" reference in multi-ref context")
+				return
 			}
 			// This is a (single) proc filesystem reference that we can directly
 			// reference without any need for pause processes.
@@ -137,11 +140,14 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, err
 			//  [0]   [1]    [2]   [3]     [4]...
 			r := strings.SplitN(refpath, "/", 4)
 			if len(r) < 4 || r[3] == "" {
-				return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+				err = errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+				return
 			}
-			rooterpid, err := strconv.ParseInt(r[2], 10, 32)
+			var rooterpid int64
+			rooterpid, err = strconv.ParseInt(r[2], 10, 32)
 			if err != nil || rooterpid <= 0 {
-				return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+				err = errors.New("invalid mount namespace reference " + ref[:idx+1].String())
+				return
 			}
 			pid = model.PIDType(rooterpid)
 			m.pid = pid
@@ -156,32 +162,28 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, err
 			rooterpid = uint64(initialContextPID) // initial context is mount namespace of init process.
 		}
 		contentsRoot := "/proc/" + strconv.FormatUint(rooterpid, 10) + "/root"
-		evilrefpath, err := procfsroot.EvalSymlinks(refpath, contentsRoot, procfsroot.EvalFullPath)
+		var evilrefpath string
+		evilrefpath, err = procfsroot.EvalSymlinks(refpath, contentsRoot, procfsroot.EvalFullPath)
 		if err != nil {
-			if m.sandbox != nil {
-				_ = m.sandbox.Process.Kill()
-			}
-			return nil, errors.New("invalid mount namespace reference " + ref[:idx+1].String() + ":" + err.Error())
+			err = errors.New("invalid mount namespace reference " + ref[:idx+1].String() + ":" + err.Error())
+			return
 		}
 		// Start a pause process and attach it to the mount namespace referenced
 		// by "ref" (in the mount namespace reachable via process with "pid").
 		wormholedref := contentsRoot + evilrefpath
 		log.Debugf("opening pandora's sandbox at %s", wormholedref)
-		sandbox, err := NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap))
+		var sandbox *exec.Cmd
+		sandbox, err = NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap))
 		if err != nil {
-			if m.sandbox != nil {
-				_ = m.sandbox.Process.Kill()
-			}
-			return nil, errors.New("sandbox failure: " + err.Error())
+			err = errors.New("sandbox failure: " + err.Error())
+			return
 		}
 		// Sandbox has attached to the mount namespace, now we can "safely"
 		// access the latter via the proc file system.
 		pid = model.PIDType(sandbox.Process.Pid)
 		// Retire previous pause process, if any. Do not retire the process
 		// giving us the initial context though.
-		if m.sandbox != nil {
-			_ = m.sandbox.Process.Kill()
-		}
+		m.Close()
 		m.pid = pid
 		m.sandbox = sandbox // switch over, and rinse+repeat.
 		m.contentsRoot = "/proc/" + strconv.FormatUint(uint64(pid), 10) + "/root"
@@ -196,6 +198,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, err
 func (m *Mountineer) Close() {
 	if m.sandbox != nil {
 		_ = m.sandbox.Process.Kill()
+		m.sandbox = nil
 	}
 }
 

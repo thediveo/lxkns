@@ -19,22 +19,23 @@ import (
 	"io"
 	"os"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 func assertInvNSError(err error) {
 	var invnserr *InvalidNamespaceError
-	ExpectWithOffset(1, errors.As(err, &invnserr)).To(BeTrue(), "not an 'invalid namespace' error")
+	Expect(errors.As(err, &invnserr)).WithOffset(1).To(BeTrue(), "not an 'invalid namespace' error")
 }
 
 func null() *os.File {
 	fnull, err := os.Open("/dev/null")
-	ExpectWithOffset(1, err).To(Succeed(), "broken /dev/null")
+	Expect(err).WithOffset(1).To(Succeed(), "broken /dev/null")
 	return fnull
 }
 

@@ -19,10 +19,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	cdengine "github.com/thediveo/whalewatcher/engineclient/containerd"
@@ -30,11 +28,23 @@ import (
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/containerd"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 const cindName = "containerd-in-docker" // name of Docker container with containerd
 
 var _ = Describe("Discovering containers in containers", func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	BeforeEach(func() {
 		if os.Getuid() != 0 {
@@ -100,9 +110,7 @@ var _ = Describe("Discovering containers in containers", func() {
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).To(Or(
 			BeNil(),
-			Not(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Cmdline": ConsistOf("sleep", ContainSubstring("1000")),
-			})))))
+			Not(HaveField("Cmdline", ConsistOf("sleep", ContainSubstring("1000"))))))
 
 		By("looking for the sleepy container, now with a PID mapper")
 		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer), WithPIDMapper())

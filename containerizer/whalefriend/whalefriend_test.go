@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/model"
@@ -27,6 +28,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/noleak"
 )
 
 const sleepyname = "pompous_pm"
@@ -34,6 +36,14 @@ const sleepyname = "pompous_pm"
 var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
 var _ = Describe("ContainerEngine", func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	var pool *dockertest.Pool
 	var sleepy *dockertest.Resource
@@ -69,11 +79,12 @@ var _ = Describe("ContainerEngine", func() {
 			return c.State.Running
 		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		Expect(pool.Client.PauseContainer(sleepyname)).NotTo(HaveOccurred())
-	})
 
-	AfterEach(func() {
-		Expect(pool.Client.UnpauseContainer(sleepyname)).NotTo(HaveOccurred())
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		DeferCleanup(func() {
+			Expect(pool.Client.UnpauseContainer(sleepyname)).NotTo(HaveOccurred())
+			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+			pool.Client.HTTPClient.CloseIdleConnections()
+		})
 	})
 
 	It("discovers container", func() {
@@ -84,6 +95,7 @@ var _ = Describe("ContainerEngine", func() {
 		defer cancel()
 		cew := New(ctx, []watcher.Watcher{dockerw})
 		Expect(cew).NotTo(BeNil())
+		defer cew.Close()
 
 		// wait for the watcher to have completed its initial synchronization
 		// with its container engine...
@@ -95,15 +107,9 @@ var _ = Describe("ContainerEngine", func() {
 		}).Should(BeTrue())
 
 		cntrs := cew.Containers(ctx, nil, nil)
-		Expect(cntrs).To(ContainElement(WithName(sleepyname)))
-
 		var c *model.Container
-		for _, cntr := range cntrs {
-			if cntr.Name == sleepyname {
-				c = cntr
-				break
-			}
-		}
+		Expect(cntrs).To(ContainElement(WithName(sleepyname), &c))
+
 		// dockertest's resource does not properly reflect container state
 		// changes after creation, sigh. So we need to inspect to get the
 		// correct information.

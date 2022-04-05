@@ -18,10 +18,12 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/noleak"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
@@ -32,6 +34,14 @@ import (
 )
 
 var _ = Describe("Decorates composer projects", Ordered, func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	var names = map[string]struct {
 		projectname string
@@ -91,12 +101,13 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 				return c.State.Running
 			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
-	})
 
-	AfterAll(func() {
-		for _, sleepy := range sleepies {
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-		}
+		DeferCleanup(func() {
+			for _, sleepy := range sleepies {
+				Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+			}
+			pool.Client.HTTPClient.CloseIdleConnections()
+		})
 	})
 
 	It("decorates IE apps and IED runtime", func() {

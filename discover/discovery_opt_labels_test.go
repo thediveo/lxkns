@@ -17,9 +17,8 @@ package discover
 import (
 	"context"
 	"os"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/go-plugger"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
@@ -27,6 +26,10 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/thediveo/noleak"
 )
 
 const testlabelname = "decorator-discovery-label-test"
@@ -51,6 +54,14 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 }
 
 var _ = Describe("decorator discovery labels", Ordered, func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	const name = "decorator-test-container"
 
@@ -82,7 +93,7 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 			Labels:     map[string]string{},
 		})
 		// Skip test in case Docker is not accessible.
-		if err != nil && nodockerre.MatchString(err.Error()) {
+		if err != nil && noDockerRE.MatchString(err.Error()) {
 			Skip("Docker not available")
 		}
 		Expect(err).NotTo(HaveOccurred())
@@ -91,10 +102,11 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
 			return c.State.Running
 		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-	})
 
-	AfterAll(func() {
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		DeferCleanup(func() {
+			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+			pool.Client.HTTPClient.CloseIdleConnections()
+		})
 	})
 
 	It("passes discovery labels to decorators", func() {

@@ -30,9 +30,18 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/noleak"
 )
 
 var _ = Describe("Decorates composer projects", Ordered, func() {
+
+	// Ensure to run the goroutine leak test *last* after all (defered)
+	// clean-ups.
+	BeforeEach(func() {
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		})
+	})
 
 	var names = map[string]struct{}{
 		"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10): {},
@@ -85,12 +94,13 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 			}).WithTimeout(5*time.Second).WithPolling(100*time.Millisecond).
 				Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
-	})
 
-	AfterAll(func() {
-		for _, sleepy := range sleepies {
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-		}
+		DeferCleanup(func() {
+			for _, sleepy := range sleepies {
+				Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+			}
+			pool.Client.HTTPClient.CloseIdleConnections()
+		})
 	})
 
 	It("decorates composer projects", func() {

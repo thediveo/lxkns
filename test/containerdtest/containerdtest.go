@@ -16,11 +16,13 @@ package containerdtest
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/cio"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/oci"
+	"github.com/containerd/containerd/remotes/docker"
 )
 
 // Pool represents a containerd client working on a specific (containerd)
@@ -66,9 +68,20 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 	// Pull image if not already in the content store.
 	var image containerd.Image
 	var err error
+	// OUCH! the default resolver keeps a persistent client around, so this
+	// triggers the goroutine leak detection. Thus, we need to explicitly
+	// supply our own (default) client, which we have control over. In
+	// particular, we can close its idle connections at the end of the test,
+	// getting rid of idling persistent connections. Sigh.
+	httpclnt := &http.Client{}
 	if image, err = pool.Client.GetImage(ctx, ref); err != nil {
-		image, err = pool.Client.Pull(ctx, ref, containerd.WithPullUnpack)
+		image, err = pool.Client.Pull(ctx, ref,
+			containerd.WithPullUnpack,
+			containerd.WithResolver(docker.NewResolver(docker.ResolverOptions{
+				Client: httpclnt,
+			})))
 	}
+	httpclnt.CloseIdleConnections()
 	if err != nil {
 		return nil, err
 	}
