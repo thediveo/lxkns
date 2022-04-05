@@ -33,40 +33,44 @@ import (
 
 var _ = Describe("mountineer", func() {
 
-	AfterEach(func() {
-		Eventually(Goroutines).ShouldNot(HaveLeaked())
-	})
+	Context("basic functionality", func() {
 
-	It("does not accept empty references", func() {
-		Expect(New(nil, nil)).Error().To(HaveOccurred())
-		Expect(New([]string{""}, nil)).Error().To(HaveOccurred())
-		Expect(New([]string{"foobar"}, nil)).Error().To(HaveOccurred())
-		Expect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).Error().To(HaveOccurred())
-		Expect(New([]string{"/proc/self"}, nil)).Error().To(HaveOccurred())
-		Expect(New([]string{"/proc/self/"}, nil)).Error().To(HaveOccurred())
-	})
+		AfterEach(func() {
+			Eventually(Goroutines).ShouldNot(HaveLeaked())
+		})
 
-	It("resolves paths", func() {
-		pid := os.Getpid()
-		m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(m.contentsRoot).To(Equal(fmt.Sprintf("/proc/%d/root", pid)))
-		pwd, err := filepath.Abs("")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(m.Resolve("")).To(Equal(fmt.Sprintf("/proc/%d/root%s", pid, pwd)))
-	})
+		It("does not accept empty references", func() {
+			Expect(New(nil, nil)).Error().To(HaveOccurred())
+			Expect(New([]string{""}, nil)).Error().To(HaveOccurred())
+			Expect(New([]string{"foobar"}, nil)).Error().To(HaveOccurred())
+			Expect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).Error().To(HaveOccurred())
+			Expect(New([]string{"/proc/self"}, nil)).Error().To(HaveOccurred())
+			Expect(New([]string{"/proc/self/"}, nil)).Error().To(HaveOccurred())
+		})
 
-	It("opens", func() {
-		pid := os.Getpid()
-		m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
-		Expect(err).NotTo(HaveOccurred())
+		It("resolves paths", func() {
+			pid := os.Getpid()
+			m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(m.contentsRoot).To(Equal(fmt.Sprintf("/proc/%d/root", pid)))
+			pwd, err := filepath.Abs("")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(m.Resolve("")).To(Equal(fmt.Sprintf("/proc/%d/root%s", pid, pwd)))
+		})
 
-		Expect(m.PID()).To(Equal(model.PIDType(os.Getpid())))
+		It("opens", func() {
+			pid := os.Getpid()
+			m, err := New([]string{fmt.Sprintf("/proc/%d/ns/mnt", pid)}, nil)
+			Expect(err).NotTo(HaveOccurred())
 
-		f, err := m.Open("mountineer_test.go")
-		Expect(err).NotTo(HaveOccurred())
-		f.Close()
-		Expect(m.Open("foobar.go")).Error().To(HaveOccurred())
+			Expect(m.PID()).To(Equal(model.PIDType(os.Getpid())))
+
+			f, err := m.Open("mountineer_test.go")
+			Expect(err).NotTo(HaveOccurred())
+			f.Close()
+			Expect(m.Open("foobar.go")).Error().To(HaveOccurred())
+		})
+
 	})
 
 	Context("accessing bind-mounted mount namespace", Ordered, func() {
@@ -74,8 +78,6 @@ var _ = Describe("mountineer", func() {
 		bindmountpoint := "/tmp/lxkns-unittest-bindmountpoint"
 		testdata := "/tmp/lxkns-unittest-data"
 		canary := testdata + "/killroy.was.here"
-
-		var cmd *testbasher.TestCommand
 
 		BeforeAll(func() {
 			if os.Getegid() != 0 {
@@ -139,7 +141,9 @@ read # wait for test to proceed()
 `)
 
 			By("creating a bind-mounted mount namespace")
-			cmd = scripts.Start("main1")
+			cmd := scripts.Start("main1")
+			DeferCleanup(func() { cmd.Close() })
+
 			var dummy string
 			cmd.Decode(&dummy)
 
@@ -171,9 +175,8 @@ read # wait for test to proceed()
 		})
 
 		AfterAll(func() {
-			if cmd != nil {
-				cmd.Close()
-			}
+			// my oh my, we ARE pedantic today, innit?
+			Eventually(Goroutines).ShouldNot(HaveLeaked())
 		})
 
 		When("using a mountineer", func() {
@@ -186,12 +189,7 @@ read # wait for test to proceed()
 				var err error
 				m, err = New([]string{bindmountpoint}, nil)
 				Expect(err).NotTo(HaveOccurred())
-			})
-
-			AfterAll(func() {
-				if m != nil {
-					m.Close()
-				}
+				DeferCleanup(func() { m.Close() })
 			})
 
 			It("created a sandbox/pause process that survives", func() {
