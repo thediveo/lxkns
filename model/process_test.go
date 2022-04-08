@@ -139,6 +139,14 @@ var _ = Describe("ProcessTable", func() {
 		Expect(proc.Parent.PID).To(Equal(PIDType(os.Getppid())))
 	})
 
+	It("returns Process objects for PIDs", func() {
+		pt := NewProcessTable(false)
+		Expect(pt).NotTo(BeNil())
+		procs := pt.ProcessesByPIDs(PIDType(os.Getpid()))
+		Expect(procs).To(HaveLen(1))
+		Expect(procs[0].PID).To(Equal(PIDType(os.Getpid())))
+	})
+
 })
 
 var _ = Describe("ProcessListByPID", func() {

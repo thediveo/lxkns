@@ -274,6 +274,22 @@ func (t ProcessTable) ByName(name string) (procs []*Process) {
 	return
 }
 
+// ProcessesByPIDs returns the Process objects corresponding to the specified
+// PIDs. It skips PIDs for which no Process object is known and only returns
+// Process objects for known PIDs. If you need error handling, then you'll
+// better roll your own function.
+func (t ProcessTable) ProcessesByPIDs(pid ...PIDType) []*Process {
+	procs := make([]*Process, 0, len(pid))
+	for _, p := range pid {
+		proc, ok := t[p]
+		if !ok {
+			continue
+		}
+		procs = append(procs, proc)
+	}
+	return procs
+}
+
 // ProcessListByPID is a type alias for sorting slices of *Process by their
 // PIDs in numerically ascending order.
 type ProcessListByPID []*Process
