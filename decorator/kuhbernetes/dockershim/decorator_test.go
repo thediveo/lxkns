@@ -30,6 +30,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/noleak"
 )
@@ -112,8 +113,10 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 	// clean-ups.
 	BeforeEach(func() {
 		ignoreGood := Goroutines()
+		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(ignoreGood))
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 

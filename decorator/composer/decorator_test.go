@@ -29,6 +29,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/noleak"
 )
@@ -38,8 +39,10 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
+		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
