@@ -32,7 +32,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/noleak"
+	. "github.com/onsi/gomega/gleak"
 )
 
 var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)

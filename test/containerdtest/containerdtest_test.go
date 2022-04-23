@@ -22,7 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/noleak"
+	. "github.com/onsi/gomega/gleak"
 )
 
 const testref = "docker.io/library/busybox:latest"

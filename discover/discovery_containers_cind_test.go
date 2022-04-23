@@ -31,7 +31,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/noleak"
+	. "github.com/onsi/gomega/gleak"
 )
 
 const cindName = "containerd-in-docker" // name of Docker container with containerd

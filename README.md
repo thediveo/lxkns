@@ -44,6 +44,24 @@ app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watc
 policy](https://golang.org/doc/devel/release.html#policy), that is, major
 versions _N_ and _N_-1 (where _N_ is the current major version).
 
+## Hacking It
+
+This project comes with comprehensive unit tests, including (albeit limited)
+mocking of Docker clients to the small extend required for whale watching. The
+tests also cover leak checks:
+
+* goroutine leak checking courtesy of Gomega's
+  [`gleak`](https://onsi.github.io/gomega/#codegleakcode-finding-leaked-goroutines)
+  package.
+
+* file descriptor leak checking courtesy of the
+  [@thediveo/fdooze](https://github.com/thediveo/fdooze) module.
+
+> **Note:** do **not run parallel tests** for multiple packages. `make test`
+ensures to run all package tests always sequentially, but in case you run `go
+test` yourself, please don't forget `-p 1` when testing multiple packages in
+one, _erm_, go.
+
 ## ⚖️ Copyright and License
 
 `lxkns` is Copyright 2020‒21 Harald Albrecht, and licensed under the Apache

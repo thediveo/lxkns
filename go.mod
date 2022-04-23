@@ -13,11 +13,12 @@ require (
 	github.com/getkin/kin-openapi v0.94.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
-	github.com/onsi/gomega v1.19.0
+	github.com/onsi/gomega v1.19.1-0.20220419145416-8dab36e62ea1
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/thediveo/enumflag v0.10.1
+	github.com/thediveo/fdooze v0.1.1
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
 	github.com/thediveo/go-plugger v0.10.2
@@ -25,7 +26,7 @@ require (
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.6
 	github.com/thediveo/whalewatcher v0.6.3
-	golang.org/x/sys v0.0.0-20220403205710-6acee93ad0eb
+	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -36,9 +37,9 @@ require (
 	github.com/Microsoft/hcsshim v0.9.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/PaesslerAG/gval v1.1.2 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/containerd/cgroups v1.0.3 // indirect
-	github.com/containerd/continuity v0.2.2 // indirect
+	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
@@ -66,9 +67,9 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
-	github.com/moby/sys/mountinfo v0.6.0 // indirect
+	github.com/moby/sys/mountinfo v0.6.1 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -78,16 +79,16 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/thediveo/noleak v0.3.0
+	github.com/thediveo/noleak v0.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
+	golang.org/x/net v0.0.0-20220421235706-1d1ef9303861 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	google.golang.org/genproto v0.0.0-20220401170504-314d38edb7de // indirect
-	google.golang.org/grpc v1.45.0 // indirect
+	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731 // indirect
+	google.golang.org/grpc v1.46.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	k8s.io/client-go v0.23.5 // indirect
+	k8s.io/client-go v0.23.6 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
