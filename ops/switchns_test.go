@@ -20,6 +20,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops/internal/opener"
@@ -30,6 +31,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 type brokenref struct{ NamespacePath }
@@ -45,6 +48,14 @@ func (b brokenref) NsFd() (int, opener.FdCloser, error) {
 var _ opener.Opener = (*brokenref)(nil)
 
 var _ = Describe("Set Namespaces", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("Go()es with errors", func() {
 		Expect(Go(func() {}, NamespacePath("foobar"))).Error().To(
@@ -68,9 +79,11 @@ var _ = Describe("Set Namespaces", func() {
 	})
 
 	It("Visit()s with errors", func() {
+		// Attempt to use a non-existing file as namespace reference
 		Expect(Visit(func() {}, NamespacePath("foobar"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
 
+		// Attempt to use an existing ordinary file as namespace reference
 		Expect(Visit(func() {}, NamespacePath("doc.go"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace.+NS_GET_NSTYPE.+ioctl`)))
 

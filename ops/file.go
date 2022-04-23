@@ -27,7 +27,7 @@ import (
 // Please use NewNamespaceFile() to create a *NamespaceFile from an *os.File and
 // an error (correctly deals with errors by returning a nil *NamespaceFile).
 type NamespaceFile struct {
-	// Please note that we embed(!) an os.File instead of embedding an os.File.
+	// Please note that we embed(!) an os.File instead of embedding an *os.File.
 	// Our rationale here is that this is fine, as os.File has an indirection
 	// designed in anyway in order to avoid users of os.File overwriting the
 	// file descriptors. With this indirection in mind, we simply skip yet

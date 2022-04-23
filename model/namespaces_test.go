@@ -15,9 +15,10 @@
 package model
 
 import (
+	"github.com/thediveo/lxkns/species"
+
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/species"
 )
 
 var _ = Describe("model", func() {

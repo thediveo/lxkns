@@ -43,7 +43,7 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	// Since we only need to temporarily open the namespace "file", we keep with
 	// unix.Open() and and plain file descriptors instead of os.Open() and
 	// os.File.
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return 0, newInvalidNamespaceError(nsp, err)
 	}
@@ -59,7 +59,7 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 // Linux kernel namespace reference.
 func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 	// See above for reasoning why unix.Open() instead of os.Open().
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return species.NoneID, err
 	}
@@ -73,7 +73,7 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) User() (relations.Relation, error) {
 	// See above for reasoning why unix.Open() instead of os.Open().
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (nsp NamespacePath) User() (relations.Relation, error) {
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) Parent() (relations.Relation, error) {
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (nsp NamespacePath) Parent() (relations.Relation, error) {
 //
 // ℹ️ A Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) OwnerUID() (int, error) {
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -130,6 +130,7 @@ func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.Refere
 	}
 	openref, err := NewTypedNamespaceFile(f, 0)
 	if err != nil {
+		f.Close() // do not leak ... anymore; now my detector pays off ;)
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return openref, func() { _ = openref.Close() }, nil
@@ -148,7 +149,7 @@ func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.Refere
 // is still in use.
 func (nsp NamespacePath) NsFd() (int, opener.FdCloser, error) {
 	var fdi int
-	fdi, err := unix.Open(string(nsp), unix.O_RDONLY, 0)
+	fdi, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return fdi, nil, newInvalidNamespaceError(nsp, err)
 	}

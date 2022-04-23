@@ -17,6 +17,7 @@ package mountineer
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/testbasher"
@@ -24,12 +25,17 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("mountineer", func() {
 
-	AfterEach(func() {
-		Eventually(Goroutines).ShouldNot(HaveLeaked())
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
 	})
 
 	It("returns error for non-existing sandbox binary", func() {

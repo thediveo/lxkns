@@ -15,13 +15,26 @@
 package mounts
 
 import (
+	"time"
+
+	"github.com/thediveo/go-mntinfo"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
 	. "github.com/onsi/gomega/gstruct"
-	"github.com/thediveo/go-mntinfo"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("MountPath", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("builds a tree", func() {
 		mp := NewMountPathMap([]mntinfo.Mountinfo{
