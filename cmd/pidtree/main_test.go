@@ -18,26 +18,33 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("renders PID trees and branches", func() {
 
-	var scripts testbasher.Basher
-	var cmd *testbasher.TestCommand
 	var pidnsid species.NamespaceID
 	var initpid, leafpid model.PIDType
 
 	BeforeEach(func() {
-		cmd = nil
-		scripts = testbasher.Basher{}
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+
+		scripts := testbasher.Basher{}
 		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("main", `
 unshare -Upmfr $stage2
@@ -48,18 +55,18 @@ process_namespaceid pid # print ID of new PID namespace.
 echo "$$"
 (echo $BASHPID && read)
 `)
-		cmd = scripts.Start("main")
+		cmd := scripts.Start("main")
 		pidnsid = nstest.CmdDecodeNSId(cmd)
 		cmd.Decode(&initpid)
 		Expect(initpid).To(Equal(model.PIDType(1)))
 		cmd.Decode(&leafpid)
-	})
 
-	AfterEach(func() {
-		if cmd != nil {
-			cmd.Close()
-		}
-		scripts.Done()
+		DeferCleanup(func() {
+			if cmd != nil {
+				cmd.Close()
+			}
+			scripts.Done()
+		})
 	})
 
 	It("CLI w/o args renders PID tree", func() {
