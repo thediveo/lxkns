@@ -17,14 +17,26 @@ package portable
 import (
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/species"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("portable reference", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("does not Open() a zero portable reference", func() {
 		portref := PortableReference{}

@@ -18,14 +18,18 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 
 	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 func assertInvNSError(err error) {
@@ -40,6 +44,14 @@ func null() *os.File {
 }
 
 var _ = Describe("Namespaces", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Filedescriptors).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("descriptively fails to wrap an invalid file descriptor", func() {
 		Expect(typedNamespaceFileFromFd(NamespacePath("goobarr"), "", ^uint(0), 0, nil)).Error().To(
@@ -119,9 +131,9 @@ var _ = Describe("Namespaces", func() {
 
 	It("opens typed references", func() {
 		ref, err := NewTypedNamespaceFd(0, species.CLONE_NEWNS)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		oref, closer, err := ref.OpenTypedReference()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(closer).NotTo(Panic())
 		Expect(oref.(*TypedNamespaceFd)).To(BeIdenticalTo(ref))
@@ -130,19 +142,26 @@ var _ = Describe("Namespaces", func() {
 		Expect(fref.OpenTypedReference()).Error().To(MatchError(MatchRegexp("invalid namespace operation NS_GET_NSTYPE")))
 
 		fref, err = NewNamespaceFile(os.Open("/proc/self/ns/net"))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(fref)
 		oref, closer, err = fref.OpenTypedReference()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
 
 		fnull := null()
-		defer fnull.Close()
+		defer func(f *os.File) {
+			defer GinkgoRecover()
+			Expect(f.Close()).To(Succeed())
+		}(fnull)
 		tfref, err := NewTypedNamespaceFile(fnull, species.CLONE_NEWUSER)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		oref, closer, err = tfref.OpenTypedReference()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
@@ -151,10 +170,15 @@ var _ = Describe("Namespaces", func() {
 		Expect(fdref.OpenTypedReference()).Error().To(MatchError(MatchRegexp("invalid namespace operation")))
 
 		fd, err := unix.Open("/proc/self/ns/net", unix.O_RDONLY, 0)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
+		defer func(fd int) {
+			defer GinkgoRecover()
+			Expect(unix.Close(fd)).To(Succeed())
+		}(fd)
+
 		fdref = NamespaceFd(fd)
 		oref, closer, err = fdref.OpenTypedReference()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(closer).NotTo(Panic())
 		Expect(oref).NotTo(BeNil())
@@ -163,12 +187,12 @@ var _ = Describe("Namespaces", func() {
 			MatchError(MatchRegexp("invalid namespace path")))
 		Expect(NewTypedNamespacePath("doc.go", 0).OpenTypedReference()).Error().To(
 			MatchError(MatchRegexp("invalid namespace path.+invalid namespace operation")))
+
 		pref, closer, err := NewTypedNamespacePath("/proc/self/ns/net", 0).OpenTypedReference()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		Expect(closer).NotTo(Panic())
 		Expect(pref).NotTo(BeNil())
-		closer()
 	})
 
 	It("returns suitable file descriptors for referencing", func() {
@@ -209,20 +233,32 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).ToNot(HaveOccurred())
 		ownerfns, err := NamespacePath("/proc/self/ns/net").User()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = ownerfns.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(ownerfns)
 		Expect(ownerfns.ID()).To(Equal(usernsid))
 
 		ownerf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
 		Expect(err).ToNot(HaveOccurred())
-		defer ownerf.Close()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(ownerf)
 		userf, err := NamespaceFd(ownerf.Fd()).User()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = userf.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(userf)
 		Expect(userf.ID()).To(Equal(usernsid))
 
 		userf, err = ownerf.User()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = userf.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(userf)
 		Expect(userf.ID()).To(Equal(usernsid))
 	})
 
@@ -259,12 +295,19 @@ read # wait for test to proceed()
 		_ = nstest.CmdDecodeNSId(cmd)
 
 		parentuserns, err := leafuserpath.Parent()
-		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = parentuserns.(io.Closer).Close() }()
+		Expect(err).NotTo(HaveOccurred())
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(parentuserns)
 		Expect(parentuserns.ID()).To(Equal(parentusernsid))
+
 		pp, err := parentuserns.Parent()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = pp.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(pp)
 		Expect(pp.Parent()).Error().To(HaveOccurred())
 
 		Expect(NewTypedNamespacePath("foobar", 0).Parent()).Error().To(
@@ -272,24 +315,41 @@ read # wait for test to proceed()
 
 		parentuserns, err = NewTypedNamespacePath(string(leafuserpath), species.CLONE_NEWUSER).Parent()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = parentuserns.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(parentuserns)
 		Expect(parentuserns.ID()).To(Equal(parentusernsid))
 
 		f, err := os.Open(string(leafuserpath))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
+		defer func(f *os.File) {
+			defer GinkgoRecover()
+			Expect(f.Close()).To(Succeed())
+		}(f)
 		tleafuserns, err := NewTypedNamespaceFile(f, species.CLONE_NEWUSER)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
+
 		parentuserns, err = tleafuserns.Parent()
-		Expect(err).To(Succeed())
-		defer func() { _ = parentuserns.(io.Closer).Close() }()
+		Expect(err).NotTo(HaveOccurred())
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(parentuserns)
 		Expect(parentuserns.ID()).To(Equal(parentusernsid))
 
 		leafuserf, err := os.Open(string(leafuserpath))
 		Expect(err).ToNot(HaveOccurred())
-		defer leafuserf.Close()
+		defer func(f *os.File) {
+			defer GinkgoRecover()
+			Expect(f.Close()).To(Succeed())
+		}(leafuserf)
 		parentuserns2, err := NamespaceFd(leafuserf.Fd()).Parent()
 		Expect(err).ToNot(HaveOccurred())
-		defer func() { _ = parentuserns2.(io.Closer).Close() }()
+		defer func(ns relations.Relation) {
+			defer GinkgoRecover()
+			Expect(ns.(io.Closer).Close()).To(Succeed())
+		}(parentuserns2)
 		Expect(parentuserns2.ID()).To(Equal(parentusernsid))
 	})
 

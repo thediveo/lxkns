@@ -67,7 +67,7 @@ func (nsp TypedNamespacePath) Type() (species.NamespaceType, error) {
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
-	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY, 0)
+	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, newInvalidNamespaceError(nsp, err)
 	}
@@ -92,6 +92,7 @@ func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.R
 	}
 	openref, err := NewTypedNamespaceFile(f, nsp.nstype)
 	if err != nil {
+		f.Close() // ...do not leak
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return openref, func() { _ = openref.Close() }, nil
