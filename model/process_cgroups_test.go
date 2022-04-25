@@ -19,15 +19,27 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/thediveo/go-mntinfo"
+	"github.com/thediveo/testbasher"
 
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
 	. "github.com/onsi/gomega/gstruct"
-	"github.com/thediveo/go-mntinfo"
-	"github.com/thediveo/testbasher"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("Freezer", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("reads v1 freezer state", func() {
 		Expect(frozenV1("test/cgroupies/v1")).To(BeFalse())

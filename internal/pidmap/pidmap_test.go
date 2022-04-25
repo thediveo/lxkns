@@ -17,18 +17,30 @@ package pidmap
 import (
 	"fmt"
 	"os"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("maps PIDs", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("returns empty PID slice for non-existing PID 0", func() {
 		Expect(NSpid(&model.Process{})).To(BeEmpty())

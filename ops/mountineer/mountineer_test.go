@@ -28,15 +28,20 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/thediveo/noleak"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("mountineer", func() {
 
 	Context("basic functionality", func() {
 
-		AfterEach(func() {
-			Eventually(Goroutines).ShouldNot(HaveLeaked())
+		BeforeEach(func() {
+			goodfds := Filedescriptors()
+			DeferCleanup(func() {
+				Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+				Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+			})
 		})
 
 		It("does not accept empty references", func() {
@@ -84,6 +89,14 @@ var _ = Describe("mountineer", func() {
 				// This unit test cannot be run inside a user namespace :(
 				Skip("needs root")
 			}
+
+			// This double-guards our sandbox removal tests and ensures that we
+			// don't leave any goroutines running or file descriptors open...
+			goodfds := Filedescriptors()
+			DeferCleanup(func() {
+				Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+				Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+			})
 
 			// This test harness is admittedly involved: we create a new mount
 			// namespace and then bind-mount it. Unfortunately, bind-mounting mount
@@ -172,11 +185,6 @@ read # wait for test to proceed()
 
 			// canary must not be visible in this mount namespace
 			Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
-		})
-
-		AfterAll(func() {
-			// my oh my, we ARE pedantic today, innit?
-			Eventually(Goroutines).ShouldNot(HaveLeaked())
 		})
 
 		When("using a mountineer", func() {

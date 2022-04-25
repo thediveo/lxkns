@@ -20,17 +20,18 @@ import (
 	"regexp"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	. "github.com/thediveo/lxkns/test/matcher"
-	. "github.com/thediveo/noleak"
-
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/lxkns/test/matcher"
 )
 
 var _ = Describe("Decorates composer projects", Ordered, func() {
@@ -38,8 +39,10 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
+		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
