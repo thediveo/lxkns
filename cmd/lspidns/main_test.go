@@ -17,24 +17,31 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("renders pid namespaces", func() {
 
-	var scripts testbasher.Basher
-	var cmd *testbasher.TestCommand
 	var initusernsid, initpidnsid, usernsid, pidnsid species.NamespaceID
 
 	BeforeEach(func() {
-		cmd = nil
-		scripts = testbasher.Basher{}
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+
+		scripts := testbasher.Basher{}
 		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("main", `
 process_namespaceid user
@@ -46,18 +53,18 @@ process_namespaceid user
 process_namespaceid pid
 read
 `)
-		cmd = scripts.Start("main")
+		cmd := scripts.Start("main")
 		initusernsid = nstest.CmdDecodeNSId(cmd)
 		initpidnsid = nstest.CmdDecodeNSId(cmd)
 		usernsid = nstest.CmdDecodeNSId(cmd)
 		pidnsid = nstest.CmdDecodeNSId(cmd)
-	})
 
-	AfterEach(func() {
-		if cmd != nil {
-			cmd.Close()
-		}
-		scripts.Done()
+		DeferCleanup(func() {
+			if cmd != nil {
+				cmd.Close()
+			}
+			scripts.Done()
+		})
 	})
 
 	It("CLI --foobar fails correctly", func() {

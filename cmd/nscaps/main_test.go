@@ -17,14 +17,26 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/lxkns/ops"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
-	"github.com/thediveo/lxkns/ops"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
 )
 
 var _ = Describe("renders branches", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("CLI --foobar fails correctly", func() {
 		os.Args = append(os.Args[:1], "--noengines", "--foobar")

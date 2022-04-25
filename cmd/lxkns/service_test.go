@@ -22,10 +22,6 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-
 	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
@@ -33,70 +29,95 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/onsi/gomega/gstruct"
+	. "github.com/thediveo/fdooze"
 )
 
+// workload test container "random" name
 var sleepyname = "empty_eno" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
+//  where to reach the API after starting the service on a dynamic port.
 var baseurl string
 
-var pool *dockertest.Pool
-var sleepy *dockertest.Resource
-var ctx context.Context
-var cancel context.CancelFunc
+var _ = Describe("serves API endpoints", Ordered, func() {
 
-var _ = BeforeSuite(func() {
-	docksock := ""
-	if os.Geteuid() == 0 {
-		docksock = "unix:///proc/1/root/run/docker.sock"
-	}
+	BeforeAll(func() {
+		docksock := ""
+		if os.Geteuid() == 0 {
+			docksock = "unix:///proc/1/root/run/docker.sock"
+		}
 
-	var err error
-	pool, err = dockertest.NewPool(docksock)
-	Expect(err).NotTo(HaveOccurred())
-	_ = pool.RemoveContainerByName(sleepyname)
-	Eventually(func() error {
-		_, err := pool.Client.InspectContainer(sleepyname)
-		return err
-	}, "5s").Should(HaveOccurred())
-	sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "busybox",
-		Tag:        "latest",
-		Name:       sleepyname,
-		Cmd:        []string{"/bin/sleep", "120s"},
+		// "hardcore" check after all has been said and done
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithTimeout(7 * time.Second).WithPolling(250 * time.Millisecond).
+				ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+
+		By("creating a test workload")
+		pool, err := dockertest.NewPool(docksock)
+		Expect(err).NotTo(HaveOccurred())
+		_ = pool.RemoveContainerByName(sleepyname)
+		Eventually(func() error {
+			_, err := pool.Client.InspectContainer(sleepyname)
+			return err
+		}, "5s").Should(HaveOccurred())
+		sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
+			Repository: "busybox",
+			Tag:        "latest",
+			Name:       sleepyname,
+			Cmd:        []string{"/bin/sleep", "120s"},
+		})
+		Expect(err).NotTo(HaveOccurred(), "container %s", sleepyname)
+		DeferCleanup(func() {
+			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
+		})
+		Eventually(func() bool {
+			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
+			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
+			return c.State.Running
+		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
+
+		By("starting a workload watcher")
+		moby, err := moby.New(docksock, nil)
+		Expect(err).NotTo(HaveOccurred())
+		ctx, cancel := context.WithCancel(context.Background())
+		DeferCleanup(func() {
+			cancel()
+			moby.Close()
+		})
+
+		By("starting a containerizer")
+		cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
+		Eventually(moby.Ready, "5s").Should(BeClosed())
+
+		By("starting the service")
+		log.SetLevel(log.FatalLevel)
+		serveraddr, err := startServer("127.0.0.1:0", cizer)
+		Expect(err).To(Succeed())
+		baseurl = "http://" + serveraddr.String() + "/api/"
+		DeferCleanup(func() {
+			stopServer(5 * time.Second)
+		})
 	})
-	Expect(err).NotTo(HaveOccurred(), "container %s", sleepyname)
-	Eventually(func() bool {
-		c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-		Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-		return c.State.Running
-	}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 
-	moby, err := moby.New(docksock, nil)
-	Expect(err).NotTo(HaveOccurred())
-	ctx, cancel = context.WithCancel(context.Background())
-	cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
-	Eventually(moby.Ready, "5s").Should(BeClosed())
-
-	log.SetLevel(log.FatalLevel)
-	serveraddr, err := startServer("127.0.0.1:0", cizer)
-	Expect(err).To(Succeed())
-	baseurl = "http://" + serveraddr.String() + "/api/"
-})
-
-var _ = AfterSuite(func() {
-	if sleepy != nil {
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-	}
-	stopServer(5 * time.Second)
-	if cancel != nil {
-		cancel()
-	}
-})
-
-var _ = Describe("serves API endpoints", func() {
+	BeforeEach(func() {
+		goods := Goroutines()
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(goods))
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+	})
 
 	It("cannot find non-existing API", func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
+		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "foobar")
 		Expect(err).To(Succeed())
 		defer resp.Body.Close()
@@ -105,6 +126,7 @@ var _ = Describe("serves API endpoints", func() {
 
 	It("discovers namespaces", func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
+		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "namespaces")
 		Expect(err).To(Succeed())
 		defer resp.Body.Close()
@@ -126,6 +148,7 @@ var _ = Describe("serves API endpoints", func() {
 
 	It("discovers processes", func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
+		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "processes")
 		Expect(err).To(Succeed())
 		defer resp.Body.Close()
@@ -137,6 +160,7 @@ var _ = Describe("serves API endpoints", func() {
 
 	It("discovers pid mapping", func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
+		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "pidmap")
 		Expect(err).To(Succeed())
 		defer resp.Body.Close()
