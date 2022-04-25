@@ -20,7 +20,7 @@ require (
 	github.com/thediveo/enumflag v0.10.1
 	github.com/thediveo/fdooze v0.1.1
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
-	github.com/thediveo/go-mntinfo v0.0.0-20200201214140-3eb7fd2748b6
+	github.com/thediveo/go-mntinfo v0.9.2
 	github.com/thediveo/go-plugger v0.10.2
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/procfsroot v0.4.12
