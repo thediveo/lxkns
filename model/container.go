@@ -93,3 +93,14 @@ func (cs Containers) WithEngineType(enginetype string) (tcs Containers) {
 	}
 	return
 }
+
+// FirstWithNameType returns the first container with the specified name and of
+// the specified type (or flavor), or nil if none could be found.
+func (cs Containers) FirstWithNameType(name string, typ string) *Container {
+	for _, c := range cs {
+		if c.Name == name && (c.Type == typ || c.Flavor == typ) {
+			return c
+		}
+	}
+	return nil
+}
