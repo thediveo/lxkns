@@ -1,0 +1,1 @@
+{"buildTargets":["buildapp","citestapp","clean","coverage","deploy","docsify","help","install","report","scan","startapp","test","testc","undeploy"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

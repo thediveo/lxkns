@@ -1,0 +1,385 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+make: *** No rule to make target 'all'.  Stop.
+
+# GNU Make 4.3
+# Built for aarch64-unknown-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Tue May 24 14:31:54 2022
+
+# Variables
+
+# environment
+LC_ALL = C
+# environment
+VSCODE_CWD = /home/harald
+# makefile (from 'Makefile', line 6)
+GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!="") print m[1]}' defs_version.go
+# default
+MAKE_COMMAND := make
+# environment
+VSCODE_HANDLES_SIGPIPE = true
+# makefile (from 'Makefile', line 3)
+GOPATH = $(shell go env GOPATH)
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/harald/github/lxkns
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+VSCODE_LOG_STACK = false
+# automatic
+%F = $(notdir $%)
+# environment
+LANG = C
+# default
+.LOADED := 
+# default
+.INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# makefile
+CURDIR := /home/harald/github/lxkns
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+MFLAGS = -pqrR
+# default
+.SHELLFLAGS := -c
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
+# makefile (from 'Makefile', line 4)
+GOGEN = go generate .
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+XDG_SESSION_TYPE = tty
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# automatic
+*F = $(notdir $*)
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en","availableLanguages":{}}
+# default
+MAKE_HOST := aarch64-unknown-linux-gnu
+# makefile
+SHELL = /bin/sh
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 0
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /home/harald/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/bin/remote-cli:/home/harald/.local/bin:/home/harald/gems/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/harald/go/bin
+# default
+MAKEFILES := 
+# environment
+MOTD_SHOWN = pam
+# automatic
+^F = $(notdir $^)
+# environment
+SSH_CLIENT = 192.168.178.65 61074 22
+# makefile (from 'Makefile', line 2)
+PREFIX = /usr/local
+# makefile (from 'Makefile', line 10)
+goversion = 1.17 1.16
+# environment
+VSCODE_LOG_NATIVE = false
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# automatic
+?F = $(notdir $?)
+# makefile (from 'Makefile', line 15)
+testcontaineropts := --pid host --cap-drop ALL --cap-add CAP_SYS_ADMIN --cap-add CAP_SYS_CHROOT --cap-add CAP_SYS_PTRACE --cap-add CAP_DAC_READ_SEARCH --cap-add CAP_DAC_OVERRIDE --cap-add CAP_SETUID --cap-add CAP_SETGID --security-opt systempaths=unconfined --security-opt apparmor=unconfined --security-opt seccomp=unconfined -v /sys/fs/cgroup:/sys/fs/cgroup:rw
+# environment
+LS_COLORS = 
+# automatic
++F = $(notdir $+)
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+BROWSER = /home/harald/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/bin/helpers/browser.sh
+# environment
+LOGNAME = harald
+# makefile
+.DEFAULT_GOAL := help
+# environment
+USER = harald
+# default
+MAKE_VERSION := 4.3
+# environment
+VSCODE_EXTHOST_WILL_SEND_SOCKET = true
+# environment
+VSCODE_AGENT_FOLDER = /home/harald/.vscode-server
+# environment
+_ = /home/harald/.vscode-server/bin/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5/node
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+GEM_HOME = /home/harald/gems
+# environment
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-1e6428e2-d612-4660-a380-1f855c96ffc7.sock
+# environment
+GOMODCACHE = /home/harald/go/pkg/mod
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/harald
+# makefile (from 'Makefile', line 12)
+tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
+# environment
+XDG_SESSION_ID = 95
+# environment
+GOPROXY = https://proxy.golang.org,direct
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# environment
+SSH_CONNECTION = 192.168.178.65 61074 192.168.178.67 22
+# variable set hash-table stats:
+# Load=80/1024=8%, Rehash=0, Collisions=4/112=4%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 2050, inode 1152399): 39 files, no impossibilities.
+
+# 39 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+coverage:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 42):
+	scripts/cov.sh
+
+deploy:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 45):
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
+
+scan:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 112):
+	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
+	syft dir:. -o json > $$BOMFILE && \
+	grype sbom:$$BOMFILE
+
+docsify:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 109):
+	@docsify serve -p 3030 -P 3031 docs
+
+report:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 94):
+	@./scripts/goreportcard.sh
+
+undeploy:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 51):
+	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
+
+startapp:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 103):
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	@echo "starting version" $(GIT_VERSION)
+	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn start
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-03-18 15:11:24.581149397
+#  File has been updated.
+#  Successfully updated.
+
+citestapp:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 74):
+	@sudo /bin/true
+	@$(GOGEN)
+	@cd web/lxkns && yarn build:dev
+	@go build -v ./cmd/lxkns
+	@TMPPIDFILE=$$(mktemp -p /tmp lxkns.service.pid.XXXXXXXXXX) && \
+	sudo chown root $$TMPPIDFILE && \
+	sudo bash -c "./lxkns --debug --http localhost:5100 & echo \$$! > $$TMPPIDFILE" && \
+	sudo bash -c "chown \$$SUDO_USER $$TMPPIDFILE" && \
+	ls -l $$TMPPIDFILE && \
+	LXKNSPID=$$(cat $$TMPPIDFILE) && \
+	rm $$TMPPIDFILE && \
+	echo "lxkns background service PID:" $$LXKNSPID && \
+	(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100,screenshotOnRunFailure=false); STATUS=$$? ; \
+	sleep 1s && \
+	echo "stopping lxkns background service and waiting for it to exit..." && \
+	sudo kill $$LXKNSPID && \
+	timeout 10s tail --pid=$$LXKNSPID -f /dev/null && \
+	exit $$STATUS
+
+clean:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 37):
+	rm -f $(tools)
+	rm -f coverage.html coverage.out coverage-root.out
+	rm -f coverage.txt coverage-root.txt
+
+buildapp:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 97):
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	@echo "building version" $(GIT_VERSION)
+	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn build
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+all:
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has not been updated.
+
+help:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 33):
+	@# Shamelessly stolen from Gomega's Makefile
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
+
+testc:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 62):
+	$(GOGEN)
+	@set -e; for GOVERSION in $(goversion); do \
+		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
+		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
+		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
+	done; \
+	echo "🎉 🎉 🎉 All tests passed"
+
+test:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 59):
+	go test -v -p 1 -count 1 -exec sudo ./... && go test -v -p 1 -count 1 ./...
+
+ 
+install:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 54):
+	$(GOGEN)
+	go install -v ./cmd/... ./examples/lsallns
+	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
+
+.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify scan
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# files hash-table stats:
+# Load=19/1024=2%, Rehash=0, Collisions=0/53=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 58 / storage = 482 B / avg = 8 B
+# current buf: size = 8162 B / used = 482 B / count = 58 / avg = 8 B
+
+# strcache performance: lookups = 90 / hit rate = 35%
+# hash-table stats:
+# Load=58/8192=1%, Rehash=0, Collisions=0/90=0%
+# Finished Make data base on Tue May 24 14:31:54 2022
+
+ 
