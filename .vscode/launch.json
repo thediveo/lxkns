@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug as root",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "asRoot": true,
+            "program": "${fileDirname}/__debug_bin",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal",
+            "preLaunchTask": "go build (debug)",
+            "env": {
+                "PATH": "${env:PATH}:/snap/bin"
+            }
+        },
+        {
+            "name": "Debug test as root",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "asRoot": true,
+            "program": "${fileDirname}/__debug_bin",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal",
+            "preLaunchTask": "go test (debug)",
+            "env": {
+                "PATH": "${env:PATH}:/snap/bin"
+            }
+        }
+    ]
+}
