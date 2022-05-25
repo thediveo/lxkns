@@ -8,12 +8,8 @@
             "mode": "exec",
             "asRoot": true,
             "program": "${fileDirname}/__debug_bin",
-            "cwd": "${fileDirname}",
             "console": "integratedTerminal",
             "preLaunchTask": "go build (debug)",
-            "env": {
-                "PATH": "${env:PATH}:/snap/bin"
-            }
         },
         {
             "name": "Debug test as root",
@@ -25,9 +21,6 @@
             "cwd": "${fileDirname}",
             "console": "integratedTerminal",
             "preLaunchTask": "go test (debug)",
-            "env": {
-                "PATH": "${env:PATH}:/snap/bin"
-            }
         }
     ]
 }
