@@ -57,6 +57,14 @@ var _ = Describe("Set Namespaces", func() {
 		})
 	})
 
+	It("describes the error when restoring a namespace", func() {
+		msg := "foo has bar'ed"
+		var err error = &RestoreNamespaceErr{msg: msg}
+		Expect(err.Error()).To(Equal(msg))
+		var rnserr *RestoreNamespaceErr
+		Expect(errors.As(err, &rnserr)).To(BeTrue())
+	})
+
 	It("Go()es with errors", func() {
 		Expect(Go(func() {}, NamespacePath("foobar"))).Error().To(
 			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
