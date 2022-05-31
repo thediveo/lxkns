@@ -779,6 +779,8 @@ github.com/thediveo/go-plugger v0.10.2 h1:d0kSSS0GwzO+9DK8ObyvfCnP+1rQtU1IgPKz4N
 github.com/thediveo/go-plugger v0.10.2/go.mod h1:F9AaFi5YuUhQp8hdysbHghKIeQXLoOQ/jQDwt+mpdbU=
 github.com/thediveo/klo v1.0.1 h1:o53QtrMPNE9qJ2en8QDhUEyHSdtssecTrtX4KqQ3QNM=
 github.com/thediveo/klo v1.0.1/go.mod h1:ilNDk1xbJzkNXR09i8+5OEw9zHdbbIb8D6XpWyA8CXg=
+github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308 h1:qMIjoTQ02wL5zqOjyL+4Zq+/0en8kNkjBQPmV1XAMpM=
+github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308/go.mod h1:0o6CyGK8vTq31gjZeTSiZ+z+Vb85HrJjLkeyAbOuvg0=
 github.com/thediveo/procfsroot v0.4.12 h1:zwPppqAiU/EapRMf/Cw+dWLBPfsSfxxXDX9RjSRlqoU=
 github.com/thediveo/procfsroot v0.4.12/go.mod h1:xaTIcmoZshPD74PwFYrbFk3Dt5eXMdXc4uU+6ICyVz4=
 github.com/thediveo/testbasher v1.0.6 h1:+ouvT22NKeYTKp4QqMjAulB7WX1A+oKN1NQMfKczCgk=

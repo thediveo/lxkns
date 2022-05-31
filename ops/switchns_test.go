@@ -33,6 +33,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/namspill"
 )
 
 type brokenref struct{ NamespacePath }
@@ -55,6 +56,10 @@ var _ = Describe("Set Namespaces", func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+	})
+
+	AfterEach(func() {
+		Expect(Tasks()).To(BeUniformlyNamespaced())
 	})
 
 	It("describes the error when restoring a namespace", func() {

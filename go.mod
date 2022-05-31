@@ -25,6 +25,7 @@ require (
 	github.com/thediveo/go-mntinfo v0.9.2
 	github.com/thediveo/go-plugger v0.10.2
 	github.com/thediveo/klo v1.0.1
+	github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308
 	github.com/thediveo/procfsroot v0.4.12
 	github.com/thediveo/testbasher v1.0.6
 	github.com/thediveo/whalewatcher v0.6.7
