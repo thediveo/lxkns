@@ -15,9 +15,10 @@
 package style
 
 import (
+	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 )
 
 var _ = Describe("reads styles", func() {
@@ -76,7 +77,7 @@ pid:
   - background: "#deadbf"
   - spanishinquisition: 666
 `)
-		})).To(MatchRegexp(`^warning: unknown color spanishinquisition: 666`))
+		})).To(MatchRegexp(`^warning: unknown value 666 for color spanishinquisition`))
 		Expect(len(PIDStyle.S("x"))).To(BeNumerically(">", 1))
 		Expect(PIDStyle.S("x")).To(ContainSubstring("mx"))
 	})
