@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	"github.com/muesli/termenv"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // parseStyles parses a YAML string containing style information into the
@@ -87,15 +87,15 @@ func parseElementStyle(sty *Style, elementStyle interface{}) {
 				"warning: unknown styling attribute %q\n", attr)
 		}
 	} else {
-		// Otherwise it has to be an object representing a color mapping for
-		// the foreground and/or background colors.
-		if colormap, ok := elementStyle.(map[interface{}]interface{}); ok {
-			for colorkey, color := range colormap {
-				colorname, ok1 := colorkey.(string)
-				colorvalue, ok2 := color.(string)
-				if !ok1 || !ok2 {
+		// Otherwise it has to be an object representing a color mapping for the
+		// foreground and/or background colors. Gmpf, yaml/v3 has changed the
+		// API.
+		if colormap, ok := elementStyle.(map[string]interface{}); ok {
+			for colorname, color := range colormap {
+				colorvalue, ok := color.(string)
+				if !ok {
 					fmt.Fprintf(os.Stderr,
-						"warning: unknown color %v: %v\n", colorkey, color)
+						"warning: unknown value %v for color %v\n", color, colorname)
 					continue
 				}
 				switch colorname {
@@ -108,6 +108,8 @@ func parseElementStyle(sty *Style, elementStyle interface{}) {
 						"warning: unknown color type %q", colorname)
 				}
 			}
+		} else {
+			fmt.Fprintf(os.Stderr, "invalid color mapping item %v", elementStyle)
 		}
 	}
 }
