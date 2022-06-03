@@ -186,9 +186,13 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		unlock := err == nil
 		for idx := len(switchback) - 1; idx >= 0; idx-- {
 			if restoreErr := unix.Setns(switchback[idx].fd, 0); restoreErr != nil && err == nil {
-				unlock = false // keep the OS-level thread locked
-				// In case we didn't registered an err so far, take this ... but
-				// ignore any subsequent errs.
+				// keep the OS-level thread locked so it gets thrown away when
+				// the calling goroutine (hopefully) quickly terminates on
+				// error.
+				unlock = false
+				// In case we didn't register an err so far, take this new one
+				// ... but then ignore any subsequent errors while trying to
+				// switch back the remaining network namespaces.
 				err = &RestoreNamespaceErr{
 					msg: fmt.Sprintf("lxkns.Visit: cannot switch back to previously active namespace: %s", restoreErr),
 					err: restoreErr,
