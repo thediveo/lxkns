@@ -11,7 +11,7 @@ require (
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.6.4
+	github.com/containerd/containerd v1.6.6
 	github.com/getkin/kin-openapi v0.94.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
