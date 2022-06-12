@@ -783,6 +783,8 @@ github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308 h1:qMIjoTQ02wL5z
 github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308/go.mod h1:0o6CyGK8vTq31gjZeTSiZ+z+Vb85HrJjLkeyAbOuvg0=
 github.com/thediveo/procfsroot v0.4.12 h1:zwPppqAiU/EapRMf/Cw+dWLBPfsSfxxXDX9RjSRlqoU=
 github.com/thediveo/procfsroot v0.4.12/go.mod h1:xaTIcmoZshPD74PwFYrbFk3Dt5eXMdXc4uU+6ICyVz4=
+github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915 h1:JeHraSrT218bMFLbNQ3oFMeMGxvDk5Zz11sXHlFJob8=
+github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915/go.mod h1:i1wL+hiqFMlJhL7jP2XE0DLt4whvoD+Zu+fq7G7MDnQ=
 github.com/thediveo/testbasher v1.0.6 h1:+ouvT22NKeYTKp4QqMjAulB7WX1A+oKN1NQMfKczCgk=
 github.com/thediveo/testbasher v1.0.6/go.mod h1:DixlMDyCntgifQgeKFkeecaH+Du5zZgZK2nsYVCTNAM=
 github.com/thediveo/whalewatcher v0.6.7 h1:6NtJOoCkBJKhWJgKfL676TKhZzy+JyYGhIU22wUpFC8=

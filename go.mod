@@ -7,6 +7,7 @@ require (
 	github.com/moby/sys/signal v0.7.0 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
