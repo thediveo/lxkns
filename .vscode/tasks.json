@@ -13,10 +13,7 @@
                 "${fileDirname}/__debug_bin"
             ],
             "options": {
-                "cwd": "${fileDirname}",
-                "env": {
-                    "PATH": "${env:PATH}:/snap/bin"
-                }
+                "cwd": "${fileDirname}"
             },
             "problemMatcher": [],
             "group": {
@@ -35,10 +32,7 @@
                 "${fileDirname}/__debug_bin"
             ],
             "options": {
-                "cwd": "${fileDirname}",
-                "env": {
-                    "PATH": "${env:PATH}:/snap/bin"
-                }
+                "cwd": "${fileDirname}"
             },
             "problemMatcher": [],
             "group": {

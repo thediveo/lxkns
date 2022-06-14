@@ -25,6 +25,61 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// SwitchNamespaceErr represents an error that occured while trying to switch
+// into a different namespace.
+//
+// Check for the occurence of an SwitchNamespaceErr using errors.As, for
+// instance:
+//
+//     err := Visit(fn, nsrefs)
+//     var nserr SwitchNamespaceErr
+//     if errors.As(err, &nserr) {
+//         ...
+//     }
+type SwitchNamespaceErr struct {
+	msg string // message including wrapped error's message
+	err error  // wrapped error
+}
+
+// Error returns the detailed error message when switching into a namespace failed.
+func (e *SwitchNamespaceErr) Error() string {
+	return e.msg
+}
+
+// Unwrap returns the wrapped error giving details about why switching into a
+// namespace failed.
+func (e *SwitchNamespaceErr) Unwrap() error {
+	return e.err
+}
+
+// RestoreNamespaceError represents an error that occured while trying to
+// restore the original namespaces after Visit'ing a function with (some)
+// switched Linux-kernel namespaces.
+//
+// Check for the occurence of an RestoreNamespaceError using errors.As, for
+// instance:
+//
+//     err := Visit(fn, nsrefs)
+//     var nserr RestoreNamespaceError
+//     if errors.As(err, &nserr) {
+//	       ...
+//     }
+type RestoreNamespaceErr struct {
+	msg string // message including wrapped error's message
+	err error  // wrapped error
+}
+
+// Error returns the detailed error message when restoring a namespace failed.
+func (e *RestoreNamespaceErr) Error() string {
+	return e.msg
+}
+
+// Unwrap returns the wrapped error giving details about why restoring a
+// namespace failed.
+func (e *RestoreNamespaceErr) Unwrap() error {
+	return e.err
+}
+
 // Go runs the specified function as a new Go routine and from a locked OS
 // thread, while joined to the specified namespaces. When the specified function
 // returns, its Go routine will also terminate and the underlying OS thread will
@@ -55,15 +110,20 @@ func Go(f func(), nsrefs ...relations.Relation) error {
 			// here.
 			fd, closer, err := nsref.(opener.Opener).NsFd()
 			if err != nil {
-				started <- fmt.Errorf("lxkns.Go: cannot reference namespace, %w", err)
+				started <- &SwitchNamespaceErr{
+					msg: fmt.Sprintf("lxkns.Go: cannot reference namespace, %s", err.Error()),
+					err: err,
+				}
 				return // ex-terminate ;)
 			}
 			err = unix.Setns(fd, 0)
 			closer()
 			if err != nil {
-				started <- fmt.Errorf(
-					"lxkns.Go: cannot enter namespace %s, %w",
-					nsref.(fmt.Stringer).String(), err)
+				started <- &SwitchNamespaceErr{
+					msg: fmt.Sprintf("lxkns.Go: cannot enter namespace %s, %s",
+						nsref.(fmt.Stringer).String(), err),
+					err: err,
+				}
 				return
 			}
 		}
@@ -92,9 +152,10 @@ func Execute(f func() interface{}, nsrefs ...relations.Relation) (interface{}, e
 }
 
 // Visit locks the OS thread executing the current go routine, then switches the
-// thread into the specified namespaces, and executes f(). Afterwards, it
-// switches the namespaces back to their original settings and unlocks the
-// underlying OS thread.
+// thread into the specified namespaces, and executes f(). f must be a function
+// taking no arguments and returning nothing. Afterwards, it switches the
+// namespaces back to their original settings and unlocks the underlying OS
+// thread.
 //
 // If switching namespaces back fails, then the OS thread is tainted and will
 // remain locked. As simple as this sounds, Visit() is a dangerous thing: as
@@ -122,19 +183,28 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		// calling Visit(), but switch back in reverse order. If this causes an
 		// error and we haven't registered any error so far, then report the
 		// switch-back problem.
+		unlock := err == nil
 		for idx := len(switchback) - 1; idx >= 0; idx-- {
-			if seterr := unix.Setns(switchback[idx].fd, 0); seterr != nil && err == nil {
-				// In case we didn't registered an err so far, take this ... but
-				// ignore any subsequent errs.
-				err = fmt.Errorf(
-					"lxkns.Visit: cannot switch back to previously active namespace: %w",
-					seterr)
+			if restoreErr := unix.Setns(switchback[idx].fd, 0); restoreErr != nil && err == nil {
+				// keep the OS-level thread locked so it gets thrown away when
+				// the calling goroutine (hopefully) quickly terminates on
+				// error.
+				unlock = false
+				// In case we didn't register an err so far, take this new one
+				// ... but then ignore any subsequent errors while trying to
+				// switch back the remaining network namespaces.
+				err = &RestoreNamespaceErr{
+					msg: fmt.Sprintf("lxkns.Visit: cannot switch back to previously active namespace: %s", restoreErr),
+					err: restoreErr,
+				}
 			}
 			switchback[idx].closer()
 		}
 		// If there was an error and we already switched at least one namespace,
-		// then this OS thread is toast and we won't unlock it.
-		if err == nil || len(switchback) == 0 {
+		// then this OS-level thread is toast anyway and we won't unlock it. The
+		// caller of Visit should drop its goroutine as soon as possible like a
+		// hot potato.
+		if unlock {
 			runtime.UnlockOSThread()
 		}
 	}()
@@ -152,10 +222,13 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		// but also its (optionally foretold) type.
 		var openref relations.Relation
 		var refcloser opener.ReferenceCloser
-		// no ":=", don't shadow err!
+		// no ":=", don't shadow the return err!
 		openref, refcloser, err = nsref.(opener.Opener).OpenTypedReference()
 		if err != nil {
-			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
+			err = &SwitchNamespaceErr{
+				msg: fmt.Sprintf("lxkns.Visit: cannot reference namespace, %s", err),
+				err: err,
+			}
 			return // ...unwind entangled namespaces
 		}
 		var fd int
@@ -164,7 +237,10 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		fd, fdcloser, err = openref.(opener.Opener).NsFd()
 		if err != nil {
 			refcloser()
-			err = fmt.Errorf("lxkns.Visit: cannot reference namespace, %w", err)
+			err = &SwitchNamespaceErr{
+				msg: fmt.Sprintf("lxkns.Visit: cannot reference namespace, %s", err.Error()),
+				err: err,
+			}
 			return // ...unwind entangled namespaces
 		}
 		nstype, _ := openref.Type() // already fetched during OpenTypedReference().
@@ -172,19 +248,22 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		if nstypename == "" {
 			fdcloser()
 			refcloser()
-			err = fmt.Errorf(
-				"lxkns.Visit: cannot determine type of %s", nsref)
+			err = &SwitchNamespaceErr{
+				msg: fmt.Sprintf("lxkns.Visit: cannot determine type of %s", nsref),
+			}
 			return // ...unwind entangled namespaces
 		}
-		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstype.Name()))
+		oldnsref := NamespacePath(fmt.Sprintf("/proc/%d/ns/%s", tid, nstypename))
 		var oldfd int
 		var oldfdcloser opener.FdCloser
 		oldfd, oldfdcloser, err = oldnsref.NsFd()
 		if err != nil {
 			fdcloser()
 			refcloser()
-			err = fmt.Errorf(
-				"lxkns.Visit: cannot save currently active namespace, %w", err)
+			err = &SwitchNamespaceErr{
+				msg: fmt.Sprintf("lxkns.Visit: cannot save currently active namespace, %s", err.Error()),
+				err: err,
+			}
 			return // ...unwind entangled namespaces
 		}
 		// Finally, we're ready to jump, erm, switch into this specific
@@ -194,7 +273,10 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		refcloser()
 		if err != nil {
 			oldfdcloser()
-			err = fmt.Errorf("lxkns.Visit: cannot enter namespace, %w", err)
+			err = &SwitchNamespaceErr{
+				msg: fmt.Sprintf("lxkns.Visit: cannot enter namespace, %s", err.Error()),
+				err: err,
+			}
 			return // ...unwind entangled namespaces
 		}
 		// We succeeded, so record the old namespace to later switch back to it.
