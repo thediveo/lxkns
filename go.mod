@@ -7,18 +7,17 @@ require (
 	github.com/moby/sys/signal v0.7.0 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.6.4
+	github.com/containerd/containerd v1.6.6
 	github.com/getkin/kin-openapi v0.94.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.11.0
-	github.com/onsi/gomega v1.19.1-0.20220520165119-fd130e126467
-	github.com/ory/dockertest/v3 v3.9.0
+	github.com/onsi/gomega v1.19.1-0.20220613004312-293dd88bf6f8
+	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/thediveo/enumflag v0.10.1
@@ -29,11 +28,12 @@ require (
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308
 	github.com/thediveo/procfsroot v0.4.12
+	github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915
 	github.com/thediveo/testbasher v1.0.6
 	github.com/thediveo/whalewatcher v0.6.7
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	golang.org/x/text v0.3.7
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -50,7 +50,7 @@ require (
 	github.com/containerd/typeurl v1.0.2 // indirect
 	github.com/docker/cli v20.10.16+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v20.10.16+incompatible // indirect
+	github.com/docker/docker v20.10.17+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.4.0 // indirect
