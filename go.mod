@@ -28,7 +28,7 @@ require (
 	github.com/thediveo/klo v1.0.1
 	github.com/thediveo/namspill v0.0.0-20220531142708-21eedaa83308
 	github.com/thediveo/procfsroot v0.4.12
-	github.com/thediveo/spaserve v0.0.0-20220612144327-f70b2b205915
+	github.com/thediveo/spaserve v0.9.0
 	github.com/thediveo/testbasher v1.0.6
 	github.com/thediveo/whalewatcher v0.6.7
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
