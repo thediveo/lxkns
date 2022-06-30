@@ -44,14 +44,17 @@ var _ = Describe("mountineer", func() {
 			})
 		})
 
-		It("does not accept empty references", func() {
-			Expect(New(nil, nil)).Error().To(HaveOccurred())
-			Expect(New([]string{""}, nil)).Error().To(HaveOccurred())
-			Expect(New([]string{"foobar"}, nil)).Error().To(HaveOccurred())
-			Expect(New([]string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}, nil)).Error().To(HaveOccurred())
-			Expect(New([]string{"/proc/self"}, nil)).Error().To(HaveOccurred())
-			Expect(New([]string{"/proc/self/"}, nil)).Error().To(HaveOccurred())
-		})
+		DescribeTable("does not accept invalid references",
+			func(ref model.NamespaceRef) {
+				Expect(New(ref, nil)).Error().To(HaveOccurred())
+			},
+			Entry("nil ref", nil),
+			Entry("empty string ref", []string{""}),
+			Entry("non-existing ref", []string{"foobar"}),
+			Entry("double self mnt ref", []string{"/proc/self/ns/mnt", "/proc/self/ns/mnt"}),
+			Entry("/proc/self ref", []string{"/proc/self"}),
+			Entry("/proc/self/ ref", []string{"/proc/self/"}),
+		)
 
 		It("resolves paths", func() {
 			pid := os.Getpid()

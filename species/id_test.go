@@ -50,15 +50,22 @@ var _ = Describe("Namespace IDs", func() {
 		Expect(id).To(Equal(NamespaceIDfromInode(1)))
 	})
 
-	It("rejects invalid textual representations", func() {
-		for _, text := range []string{
-			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1", "net:",
-		} {
+	DescribeTable("rejects invalid textual representations",
+		func(text string) {
 			id, t := IDwithType(text)
 			Expect(t).To(Equal(NaNS), "%s is not a namespace", text)
 			Expect(id).To(Equal(NoneID), "%s is not a namespace", text)
-		}
-	})
+		},
+		Entry("empty textual representation", ""),
+		Entry("missing the colon", "net"),
+		Entry("missing the colon 2", "net[1]"),
+		Entry("missing the opening bracket", "net:"),
+		Entry("missing the closing bracket", "net:[1"),
+		Entry("unknown namespace type", "foo:[1]"),
+		Entry("invalid negative namespace ID", "net:[-1]"),
+		Entry("not a namespace ID number", "net:[123abc]"),
+		Entry("too short a namespace type", "n:[1]"),
+	)
 
 	It("stringifies", func() {
 		Expect(NamespaceID{Dev: 42, Ino: 123}.String()).To(Equal("NamespaceID(42,123)"))
