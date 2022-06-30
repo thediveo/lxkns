@@ -52,7 +52,7 @@ var _ = Describe("Namespace IDs", func() {
 
 	It("rejects invalid textual representations", func() {
 		for _, text := range []string{
-			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1",
+			"foo:[1]", "net:[-1]", "net[1]", "n:[1]", "net:[1", "net:",
 		} {
 			id, t := IDwithType(text)
 			Expect(t).To(Equal(NaNS), "%s is not a namespace", text)

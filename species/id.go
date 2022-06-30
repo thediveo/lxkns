@@ -81,7 +81,7 @@ func IDwithType(s string) (id NamespaceID, t NamespaceType) {
 	// There must be a colon, immediately followed by an opening square bracket,
 	// as well as a terminating closing square bracket.
 	colon := strings.IndexRune(s, ':')
-	if colon < 3 || s[colon+1] != '[' || s[len(s)-1] != ']' {
+	if colon < 3 || colon >= len(s)-1 || s[colon+1] != '[' || s[len(s)-1] != ']' {
 		return
 	}
 	// Look up the type of namespaces (which goes before the ":").
