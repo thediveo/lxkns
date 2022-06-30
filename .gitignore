@@ -16,4 +16,4 @@ __debug_bin
 /web/node_modules
 .eslintcache
 node_modules
-.vscode/*.log
+*.log

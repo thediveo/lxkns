@@ -16,187 +16,22 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
-	"path"
-	"path/filepath"
-	"regexp"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/spaserve"
 )
-
-// OriginalUrlHeader is the name of an optional HTTP request header passed to us
-// by the first reverse proxy hit by a client's request. Its value allows us to
-// determine the base path of our SPA as seen by the client. While
-// X-Forwarded-Uri is generally barely documented it seems to be kind of a (oh,
-// the irony) "well-known" header often used almost undetectedly.
-//
-// One place to spot it are Træfik's forward-request headers,
-// https://doc.traefik.io/traefik/middlewares/forwardauth/#forward-request-headers.
-const OriginalUrlHeader = "X-Forwarded-Uri"
-
-// baseRe matches the base element in index.html in order to allow us to
-// dynamically rewrite the base the SPA is served from. Please note that it
-// doesn't make sense to use Go's templating here, as for development reasons
-// the index.html must be perfectly usable without any Go templating at any
-// time.
-//
-// Please note: "*?" instead of "*" ensures that our irregular expression
-// doesn't get to greedy, gobbling much more than it should until the last(!)
-// empty element.
-var baseRe = regexp.MustCompile(`(<base href=").*?("\s*/>)`)
-
-// singleLineRe matches problematic white space in strings that are going to be
-// logged, as to avoid user input trying to mimic (in)valid log entries.
-var singleLineRe = regexp.MustCompile(`(\r)|(\n)|(\t)|(\v)|(\f)`)
 
 var (
 	once   sync.Once
 	server *http.Server
 )
-
-// appHandler implements the http.Handler interface, so we can use it to respond
-// to HTTP requests. The path to the static directory and path to the index file
-// within that static directory are used to serve the SPA in the given static
-// directory.
-type appHandler struct {
-	staticPath string // file system path to static assets (directory)
-	indexName  string // name of index file, such as "index.html"
-}
-
-// httpError writes a normalized HTTP error message and HTTP status code given
-// an error, not leaking any interesting internal server details from the
-// original internal error.
-func httpError(w http.ResponseWriter, e error) {
-	if os.IsNotExist(e) {
-		http.Error(w, "404 page not found", http.StatusNotFound)
-	}
-	if os.IsPermission(e) {
-		http.Error(w, "403 Forbidden", http.StatusForbidden)
-	}
-	http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-}
-
-// ServeHTTP inspects the URL path to locate a file within the static dir on the
-// SPA handler. If a file is found, it will be served. If not, the file located
-// at the index path on the SPA handler will be served. This is suitable
-// behavior for serving an SPA (single page application).
-func (h appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Get the absolute (and cleaned) path to prevent directory traversal,
-	// ensuring NOT to use the current working dir whichever it is.
-	uriPath := path.Clean("/" + r.URL.Path)
-	// Check whether a file exists at the given path; if it doesn't then serve
-	// index.html from the "root" location of our static file assets instead.
-	// Please note that we also consider all directories themselves to trigger
-	// fallback to index.html.
-	if info, err := os.Stat(path.Join(h.staticPath, uriPath)); err == nil && !info.IsDir() {
-		// simply use http.FileServer to serve the existing static file; please
-		// note that http.FileServer.ServeHTTP correctly sanitizes r.URL.Path
-		// itself before trying to serve the filesystem resource, so it is kept
-		// inside h.staticPath. However, at least some static code analysis
-		// scanners still go berserk, so we sanitize further -- can we consider
-		// it boosterism?
-		log.Debugfn(func() string {
-			return "serving static resource " + singleLineRe.ReplaceAllString(uriPath, `\?`)
-		})
-		http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
-		return
-	} else if err != nil && !os.IsNotExist(err) {
-		// we got an error other than that the file doesn't exist when trying to
-		// stat the file, so return a (sanitized) 500 internal server error and
-		// be done with it.
-		log.Debugf("no such static resource %s", uriPath)
-		httpError(w, err)
-		return
-	}
-	h.serveIndex(uriPath, w, r)
-}
-
-// serveIndex serves the index file, rewriting the index file on-the-fly to
-// refer to the correct base name.
-func (h appHandler) serveIndex(uriPath string, w http.ResponseWriter, r *http.Request) {
-	// determine the base path to the SPA as seen by clients. Here, we don't
-	// want to rely on "magic" signatures in paths but instead rely on the first
-	// reverse proxy correctly setting some HTTP request header. So, we're in
-	// part relying on proxy magic instead that passes the original path to us
-	// :o
-	origUriPath := uriPath
-	if clientUri, ok := r.Header[OriginalUrlHeader]; ok {
-		if len(clientUri) > 0 && clientUri[0] != "" {
-			// Again, sanitize whatever some self-acclaimed lobbxy, erm, proxy
-			// sent us. For instance, the proxy's posh spell checker might have
-			// flipped the URL to call the /reduce/tax API instead of
-			// /reduce/VAT.
-			if strings.HasPrefix(clientUri[0], "/") {
-				origUriPath = path.Clean(clientUri[0])
-			} else {
-				// might be an URI, erm, URL, so try that; if that fails, we
-				// just ignore it.
-				if u, err := url.Parse(clientUri[0]); err == nil {
-					origUriPath = path.Clean("/" + u.Path)
-				}
-			}
-		}
-	}
-	var base string
-	if strings.HasSuffix(uriPath, "/") && !strings.HasSuffix(origUriPath, "/") {
-		// handle the corner case where the reverse proxy might redirect from,
-		// say, /lxkns to /lxkns/ so that the original URI path is /lxkns/ and
-		// then rewrites the path to just /. Please note that the reverse proxy
-		// shouldn't interfere with redirects anywhere below the root.
-		origUriPath += "/"
-	}
-	if strings.HasSuffix(origUriPath, uriPath) {
-		base = origUriPath[:len(origUriPath)-len(uriPath)]
-	} else {
-		// fallback to root base in case the proxy passed us (ex-)PM nonsense,
-		// trying to shift blame onto the auto korrekter.
-		base = ""
-	}
-	if !strings.HasSuffix(base, "/") {
-		// Ensure that the base path always ends with a "/", as otherwise
-		// browsers will throw the specified path under the bus (erm, nevermind)
-		// of a dirname() operation, clipping off the final element that once
-		// was a proper directory name. Oh, well.
-		base += "/"
-	}
-	// Sanitize the path further to not interfere with our regexp replacement
-	// operation which uses "$1" and "$2" back references. So we simply
-	// eliminate any "$" in the path, as this definitely is not VMS (shudder)
-	// and we don't need no "$" in the SPA paths.
-	base = strings.ReplaceAll(base, "$", "")
-	log.Debugf("serving dynamic index.html with base %s at %s", base, uriPath)
-
-	// Grab the index.html's contents into a string as we need to modify it
-	// on-the-fly based on where we deem the base path to be. And finally serve
-	// the updated contents.
-	f, err := os.Open(filepath.Join(h.staticPath, h.indexName))
-	if err != nil {
-		httpError(w, err)
-		return
-	}
-	defer func() { _ = f.Close() }()
-	fi, err := f.Stat()
-	if err != nil {
-		httpError(w, err)
-		return
-	}
-	indexhtmlcontents, err := ioutil.ReadAll(f) // retain pre-1.16 compatibility for now
-	if err != nil {
-		httpError(w, err)
-		return
-	}
-	finalIndexhtml := baseRe.ReplaceAllString(string(indexhtmlcontents), "${1}"+base+"${2}")
-	http.ServeContent(w, r, "index.html", fi.ModTime(), strings.NewReader(finalIndexhtml))
-}
 
 // requestLogger is a middleware that closes the specified HTTP handler so that
 // requests get logged at info level.
@@ -223,7 +58,7 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 	r.HandleFunc("/api/pidmap", GetPIDMapHandler).Methods("GET")
 	r.PathPrefix("/api").HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNotFound) })
 
-	spa := appHandler{staticPath: "web/lxkns/build", indexName: "index.html"}
+	spa := spaserve.NewSPAHandler(os.DirFS("web/lxkns/build"), "index.html")
 	r.PathPrefix("/").Handler(spa)
 
 	server = &http.Server{Handler: r}

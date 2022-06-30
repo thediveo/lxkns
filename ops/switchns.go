@@ -182,8 +182,10 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		// Switch back into the original namespaces which were active when
 		// calling Visit(), but switch back in reverse order. If this causes an
 		// error and we haven't registered any error so far, then report the
-		// switch-back problem.
-		unlock := err == nil
+		// switch-back problem. If there was an error on the first switch
+		// attempt only, then no namespace switch has happened at all and in
+		// this case we can still unlock the thread.
+		unlock := err == nil || len(switchback) == 0
 		for idx := len(switchback) - 1; idx >= 0; idx-- {
 			if restoreErr := unix.Setns(switchback[idx].fd, 0); restoreErr != nil && err == nil {
 				// keep the OS-level thread locked so it gets thrown away when
