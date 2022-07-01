@@ -23,12 +23,15 @@ import (
 
 var _ = Describe("Namespace types", func() {
 
-	It("stringify", func() {
-		Expect(CLONE_NEWNS.String()).To(Equal("CLONE_NEWNS"))
-		Expect(CLONE_NEWTIME.String()).To(Equal("CLONE_NEWTIME"))
-		Expect((CLONE_NEWCGROUP | CLONE_NEWIPC).String()).
-			To(Equal(fmt.Sprintf("NamespaceType(%d)", CLONE_NEWCGROUP|CLONE_NEWIPC)))
-	})
+	DescribeTable("stringify",
+		func(nstype NamespaceType, expected string) {
+			Expect(nstype.String()).To(Equal(expected))
+		},
+		Entry("CLONE_NEWNS", CLONE_NEWNS, "CLONE_NEWNS"),
+		Entry("CLONE_NEWTIME", CLONE_NEWTIME, "CLONE_NEWTIME"),
+		Entry("CLONE_NEWCGROUP | CLONE_NEWIPC", CLONE_NEWCGROUP|CLONE_NEWIPC,
+			fmt.Sprintf("NamespaceType(%d)", CLONE_NEWCGROUP|CLONE_NEWIPC)),
+	)
 
 	It("defines CLONE_NEWTIME", func() {
 		Expect(CLONE_NEWTIME).To(Equal(NamespaceType(0x80)))

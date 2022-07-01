@@ -55,20 +55,21 @@ var _ = Describe("Set Namespaces", func() {
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+			Expect(Tasks()).To(BeUniformlyNamespaced())
 		})
 	})
 
-	AfterEach(func() {
-		Expect(Tasks()).To(BeUniformlyNamespaced())
-	})
-
-	It("describes the error when restoring a namespace", func() {
-		msg := "foo has bar'ed"
-		var err error = &RestoreNamespaceErr{msg: msg}
-		Expect(err.Error()).To(Equal(msg))
-		var rnserr *RestoreNamespaceErr
-		Expect(errors.As(err, &rnserr)).To(BeTrue())
-	})
+	DescribeTable("describes the error when switching or restoring a namespace",
+		func(err error, msg string, as interface{}) {
+			Expect(err.Error()).To(Equal(msg))
+			Expect(errors.As(err, &as)).To(BeTrue())
+			Expect(as.(error).Error()).To(Equal(msg))
+		},
+		Entry("switching error",
+			&SwitchNamespaceErr{msg: "foo"}, "foo", &RestoreNamespaceErr{}),
+		Entry("restoring error",
+			&RestoreNamespaceErr{msg: "bar"}, "bar", &RestoreNamespaceErr{}),
+	)
 
 	It("Go()es with errors", func() {
 		Expect(Go(func() {}, NamespacePath("foobar"))).Error().To(
@@ -91,24 +92,33 @@ var _ = Describe("Set Namespaces", func() {
 		Expect(Execute(func() interface{} { return nil }, NamespacePath("foobar"))).Error().To(HaveOccurred())
 	})
 
-	It("Visit()s with errors", func() {
-		// Attempt to use a non-existing file as namespace reference
-		Expect(Visit(func() {}, NamespacePath("foobar"))).Error().To(
-			MatchError(MatchRegexp(`cannot reference namespace, .+invalid namespace path "foobar"`)))
-
-		// Attempt to use an existing ordinary file as namespace reference
-		Expect(Visit(func() {}, NamespacePath("doc.go"))).Error().To(
-			MatchError(MatchRegexp(`cannot reference namespace.+NS_GET_NSTYPE.+ioctl`)))
-
-		Expect(Visit(func() {}, NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)))).Error().To(
-			MatchError(MatchRegexp(`cannot determine type`)))
-
-		Expect(Visit(func() {}, NamespacePath("/proc/self/ns/mnt"))).Error().To(
-			MatchError(MatchRegexp(`cannot enter namespace, (operation not permitted|invalid argument)`)))
-
-		Expect(Visit(func() {}, &brokenref{NamespacePath("/proc/self/ns/net")})).Error().To(
-			MatchError(MatchRegexp(`cannot reference namespace, broken reference`)))
-	})
+	DescribeTable("Visit()s with errors when attempting to use...",
+		func(nsref relations.Relation, expected string) {
+			// Run the visitation on a separate locked goroutine in order to not
+			// lock the current Ginkgo goroutine due to errors.
+			ch := make(chan error)
+			go func() {
+				ch <- Visit(func() {}, nsref)
+			}()
+			Eventually(ch).WithTimeout(2 * time.Second).WithPolling(100 * time.Millisecond).
+				Should(Receive(MatchError(MatchRegexp(expected))))
+		},
+		Entry("non-existing file as namespace reference",
+			NamespacePath("foobar"),
+			`cannot reference namespace, .+invalid namespace path "foobar"`),
+		Entry("existing ordinary file as namespace reference",
+			NamespacePath("doc.go"),
+			`cannot reference namespace.+NS_GET_NSTYPE.+ioctl`),
+		Entry("unspecified typed reference",
+			NewTypedNamespacePath("/proc/self/ns/net", ^species.NamespaceType(0)),
+			`cannot determine type`),
+		Entry("non-enterable namespace",
+			NamespacePath("/proc/self/ns/mnt"),
+			`cannot enter namespace, (operation not permitted|invalid argument)`),
+		Entry("broken reference",
+			&brokenref{NamespacePath("/proc/self/ns/net")},
+			`cannot reference namespace, broken reference`),
+	)
 
 	It("Execute()s", func() {
 		Expect(Execute(func() interface{} { return nil })).To(Succeed())
