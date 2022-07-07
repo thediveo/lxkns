@@ -16,7 +16,7 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 

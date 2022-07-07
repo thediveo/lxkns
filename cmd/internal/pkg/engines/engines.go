@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/lxkns/containerizer"
@@ -93,13 +93,10 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "engines",
-		Group: cliplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: EngineSetupCLI},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("engines"),
+		plugger.WithGroup(cliplugin.Group),
+		plugger.WithNamedSymbol("SetupCLI", EngineSetupCLI))
 }
 
 // EngineSetupCLI registers the engine-agnostic specific CLI options.

@@ -26,7 +26,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -56,14 +56,11 @@ var themeIds = map[Theme][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "theme",
-		Group: cliplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ThemeSetupCLI},
-			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ThemeBeforeRun},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("theme"),
+		plugger.WithGroup(cliplugin.Group),
+		plugger.WithNamedSymbol("SetupCLI", ThemeSetupCLI),
+		plugger.WithNamedSymbol("BeforeRun", ThemeBeforeRun))
 }
 
 // ThemeSetupCLI is a plugin function that registers the CLI flags related to

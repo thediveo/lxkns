@@ -16,7 +16,7 @@ package moby
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
@@ -25,20 +25,14 @@ import (
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "moby",
-		Group: engineplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "Watcher", Symbol: engineplugin.NewWatcher(Watcher)},
-		},
-	})
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "moby",
-		Group: "cli",
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: MobySetupCLI},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("moby"),
+		plugger.WithGroup(engineplugin.Group),
+		plugger.WithNamedSymbol("Watcher", engineplugin.NewWatcher(Watcher)))
+	plugger.Register(
+		plugger.WithName("moby"),
+		plugger.WithGroup("cli"),
+		plugger.WithNamedSymbol("SetupCLI", MobySetupCLI))
 }
 
 // MobySetupCLI registers the Docker-engine specific CLI options.

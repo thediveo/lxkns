@@ -17,7 +17,7 @@ package industrialedge
 import (
 	"strings"
 
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"
@@ -44,14 +44,11 @@ const edgeAppConfigLabelPrefix = "com_mwp_conf_"
 
 // Register this Decorator plugin.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:      "industrialedge",
-		Group:     decorator.PluginGroup,
-		Placement: ">composer",
-		Symbols: []plugger.Symbol{
-			decorator.Decorate(Decorate),
-		},
-	})
+	plugger.Register(
+		plugger.WithName("industrialedge"),
+		plugger.WithGroup(decorator.PluginGroup),
+		plugger.WithPlacement(">composer"),
+		plugger.WithSymbol(decorator.Decorate(Decorate)))
 }
 
 // Decorate decorates the discovered Docker containers with Industrial Edge app

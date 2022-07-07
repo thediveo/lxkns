@@ -21,7 +21,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -54,14 +54,11 @@ var colorModeIds = map[ColorMode][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "colormode",
-		Group: cliplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: ColorModeSetupCLI},
-			plugger.NamedSymbol{Name: "BeforeRun", Symbol: ColorModeBeforeRun},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("colormode"),
+		plugger.WithGroup(cliplugin.Group),
+		plugger.WithNamedSymbol("SetupCLI", ColorModeSetupCLI),
+		plugger.WithNamedSymbol("BeforeRun", ColorModeBeforeRun))
 }
 
 // ColorModeSetupCLI is a plugin function that registers the CLI "color" flag.

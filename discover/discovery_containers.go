@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"

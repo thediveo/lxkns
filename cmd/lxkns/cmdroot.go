@@ -26,10 +26,12 @@ import (
 	"unsafe"
 
 	"github.com/spf13/cobra"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
+	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -155,7 +157,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	// And now for the real meat.
 	log.Infof("This is the lxkns Linux-kernel namespaces discovery service and web app, version %s",
 		lxkns.SemVersion)
-	log.Infof("Copyright (c) Harald Albrecht, 2020..., see: https://github.com/thediveo/lxkns")
+	log.Infof("Copyright (c) Harald Albrecht, 2020, 2022, ...; see: https://github.com/thediveo/lxkns")
 	log.Infof("This software is licensed under the Apache License, version 2.0, see: https://www.apache.org/licenses/LICENSE-2.0")
 
 	if pausebin := mountineer.StandaloneSandboxBinary(); pausebin != "" {
@@ -168,6 +170,9 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 		mycaps = "<none>"
 	}
 	log.Infof("with effective capabilities: %s", mycaps)
+
+	log.Infof("available decorator plugins: %s",
+		strings.Join(plugger.New(decorator.PluginGroup).PluginNames(), ", "))
 
 	// Create the containerizer for the specified container engines...
 	ctx, cancel := context.WithCancel(context.Background())
