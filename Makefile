@@ -45,10 +45,10 @@ deploy: ## deploys lxkns service on host port 5010
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
+	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy: ## removes any deployed lxkns service
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
+	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
 
 install: ## installs lxkns commands
 	$(GOGEN)
