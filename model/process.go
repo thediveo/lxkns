@@ -24,7 +24,7 @@ package model
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -99,7 +99,7 @@ func NewProcess(PID PIDType) (proc *Process) {
 // fake /proc "filesystems".
 func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 	procbase := procroot + "/" + strconv.Itoa(int(PID))
-	line, err := ioutil.ReadFile(procbase + "/stat") // #nosec G304
+	line, err := os.ReadFile(procbase + "/stat") // #nosec G304
 	if err != nil {
 		return nil
 	}
@@ -110,7 +110,7 @@ func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 	// Also get the process command line, so later tools can decide to
 	// either go for the process name or the executable basename, et
 	// cetera.
-	cmdline, err := ioutil.ReadFile(procbase + "/cmdline") // #nosec G304
+	cmdline, err := os.ReadFile(procbase + "/cmdline") // #nosec G304
 	if err == nil {
 		cmdparts := bytes.Split(bytes.TrimRight(cmdline, "\x00"), []byte{0x00})
 		proc.Cmdline = make([]string, len(cmdparts))
@@ -217,7 +217,7 @@ func NewProcessTable(freezer bool) (pt ProcessTable) {
 // NewProcessTableFromProcfs implements NewProcessTable and allows for testing on fake
 // /proc "filesystems".
 func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) {
-	procentries, err := ioutil.ReadDir(procroot)
+	procentries, err := os.ReadDir(procroot)
 	if err != nil {
 		return nil
 	}

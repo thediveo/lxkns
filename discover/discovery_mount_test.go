@@ -16,6 +16,8 @@ package discover
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/thediveo/lxkns/nstest"
@@ -29,7 +31,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("Discover mount points", func() {
+var _ = FDescribe("Discover mount points", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -39,11 +41,11 @@ var _ = Describe("Discover mount points", func() {
 		})
 	})
 
-	It("from other mount namespace", func() {
+	It("discovers from other mount namespace", func() {
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 
-		bm := "/tmp/bindmountpoint"
+		bm := fmt.Sprintf("/tmp/bindmountpoint-%d", os.Getpid())
 		scripts.Common(fmt.Sprintf(`bm=%s`, bm))
 		scripts.Common(nstest.NamespaceUtilsScript)
 		scripts.Script("main", `
@@ -51,12 +53,15 @@ unshare -Umr $stage2
 `)
 		scripts.Script("stage2", `
 umount $bm || /bin/true # remove stale bind mount.
+rmdir $bm-testdir || /bin/true
+mkdir $bm-testdir
 mkdir $bm # make sure we have a thing to bind mount over.
-mount --bind /tmp $bm
+mount --bind $mb-testdir $bm
 process_namespaceid mnt # prints the "current" mount namespace ID.
 read # wait for test to proceed()
 umount $bm || /bin/true # clean up.
 rmdir $bm || /bin/true
+rmdir $bm-dir || /bin/true
 `)
 		cmd := scripts.Start("main")
 		defer cmd.Close()
@@ -67,7 +72,13 @@ rmdir $bm || /bin/true
 		Expect(namespacedmmap).NotTo(BeNil())
 		Expect(namespacedmmap).To(HaveKey(netnsid))
 		mpmap := namespacedmmap[netnsid]
-		Expect(mpmap).To(HaveKey(bm))
+		Expect(mpmap).To(HaveKey(bm), func() string {
+			keys := []string{}
+			for key := range mpmap {
+				keys = append(keys, key)
+			}
+			return fmt.Sprintf("keys: %s", strings.Join(keys, ", "))
+		})
 		initialmntnsid, err := ops.NewTypedNamespacePath("/proc/self/ns/mnt", species.CLONE_NEWNS).ID()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(namespacedmmap[initialmntnsid]).NotTo(HaveKey(bm))

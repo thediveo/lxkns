@@ -19,7 +19,6 @@ package style
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -92,7 +91,7 @@ func ThemeBeforeRun() error {
 	var th string
 	if home, err := os.UserHomeDir(); err == nil {
 		// #nosec G304
-		if styling, err := ioutil.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
+		if styling, err := os.ReadFile(filepath.Join(home, ".lxknsrc.yaml")); err == nil {
 			th = string(styling)
 		}
 	}

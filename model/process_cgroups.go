@@ -17,7 +17,6 @@ package model
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -112,7 +111,7 @@ func frozenV2(fridgepath string) (frozen bool) {
 	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
 	// for details.
 	/* #nosec G304 */
-	if events, err := ioutil.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
+	if events, err := os.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
 		for _, event := range strings.Split(string(events), "\n") {
 			if strings.HasPrefix(event, "frozen ") {
 				if event[7] == '1' {
@@ -132,7 +131,7 @@ func frozenV1(fridgepath string) (frozen bool) {
 	// interface files don't exist."
 	// (https://www.kernel.org/doc/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst)
 	/* #nosec G304 */
-	if state, err := ioutil.ReadFile(
+	if state, err := os.ReadFile(
 		filepath.Join(fridgepath, "freezer.state")); err == nil {
 		switch strings.TrimSuffix(string(state), "\n") {
 		case "FREEZING":
