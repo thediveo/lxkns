@@ -31,7 +31,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = FDescribe("Discover mount points", func() {
+var _ = Describe("Discover mount points", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -55,12 +55,14 @@ unshare -Umr $stage2
 umount $bm || /bin/true # remove stale bind mount.
 rmdir $bm-testdir || /bin/true
 mkdir $bm-testdir
+touch $bm-testdir/canary
 mkdir $bm # make sure we have a thing to bind mount over.
-mount --bind $mb-testdir $bm
+mount --bind $bm-testdir $bm
 process_namespaceid mnt # prints the "current" mount namespace ID.
 read # wait for test to proceed()
 umount $bm || /bin/true # clean up.
 rmdir $bm || /bin/true
+rm $bm-dir/canary || /bin/true
 rmdir $bm-dir || /bin/true
 `)
 		cmd := scripts.Start("main")
