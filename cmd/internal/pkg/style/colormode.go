@@ -20,7 +20,7 @@ package style
 import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-	"github.com/thediveo/enumflag"
+	"github.com/thediveo/enumflag/v2"
 	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )

@@ -8,6 +8,7 @@ require (
 	github.com/moby/sys/signal v0.7.0 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
@@ -21,7 +22,7 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
-	github.com/thediveo/enumflag v0.10.1
+	github.com/thediveo/enumflag/v2 v2.0.1
 	github.com/thediveo/fdooze v0.1.3
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v0.9.2

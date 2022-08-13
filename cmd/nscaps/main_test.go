@@ -32,8 +32,12 @@ var _ = Describe("renders branches", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
+		// As we're keeping a harness script running in the background we'll
+		// have additionally "background" goroutines running that would
+		// otherwise cause false positives, so we take a snapshot here.
+		goodgos := Goroutines()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})

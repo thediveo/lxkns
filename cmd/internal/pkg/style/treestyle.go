@@ -19,7 +19,7 @@ package style
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/enumflag"
+	"github.com/thediveo/enumflag/v2"
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
