@@ -22,10 +22,10 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-// BeSameProcessTable returns a GomegaMatcher which compares an actual
-// ProcessTable to an expected ProcessTable. This matcher doesn't test for deep
-// equality (you could do this already using the existing matchers) but instead
-// does only flat Process matching.
+// BeSameProcessTable returns a [types.GomegaMatcher] which compares an actual
+// [model.ProcessTable] to an expected ProcessTable. This matcher doesn't test
+// for deep equality (you could do this already using the existing matchers) but
+// instead does only flat [model.Process] matching.
 func BeSameProcessTable(expectedproctable interface{}) types.GomegaMatcher {
 	return &beSameProcessTableMatcher{expected: expectedproctable}
 }
@@ -40,6 +40,8 @@ var processtableT = reflect.TypeOf(dummyproctable)
 func (matcher *beSameProcessTableMatcher) Match(actual interface{}) (bool, error) {
 	if actual == nil && matcher.expected == nil {
 		return false, fmt.Errorf(
+			// revive:disable-next-line:error-strings Gomega matchers
+			// communicate useful messages, not Go platitudes.
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}
 	// "unpack" the ProcessTable-s

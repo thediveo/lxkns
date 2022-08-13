@@ -31,10 +31,10 @@ import (
 )
 
 // discoverContainers discovers alive containers using the optionally specified
-// Containerizer and then resolves the relationships between containers and
-// processes (and thus also namespaces). Also translates container PIDs for
-// containers in containers when their container engine PIDs are known so that
-// PID translation is possible.
+// Containerizer (as part of Result.Options) and then resolves the relationships
+// between containers and processes (and thus also namespaces). Also translates
+// container PIDs for containers in containers when their container engine PIDs
+// are known so that PID translation is possible.
 func discoverContainers(result *Result) {
 	if result.Options.Containerizer == nil {
 		return

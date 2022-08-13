@@ -24,8 +24,8 @@ import (
 // HaveLabel succeeds if actual has a "Labels" field that contains a map key
 // with the specified name and the optionally specified value.
 //
-//   Expect(container).To(HaveLabel("foobar"))
-//   Expect(container).To(HaveLabel("foo", "bar"))
+//	Expect(container).To(HaveLabel("foobar"))
+//	Expect(container).To(HaveLabel("foo", "bar"))
 func HaveLabel(name string, value ...string) types.GomegaMatcher {
 	switch len(value) {
 	case 0:

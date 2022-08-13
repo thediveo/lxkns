@@ -27,17 +27,17 @@ import (
 )
 
 // NamespacesDict is a dictionary of all namespaces, basically a
-// model.AllNamespaces but with the added twist of creating new preliminary
+// [model.AllNamespaces] but with the added twist of creating new preliminary
 // namespace objects when looking up namespaces which we don't have seen yet.
 type NamespacesDict struct {
 	*model.AllNamespaces
 	ProcessTable // our enhanced process table ;)
 }
 
-// NewNamespacesDict returns a new and properly initialized NamespacesDict ready
-// for use. It will be empty if nil discovery results are specified; otherwise,
-// the information from the discovery results will be used by this namespace
-// dictionary.
+// NewNamespacesDict returns a new and properly initialized [NamespacesDict]
+// ready for use. It will be empty if nil discovery results are specified;
+// otherwise, the information from the discovery results will be used by this
+// namespace dictionary.
 func NewNamespacesDict(discoveryresults *discover.Result) *NamespacesDict {
 	var d *NamespacesDict
 	if discoveryresults == nil {
@@ -55,12 +55,11 @@ func NewNamespacesDict(discoveryresults *discover.Result) *NamespacesDict {
 	return d
 }
 
-// Get always(!) returns a Namespace interface (to a namespace object) with
-// the given ID and type. When the namespace is already known, then it is
+// Get always(!) returns a [model.Namespace] interface (to a namespace object)
+// with the given ID and type. When the namespace is already known, then it is
 // returned, otherwise a new preliminary namespace object gets created,
-// registered, and returned instead. Preliminary namespace objects have their
-// ID and type set, but everything is still zero, including the reference
-// (path).
+// registered, and returned instead. Preliminary namespace objects have their ID
+// and type set, but everything is still zero, including the reference (path).
 func (d NamespacesDict) Get(nsid species.NamespaceID, nstype species.NamespaceType) model.Namespace {
 	nsidx := model.TypeIndex(nstype)
 	ns, ok := d.AllNamespaces[nsidx][nsid]
@@ -131,7 +130,7 @@ type NamespaceUnMarshal struct {
 	UserName string             `json:"user-name,omitempty"` // user: name.
 }
 
-// NamespaceMarshal adds those fields to NamespaceUnmarshal we marshal as a
+// NamespaceMarshal adds those fields to [NamespaceUnmarshal] we marshal as a
 // convenience to some JSON consumers, but which we rather prefer to ignore on
 // unmarshalling.
 type NamespaceMarshal struct {
@@ -191,7 +190,7 @@ func (d NamespacesDict) marshalNamespace(ns model.Namespace, usernames map[uint3
 	})
 }
 
-// UnmarshalNamespace retrieves a Namespace from the given textual
+// UnmarshalNamespace retrieves a [model.Namespace] from the given textual
 // representation, making use of the additionally specified namespace dictionary
 // to resolve references to other namespaces (if needed, by creating preliminary
 // namespace objects so they can be referenced in advance). Moreover, it also

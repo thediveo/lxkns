@@ -40,7 +40,7 @@ import (
 // workload test container "random" name
 var sleepyname = "empty_eno" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
-//  where to reach the API after starting the service on a dynamic port.
+// where to reach the API after starting the service on a dynamic port.
 var baseurl string
 
 var _ = Describe("serves API endpoints", Ordered, func() {

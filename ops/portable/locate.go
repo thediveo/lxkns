@@ -20,12 +20,12 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// LocateNamespace tries to recover the path reference to a "lost" namespace
+// LocateNamespace tries to recover the path reference to a “lost” namespace
 // based on its ID and type by running a slightly reduced discovery and
-// searching the namestack for the needle (or so). Returns a Namespace if
-// successful, otherwise nil. See also LocateNamespaceInNamespaces in case a
-// discovery result is ready at hand, thus avoiding the need for an additional
-// namespace discovery.
+// searching the namestack for the needle (or so). Returns a [model.Namespace]
+// if successful, otherwise nil. Please see also L[ocateNamespaceInNamespaces]
+// in case a discovery result is ready at hand, thus avoiding the need for an
+// additional namespace discovery.
 func LocateNamespace(nsid species.NamespaceID, nstype species.NamespaceType) model.Namespace {
 	if nsid == species.NoneID {
 		return nil // bail out early, if necessary.
@@ -49,7 +49,7 @@ func LocateNamespace(nsid species.NamespaceID, nstype species.NamespaceType) mod
 	return LocateNamespaceInNamespaces(nsid, nstype, discovery.Namespaces)
 }
 
-// LocateNamespaceInNamespaces tries to recover the path reference to a "lost"
+// LocateNamespaceInNamespaces tries to recover the path reference to a “lost”
 // namespace based on its ID and type, using the specified namespace information
 // (map).
 func LocateNamespaceInNamespaces(nsid species.NamespaceID, nstype species.NamespaceType, allnamespaces model.AllNamespaces) model.Namespace {

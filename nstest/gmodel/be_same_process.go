@@ -15,6 +15,7 @@
 package gmodel
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -24,23 +25,24 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-// BeSameProcess returns a GomegaMatcher which compares an actual Process to
-// an expected Process, using only a (semi-) flat comparism for equality. In
-// particular, PID, PPID, Name, Cmdline, and Starttime are compared directly,
-// since they are "flat" types. Additionally, it also checks the joined
-// Namespaces for their IDs and types. But this matcher doesn't check the
-// related Parent and Children Process objects; use BeSameTreeProcess instead.
+// BeSameProcess returns a [types.GomegaMatcher] which compares an actual
+// [model.Process] to an expected Process, using only a (semi-) flat comparism
+// for equality. In particular, PID, PPID, Name, Cmdline, and Starttime are
+// compared directly, since they are “flat” types. Additionally, it also checks
+// the joined Namespaces for their IDs and types. But this matcher doesn't check
+// the related Parent and Children Process objects; use BeSameTreeProcess
+// instead.
 func BeSameProcess(expectedprocess interface{}) types.GomegaMatcher {
 	return &beSameProcessMatcher{expected: expectedprocess, intree: false}
 }
 
-// BeSameTreeProcess returns a GomegaMatcher which compares an actual Process
-// to an expected Process, using only a (semi-) flat comparism for equality.
-// In particular, PID, PPID, Name, Cmdline, and Starttime are compared
-// directly, since they are "flat" types. The Parent and Children Process(es)
-// are compared only for their PIDs (but not grandchildren, and so on). And
-// the (joined) Namespaces are also only compared for their ID and type, but
-// not anything beyond those two main properties.
+// BeSameTreeProcess returns a [types.GomegaMatcher] which compares an actual
+// [model.Process] to an expected Process, using only a (semi-) flat comparism
+// for equality. In particular, PID, PPID, Name, Cmdline, and Starttime are
+// compared directly, since they are “flat” types. The Parent and Children
+// Process(es) are compared only for their PIDs (but not grandchildren, and so
+// on). And the (joined) Namespaces are also only compared for their ID and
+// type, but not anything beyond those two main properties.
 func BeSameTreeProcess(expectedprocess interface{}) types.GomegaMatcher {
 	return &beSameProcessMatcher{expected: expectedprocess, intree: true}
 }
@@ -55,7 +57,9 @@ var processT = reflect.TypeOf(dummyproc)
 
 func (matcher *beSameProcessMatcher) Match(actual interface{}) (bool, error) {
 	if actual == nil && matcher.expected == nil {
-		return false, fmt.Errorf(
+		return false, errors.New(
+			// revive:disable-next-line:error-strings Gomega matchers
+			// communicate useful messages, not Go platitudes.
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}
 	// "unpack" the Process-es

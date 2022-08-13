@@ -23,10 +23,10 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// DiscoveryOptions is the (digital) twin of an lxkns DiscoveryOptions, which
-// can be marshalled and unmarshalled to and from JSON. This type usually isn't
-// used on its own but instead as part of un/marshalling the DiscoveryResult
-// type.
+// DiscoveryOptions is the (digital) twin of an lxkns [discover.DiscoverOpts],
+// which can be marshalled and unmarshalled to and from JSON. This type usually
+// isn't used on its own but instead as part of un/marshalling the
+// discover.DiscoverOpts type.
 type DiscoveryOptions discover.DiscoverOpts
 
 // MarshalJSON emits discovery options as JSON, handling the slightly involved
@@ -49,7 +49,7 @@ func (doh DiscoveryOptions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aux)
 }
 
-// UnmarshalJSON unmarshals JSON into a DiscoveryOptions type. It especially
+// UnmarshalJSON unmarshals JSON into a [DiscoveryOptions] type. It especially
 // handles the slightly involved task of unmarshalling a list of namespace types
 // into a bitmap mask of CLONE_NEWxxx namespace type flags.
 func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
@@ -72,11 +72,11 @@ func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// DiscoveryResult is basically the (digital) twin of an lxkns DiscoveryResult,
-// adding marshalling and unmarshalling to and from JSON. Besides,
-// DiscoveryResult acts also as an extensible discovery result wrapper that
-// allows API users to freely add their own fields (with objects) to un/marshal
-// additional result fields, as they see fit.
+// DiscoveryResult is basically the (digital) twin of an lxkns
+// [discover.Result], adding marshalling and unmarshalling to and from JSON.
+// Besides, DiscoveryResult acts also as an extensible discovery result wrapper
+// that allows API users to freely add their own fields (with objects) to
+// un/marshal additional result fields, as they see fit.
 type DiscoveryResult struct {
 	// Maps discovery result top-level JSON elements to their (un)marshalling
 	// types (the ones that then must do the real work).
@@ -97,7 +97,7 @@ const (
 )
 
 // NewDiscoveryResult returns a discovery result object ready for unmarshalling
-// JSON into it or marshalling an existing lxkns discovery result.
+// JSON into it or marshalling an existing lxkns [discover.Result] result.
 func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	// A very limited initialization only before immediately applying any
 	// options specified to us.
@@ -146,13 +146,13 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 }
 
 // NewDiscoveryResultOption defines so-called functional options for use with
-// NewDiscoveryResult().
+// [NewDiscoveryResult].
 type NewDiscoveryResultOption func(newdiscoveryresult *DiscoveryResult)
 
-// WithResult instructs NewDiscoveryResult() to use an existing lxkns discovery
-// result; this is typically used for marshalling only, but not needed for
-// unmarshalling. In the latter case you probably want to prefer starting with a
-// clean slate.
+// WithResult instructs [NewDiscoveryResult] to use an existing lxkns discovery
+// result (of type [discover.Result]); this is typically used for marshalling
+// only, but not needed for unmarshalling. In the latter case you probably want
+// to prefer starting with a clean slate.
 func WithResult(result *discover.Result) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.DiscoveryResult = result
@@ -160,22 +160,22 @@ func WithResult(result *discover.Result) NewDiscoveryResultOption {
 }
 
 // WithElement allows API users to add their own top-level elements for
-// un/marshalling to discovery results; for unmarshalling you need to use
-// WithElement() in order to add a non-nil zero value of the correct type in
-// order to be able to unmarshal into the correct type instead of a generic
-// map[string]interface{}:
+// un/marshalling to discovery results when using [NewDiscoveryResult]. For
+// unmarshalling you need to use WithElement in order to add a non-nil zero
+// value of the correct type in order to be able to unmarshal into the correct
+// type instead of a generic map[string]interface{}:
 //
-//     // foobar is a JSON un/marshallable type of your own. For unmarshalling,
-//     // allocate a non-nil zero value, which can be unmarshalled correctly.
-//     discoresult := NewDiscoveryResult(
-//         WithDiscoveryResult(all),
-//         WithElement("foobar", foobar))
-//     json.Marshal(discoresult)
+//	// foobar is a JSON un/marshallable type of your own. For unmarshalling,
+//	// allocate a non-nil zero value, which can be unmarshalled correctly.
+//	discoresult := NewDiscoveryResult(
+//	    WithDiscoveryResult(all),
+//	    WithElement("foobar", foobar))
+//	json.Marshal(discoresult)
 //
 // For unmarshalling:
 //
-//     discoresult := NewDiscoveryResult(WithElement("foobar", foobar))
-//     json.Unmarshal(jsondata, discoresult)
+//	discoresult := NewDiscoveryResult(WithElement("foobar", foobar))
+//	json.Unmarshal(jsondata, discoresult)
 func WithElement(name string, obj interface{}) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.Fields[name] = obj
@@ -187,19 +187,19 @@ func (dr DiscoveryResult) Result() *discover.Result {
 	return dr.DiscoveryResult
 }
 
-// Processes returns the process table from the wrapped discover.DiscoveryResult.
+// Processes returns the process table from the wrapped [discover.Result].
 func (dr DiscoveryResult) Processes() model.ProcessTable {
 	return dr.DiscoveryResult.Processes
 }
 
 // Mounts returns the namespace'd mount paths and points from the wrapped
-// discover.DiscoveryResult.
+// [discover.Result].
 func (dr DiscoveryResult) Mounts() discover.NamespacedMountPathMap {
 	return dr.DiscoveryResult.Mounts
 }
 
 // Get returns the user-specified result extension object for the specified
-// extension field. The field must have been added first with the WithElement
+// extension field. The field must have been added first with the [WithElement]
 // option when creating the un/marshalling wrapper object for discovery results.
 func (dr DiscoveryResult) Get(name string) interface{} {
 	return dr.Fields[name]
@@ -212,7 +212,7 @@ func (dr DiscoveryResult) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals discovery results from JSON into a DiscoveryResult
-// object, usually obtained with NewDiscoveryResult() first.
+// object, usually obtained with [NewDiscoveryResult] first.
 func (dr *DiscoveryResult) UnmarshalJSON(data []byte) error {
 	var aux map[string]json.RawMessage
 	if err := json.Unmarshal(data, &aux); err != nil {

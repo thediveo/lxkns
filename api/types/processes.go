@@ -27,16 +27,16 @@ import (
 
 // ProcessTable is the JSON serializable (digital!) twin to the process table
 // returned from discoveries. The processes (process tree) is represented in
-// JSON as a JSON object, where the members (keys) are the stringified PIDs
-// and the values are process objects.
+// JSON as a JSON object, where the members (keys) are the stringified PIDs and
+// the values are process objects.
 //
 // In order to unmarshal a ProcessTable a namespace dictionary is required,
 // which can either be prefilled or empty: it is used to share the namespace
 // objects with the same ID between individual process objects in the table.
 //
 // Additionally, a ProcessTable can be primed with ("preliminary") Process
-// objects. In this case, these process objects will be reused and updated
-// with the new state. Please see also the Get() method, which will
+// objects. In this case, these process objects will be reused and updated with
+// the new state. Please see also the [ProcessTable.Get] method, which will
 // automatically do priming for yet unknown PIDs.
 type ProcessTable struct {
 	model.ProcessTable
@@ -46,7 +46,7 @@ type ProcessTable struct {
 // NewProcessTable creates a new process table that can be un/marshalled from or
 // to JSON. Without any options, the process table returned can be used for
 // unmarshalling right from the start. For marshalling an existing (hopefully
-// filled) process table, use the WithProcessTable() option to specify the
+// filled) process table, use the [WithProcessTable] option to specify the
 // process table to use.
 func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
 	proctable := ProcessTable{}
@@ -63,7 +63,7 @@ func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
 }
 
 // NewProcessTableOption defines so-called functional options to be used with
-// NewProcessTable().
+// [NewProcessTable].
 type NewProcessTableOption func(newproctable *ProcessTable)
 
 // WithProcessTable specifies an existing (model) process table to use for
@@ -82,11 +82,11 @@ func WithNamespacesDict(nsdict *NamespacesDict) NewProcessTableOption {
 	}
 }
 
-// Get always(!) returns a Process object with the given PID. When the process
-// is already known, then it is returned, else a new preliminary process
+// Get always(!) returns a [model.Process] object with the given PID. When the
+// process is already known, then it is returned, else a new preliminary process
 // object gets created, registered, and returned instead. Preliminary process
-// objects have only their PID set, but nothing else with the sole exception
-// for the list of child processes being initialized.
+// objects have only their PID set, but nothing else with the sole exception for
+// the list of child processes being initialized.
 func (p *ProcessTable) Get(pid model.PIDType) *model.Process {
 	proc, ok := p.ProcessTable[pid]
 	if !ok {
@@ -245,7 +245,7 @@ func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 }
 
 // NamespacesSetReferences is the JSON representation of a set of typed
-// namespace ID references and thus the JSON face to model.NamespaceSet. The
+// namespace ID references and thus the JSON face to [model.NamespaceSet]. The
 // set of namespaces is represented in form of a JSON object with the object
 // keys being the namespace types and the IDs then being the number values.
 // Other namespace details are completely ignored, these are on purpose not

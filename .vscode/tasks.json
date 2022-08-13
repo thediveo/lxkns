@@ -39,6 +39,40 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "View Go module documentation",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "don't Run Task this! -- pkgsite service",
+                "don't Run Task this! -- view pkgsite"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "don't Run Task this! -- view pkgsite",
+            "command": "${input:pkgsite}",
+        },
+        {
+            "label": "don't Run Task this! -- pkgsite service",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/pkgsite.sh",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "close": true,
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "pkgsite",
+            "type": "command",
+            "command": "simpleBrowser.api.open",
+            "args": "http://localhost:6060/github.com/thediveo/lxkns"
         }
     ]
 }

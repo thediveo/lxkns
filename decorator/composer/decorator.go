@@ -29,7 +29,7 @@ const ComposerProjectLabel = "com.docker.compose.project"
 // ComposerGroupType identifies container groups representing composer projects.
 const ComposerGroupType = ComposerProjectLabel
 
-// Register this Decorator plugin.
+// Register this decorator plugin.
 func init() {
 	plugger.Register(
 		plugger.WithName("composer"),

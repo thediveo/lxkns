@@ -32,9 +32,12 @@ import (
 	"github.com/thediveo/lxkns/plural"
 )
 
-// PIDType expresses things more clearly. And no, that's not a "PidType" since
-// "PID" is an acronym (https://en.wikipedia.org/wiki/Acronym), but neither an
-// abbreviation, nor an ordinary word (yet/still) in itself.
+// PIDType expresses things more clearly.
+//
+//   - No, that's not a "PidType" since “PID” is an [acronym],
+//     but neither an abbreviation, nor an ordinary word (yet/still) in itself.
+//
+// [acronym]: https://en.wikipedia.org/wiki/Acronym
 type PIDType int32
 
 // Process represents our very limited view and even more limited interest in
@@ -59,14 +62,16 @@ type Process struct {
 	Container *Container `json:"-"` // associated container.
 }
 
-// ProcessTable maps PIDs to their Process descriptions, allowing for quick
-// lookups.
+// ProcessTable maps PIDs to their [model.Process] descriptions, allowing for
+// quick lookups.
 type ProcessTable map[PIDType]*Process
 
-// Basename returns the process executable name with the directory stripped
-// off, similar to what basename(1) does when applied to the "$0" argument. In
-// case the basename would be empty, then the process name is returned instead
-// as fallback.
+// Basename returns the process executable name with the directory stripped off,
+// similar to what [basename(1)] does when applied to the “$0” argument. In case
+// the basename would be empty, then the process name is returned instead as
+// fallback.
+//
+// [basename(1)]: https://man7.org/linux/man-pages/man1/basename.1.html
 func (p *Process) Basename() (basename string) {
 	if len(p.Cmdline) > 0 {
 		if idx := strings.LastIndex(p.Cmdline[0], "/"); idx >= 0 {
@@ -88,15 +93,15 @@ func (p *Process) Basename() (basename string) {
 	return
 }
 
-// NewProcess returns a Process object describing certain properties of the
-// Linux process with the specified PID. In particular, the parent PID and the
-// name of the process, as well as the command line.
+// NewProcess returns a [model.Process] object describing certain properties of
+// the Linux process with the specified PID. In particular, the parent PID and
+// the name of the process, as well as the command line.
 func NewProcess(PID PIDType) (proc *Process) {
 	return NewProcessInProcfs(PID, "/proc")
 }
 
-// NewProcessInProcfs implements NewProcess and additionally allows for testing on
-// fake /proc "filesystems".
+// NewProcessInProcfs implements [model.NewProcess] and additionally allows for
+// testing on fake /proc "filesystems".
 func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 	procbase := procroot + "/" + strconv.Itoa(int(PID))
 	line, err := os.ReadFile(procbase + "/stat") // #nosec G304
@@ -214,8 +219,8 @@ func NewProcessTable(freezer bool) (pt ProcessTable) {
 	return
 }
 
-// NewProcessTableFromProcfs implements NewProcessTable and allows for testing on fake
-// /proc "filesystems".
+// NewProcessTableFromProcfs implements [model.NewProcessTable] and allows for
+// testing on fake /proc "filesystems".
 func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) {
 	procentries, err := os.ReadDir(procroot)
 	if err != nil {
@@ -274,10 +279,10 @@ func (t ProcessTable) ByName(name string) (procs []*Process) {
 	return
 }
 
-// ProcessesByPIDs returns the Process objects corresponding to the specified
-// PIDs. It skips PIDs for which no Process object is known and only returns
-// Process objects for known PIDs. If you need error handling, then you'll
-// better roll your own function.
+// ProcessesByPIDs returns the [model.Process] objects corresponding to the
+// specified PIDs. It skips PIDs for which no Process object is known and only
+// returns Process objects for known PIDs. If you need error handling, then
+// you'll better roll your own function.
 func (t ProcessTable) ProcessesByPIDs(pid ...PIDType) []*Process {
 	procs := make([]*Process, 0, len(pid))
 	for _, p := range pid {
@@ -290,8 +295,8 @@ func (t ProcessTable) ProcessesByPIDs(pid ...PIDType) []*Process {
 	return procs
 }
 
-// ProcessListByPID is a type alias for sorting slices of *Process by their
-// PIDs in numerically ascending order.
+// ProcessListByPID is a type alias for sorting slices of *[model.Process] by
+// their PIDs in numerically ascending order.
 type ProcessListByPID []*Process
 
 func (l ProcessListByPID) Len() int      { return len(l) }

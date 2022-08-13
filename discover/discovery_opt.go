@@ -26,7 +26,7 @@ import (
 // namespace discovery.
 //
 // This information is JSON-marshallable, with the exception of the
-// Containerizer interface.
+// [containerizer.Containerizer] interface.
 type DiscoverOpts struct {
 	// The types of namespaces discovered: this is an OR'ed combination of Linux
 	// kernel namespace constants, such as CLONE_NEWNS, CLONE_NEWNET, et cetera.
@@ -48,7 +48,7 @@ type DiscoverOpts struct {
 }
 
 // DiscoveryOption represents a function able to set a particular discovery
-// option state in DiscoverOpts.
+// option state in [DiscoverOpts].
 type DiscoveryOption func(*DiscoverOpts)
 
 // WithStandardDiscovery opts for a "standard" discovery, scanning not only
@@ -57,8 +57,8 @@ type DiscoveryOption func(*DiscoverOpts)
 // namespaces will be discovered. Please note that time namespaces can only be
 // discovered on newer kernels with support for them.
 //
-// Please note that mount point discovery (including visibility calculation) it
-// not opted in; it has to be opted in individually.
+// Please note that mount point discovery (including visibility calculation) is
+// not automatically opted in; it has to be opted in individually.
 func WithStandardDiscovery() DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		o.NamespaceTypes = species.AllNS
@@ -76,8 +76,8 @@ func WithStandardDiscovery() DiscoveryOption {
 var stddisco = WithStandardDiscovery()
 
 // WithFullDiscovery opts in to all discovery features that lxkns has to offer.
-// Please note that API users still need to set an optional Containerizer
-// explicitly.
+// Please note that API users still need to set an optional
+// [containerizer.Containerizer] explicitly using [WithContainerizer].
 func WithFullDiscovery() DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		stddisco(o)
@@ -185,7 +185,7 @@ func WithLabels(labels map[string]string) DiscoveryOption {
 
 // WithContainerizer opts for discovery of containers related to namespaces,
 // using the specified Containerizer. Depending on your system configuration you
-// might want to additionally use WithPIDMapper() in order to support containers
+// might want to additionally use [WithPIDMapper] in order to support containers
 // in containers.
 func WithContainerizer(c containerizer.Containerizer) DiscoveryOption {
 	return func(o *DiscoverOpts) {

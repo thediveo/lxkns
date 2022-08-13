@@ -31,8 +31,8 @@ import (
 // TypedNamespacePath when using Visit() on newer kernels to slightly optimize
 // things, but this isn't strictly necessary.
 //
-// ℹ️ Please note that User() and Parent() require a least a 4.9+ kernel.
-// OwnerUID() requires at least a 4.11+ kernel.
+// 🛈 Please note that [TypedNamespacePath.User] and [TypedNamespacePath.Parent]
+// require a least a 4.9+ kernel. OwnerUID() requires at least a 4.11+ kernel.
 type TypedNamespacePath struct {
 	NamespacePath
 	nstype species.NamespaceType
@@ -62,10 +62,12 @@ func (nsp TypedNamespacePath) Type() (species.NamespaceType, error) {
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
-// PID and user namespaces. For user namespaces, Parent() and User() behave
-// identical.
+// PID and user namespaces. For user namespaces, [TypedNamespacePath.Parent] and
+// [TypedNamespacePath.User] mostly behave identical, except that the latter
+// returns a [TypedNamespaceFile], while Parent returns an untyped
+// [NamespaceFile] instead.
 //
-// ℹ️ A Linux kernel version 4.9 or later is required.
+// 🛈 A Linux kernel version 4.9 or later is required.
 func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
 	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {

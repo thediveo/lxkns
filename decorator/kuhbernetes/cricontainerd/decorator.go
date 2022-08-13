@@ -24,7 +24,7 @@ import (
 )
 
 // containerKind specifies the kind of container at the engine level, in order
-// to differentiate between user containers and infrastructure "sandbox"
+// to differentiate between user containers and infrastructure “sandbox”
 // containers that haven't been specified by users (deployments).
 const containerKindLabel = "io.cri-containerd.kind"
 

@@ -23,9 +23,9 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// NamespaceFile is an open os.File which references a Linux-kernel namespace.
-// Please use NewNamespaceFile() to create a *NamespaceFile from an *os.File and
-// an error (correctly deals with errors by returning a nil *NamespaceFile).
+// NamespaceFile is an open [os.File] which references a Linux-kernel namespace.
+// Please use [NewNamespaceFile] to create a *NamespaceFile from an *os.File and
+// an error (correctly deals with errors by returning a nil *[NamespaceFile]).
 type NamespaceFile struct {
 	// Please note that we embed(!) an os.File instead of embedding an *os.File.
 	// Our rationale here is that this is fine, as os.File has an indirection
@@ -36,9 +36,11 @@ type NamespaceFile struct {
 	os.File
 }
 
-// NewNamespaceFile returns a new NamespaceFile given an *os.File and a nil
+// NewNamespaceFile returns a new [NamespaceFile] given an *[os.File] and a nil
 // error. In case of a non-nil error or of a nil *os.File it returns a nil
-// *NamespaceFile instead, together with the error.
+// *NamespaceFile instead, together with the error. This “constructor” is
+// intended to be conveniently used with [os.Open] by directly accepting its two
+// return values.
 func NewNamespaceFile(f *os.File, err error) (*NamespaceFile, error) {
 	if err == nil && f != nil {
 		return &NamespaceFile{*f}, nil
@@ -82,7 +84,7 @@ func (nsf NamespaceFile) String() (s string) {
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file.
 //
-// ℹ️ A Linux kernel version 4.11 or later is required.
+// 🛈 A Linux kernel version 4.11 or later is required.
 func (nsf NamespaceFile) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsf.Fd()), _NS_GET_NSTYPE)
 	if err != nil {
@@ -98,9 +100,11 @@ func (nsf NamespaceFile) ID() (species.NamespaceID, error) {
 }
 
 // User returns the owning user namespace of any namespace, as a NamespaceFile
-// reference. For user namespaces, User() behaves identical to Parent().
+// reference. For user namespaces, [NamespaceFile.User] mostly behaves identical
+// to [NamespaceFile.Parent], except that the latter returns an untyped
+// [NamespaceFile] instead of a [TypedNamespaceFile].
 //
-// ℹ️ A Linux kernel version 4.9 or later is required.
+// 🛈 A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) User() (relations.Relation, error) {
 	userfd, err := ioctl(int(nsf.Fd()), _NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
@@ -113,10 +117,11 @@ func (nsf NamespaceFile) User() (relations.Relation, error) {
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
-// PID and user namespaces. For user namespaces, Parent() and User() behave
-// identical.
+// PID and user namespaces. For user namespaces, [NamespaceFile.Parent] and
+// [NamespaceFile.User] mostly behave identical, except that the latter returns
+// a [TypedNamespaceFile], while Parent returns an untyped [NamespaceFile] instead.
 //
-// ℹ️ A Linux kernel version 4.9 or later is required.
+// 🛈 A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) Parent() (relations.Relation, error) {
 	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
@@ -128,15 +133,17 @@ func (nsf NamespaceFile) Parent() (relations.Relation, error) {
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
 // open file descriptor.
 //
-// ℹ️ A Linux kernel version 4.11 or later is required.
+// 🛈 A Linux kernel version 4.11 or later is required.
 func (nsf NamespaceFile) OwnerUID() (int, error) {
 	return ownerUID(nsf, int(nsf.Fd()))
 }
 
 // OpenTypedReference returns an open namespace reference, from which an
-// OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
-// internally used to allow optimizing switching namespaces under the condition
-// that additionally the type of namespace needs to be known at the same time.
+// OS-level file descriptor can be retrieved using [NamespaceFile.NsFd].
+//
+// OpenTypeReference is also internally used to allow optimizing switching
+// namespaces under the condition that additionally the type of namespace needs
+// to be known at the same time.
 func (nsf NamespaceFile) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	openref, err := NewTypedNamespaceFile(&nsf.File, 0)
 	if err != nil {
@@ -146,16 +153,17 @@ func (nsf NamespaceFile) OpenTypedReference() (relations.Relation, opener.Refere
 }
 
 // NsFd returns a file descriptor referencing the namespace indicated in a
-// namespace reference implementing the Opener interface.
+// namespace reference implementing the [opener.Opener] interface.
 //
 // ⚠️ After the caller is done using the returned file descriptor, the caller
-// must call the returned FdCloser function in order to properly release process
-// resources. In case of any error when opening the referenced namespace, err
-// will be non-nil, and might additionally wrap an underlying OS-level error.
+// must call the returned [opener.FdCloser] function in order to properly
+// release process resources. In case of any error when opening the referenced
+// namespace, err will be non-nil, and might additionally wrap an underlying
+// OS-level error.
 //
 // ⚠️ The caller must make sure that the namespace reference object doesn't get
-// prematurely garbage collected, while the file descriptor returned by NsFd()
-// is still in use.
+// prematurely garbage collected, while the file descriptor returned by NsFd is
+// still in use.
 func (nsf NamespaceFile) NsFd() (int, opener.FdCloser, error) {
 	return int(nsf.Fd()), func() {}, nil
 }

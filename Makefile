@@ -7,7 +7,7 @@ GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!=
 
 # Go version to use when building the test containers; see README.md for
 # supported versions strategy.
-goversion = 1.17 1.16
+goversion = 1.19 1.18
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 
@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify scan
+.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -38,8 +38,15 @@ clean: ## cleans up build and testing artefacts
 	rm -f coverage.html coverage.out coverage-root.out
 	rm -f coverage.txt coverage-root.txt
 
-coverage: ## runs tests with code coverage
-	scripts/cov.sh
+coverage: ## gathers coverage and updates README badge
+	@scripts/cov.sh
+
+manual: ## start docsify server for manual
+	@scripts/docsify.sh ./docs
+
+pkgsite: ## serves Go documentation on port 6060
+	@echo "navigate to: http://localhost:6060/github.com/thediveo/lxkns"
+	@scripts/pkgsite.sh
 
 deploy: ## deploys lxkns service on host port 5010
 	$(GOGEN)
@@ -91,7 +98,7 @@ citestapp: ## builds and tests lxkns with static web UI
 	exit $$STATUS
 
 report: ## runs goreportcard
-	@./scripts/goreportcard.sh
+	@scripts/goreportcard.sh
 
 buildapp: ## builds web UI app
 	$(GOGEN)

@@ -49,13 +49,13 @@ type PortableReference struct {
 // When opening a portable namespace reference, the following checks are carried
 // out (or not), depending on the information supplied:
 //
-//   * just the namespace ID is known, nothing else: namespace is located via ID requiring a discovery.
-//   * namespace ID and type is known: namespace is located ID with discovery, then type is cross-checked.
-//   * just the path is known, nothing else: no checks beyond successfully opening as a namespace.
-//   * path and type is known: cross-checking the type against what has been opened.
-//   * path and ID are known: path is used and checked against the ID.
-//   * path, ID and type are known: path is used and checked against ID and type of namespace.
-//   * (path OR ID) is known, as well as PID and Starttime: additionally checks that process is still around.
+//   - just the namespace ID is known, nothing else: namespace is located via ID requiring a discovery.
+//   - namespace ID and type is known: namespace is located ID with discovery, then type is cross-checked.
+//   - just the path is known, nothing else: no checks beyond successfully opening as a namespace.
+//   - path and type is known: cross-checking the type against what has been opened.
+//   - path and ID are known: path is used and checked against the ID.
+//   - path, ID and type are known: path is used and checked against ID and type of namespace.
+//   - (path OR ID) is known, as well as PID and Starttime: additionally checks that process is still around.
 func (portref PortableReference) Open() (rel relations.Relation, closer func(), err error) {
 	// If we don't have a path, we must try to locate the namespace through a
 	// discovery and then looking for the namespace ID...

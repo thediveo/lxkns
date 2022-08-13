@@ -25,6 +25,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+//revive:disable:var-naming
+
 // NamespaceType mirrors the data type used in the Linux kernel for the
 // namespace type constants. These constants are actually part of the clone()
 // syscall options parameter.
@@ -33,15 +35,20 @@ type NamespaceType uint64
 // The 8 type of Linux namespaces defined at this time (sic!). Please note that
 // the 8th namespace is only supported since Kernel 5.6+.
 //
-// These constants are used with several of the namespace-related functions,
-// such as clone() in particular, but also setns(), unshare(), and the
-// NS_GET_NSTYPE ioctl(). The origin for their definitions is:
-// https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/sched.h
+// These constants ([Linux source]) are used with several of the
+// namespace-related functions, such as [clone(7)] in particular, but also
+// [setns(2)], [unshare(2)], and the [NS_GET_NSTYPE ioctl(2)].
 //
-// Oh, forgo golint with its "helicopter parents" attitude patronizing us about
-// how names of Linux kernel definitions have to look like. Go for something
-// grown up, such as golangci-lint, and many more, which hide the totally
-// childish behavior of golint.
+//   - Oh, forgo golint with its “helicopter parents” attitude patronizing us about
+//     how names of Linux kernel definitions have to look like. Go for something
+//     grown up, such as golangci-lint, and many more, which hide the totally
+//     childish behavior of golint.
+//
+// [clone(7)]: https://man7.org/linux/man-pages/man2/clone.2.html
+// [setns(2)]: https://man7.org/linux/man-pages/man2/setns.2.html
+// [unshare(2)]: https://man7.org/linux/man-pages/man2/unshare.2.html
+// [NS_GET_NSTYPE ioctl(2)]: https://man7.org/linux/man-pages/man2/ioctl_ns.2.html
+// [Linux source]: https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/sched.h
 const (
 	CLONE_NEWNS     = NamespaceType(unix.CLONE_NEWNS)
 	CLONE_NEWCGROUP = NamespaceType(unix.CLONE_NEWCGROUP)
@@ -108,9 +115,9 @@ var typeNames = map[NamespaceType]string{
 	CLONE_NEWTIME:   "time",
 }
 
-// NameToType returns the namespace type value (constant CLONE_NEWNS, ...)
-// corresponding to the specified namespace type name (such as "mnt", "net",
-// et cetera).
+// NameToType returns the namespace type value (constant [CLONE_NEWNS], ...)
+// corresponding to the specified namespace type name (such as "mnt", "net", et
+// cetera).
 func NameToType(name string) NamespaceType {
 	t := nameTypes[name]
 	return t

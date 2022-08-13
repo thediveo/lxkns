@@ -4,17 +4,23 @@ set -e
 if ! command -v go-acc; then
     PATH="$(go env GOPATH)/bin:$PATH"
     if ! command -v go-acc; then
-        # Don't touch our local module dependencies, so run installation from
-        # somewhere else...
-        (cd /tmp && go get -v github.com/ory/go-acc)
+        go install github.com/ory/go-acc@latest
     fi
 fi
 
-# First, run tests as non-root; this will need to skip some tests.
-go-acc --covermode atomic -o coverage.out ./... -- -v
-# Second, run the tests now again, but this tome as root; this will skip some
-# other tests, but run the missing ones that need to be run as root.
-go-acc --covermode atomic -o $(pwd)/coverage-root.out ./... -- -v -exec sudo
+if ! command -v gobadge &>/dev/null; then
+    export PATH="$(go env GOPATH)/bin:$PATH"
+    if ! command -v gobadge &>/dev/null; then
+        go install github.com/AlexBeauchemin/gobadge@latest
+    fi
+fi
+
+# First, run the tests as root; this will skip a few tests where we explicitly
+# will need root, but running as root is the broader scope.
+go-acc --covermode atomic -o $(pwd)/coverage-root.out ./... -- -v -p 1 -exec sudo
+# Second, rerun the tests as non-root in order to cover the tests skipped
+# on the first root run.
+go-acc --covermode atomic -o coverage.out ./... -- -v -p 1
 tail -n +2 coverage-root.out >> coverage.out
-go tool cover -html coverage.out -o coverage.html
-# xdg-open coverage.html
+go tool cover -func=coverage.out -o=coverage.out
+gobadge -filename=coverage.out -green=80 -yellow=50

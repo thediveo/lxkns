@@ -26,16 +26,16 @@ import (
 )
 
 // WhaleFriend is a containerizer internally backed by one or more
-// Whalewatchers, that is, container watchers.
+// Whalewatchers, that is, [watcher.Watcher] container observers.
 type WhaleFriend struct {
 	watchers []watcher.Watcher
 }
 
 var _ containerizer.Containerizer = (*WhaleFriend)(nil)
 
-// New returns a new containerizer using the specified set of container
-// watchers. This also spins up the watchers to constantly watch in the
-// background for any signs of container life and death.
+// New returns a new [containerizer.Containerizer] using the specified set of
+// container watchers. This also spins up the watchers to constantly watch in
+// the background for any signs of container life and death.
 func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containerizer {
 	c := &WhaleFriend{
 		watchers: watchers,
@@ -46,9 +46,10 @@ func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containe
 	return c
 }
 
-// watchersContainers returns the alive Containers managed by the specified
-// engine/watcher. The containers returned are additionally linked to a unique
-// ContainerEngine and the ContainerEngine also aware of its Containers.
+// watchersContainers returns the alive [model.Container] objects managed by the
+// specified engine/watcher. The containers returned are additionally linked to
+// a unique [model.ContainerEngine] and these container engines are also aware
+// of their containers.
 func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []*model.Container {
 	eng := &model.ContainerEngine{
 		ID:      engine.ID(ctx),
@@ -101,7 +102,7 @@ func (c *WhaleFriend) Containers(
 	return containers
 }
 
-// Close closes all watcher resources associated with this WhaleFriend.
+// Close closes all watcher resources associated with this [WhaleFriend].
 func (c *WhaleFriend) Close() {
 	for _, watcher := range c.watchers {
 		watcher.Close()

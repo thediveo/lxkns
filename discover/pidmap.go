@@ -22,8 +22,8 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
-// NewPIDMap returns a new PID map (PIDMapper) based on the specified discovery
-// results and further information gathered from the /proc filesystem.
+// NewPIDMap returns a new PID map ([model.PIDMapper]) based on the specified
+// discovery results and further information gathered from the /proc filesystem.
 func NewPIDMap(result *Result) model.PIDMapper {
 	return pidmap.NewPIDMap(result.Processes)
 }
