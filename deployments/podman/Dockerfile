@@ -1,5 +1,4 @@
-# Requires Docker buildx in order to correctly produce the final image with the
-# extended file attributes for capabilities still intact.
+# Build lxkns with Podman support.
 
 ARG ALPINE_VERSION=3.16
 ARG ALPINE_PATCH=2
@@ -9,9 +8,10 @@ ARG GO_VERSION=1.19.1
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
 # start with the gcc and header stuff, which is kind of base builder image stuff
 # anyway.
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+FROM docker.io/library/golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+RUN apk add --no-cache gcc musl-dev libcap
+RUN apk add --no-cache git patch linux-headers gpgme-dev libassuan-dev libgpg-error-dev
 WORKDIR /src
-RUN apk add --no-cache --update-cache gcc musl-dev libcap
 # We now try to cache only the dependencies in a separate layer, so we can speed
 # up things in case the dependencies do not change. This then reduces the amount
 # of fetching and compiling required when compiling the final binary later.
@@ -31,13 +31,14 @@ COPY ops/ ./ops/
 COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
-RUN go build -v -ldflags "-s -w" -o /lxkns ./cmd/lxkns && \
-    go build -v -ldflags "-s -w" -o /mntnssandbox ./cmd/mntnssandbox && \
+# libassuan blocks fully static binary
+RUN go build -v -tags osusergo,netgo,podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove -ldflags "-s -w" -o /lxkns ./cmd/lxkns && \
+    go build -v -tags osusergo,netgo -ldflags "-s -w -extldflags=-static" -o /mntnssandbox ./cmd/mntnssandbox && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
 # 2nd stage: builds the lxkns web client react application.
-FROM node:16-alpine AS reactor
+FROM docker.io/library/node:16-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
@@ -55,7 +56,8 @@ RUN yarn imagebuild
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
-FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH}
+FROM docker.io/library/alpine:${ALPINE_VERSION}.${ALPINE_PATCH}
+RUN apk add --no-cache --update-cache gpgme
 COPY --from=builder /lxkns /mntnssandbox /
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 ENV PATH /

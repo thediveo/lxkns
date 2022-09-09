@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan
+.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan systempodman systempodman-down
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -119,3 +119,19 @@ scan: ## scans the repository for CVEs
 	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
 	syft dir:. -o json > $$BOMFILE && \
 	grype sbom:$$BOMFILE
+
+systempodman: ## builds lxkns using podman system service
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
+
+systempodman-down: ## removes any deployed lxkns service
+	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml down
+
+userpodman: ## builds lxkns using podman system service
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	$(eval UID := $(shell id -u))
+	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p lxkns -f deployments/userpodman/docker-compose.yaml up

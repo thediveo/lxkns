@@ -1,8 +1,6 @@
 <!-- markdownlint-disable-next-line MD022 -->
 # Linux kernel Namespaces
-<img align="right" width="200" src="docs/_images/lxkns-gophers.jpeg">
-
-…and Containers.
+<img align="right" width="200" src="docs/_images/lxkns-gophers.png">
 
 [![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
@@ -14,13 +12,21 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-`lxkns` is a Golang package for discovering Linux kernel namespaces as well as
-mount points in mount namespaces. It then relates them to containers, where
-possible. In (almost) every nook and cranny of your Linux hosts.
+## Overview
 
-This discovery can be operated as a stand-alone REST service with additional web
-UI. Or it can be integrated into system diagnosis tools that need an
-unobstructed view on Linux-kernel namespaces.
+`lxkns` discovers Linux namespaces and also the mount points inside mount
+namespaces. The discovery engine then relates the found namespaces to
+containers, where possible. In (almost) every nook and cranny of your Linux
+hosts, for instance by looking at bind-mounts and open file descriptors.
+
+The following container engine workloads are detected:
+- Docker,
+- plain containerd,
+- Podman (but please see the [separate instructions](podman.md)).
+
+The `lxkns` discovery engine can be operated as a stand-alone REST service with
+additional web UI. Alternatively, it can be embedded/integrated into other
+system diagnosis tools.
 
 For mount namespaces, lxkns finds mount points even in process-less mount
 namespaces (for instance, as utilized in ["snap"
