@@ -66,7 +66,8 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 		return nil, nil
 	}
 
-	cizer := whalefriend.New(ctx, watchers)
+	numworkers, _ := cmd.PersistentFlags().GetUint("engine-workers")
+	cizer := whalefriend.New(ctx, watchers, whalefriend.WithWorkers(numworkers))
 	for _, w := range watchers {
 		if wait {
 			<-w.Ready()
@@ -114,4 +115,5 @@ func init() {
 func EngineSetupCLI(cmd *cobra.Command) {
 	cmd.PersistentFlags().Bool("noengines", false, "do not consult any container engines")
 	cmd.PersistentFlags().Bool("keep-going", false, "skip non-responsive container engines")
+	cmd.PersistentFlags().Uint("engine-workers", 1, "maximum number of workers for container engine workload discovery")
 }

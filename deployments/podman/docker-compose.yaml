@@ -15,6 +15,7 @@ services:
             - "--containerd=/proc/1/root/run/containerd/containerd.sock"
             - "--podman=unix:///proc/1/root/run/podman/podman.sock"
             - "--user-podmen=/proc/1/root/run/user"
+            - "--engine-workers=8"
         ports:
             - "5010:5010"
         user: "65534"
