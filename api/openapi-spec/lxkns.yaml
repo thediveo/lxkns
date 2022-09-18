@@ -1,4 +1,6 @@
 openapi: 3.0.2
+security: 
+    -  {}
 info:
     title: lxkns
     version: 0.22.0
@@ -582,7 +584,7 @@ components:
                 - uts
                 - time
             type: string
-            example: '"net"'
+            example: 'net'
         NamespacesDict:
             description: |
                 "Dictionary" or "map" of Linux-kernel namespaces, keyed by their namespace IDs in stringified

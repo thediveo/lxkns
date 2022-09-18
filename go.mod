@@ -7,11 +7,11 @@ replace github.com/containernetworking/cni => github.com/containernetworking/cni
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd v1.6.8
-	github.com/getkin/kin-openapi v0.102.0
+	github.com/getkin/kin-openapi v0.94.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.12.0
-	github.com/onsi/ginkgo/v2 v2.1.6
-	github.com/onsi/gomega v1.20.2
+	github.com/onsi/ginkgo/v2 v2.2.0
+	github.com/onsi/gomega v1.20.3-0.20220910160552-ba548e2ba877
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
