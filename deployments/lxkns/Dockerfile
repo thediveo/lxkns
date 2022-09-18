@@ -1,9 +1,9 @@
 # Requires Docker buildx in order to correctly produce the final image with the
 # extended file attributes for capabilities still intact.
 
-ARG ALPINE_VERSION=3.14
+ARG ALPINE_VERSION=3.16
 ARG ALPINE_PATCH=2
-ARG GO_VERSION=1.17.2
+ARG GO_VERSION=1.19.1
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we

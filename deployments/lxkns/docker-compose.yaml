@@ -12,6 +12,7 @@ services:
             - "--debug"
             - "--docker=unix:///proc/1/root/run/docker.sock"
             - "--containerd=/proc/1/root/run/containerd/containerd.sock"
+            - "--engine-workers=8"
         ports:
             - "5010:5010"
         user: "65534"
@@ -26,7 +27,7 @@ services:
             # profile thus does not interfere with lxkns. However, we still want
             # to slightly curb the unneeded parts of the powers bestowed upon us
             # by especially CRAP_SYS_ADMIN and CAP_SYS_PTRACE...
-            - seccomp:deployments/lxkns/lxkns-seccomp.json
+            - seccomp:lxkns-seccomp.json
         # Clean all default capabilities Docker might otherwise grant us and
         # several of them we don't need; add only those capabilities we really
         # need, such as CAP_WORLD_DOMINATION.

@@ -17,7 +17,6 @@ package mountineer
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -230,7 +229,7 @@ func (m *Mountineer) ReadFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ioutil.ReadFile(pathname) // #nosec G304
+	return os.ReadFile(pathname) // #nosec G304
 }
 
 // Resolve resolves a pathname inside the open mount namespace to a pathname

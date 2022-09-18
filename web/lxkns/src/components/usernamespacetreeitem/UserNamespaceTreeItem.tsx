@@ -59,11 +59,13 @@ const OwningUserNamespace = styled('span')(({ theme }) => ({
 export interface UserNamespaceTreeItemProps {
     /** user namespace object */
     namespace: Namespace
+    /** information about all processes (for some render support) */
+    processes?: ProcessMap,
 }
 
 // Component UserNamespaceTreeItem renders a user namespace tree item, as well
 // as the owned non-user namespaces and child user namespaces.
-export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespaceTreeItemProps) => {
+export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: UserNamespaceTreeItemProps) => {
     const [showSharedNamespaces] = useAtom(showSharedNamespacesAtom)
 
     // Generally speaking, we now separate the "tenants" into bind-mounted
@@ -78,7 +80,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
             className="tenant"
             key={tenant.nsid}
             nodeId={tenant.nsid.toString()}
-            label={<NamespaceInfo namespace={tenant} />}
+            label={<NamespaceInfo namespace={tenant} processes={processes} />}
         />);
 
     // We now want to organize namespaces with processes joined to them by these
@@ -114,6 +116,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
                                 noprocess={true}
                                 shortprocess={procns.ealdorman !== proc}
                                 namespace={procns}
+                                processes={processes}
                             />
                             {procns.ealdorman === proc
                                 && procns.owner && procns.type !== NamespaceType.user
@@ -133,7 +136,11 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
 
     const children = Object.values(usernamespace.children)
         .sort(compareNamespaceById)
-        .map(childns => <UserNamespaceTreeItem key={childns.nsid} namespace={childns} />)
+        .map(childns => <UserNamespaceTreeItem
+            key={childns.nsid}
+            namespace={childns}
+            processes={processes}
+        />)
 
     // Please note that we need destructure or concatenate the resulting two
     // sets of tenant nodes and children nodes, as otherwise the enclosing
@@ -144,7 +151,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace }: UserNamespac
             className="namespace"
             key={usernamespace.nsid}
             nodeId={`${usernamespace.nsid}`}
-            label={<NamespaceInfo namespace={usernamespace} />}
+            label={<NamespaceInfo namespace={usernamespace} processes={processes} />}
         >
             {[...procs, ...bindmounts, ...children]}
         </TreeItem>

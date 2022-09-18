@@ -56,7 +56,7 @@ func (m *NamespacedMountMap) UnmarshalJSON(data []byte) error {
 // MountPathMap is a JSON marshallable mount path map.
 type MountPathMap mounts.MountPathMap
 
-// MountPath wraps a mounts.MountPathMap so that it can be marshalled with
+// MountPath wraps a [mounts.MountPathMap] so that it can be marshalled with
 // identifiers in place of mount path object references.
 type MountPath struct {
 	*mounts.MountPath

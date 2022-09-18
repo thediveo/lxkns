@@ -25,25 +25,24 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// PIDMap is the (Digital) Twin of an model.PIDMap and can be marshalled and
-// unmarshalled to and from JSON. Nota bene: PIDMap is a small object, so it
-// should simply be passed around by value.
+// PIDMap is the (Digital) Twin of a [model.PIDMap] and can be marshalled and
+// unmarshalled to and from JSON. Nota bene: model.PIDMap is a small object, so
+// it should simply be passed around by value.
 //
+// To marshal from an existing [model.PIDMap]:
 //
-// To marshal from an existing model.PIDMap:
+//	pm := NewPIDMap(WithPIDMap(mypidmap))
+//	out, err := json.Marshal(pm)
 //
-//   pm := NewPIDMap(WithPIDMap(mypidmap))
-//   out, err := json.Marshal(pm)
-//
-// To unmarshal into a fresh model.PIDMap, not caring about PID namespace
-// details beyond PID namespace IDs, simply call NewPIDMap() without any
+// To unmarshal into a fresh [model.PIDMap], not caring about PID namespace
+// details beyond PID namespace IDs, simply call [NewPIDMap] without any
 // options:
 //
-//  pm := NewPIDMap()
+//	pm := NewPIDMap()
 //
 // On purpose, the external JSON representation of a PIDMap is reduced compared
-// to an model.PIDMap: this optimizes the transfer size by marshalling only the
-// absolutely necessary information necessary to recreate an model.PIDMap on
+// to an [model.PIDMap]: this optimizes the transfer size by marshalling only
+// the absolutely necessary information necessary to recreate an model.PIDMap on
 // unmarshalling. In contrast, the process-internal model.PIDMap trades memory
 // consumption for performance, in oder to speed up translating PIDs between
 // different PID namespaces.
@@ -56,7 +55,7 @@ type PIDMap struct {
 	PIDns model.NamespaceMap
 }
 
-// NewPIDMap creates a new twin of either an existing model.PIDMap or
+// NewPIDMap creates a new twin of either an existing [model.PIDMap] or
 // allocates a new and empty model.PIDMap.
 func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 	pidmap := PIDMap{}
@@ -75,19 +74,19 @@ func NewPIDMap(opts ...NewPIDMapOption) PIDMap {
 }
 
 // NewPIDMapOption defines so-called functional options to be used with
-// NewPIDMap().
+// [NewPIDMap].
 type NewPIDMapOption func(newpidmap *PIDMap)
 
-// WithPIDMap configures a new PIDMap to wrap an existing model.PIDMap; either
-// for marshalling an existing PIDMap or to unmarshal into a pre-allocated
-// PIDMap.
+// WithPIDMap configures a new [PIDMap] to wrap an existing [model.PIDMap];
+// either for marshalling an existing PIDMap or to unmarshal into a
+// pre-allocated PIDMap.
 func WithPIDMap(pidmap model.PIDMapper) NewPIDMapOption {
 	return func(npm *PIDMap) {
 		npm.PIDMap = pidmap
 	}
 }
 
-// WithPIDNamespaces configures a new PIDMap to use an already known map of
+// WithPIDNamespaces configures a new [PIDMap] to use an already known map of
 // PID namespaces.
 func WithPIDNamespaces(pidnsmap model.NamespaceMap) NewPIDMapOption {
 	return func(npm *PIDMap) {
@@ -104,8 +103,8 @@ type namespacedPID struct {
 }
 type namespacedPIDs []namespacedPID
 
-// MarshalJSON emits a PIDMap as JSON. To reduce the transfer volume, this
-// method only emits enough table data for UnmarshalJSON() later being able to
+// MarshalJSON emits a [PIDMap] as JSON. To reduce the transfer volume, this
+// method only emits enough table data for UnmarshalJSON later being able to
 // regenerate the full table.
 func (pidmap PIDMap) MarshalJSON() ([]byte, error) {
 	pidmapper := pidmap.PIDMap.(pm.PIDMap)

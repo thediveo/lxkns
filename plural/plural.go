@@ -25,8 +25,8 @@ var printer = message.NewPrinter(language.English)
 // Elements returns the specified count of elements together with the correct
 // singular or plural form for elements, depending on the count. The elements
 // parameter must specify the plural. One or more optional arguments can be
-// specified for elements that possess varying elements, such as "hidden [TYP]
-// namespaces".
+// specified for elements that possess varying elements, such as “hidden [TYP]
+// namespaces”.
 func Elements(count int, elements string, a ...interface{}) string {
 	return printer.Sprintf("%d "+elements, append([]interface{}{count}, a...)...)
 }
@@ -47,6 +47,7 @@ var elements = [...]element{
 	{"mount point", "mount points"},
 	{"pod", "pods"},
 	{"process", "processes"},
+	{"Podman pod", "Podman pods"},
 }
 
 func init() {

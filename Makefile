@@ -7,7 +7,7 @@ GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!=
 
 # Go version to use when building the test containers; see README.md for
 # supported versions strategy.
-goversion = 1.17 1.16
+goversion = 1.19 1.18
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 
@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report buildapp startapp docsify scan
+.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan systempodman systempodman-down
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -38,17 +38,24 @@ clean: ## cleans up build and testing artefacts
 	rm -f coverage.html coverage.out coverage-root.out
 	rm -f coverage.txt coverage-root.txt
 
-coverage: ## runs tests with code coverage
-	scripts/cov.sh
+coverage: ## gathers coverage and updates README badge
+	@scripts/cov.sh
+
+manual: ## start docsify server for manual
+	@scripts/docsify.sh ./docs
+
+pkgsite: ## serves Go documentation on port 6060
+	@echo "navigate to: http://localhost:6060/github.com/thediveo/lxkns"
+	@scripts/pkgsite.sh
 
 deploy: ## deploys lxkns service on host port 5010
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
+	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy: ## removes any deployed lxkns service
-	docker-compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
+	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml down
 
 install: ## installs lxkns commands
 	$(GOGEN)
@@ -91,7 +98,7 @@ citestapp: ## builds and tests lxkns with static web UI
 	exit $$STATUS
 
 report: ## runs goreportcard
-	@./scripts/goreportcard.sh
+	@scripts/goreportcard.sh
 
 buildapp: ## builds web UI app
 	$(GOGEN)
@@ -112,3 +119,20 @@ scan: ## scans the repository for CVEs
 	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
 	syft dir:. -o json > $$BOMFILE && \
 	grype sbom:$$BOMFILE
+
+systempodman: ## builds lxkns using podman system service
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	# podman-compose doesn't support "pid:host" which we absolutely need.
+	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
+
+systempodman-down: ## removes any deployed lxkns service
+	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml down
+
+userpodman: ## builds lxkns using podman system service
+	$(GOGEN)
+	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	$(eval UID := $(shell id -u))
+	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up

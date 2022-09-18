@@ -33,11 +33,11 @@ type TypedNamespaceFile struct {
 	nstype species.NamespaceType // foreknown type of Linux kernel namespace
 }
 
-// NewTypedNamespaceFile takes an open(!) os.File plus the type of namespace
+// NewTypedNamespaceFile takes an open(!) *[os.File] plus the type of namespace
 // referenced and returns a new typed namespace reference object. If the
 // namespace type is left zero, then this convenience helper will auto-detect
-// it, unless when on a pre-4.11 kernel, where auto-detection is impossible
-// due to the missing specific ioctl().
+// it, unless when on a pre-4.11 kernel, where auto-detection is impossible due
+// to the missing specific ioctl().
 func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedNamespaceFile, error) {
 	if f != nil && nstype == 0 {
 		t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE)
@@ -99,10 +99,10 @@ func (nsf TypedNamespaceFile) Parent() (relations.Relation, error) {
 }
 
 // OpenTypedReference returns an open and typed namespace reference, from which
-// an OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference
-// is internally used to allow optimizing switching namespaces under the
-// condition that additionally the type of namespace needs to be known at the
-// same time.
+// an OS-level file descriptor can be retrieved using [TypedNamespaceFile.NsFd].
+// OpenTypeReference is internally used to allow optimizing switching namespaces
+// under the condition that additionally the type of namespace needs to be known
+// at the same time.
 func (nsf TypedNamespaceFile) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	return nsf, func() {}, nil
 }

@@ -19,6 +19,8 @@ import ContainerdIcon from 'icons/containers/Containerd'
 import IERuntimeIcon from 'icons/containers/IERuntime'
 import IEAppIcon from 'icons/containers/IEApp'
 
+import PodmanIcon from 'icons/containers/Podman'
+
 //import PodIcon from 'icons/containers/Pod'
 //import K8sPodIcon from 'icons/containers/K8sPod'
 import { Container } from 'models/lxkns'
@@ -30,6 +32,7 @@ const ContainerTypeIcons = {
     'containerd.io': ContainerdIcon,
     'com.siemens.industrialedge.runtime': IERuntimeIcon,
     'com.siemens.industrialedge.app': IEAppIcon,
+    'podman.io': PodmanIcon,
 }
 
 /*

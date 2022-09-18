@@ -31,6 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	"github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/lxkns/test/matcher"
 )
 
@@ -46,9 +47,9 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 		})
 	})
 
-	var names = map[string]struct{}{
-		"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10): {},
-		"pompous_pm" + strconv.FormatInt(GinkgoRandomSeed(), 10):   {},
+	var names = []string{
+		"dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10),
+		"pompous_pm" + strconv.FormatInt(GinkgoRandomSeed(), 10),
 	}
 
 	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
@@ -68,7 +69,7 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 		var err error
 		pool, err = dockertest.NewPool(docksock)
 		Expect(err).NotTo(HaveOccurred())
-		for name := range names {
+		for _, name := range names {
 			_ = pool.RemoveContainerByName(name)
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
@@ -107,6 +108,7 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	})
 
 	It("decorates composer projects", func() {
+		By("watcher whales")
 		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -117,17 +119,21 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 
 		<-mw.Ready()
 
+		By("finding a Docker engine")
 		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
 		Expect(allcontainers).NotTo(BeEmpty())
-		Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
+		var canaries []*model.Container
+		Expect(allcontainers).To(ContainElement(matcher.WithType(moby.Type), &canaries))
+		Expect(len(canaries)).To(BeNumerically(">=", len(names)))
 
-		containers := make([]*model.Container, 0, len(names))
-		for _, container := range allcontainers {
-			if _, ok := names[container.Name]; ok {
-				containers = append(containers, container)
-			}
-		}
-		Expect(containers).To(HaveLen(len(names)))
+		By("decorating the Docker containers")
+		Decorate([]*model.ContainerEngine{canaries[0].Engine}, nil)
+
+		var containers []*model.Container
+		Expect(allcontainers).To(ContainElement(
+			HaveField("Name", BeElementOf(names)),
+			&containers))
+		Expect(containers).To(HaveLen(len(names)), "missing canaries: %#v", allcontainers)
 
 		for _, container := range containers {
 			Expect(container).To(BeInAGroup(WithType(ComposerGroupType)))

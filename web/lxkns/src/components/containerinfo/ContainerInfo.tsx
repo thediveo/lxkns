@@ -21,6 +21,7 @@ import { ContainerTypeIcon } from 'utils/containericon'
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/Pod'
 import IEAppIcon from 'icons/containers/IEApp'
+import PodmanPodIcon from 'icons/containers/PodmanPod'
 
 
 const ContainerInformation = styled('span')(({ theme }) => ({
@@ -100,6 +101,11 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
     if (pod) {
         groupname = pod.name
         groupicon = <PodIcon fontSize="inherit" />
+    }
+    const podmanpod = containerGroup(container, 'io.podman')
+    if (podmanpod) {
+        groupname = podmanpod.name
+        groupicon = <PodmanPodIcon fontSize="inherit" />
     }
 
     const paused = container.paused && <Pause fontSize="inherit" />

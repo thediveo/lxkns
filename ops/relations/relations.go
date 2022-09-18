@@ -17,10 +17,12 @@
 // namespace, parent namespace in case of hierarchical namespaces, et cetera.
 //
 // While the Relation interface strongly relates to the ops package, it is
-// separate in order to avoid import cycles: because the Opener interface needs
-// to reference the Relation interface and we want to keep the Opener interface
-// internal (due to the knowledge required to correctly handle the object and
-// file descriptor lifecycles correctly).
+// separate in order to avoid import cycles, because:
+//   - the [github.com/thediveo/lxkns/ops/Opener] interface needs to reference the
+//     [Relation] interface
+//   - and we want to keep the Opener interface internal (due
+//     to the knowledge required to correctly handle the object and file descriptor
+//     lifecycles correctly).
 package relations
 
 import "github.com/thediveo/lxkns/species"

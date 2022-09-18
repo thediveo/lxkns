@@ -24,7 +24,6 @@ package discover
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -58,7 +57,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 	total := 0
 	for pid := range result.Processes {
 		basepath := fmt.Sprintf(filepath.Join(procfs, "%d/fd"), pid)
-		fdentries, err := ioutil.ReadDir(basepath)
+		fdentries, err := os.ReadDir(basepath)
 		if err != nil {
 			continue
 		}
@@ -66,7 +65,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			// Filter out all open file descriptors which are not symbolic
 			// links; please note that there should only be symbolic links,
 			// but better be careful here.
-			if fdentry.Mode()&os.ModeSymlink == 0 {
+			if fdentry.Type()&os.ModeSymlink == 0 {
 				continue
 			}
 			// Unfortunately, we cannot simply do an os.Readlink() and then an

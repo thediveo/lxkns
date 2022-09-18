@@ -17,11 +17,12 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	wm "github.com/thediveo/whalewatcher/test/matcher"
 )
 
 // WithName succeeds if actual has a Name field and optionally an ID field, and
 // the specified nameid matches at least one of these fields.
 func WithName(nameid string) types.GomegaMatcher {
-	return o.SatisfyAny(o.HaveField("Name", nameid), wm.HaveOptionalField("ID", nameid))
+	return o.SatisfyAny(
+		o.HaveField("Name", nameid),
+		o.And(o.HaveExistingField("ID"), o.HaveField("ID", nameid)))
 }

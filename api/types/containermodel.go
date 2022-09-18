@@ -31,7 +31,7 @@ type ContainerModel struct {
 	Groups           GroupMap
 }
 
-// NewContainerModel returns a new ContainerModel for (un)marshalling,
+// NewContainerModel returns a new [ContainerModel] for (un)marshalling,
 // optionally preparing it from a list of discovered containers (with managing
 // container engines and groups).
 func NewContainerModel(containers []*model.Container) *ContainerModel {
@@ -42,14 +42,14 @@ func NewContainerModel(containers []*model.Container) *ContainerModel {
 	return cm
 }
 
-// ContainerMap wraps a set of discovered model.Containers for JSON
+// ContainerMap wraps a set of discovered [model.Containers] for JSON
 // (un)marshalling.
 type ContainerMap struct {
 	Containers map[uint]*model.Container // map ref IDs to containers.
 	cm         *ContainerModel
 }
 
-// NewContainerMap returns a ContainerMap optionally initialized from a set of
+// NewContainerMap returns a [ContainerMap] optionally initialized from a set of
 // model.Containers.
 func NewContainerMap(cm *ContainerModel, containers []*model.Container) ContainerMap {
 	m := ContainerMap{
@@ -62,7 +62,7 @@ func NewContainerMap(cm *ContainerModel, containers []*model.Container) Containe
 	return m
 }
 
-// ContainerSlice returns the containers stored in the ContainerMap.
+// ContainerSlice returns the containers stored in the [ContainerMap].
 func (m ContainerMap) ContainerSlice() []*model.Container {
 	containers := make([]*model.Container, 0, len(m.Containers))
 	for _, container := range m.Containers {
@@ -82,7 +82,7 @@ func (m ContainerMap) ContainerByRefID(refid uint) *model.Container {
 	return container
 }
 
-// ContainerUnMarshal is a model.Container with additional fields for
+// ContainerUnMarshal is a [model.Container] with additional fields for
 // (un)marshalling the engine and group references, as we cannot directly
 // serialize plain pointers in an information model with lots of cycles.
 type ContainerUnMarshal struct {
@@ -91,7 +91,7 @@ type ContainerUnMarshal struct {
 	*model.Container
 }
 
-// ContainerMarshal basically is ContainerUnMarshal, but brings in its own
+// ContainerMarshal basically is [ContainerUnMarshal], but brings in its own
 // labels field so that we can ensure to never marshal a nil map without having
 // to change the underlaying information model container object.
 type ContainerMarshal struct {
@@ -168,7 +168,7 @@ func (m *ContainerMap) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// EngineMap wraps a set of discovered model.ContainerEngines for JSON
+// EngineMap wraps a set of discovered [model.ContainerEngines] for JSON
 // (un)marshalling.
 type EngineMap struct {
 	enginesByRefID map[uint]*model.ContainerEngine // map ref IDs to engines.
@@ -176,8 +176,8 @@ type EngineMap struct {
 	cm             *ContainerModel
 }
 
-// NewEngineMap creates a new map for ContainerEngines, optionally building
-// using a discovered list of containers (with their ContainerEngines).
+// NewEngineMap creates a new map for [ContainerEngine] objects, optionally
+// building using a discovered list of containers (with their container engines).
 func NewEngineMap(cm *ContainerModel, containers []*model.Container) EngineMap {
 	m := EngineMap{
 		enginesByRefID: map[uint]*model.ContainerEngine{},
@@ -197,7 +197,7 @@ func NewEngineMap(cm *ContainerModel, containers []*model.Container) EngineMap {
 	return m
 }
 
-// EngineByRefID returns the ContainerEngine associated with a (ref) ID,
+// EngineByRefID returns the [ContainerEngine] associated with a (ref) ID,
 // creating a new zero ContainerEngine if necessary.
 func (m EngineMap) EngineByRefID(refid uint) *model.ContainerEngine {
 	engine, ok := m.enginesByRefID[refid]
@@ -209,12 +209,12 @@ func (m EngineMap) EngineByRefID(refid uint) *model.ContainerEngine {
 }
 
 // EngineRefID returns the (ref) ID associated with a particular
-// ContainerEngine.
+// [ContainerEngine].
 func (m EngineMap) EngineRefID(engine *model.ContainerEngine) uint {
 	return m.engineRefIDs[engine]
 }
 
-// EngineMarshal is a model.ContainerEngine with additional fields for
+// EngineMarshal is a [model.ContainerEngine] with additional fields for
 // (un)marshalling the container references, as we cannot directly serialize
 // plain pointers in an information model with lots of cycles.
 type EngineMarshal struct {
@@ -282,14 +282,15 @@ func (m *EngineMap) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GroupMap wraps a set of discovered model.Groups for JSON (un)marshalling.
+// GroupMap wraps a set of discovered [model.Group] objects for JSON
+// (un)marshalling.
 type GroupMap struct {
 	groupsByRefID map[uint]*model.Group // map ref IDs to groups.
 	groupRefIDs   map[*model.Group]uint // associate (ref) IDs with the groups.
 	cm            *ContainerModel
 }
 
-// NewGroupMap creates a new map for Groups.
+// NewGroupMap creates a new map for [Group] objects.
 func NewGroupMap(cm *ContainerModel, containers []*model.Container) GroupMap {
 	m := GroupMap{
 		groupsByRefID: map[uint]*model.Group{},
@@ -311,8 +312,8 @@ func NewGroupMap(cm *ContainerModel, containers []*model.Container) GroupMap {
 	return m
 }
 
-// GroupByRefID returns the ContainerEngine associated with a (ref) ID, creating
-// a new zero Group if necessary.
+// GroupByRefID returns the [model.Group] associated with a (ref) ID, creating a
+// new zero model.Group if necessary.
 func (m GroupMap) GroupByRefID(refid uint) *model.Group {
 	group, ok := m.groupsByRefID[refid]
 	if !ok {
@@ -322,12 +323,12 @@ func (m GroupMap) GroupByRefID(refid uint) *model.Group {
 	return group
 }
 
-// GroupRefID returns the (ref) ID associated with a particular Group.
+// GroupRefID returns the (ref) ID associated with a particular [model.Group].
 func (m GroupMap) GroupRefID(group *model.Group) uint {
 	return m.groupRefIDs[group]
 }
 
-// GroupUnMarshal is a model.Group with additional fields for (un)marshalling
+// GroupUnMarshal is a [model.Group] with additional fields for (un)marshalling
 // the container references, as we cannot directly serialize plain pointers in
 // an information model with lots of cycles.
 type GroupUnMarshal struct {
@@ -335,7 +336,7 @@ type GroupUnMarshal struct {
 	*model.Group
 }
 
-// GroupMarshal is the evil twin to GroupUnmarshal, taking care of nil label
+// GroupMarshal is the evil twin to [GroupUnmarshal], taking care of nil label
 // maps.
 type GroupMarshal struct {
 	GroupUnMarshal

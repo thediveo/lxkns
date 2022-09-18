@@ -41,7 +41,7 @@ func (nsfd NamespaceFd) String() string {
 // Type returns the type of the Linux-kernel namespace referenced by this open
 // file descriptor.
 //
-// ℹ️ A Linux kernel version 4.11 or later is required.
+// 🛈 A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
@@ -60,10 +60,12 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 
 // User returns the owning user namespace the namespace referenced by this open
 // file descriptor. The owning user namespace is returned in form of a
-// NamespaceFile reference. For user namespaces, User() behaves identical to
-// Parent().
+// [TypedNamespaceFile] reference. For user namespaces, User (mostly) behaves
+// identical to [NamespaceFd.Parent]. The only difference is that User returns a
+// [TypedNamespaceFile], whereas [NamespaceFd.Parent] returns an untyped
+// [NamespaceFile] reference.
 //
-// ℹ️ A Linux kernel version 4.9 or later is required.
+// 🛈 A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) User() (relations.Relation, error) {
 	userfd, err := ioctl(int(nsfd), _NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
@@ -77,7 +79,10 @@ func (nsfd NamespaceFd) User() (relations.Relation, error) {
 
 // Parent returns the parent namespace of the Linux-kernel namespace referenced
 // by this open file descriptor. The namespace references must be either of type
-// PID or user. For user namespaces, Parent() and User() behave identical.
+// PID or user. For user namespaces, [NamespaceFd.Parent] and [NamespaceFd.User]
+// mostly behave identical, except that [NamespaceFd.Parent] returns an untyped
+// [NamespaceFile] reference, whereas [NamespaceFd.User] returns a
+// [TypedNamespaceFile] instead.
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) Parent() (relations.Relation, error) {
@@ -91,7 +96,7 @@ func (nsfd NamespaceFd) Parent() (relations.Relation, error) {
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
 // open file descriptor.
 //
-// ℹ️ A Linux kernel version 4.11 or later is required.
+// 🛈 A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) OwnerUID() (int, error) {
 	return ownerUID(nsfd, int(nsfd))
 }
@@ -109,9 +114,10 @@ func fdID(ref relations.Relation, fd int) (species.NamespaceID, error) {
 }
 
 // OpenTypedReference returns an open namespace reference, from which an
-// OS-level file descriptor can be retrieved using NsFd(). OpenTypeReference is
-// internally used to allow optimizing switching namespaces under the condition
-// that additionally the type of namespace needs to be known at the same time.
+// OS-level file descriptor can be retrieved using [NamespaceFd.NsFd].
+// OpenTypeReference is internally used to allow optimizing switching namespaces
+// under the condition that additionally the type of namespace needs to be known
+// at the same time.
 func (nsfd NamespaceFd) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
 	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
 	if err != nil {
@@ -128,7 +134,7 @@ func (nsfd NamespaceFd) OpenTypedReference() (relations.Relation, opener.Referen
 // Please note that in case of a NamespaceFd reference, this returns the
 // original open file descriptor (and doesn't make a copy of it). Aliasing a
 // file descriptor into a NamespaceFd does not take ownership, so control of the
-// lifetime of the aliased file descriptor is still up to its original creatorelations.
+// lifetime of the aliased file descriptor is still up to its original creator.
 // In consequence, the closer returned for a namespace file descriptor will
 // leave the original file descriptor untouched.
 func (nsfd NamespaceFd) NsFd() (fd int, closer opener.FdCloser, err error) {

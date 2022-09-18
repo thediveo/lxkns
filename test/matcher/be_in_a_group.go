@@ -23,7 +23,7 @@ import (
 // the specified option matchers all succeed on a group the actual container
 // belongs to.
 //
-//   Expect(c).To(BeInAGroup(WithName("my_project")))
+//	Expect(c).To(BeInAGroup(WithName("my_project")))
 func BeInAGroup(opts ...types.GomegaMatcher) types.GomegaMatcher {
 	return withContainer("BeInAGroup",
 		o.HaveField("Groups", o.ContainElement(o.SatisfyAll(opts...))))

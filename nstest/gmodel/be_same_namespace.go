@@ -22,10 +22,10 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-// BeSameNamespace returns a GomegaMatcher which compares an actual namespace
-// to an expected namespace. A namespace is anything supporting at least the
-// model.Namespace interface, as well as optionally (and depending on the type
-// of namespace) model.Hierarchy and model.Ownership.
+// BeSameNamespace returns a [types.GomegaMatcher] which compares an actual
+// namespace to an expected namespace. A namespace is anything supporting at
+// least the [model.Namespace] interface, as well as optionally (and depending
+// on the type of namespace) [model.Hierarchy] and [model.Ownership].
 func BeSameNamespace(expectedns interface{}) types.GomegaMatcher {
 	return &beSameNamespaceMatcher{expected: expectedns}
 }

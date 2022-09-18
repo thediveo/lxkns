@@ -16,8 +16,8 @@ package filter
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/enumflag"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/enumflag/v2"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -66,13 +66,10 @@ var nsFilterIds = map[species.NamespaceType][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "filter",
-		Group: cliplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: FilterSetupCLI},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("filter"),
+		plugger.WithGroup(cliplugin.Group),
+		plugger.WithNamedSymbol("SetupCLI", FilterSetupCLI))
 }
 
 // FilterSetupCLI adds the "--filter" flag to the specified command. The filter

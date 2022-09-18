@@ -17,7 +17,6 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	wm "github.com/thediveo/whalewatcher/test/matcher"
 )
 
 // WithType succeeds if actual has a Type field and optionally a Flavor field,
@@ -25,5 +24,7 @@ import (
 // want to check only for the specific Type but not accept it as a Flavor, then
 // use the WithStrictType matcher instead.
 func WithType(typeflavor string) types.GomegaMatcher {
-	return o.SatisfyAny(o.HaveField("Type", typeflavor), wm.HaveOptionalField("Flavor", typeflavor))
+	return o.SatisfyAny(
+		o.HaveField("Type", typeflavor),
+		o.And(o.HaveExistingField("Flavor"), o.HaveField("Flavor", typeflavor)))
 }

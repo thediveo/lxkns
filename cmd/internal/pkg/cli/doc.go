@@ -1,5 +1,4 @@
 /*
-
 Package cli handles registering CLI flags via a plug-in mechanism. Additionally,
 optional CLI flag handling can be carried out after the CLI flags have been
 parsed and just right before the selected command is about to run.
@@ -12,8 +11,8 @@ package for a working example.
 
 Plug-ins in the "cli" group should export these functions:
 
-    * SetupCLI: a "func(*cobra.Command)" registering CLI one or more flags.
-    * BeforeRun: an optional "func() error" which is called before the command runs.
+  - SetupCLI: a "func(*cobra.Command)" registering CLI one or more flags.
+  - BeforeRun: an optional "func() error" which is called before the command runs.
 
 Registration of the exported functions should be done, as usual, in an init()
 function. For better modularity, multiple such registration-related init()
@@ -29,6 +28,5 @@ object and is ready for registering flags.
 
 BeforeCommand() should be called from the PersistentPreRunE hook function of
 your cmd package's root command object.
-
 */
 package cli

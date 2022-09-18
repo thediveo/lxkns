@@ -26,16 +26,18 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+//revive:disable:var-naming
+
 /*
-   Ugly IOCTL stuff.
+Ugly IOCTL stuff.
 
-   ATTENTION: the following definitions hold only for the "asm-generic"
-   platforms, such as x86, arm, and others. Currently the only platforms
-   having a different ioctl request field mapping are: alpha, mips, powerpc,
-   and sparc.
+ATTENTION: the following definitions hold only for the "asm-generic"
+platforms, such as x86, arm, and others. Currently the only platforms
+having a different ioctl request field mapping are: alpha, mips, powerpc,
+and sparc.
 
-   Our const definitions here come from:
-   https://elixir.bootlin.com/linux/latest/source/include/uapi/asm-generic/ioctl.h
+Our const definitions here come from:
+https://elixir.bootlin.com/linux/latest/source/include/uapi/asm-generic/ioctl.h
 */
 const _IOC_NRBITS = 8
 const _IOC_TYPEBITS = 8
@@ -48,9 +50,11 @@ const _IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS
 
 const _IOC_NONE = uint(0)
 
-// Returns an ioctl() request value, calculated from the specific ioctl call
+// Returns an [ioctl(2)] request value, calculated from the specific ioctl call
 // properties: parameter in/out direction, type of ioctl, command number, and
 // finally parameter size.
+//
+// [ioctl(2)]: https://man7.org/linux/man-pages/man2/ioctl.2.html
 func _IOC(dir, ioctype, nr, size uint) uint {
 	return (dir << _IOC_DIRSHIFT) | (ioctype << _IOC_TYPESHIFT) | (nr << _IOC_NRSHIFT) | (size << _IOC_SIZESHIFT)
 }
@@ -59,8 +63,10 @@ func _IO(ioctype, nr uint) uint {
 	return _IOC(_IOC_NONE, ioctype, nr, 0)
 }
 
-// Linux kernel ioctl() command for namespace relationship queries
-// https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/nsfs.h
+// Linux kernel [ioctl(2)] command for [namespace relationship queries].
+//
+// [ioctl(2)]: https://man7.org/linux/man-pages/man2/ioctl.2.html
+// [namespace relationship queries]: https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/nsfs.h
 const _NSIO = 0xb7
 
 const (

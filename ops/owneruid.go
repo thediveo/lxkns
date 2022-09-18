@@ -37,7 +37,7 @@ func ownerUID(ref relations.Relation, fd int) (int, error) {
 	// careful with the Syscall(), giving it the correct uint32 -- even on
 	// 64bit Linux. See also:
 	// https://elixir.bootlin.com/linux/latest/source/include/linux/types.h#L32
-	var uid uint32 = ^uint32(0) - 42
+	uid := ^uint32(0) - 42
 	_, _, errno := unix.Syscall(
 		unix.SYS_IOCTL, uintptr(fd),
 		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid))) // #nosec G103

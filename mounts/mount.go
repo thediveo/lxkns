@@ -33,15 +33,15 @@ import (
 // prefix path.
 type MountPathMap map[string]*MountPath
 
-// MountPath represents a path name (in the VFS) where there are one or even
-// multiple mount points. MountPaths form a ("sparse") hierarchy of mount paths
-// with references to their nearest parent mount path (that is, longest path
-// prefix) as well as child mount paths.
+// MountPath represents a path name to a “place” in the VFS where there are
+// one or even multiple mount points. MountPaths form a (“sparse”) hierarchy
+// of mount paths with references to their nearest parent mount path (that is,
+// longest path prefix) as well as child mount paths.
 //
 // For instance, given the mount paths "/a" and "/a/b/c" the model only stored
 // "/a" and "/a/b/c", but there is no mount path "/a/b".
 //
-// Use MountPath.Path() to get the mount path of a MountPath object.
+// Use [MountPath.Path] to get the mount path of a MountPath object.
 type MountPath struct {
 	Mounts   []*MountPoint `json:"mounts"` // one or several mount points at this same (VFS) path.
 	Parent   *MountPath    `json:"-"`      // Parent mount path, except for root mount path.
@@ -51,7 +51,7 @@ type MountPath struct {
 // MountPoint contains information about a single mount point with additional
 // object references to parent and child mount points.
 //
-// MountInfo objects form a hierarchical tree that is separate from the mount
+// MountPoint objects form a hierarchical tree that is separate from the mount
 // path tree. The parent/child references base on the mount and parent IDs (from
 // /proc/$PID/mountinfo), instead of mount paths.
 type MountPoint struct {
@@ -61,7 +61,7 @@ type MountPoint struct {
 	Children          []*MountPoint `json:"-"`      // child mount points, derived from mount and parent IDs.
 }
 
-// Path returns the path name of a MountPath object.
+// Path returns the path name of a [MountPath] object.
 func (p MountPath) Path() string {
 	// As all mount points of this MountPath share the same path name, we don't
 	// store the path explicitly but instead simply take it from the first

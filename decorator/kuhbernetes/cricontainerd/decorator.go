@@ -15,7 +15,7 @@
 package cricontainerd
 
 import (
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/log"
@@ -24,19 +24,16 @@ import (
 )
 
 // containerKind specifies the kind of container at the engine level, in order
-// to differentiate between user containers and infrastructure "sandbox"
+// to differentiate between user containers and infrastructure “sandbox”
 // containers that haven't been specified by users (deployments).
 const containerKindLabel = "io.cri-containerd.kind"
 
 // Register this Decorator plugin.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "cri-containerd",
-		Group: decorator.PluginGroup,
-		Symbols: []plugger.Symbol{
-			decorator.Decorate(Decorate),
-		},
-	})
+	plugger.Register(
+		plugger.WithName("cri-containerd"),
+		plugger.WithGroup(decorator.PluginGroup),
+		plugger.WithSymbol(decorator.Decorate(Decorate)))
 }
 
 // Decorate decorates the discovered Docker containers with pod groups, where

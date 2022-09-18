@@ -19,9 +19,9 @@ package style
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/enumflag"
+	"github.com/thediveo/enumflag/v2"
 	asciitree "github.com/thediveo/go-asciitree"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -54,14 +54,11 @@ var treeStyleIds = map[TreeStyle][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "treestyle",
-		Group: cliplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: TreeStyleSetupCLI},
-			plugger.NamedSymbol{Name: "BeforeRun", Symbol: TreeStyleBeforeRun},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("treestyle"),
+		plugger.WithGroup(cliplugin.Group),
+		plugger.WithNamedSymbol("SetupCLI", TreeStyleSetupCLI),
+		plugger.WithNamedSymbol("BeforeRun", TreeStyleBeforeRun))
 }
 
 // TreeStyleSetupCLI is a plugin function that registers the CLI "treestyle"

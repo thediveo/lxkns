@@ -23,7 +23,7 @@ import (
 // container is grouped by a Kubernetes/k8s pod for which all the option
 // matchers also succeed.
 //
-//   Expect(c).To(BeInAPod(WithName("default/mypod")))
+//	Expect(c).To(BeInAPod(WithName("default/mypod")))
 func BeInAPod(opts ...types.GomegaMatcher) types.GomegaMatcher {
 	return withContainer("BeInAPod",
 		o.HaveField("Groups",

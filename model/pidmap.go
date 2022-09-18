@@ -14,7 +14,8 @@
 
 package model
 
-// PIDMapper translates PIDs from one PID namespace to another.
+// PIDMapper translates PIDs ([model.PIDType]) from one PID namespace to
+// another.
 type PIDMapper interface {
 	// Translate translates a PID "pid" in PID namespace "from" to the
 	// corresponding PID in PID namespace "to". Returns 0, if PID "pid" either

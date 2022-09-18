@@ -25,17 +25,17 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// SwitchNamespaceErr represents an error that occured while trying to switch
+// SwitchNamespaceErr represents an error that occurred while trying to switch
 // into a different namespace.
 //
-// Check for the occurence of an SwitchNamespaceErr using errors.As, for
+// Check for the occurrence of an SwitchNamespaceErr using [errors.As], for
 // instance:
 //
-//     err := Visit(fn, nsrefs)
-//     var nserr SwitchNamespaceErr
-//     if errors.As(err, &nserr) {
-//         ...
-//     }
+//	err := Visit(fn, nsrefs)
+//	var nserr SwitchNamespaceErr
+//	if errors.As(err, &nserr) {
+//	    ...
+//	}
 type SwitchNamespaceErr struct {
 	msg string // message including wrapped error's message
 	err error  // wrapped error
@@ -52,18 +52,18 @@ func (e *SwitchNamespaceErr) Unwrap() error {
 	return e.err
 }
 
-// RestoreNamespaceError represents an error that occured while trying to
-// restore the original namespaces after Visit'ing a function with (some)
+// RestoreNamespaceErr represents an error that occurred while trying to
+// restore the original namespaces after [Visit]'ing a function with (some)
 // switched Linux-kernel namespaces.
 //
-// Check for the occurence of an RestoreNamespaceError using errors.As, for
+// Check for the occurrence of an RestoreNamespaceError using [errors.As], for
 // instance:
 //
-//     err := Visit(fn, nsrefs)
-//     var nserr RestoreNamespaceError
-//     if errors.As(err, &nserr) {
+//	err := Visit(fn, nsrefs)
+//	var nserr RestoreNamespaceError
+//	if errors.As(err, &nserr) {
 //	       ...
-//     }
+//	}
 type RestoreNamespaceErr struct {
 	msg string // message including wrapped error's message
 	err error  // wrapped error
@@ -85,8 +85,8 @@ func (e *RestoreNamespaceErr) Unwrap() error {
 // returns, its Go routine will also terminate and the underlying OS thread will
 // be destroyed. This avoids subtle problems further down the road in case there
 // were namespace switching issues which overwise would carry over into any code
-// executed after invoking Go(). Go() returns nil if switching namespaces
-// succeeded, else an error. Please note that Go() returns as soon as switching
+// executed after invoking [Go]. Go returns nil if switching namespaces
+// succeeded, else an error. Please note that Go returns as soon as switching
 // namespaces has finished. The specified function is then run in its own Go
 // routine.
 func Go(f func(), nsrefs ...relations.Relation) error {
@@ -152,23 +152,23 @@ func Execute(f func() interface{}, nsrefs ...relations.Relation) (interface{}, e
 }
 
 // Visit locks the OS thread executing the current go routine, then switches the
-// thread into the specified namespaces, and executes f(). f must be a function
+// thread into the specified namespaces, and executes f. f must be a function
 // taking no arguments and returning nothing. Afterwards, it switches the
 // namespaces back to their original settings and unlocks the underlying OS
 // thread.
 //
 // If switching namespaces back fails, then the OS thread is tainted and will
-// remain locked. As simple as this sounds, Visit() is a dangerous thing: as
+// remain locked. As simple as this sounds, Visit can be a dangerous thing: as
 // long as the wheels keep spinning we're in the sunlit uplands. But as soon as
-// the gears jam ... good luck. Visit() mainly exists for those optimizations
+// the gears jam ... good luck. Visit mainly exists for those optimizations
 // where creating new OS threads is deemed to much overhead and namespace
 // switch-back usually is possible. However, such uses must be prepared for
-// Visit() to fail and then act accordingly: namely, terminate the Go routine so
+// Visit to fail and then act accordingly: namely, terminate the Go routine so
 // the runtime can kill its locked OS thread.
 //
-// Visit() should never be called from the main Go routine, as any failure in
+// Visit should never be called from the main Go routine, as any failure in
 // switching namespaces leaves us with a tainted OS thread for the main Go
-// routine. Yuk!
+// routine and terminating the main Go routine isn't a good idea either. Yuk!
 func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 	runtime.LockOSThread()
 	tid := unix.Gettid()

@@ -16,7 +16,7 @@ package moby
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
@@ -25,40 +25,35 @@ import (
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "moby",
-		Group: engineplugin.Group,
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "Watcher", Symbol: engineplugin.NewWatcher(Watcher)},
-		},
-	})
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "moby",
-		Group: "cli",
-		Symbols: []plugger.Symbol{
-			plugger.NamedSymbol{Name: "SetupCLI", Symbol: MobySetupCLI},
-		},
-	})
+	plugger.Register(
+		plugger.WithName("moby"),
+		plugger.WithGroup(engineplugin.Group),
+		plugger.WithNamedSymbol("Watchers", engineplugin.NewWatchers(Watchers)))
+	plugger.Register(
+		plugger.WithName("moby"),
+		plugger.WithGroup("cli"),
+		plugger.WithNamedSymbol("SetupCLI", SetupCLI))
 }
 
-// MobySetupCLI registers the Docker-engine specific CLI options.
-func MobySetupCLI(cmd *cobra.Command) {
+// SetupCLI registers the Docker-engine specific CLI options.
+func SetupCLI(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("docker", "unix:///var/run/docker.sock",
 		"Docker engine API socket path")
 	cmd.PersistentFlags().Bool("nodocker", false, "do not consult a Docker engine")
 }
 
-// Watcher returns a moby engine watcher taking the supplied optional CLI flags
-// into consideration. If this engine shouldn't be watched then it returns a nil
-// watcher.
-func Watcher(cmd *cobra.Command) (*engineplugin.NamedWatcher, error) {
+// Watchers returns a moby engine watcher taking the supplied optional CLI flags
+// into consideration. If this engine shouldn't be watched then it returns nil.
+func Watchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
 	if nodocker, _ := cmd.PersistentFlags().GetBool("nodocker"); !nodocker {
 		apipath, _ := cmd.PersistentFlags().GetString("docker")
 		w, err := moby.New(apipath, nil)
 		if err != nil {
 			return nil, err
 		}
-		return &engineplugin.NamedWatcher{Watcher: w, Name: "Docker"}, nil
+		return []*engineplugin.NamedWatcher{
+			{Watcher: w, Name: "Docker"},
+		}, nil
 	}
 	return nil, nil
 }

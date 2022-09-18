@@ -15,7 +15,7 @@
 package composer
 
 import (
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
@@ -29,15 +29,12 @@ const ComposerProjectLabel = "com.docker.compose.project"
 // ComposerGroupType identifies container groups representing composer projects.
 const ComposerGroupType = ComposerProjectLabel
 
-// Register this Decorator plugin.
+// Register this decorator plugin.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "composer",
-		Group: decorator.PluginGroup,
-		Symbols: []plugger.Symbol{
-			decorator.Decorate(Decorate),
-		},
-	})
+	plugger.Register(
+		plugger.WithName("composer"),
+		plugger.WithGroup(decorator.PluginGroup),
+		plugger.WithSymbol(decorator.Decorate(Decorate)))
 }
 
 // Decorate decorates the discovered Docker (and nerdctl) containers with

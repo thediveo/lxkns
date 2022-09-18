@@ -20,7 +20,7 @@ import { NamespaceIcon } from 'icons/Namespace'
 import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'
 
-import { Namespace } from 'models/lxkns'
+import { Namespace, ProcessMap } from 'models/lxkns'
 import { keyframes } from '@mui/system'
 
 
@@ -95,10 +95,31 @@ const PathsSeparator = styled(DoubleArrowIcon)(({ theme }) => ({
     paddingLeft: '0.2em',
 }))
 
+/**
+ * Given a file system path returns the corresponding process name if
+ * applicable, otherwise returns undefined.
+ *
+ * @param path file system path
+ */
+const ProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
+    if (!processes || !path.startsWith('/proc/')) return
+    const fields = path.split('/')
+    if (fields.length < 3) return
+    const process = processes[fields[2]]
+    if (!process) return
+    return process.name
+}
+
+const FancyProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
+    const processName = ProcessNameOfProcPath(path, processes)
+    return processName ? ` [${processName}]` : undefined
+}
 
 export interface NamespaceRefProps {
     /** namespace object, with type and reference information. */
     namespace: Namespace
+    /** information about all processes (for some render support) */
+    processes?: ProcessMap,
     /** optional CSS class name(s) for the badge. */
     className?: string
 }
@@ -128,7 +149,7 @@ export interface NamespaceRefProps {
  * the parent of a PID or user namespace. In lxkns, such "unreferenced"
  * namespaces thus don't have their own explicit reference, so no path.
  */
-export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
+export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefProps) => {
     const isProcfdPath = namespace.reference &&
         namespace.reference[0].startsWith('/proc/') &&
         namespace.reference[0].includes('/fd/')
@@ -138,6 +159,7 @@ export const NamespaceRef = ({ namespace, className }: NamespaceRefProps) => {
         .map((refpath, idx) => [
             idx > 0 ? <PathsSeparator key={`pathssep-${idx}`} fontSize="inherit" /> : undefined,
             <span key={idx} className="bindmount">{refpath}</span>,
+            FancyProcessNameOfProcPath(refpath, processes),
         ]).flat()
 
     return (

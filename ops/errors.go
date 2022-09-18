@@ -22,16 +22,17 @@ import (
 
 // InvalidNamespaceError wraps an underlying OS-related error when dealing with
 // Linux-kernel namespaces. Due to Golang's attempt at abstracting things, this
-// might often be an os.PathError, in its turn wrapping a syscall error, such as
-// syscall.EBADF, syscall.EINVAL, syscall.EPERM, et cetera.
+// might often be an [os.PathError], in its turn wrapping a syscall error, such as
+// [syscall.EBADF], [syscall.EINVAL], [syscall.EPERM], et cetera.
 type InvalidNamespaceError struct {
 	Ref string // textual representation of a namespace reference.
 	Err error  // wrapped OS-level error.
 }
 
-// NamespaceOperationError wraps an invalid namespace operation, giving
-// information about the failed operation both on a high level, as well as the
-// underlying invalid namespace and OS-level errors.
+// NamespaceOperationError wraps an invalid namespace operation (in form of an
+// [InvalidNamespaceError]), giving information about the failed operation both
+// on a high level, as well as the underlying invalid namespace and OS-level
+// errors.
 type NamespaceOperationError struct {
 	InvalidNamespaceError
 	Op string // failed namespace ioctl operation

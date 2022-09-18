@@ -30,10 +30,11 @@ import (
 )
 
 // NamespaceTypeIndex is an array index type for Linux kernel namespace types.
-// It is used with the AllNamespaces type, which is an array of namespace
-// maps, one map "id->namespace object" for each type of Linux kernel
-// namespace. NamespaceTypeIndex must not be confused with the Linux' kernel
-// namespace clone() syscall constants as typed as NamespaceType instead.
+// It is used with the [model.AllNamespaces] type, which is an array of
+// namespace maps, one map “id->namespace object” for each type of Linux
+// kernel namespace. NamespaceTypeIndex must not be confused with the Linux'
+// kernel namespace clone() syscall constants as the latter are typed as
+// [species.NamespaceType] instead.
 type NamespaceTypeIndex int
 
 // Set of indices into AllNamespaces arrays, one for each type of Linux kernel
@@ -52,7 +53,7 @@ const (
 )
 
 // typeIndices maps Linux' kernel namespace clone() syscall constants to
-// their corresponding AllNamespaces array indices.
+// their corresponding [model.AllNamespaces] array indices.
 var typeIndices = map[species.NamespaceType]NamespaceTypeIndex{
 	species.CLONE_NEWNS:     MountNS,
 	species.CLONE_NEWCGROUP: CgroupNS,
@@ -64,8 +65,8 @@ var typeIndices = map[species.NamespaceType]NamespaceTypeIndex{
 	species.CLONE_NEWTIME:   TimeNS,
 }
 
-// TypesByIndex maps Allnamespaces array indices to their corresponding Linux'
-// kernel namespace clone() syscall constants.
+// TypesByIndex maps [model.Allnamespaces] array indices to their corresponding
+// Linux' kernel namespace clone() syscall constants.
 var TypesByIndex = [NamespaceTypesCount]species.NamespaceType{
 	species.CLONE_NEWNS,
 	species.CLONE_NEWCGROUP,
@@ -77,7 +78,8 @@ var TypesByIndex = [NamespaceTypesCount]species.NamespaceType{
 	species.CLONE_NEWTIME,
 }
 
-// TypeIndexLexicalOrder contains Namespace type indices in lexical order.
+// TypeIndexLexicalOrder contains [NamespaceTypeIndex] type indices in lexical
+// order.
 var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 	CgroupNS,
 	IPCNS,
@@ -89,9 +91,9 @@ var TypeIndexLexicalOrder = [NamespaceTypesCount]NamespaceTypeIndex{
 	UTSNS,
 }
 
-// TypeIndex returns the AllNamespaces array index corresponding with the
-// specified Linux' kernel clone() syscall namespace constant. For instance,
-// for CLONE_NEWNET the index NetNS is then returned.
+// TypeIndex returns the [model.AllNamespaces] array index corresponding with
+// the specified Linux' kernel clone() syscall namespace constant. For instance,
+// for [species.CLONE_NEWNET] the index [model.NetNS] is then returned.
 func TypeIndex(nstype species.NamespaceType) NamespaceTypeIndex {
 	if idx, ok := typeIndices[nstype]; ok {
 		return idx
@@ -99,22 +101,21 @@ func TypeIndex(nstype species.NamespaceType) NamespaceTypeIndex {
 	return -1 // return an invalid index
 }
 
-// AllNamespaces contains separate NamespaceMaps for all types of Linux kernel
-// namespaces. This type allows package functions to work on multiple
-// namespace types simultaneously in order to optimize traversal of the /proc
-// filesystem, bind-mounts, et cetera. AllNamespaces thus stores "all"
-// namespaces that could be discovered in the system, subject to discovery
-// filtering.
+// AllNamespaces contains separate [model.NamespaceMaps] for all types of Linux kernel
+// namespaces. This type allows package functions to work on multiple namespace
+// types simultaneously in order to optimize traversal of the /proc filesystem,
+// bind-mounts, et cetera. [model.AllNamespaces] thus stores “all” namespaces
+// that could be discovered in the system, subject to discovery filtering.
 type AllNamespaces [NamespaceTypesCount]NamespaceMap
 
-// NamespacesSet contains a Namespace reference of each type exactly once. For
-// instance, it represents the set of 7 namespaces a process will always be
-// joined ("attached", ...) to. Processes cannot be not attached to each type
-// of Linux kernel namespace.
+// NamespacesSet contains a [model.Namespace] reference of each type exactly
+// once. For instance, it represents the set of 7 namespaces a process will
+// always be joined (“attached”, ...) to. Processes cannot be not attached to
+// each type of Linux kernel namespace.
 type NamespacesSet [NamespaceTypesCount]Namespace
 
-// NamespaceMap indexes a bunch of Namespaces by their identifiers. Usually,
-// namespace indices will contain only namespaces of the same type.
+// NamespaceMap indexes a bunch of [model.Namespaces] by their identifiers.
+// Usually, namespace indices will contain only namespaces of the same type.
 type NamespaceMap map[species.NamespaceID]Namespace
 
 // Namespace represents a Linux kernel namespace in terms of its unique
@@ -174,7 +175,7 @@ type Namespace interface {
 // by the previous element.
 //
 // If this does sound moonstruck, then it most probably is. But didn't we said
-// "in every nook and cranny"?
+// “in every nook and cranny”?
 type NamespaceRef []string
 
 // String returns the textual representation of a NamespaceRef in form of a
@@ -184,9 +185,9 @@ func (r NamespaceRef) String() string {
 }
 
 // NamespaceStringer describes a namespace either in its descriptive form when
-// using the well-known String() method, or in a terse format when going for
-// TypeIDString(), which only describes the type and identifier of a
-// namespace.
+// using the well-known [fmt.Stringer.String] method, or in a terse format when
+// going for [model.NamespaceStringer.TypeIDString], which only describes the
+// type and identifier of a namespace.
 type NamespaceStringer interface {
 	fmt.Stringer
 	// TypeIDString describes this instance of a Linux kernel namespace just by
@@ -207,7 +208,8 @@ type Hierarchy interface {
 }
 
 // Ownership informs about the owning user ID, as well as the namespaces owned
-// by a specific user namespace. Only user namespaces can execute Ownership.
+// by a specific user namespace. Only user namespaces provide and implement
+// Ownership.
 type Ownership interface {
 	// UID returns the user ID of the process that created this user namespace.
 	UID() int
@@ -218,8 +220,8 @@ type Ownership interface {
 	Ownings() AllNamespaces
 }
 
-// NewAllNamespaces returns a fully initialized AllNamespaces object, ready to
-// be filled with funny namespaces, such as "Kevin" and "Chantal".
+// NewAllNamespaces returns a fully initialized [model.AllNamespaces] object,
+// ready to be filled with funny namespaces, such as “Kevin” and “Chantal”.
 func NewAllNamespaces() *AllNamespaces {
 	allns := &AllNamespaces{}
 	for idx := NamespaceTypeIndex(0); idx < NamespaceTypesCount; idx++ {

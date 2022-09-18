@@ -1,0 +1,55 @@
+version: '2.4'
+services: 
+    userlxkns:
+        image: localhost/userlxkns:latest
+        read_only: true
+        build: 
+            context: ../..
+            dockerfile: deployments/podman/Dockerfile
+        command:
+            - "/lxkns"
+            - "--initialcgroup"
+            - "--http=[::]:5100"
+            - "--debug"
+            - "--nodocker"
+            - "--nocontainerd"
+            - "--podman=unix:///run/podman/podman.sock"
+        volumes:
+            - /run/user/${UID}/podman/podman.sock:/run/podman/podman.sock
+        ports:
+            - "5100:5100"
+        user: "65534"
+        security_opt:
+            # apparmor only accepts a profile name, which must have been loaded
+            # by the system admin. You might want to use the lxkns-apparmor
+            # profile to be found in this directory.
+            - apparmor:unconfined #- apparmor:lxkns
+            # Please note that Docker's default container seccomp profile is
+            # adaptive: it allows all those syscalls for which the process has
+            # matching capabilities. In consequence, this Docker default seccomp
+            # profile thus does not interfere with lxkns. However, we still want
+            # to slightly curb the unneeded parts of the powers bestowed upon us
+            # by especially CRAP_SYS_ADMIN and CAP_SYS_PTRACE...
+            # - seccomp:lxkns-seccomp.json
+        # Clean all default capabilities Docker might otherwise grant us and
+        # several of them we don't need; add only those capabilities we really
+        # need, such as CAP_WORLD_DOMINATION.
+        cap_drop:
+            - ALL
+        cap_add:
+            - SYS_ADMIN       # change namespaces
+            - SYS_CHROOT      # change mount namespaces
+            - SYS_PTRACE      # access nsfs namespace information
+            - DAC_READ_SEARCH # for fully discovering bind-mounted namespaces
+            - DAC_OVERRIDE    # for accessing the containerd API socket
+        # We need the full PID view for correct scanning.
+        pid: host
+        # when operating in a "pure" unified cgroup hierarchy without any traces
+        # of v1+v2 hybrid hierarchies, then Docker now defaults to creating
+        # private cgroup namespaces for containers. Of course, this is exactly
+        # what defeats the purpose of system diagnosis containers, such as
+        # lxkns. Unfortunately, the compose definition yet doesn't support
+        # setting the cgroup namespace mode "private" or "host" (it simply
+        # doesn't exist).
+        #
+        # cgroup: host

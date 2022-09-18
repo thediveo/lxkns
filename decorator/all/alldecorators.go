@@ -1,8 +1,6 @@
 /*
-
 Package all imports and activates all lxkns (container) decorator plugins,
 activating them during discoveries.
-
 */
 package all
 

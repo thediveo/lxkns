@@ -108,7 +108,7 @@ func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cm
 	// references, denied access, et cetera. So we need to deal with the pause
 	// process prematurely terminating while we wait for the "OK" that will
 	// never come...
-	okch := make(chan bool)
+	okch := make(chan bool, 1)       // decouple sender from (maybe missing) consumer.
 	waiterrch := make(chan error, 1) // decouple sender from (maybe missing) consumer.
 	go func() {
 		r := bufio.NewReader(childout)

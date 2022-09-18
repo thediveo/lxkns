@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/log"
@@ -30,13 +30,10 @@ import (
 
 // Register this Decorator plugin.
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "dockershim",
-		Group: decorator.PluginGroup,
-		Symbols: []plugger.Symbol{
-			decorator.Decorate(Decorate),
-		},
-	})
+	plugger.Register(
+		plugger.WithName("dockershim"),
+		plugger.WithGroup(decorator.PluginGroup),
+		plugger.WithSymbol(decorator.Decorate(Decorate)))
 }
 
 const sandboxName = "POD"

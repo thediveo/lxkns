@@ -147,7 +147,11 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === "user" && ns.parent === null)
             .sort(compareNamespaceById)
-            .map(ns => <UserNamespaceTreeItem key={ns.nsid.toString()} namespace={ns} />)
+            .map(ns => <UserNamespaceTreeItem
+                key={ns.nsid.toString()}
+                namespace={ns}
+                processes={discovery.processes}
+            />)
     ), [discovery])
 
     return (

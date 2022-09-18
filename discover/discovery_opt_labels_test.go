@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/ory/dockertest/v3"
-	"github.com/thediveo/go-plugger"
+	"github.com/thediveo/go-plugger/v2"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/model"
@@ -37,13 +37,10 @@ const testlabelname = "decorator-discovery-label-test"
 const testlabelvalue = "test-value"
 
 func init() {
-	plugger.RegisterPlugin(&plugger.PluginSpec{
-		Name:  "decorator-label-test",
-		Group: decorator.PluginGroup,
-		Symbols: []plugger.Symbol{
-			decorator.Decorate(Decorate),
-		},
-	})
+	plugger.Register(
+		plugger.WithName("decorator-label-test"),
+		plugger.WithGroup(decorator.PluginGroup),
+		plugger.WithSymbol(decorator.Decorate(Decorate)))
 }
 
 func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
