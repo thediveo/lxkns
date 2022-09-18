@@ -124,6 +124,7 @@ systempodman: ## builds lxkns using podman system service
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	# podman-compose doesn't support "pid:host" which we absolutely need.
 	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
 
 systempodman-down: ## removes any deployed lxkns service
@@ -132,6 +133,6 @@ systempodman-down: ## removes any deployed lxkns service
 userpodman: ## builds lxkns using podman system service
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-	podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
 	$(eval UID := $(shell id -u))
-	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p lxkns -f deployments/userpodman/docker-compose.yaml up
+	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up

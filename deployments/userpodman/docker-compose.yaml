@@ -1,13 +1,15 @@
 version: '2.4'
 services: 
-    lxkns:
-        image: localhost/lxkns:latest
+    userlxkns:
+        image: localhost/userlxkns:latest
         read_only: true
         build: 
             context: ../..
             dockerfile: deployments/podman/Dockerfile
         command:
             - "/lxkns"
+            - "--initialcgroup"
+            - "--http=[::]:5100"
             - "--debug"
             - "--nodocker"
             - "--nocontainerd"
@@ -15,7 +17,7 @@ services:
         volumes:
             - /run/user/${UID}/podman/podman.sock:/run/podman/podman.sock
         ports:
-            - "5100:5010"
+            - "5100:5100"
         user: "65534"
         security_opt:
             # apparmor only accepts a profile name, which must have been loaded

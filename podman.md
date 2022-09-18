@@ -34,8 +34,15 @@ containerd), but also on the users rootless container workloads.
 As `podman-compose` does not support deploying services with `pid: host`, make
 sure that you have Docker with the "compose" plugin installed.
 
-Then deploy with `make systempodman`. This will deploy `lxkns` using the system
-Podman ~~daemon~~ service using additional Podman-related CLI arguments.
+Then deploy:
+
+```bash
+make systempodman
+```
+
+...this will deploy `lxkns` using the system Podman ~~daemon~~ service using
+additional Podman-related CLI arguments. Then navigate to
+`http://localhost:5010`.
 
 - `--podman=unix:///proc/1/root/run/podman/podman.sock`: enables discovering
   containers from the system Podman ~~daemon~~ service.
@@ -51,5 +58,13 @@ Podman ~~daemon~~ service using additional Podman-related CLI arguments.
 
 Deploying `lxkns` as a rootless per-user service is also possible and naturally
 gives only a limited view into that user's rootless container workload.
+
+To deploy:
+
+```bash
+make userpodman
+```
+
+Then navigate to `http://localhost:5100`.
 
 ![user's rootless workload](docs/_images/user-podman-rootless-containers.png)
