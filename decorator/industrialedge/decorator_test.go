@@ -31,6 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	"github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/lxkns/test/matcher"
 )
 
@@ -114,6 +115,7 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	})
 
 	It("decorates IE apps and IED runtime", func() {
+		By("watcher whales")
 		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -124,10 +126,15 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 
 		<-mw.Ready()
 
+		By("finding a Docker engine")
 		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
 		Expect(allcontainers).NotTo(BeEmpty())
-		composer.Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
-		Decorate([]*model.ContainerEngine{allcontainers[0].Engine}, nil)
+
+		var canaries []*model.Container
+		Expect(allcontainers).To(ContainElement(matcher.WithType(moby.Type), &canaries))
+
+		composer.Decorate([]*model.ContainerEngine{canaries[0].Engine}, nil)
+		Decorate([]*model.ContainerEngine{canaries[0].Engine}, nil)
 
 		containers := make([]*model.Container, 0, len(names))
 		for _, container := range allcontainers {
