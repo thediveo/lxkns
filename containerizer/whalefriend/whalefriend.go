@@ -20,7 +20,9 @@ package whalefriend
 import (
 	"context"
 
+	"github.com/gammazero/workerpool"
 	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 )
@@ -28,22 +30,51 @@ import (
 // WhaleFriend is a containerizer internally backed by one or more
 // Whalewatchers, that is, [watcher.Watcher] container observers.
 type WhaleFriend struct {
-	watchers []watcher.Watcher
+	watchers   []watcher.Watcher
+	numworkers uint
+	workers    workerpool.WorkerPool
 }
 
 var _ containerizer.Containerizer = (*WhaleFriend)(nil)
 
+// Option represents a function able to set a particular WhaleFriend option
+// state.
+type Option func(c *WhaleFriend)
+
 // New returns a new [containerizer.Containerizer] using the specified set of
 // container watchers. This also spins up the watchers to constantly watch in
 // the background for any signs of container life and death.
-func New(ctx context.Context, watchers []watcher.Watcher) containerizer.Containerizer {
+//
+// The following options are supported:
+//   - [WithWorkers] set the maximum of concurrent workers used when querying
+//     the container workload.
+func New(ctx context.Context, watchers []watcher.Watcher, opts ...Option) containerizer.Containerizer {
 	c := &WhaleFriend{
 		watchers: watchers,
 	}
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	// establish a worker pool for concurrently querying the container workloads
+	// from multiple container engines.
+	if c.numworkers < 1 {
+		c.numworkers = 1
+	}
+	c.workers = *workerpool.New(int(c.numworkers))
+
 	for _, w := range watchers {
 		go func(w watcher.Watcher) { _ = w.Watch(ctx) }(w)
 	}
 	return c
+}
+
+// WithWorkers sets the maximum number of workers for querying workload
+// containers from multiple container engines concurrently.
+func WithWorkers(num uint) Option {
+	return func(c *WhaleFriend) {
+		c.numworkers = num
+	}
 }
 
 // watchersContainers returns the alive [model.Container] objects managed by the
@@ -94,16 +125,29 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 func (c *WhaleFriend) Containers(
 	ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper,
 ) []*model.Container {
-	// Gather all alive containers known at this time to our whale watchers.
-	containers := []*model.Container{}
+	// Gather all alive containers known at this time to our whale watchers. For
+	// fun, we run the workload queries concurrently using a (limited) worker
+	// pool. First, we submit query jobs for all engines that we watch...
+	ch := make(chan []*model.Container)
 	for _, watcher := range c.watchers {
-		containers = append(containers, c.watchersContainers(ctx, watcher)...)
+		watcher := watcher // ...oh well...
+		c.workers.Submit(func() {
+			log.Debugf("querying workload from '%s'", watcher.ID(ctx))
+			ch <- c.watchersContainers(ctx, watcher)
+		})
+	}
+	// ...and then we're collecting the results while the workers from the pool
+	// churn on the submitted jobs.
+	containers := []*model.Container{}
+	for w := 0; w < len(c.watchers); w++ {
+		containers = append(containers, <-ch...)
 	}
 	return containers
 }
 
 // Close closes all watcher resources associated with this [WhaleFriend].
 func (c *WhaleFriend) Close() {
+	c.workers.Stop()
 	for _, watcher := range c.watchers {
 		watcher.Close()
 	}

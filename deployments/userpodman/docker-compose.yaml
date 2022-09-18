@@ -1,20 +1,23 @@
 version: '2.4'
 services: 
-    lxkns:
-        image: lxkns:latest
+    userlxkns:
+        image: localhost/userlxkns:latest
         read_only: true
         build: 
             context: ../..
-            dockerfile: deployments/lxkns/Dockerfile
+            dockerfile: deployments/podman/Dockerfile
         command:
             - "/lxkns"
             - "--initialcgroup"
+            - "--http=[::]:5100"
             - "--debug"
-            - "--docker=unix:///proc/1/root/run/docker.sock"
-            - "--containerd=/proc/1/root/run/containerd/containerd.sock"
-            - "--engine-workers=8"
+            - "--nodocker"
+            - "--nocontainerd"
+            - "--podman=unix:///run/podman/podman.sock"
+        volumes:
+            - /run/user/${UID}/podman/podman.sock:/run/podman/podman.sock
         ports:
-            - "5010:5010"
+            - "5100:5100"
         user: "65534"
         security_opt:
             # apparmor only accepts a profile name, which must have been loaded
@@ -27,7 +30,7 @@ services:
             # profile thus does not interfere with lxkns. However, we still want
             # to slightly curb the unneeded parts of the powers bestowed upon us
             # by especially CRAP_SYS_ADMIN and CAP_SYS_PTRACE...
-            - seccomp:lxkns-seccomp.json
+            # - seccomp:lxkns-seccomp.json
         # Clean all default capabilities Docker might otherwise grant us and
         # several of them we don't need; add only those capabilities we really
         # need, such as CAP_WORLD_DOMINATION.

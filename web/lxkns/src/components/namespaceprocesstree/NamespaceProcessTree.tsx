@@ -25,7 +25,7 @@ import TreeItem from '@mui/lab/TreeItem'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
-import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process } from 'models/lxkns'
+import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process, ProcessMap } from 'models/lxkns'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 import { MountpointInfoModalProvider } from 'components/mountpointinfomodal'
@@ -116,6 +116,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
  */
 const NamespaceTreeItem = (
     namespace: Namespace,
+    processes: ProcessMap,
     showSystemProcesses: boolean,
     DetailsFactory?: NamespaceProcessTreeDetailFactory
 ) => {
@@ -132,13 +133,13 @@ const NamespaceTreeItem = (
 
     // In case of hierarchical namespaces also render the child namespaces.
     const childnamespaces = namespace.children ?
-        namespace.children.map(childns => NamespaceTreeItem(childns, showSystemProcesses, null)) : []
+        namespace.children.map(childns => NamespaceTreeItem(childns, processes, showSystemProcesses, null)) : []
 
     return <TreeItem
         className="namespace"
         key={namespace.nsid}
         nodeId={namespace.nsid.toString()}
-        label={<NamespaceInfo namespace={namespace} />}
+        label={<NamespaceInfo namespace={namespace} processes={processes} />}
     >{[
         ...procs.concat(childnamespaces),
         ...(DetailsFactory ? [<DetailsFactory key="42" namespace={namespace} />] : [])
@@ -291,7 +292,7 @@ export const NamespaceProcessTree = ({
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === nstype && ns.parent == null)
             .sort(compareNamespaceById)
-            .map(ns => NamespaceTreeItem(ns, showSystemProcesses, details ? details.factory : null))
+            .map(ns => NamespaceTreeItem(ns, discovery.processes, showSystemProcesses, details ? details.factory : null))
     ), [discovery, showSystemProcesses, nstype, details])
 
     return (

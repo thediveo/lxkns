@@ -94,6 +94,7 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 
 		By("starting a containerizer")
 		cizer := whalefriend.New(ctx, []watcher.Watcher{moby})
+		DeferCleanup(func() { cizer.Close() })
 		Eventually(moby.Ready, "5s").Should(BeClosed())
 
 		By("starting the service")
@@ -110,7 +111,12 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		goods := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(goods))
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(
+					goods,
+					// as we have no direct control over the workerpool worker
+					// goroutines we ignore them in this specific case.
+					IgnoringCreator("github.com/gammazero/workerpool.(*WorkerPool).dispatch")))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})

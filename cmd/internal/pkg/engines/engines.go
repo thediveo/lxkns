@@ -40,22 +40,34 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 	if ignoramus, _ := cmd.PersistentFlags().GetBool("noengines"); ignoramus {
 		return nil, nil
 	}
+	keepGoing, _ := cmd.PersistentFlags().GetBool("keep-going")
 	watchers := []watcher.Watcher{}
-	for _, plugf := range plugger.New(engineplugin.Group).Func("Watcher") {
-		watcher, err := plugf.(engineplugin.NewWatcher)(cmd)
+
+	for _, plugf := range plugger.New(engineplugin.Group).PluginsFunc("Watchers") {
+		log.Debugf("querying engine watcher plugin '%s'", plugf.Plugin.Name)
+		observers, err := plugf.F.(engineplugin.NewWatchers)(cmd)
 		if err != nil {
+			log.Errorf("engine watcher plugin '%s' failure: %s", plugf.Plugin.Name, err.Error())
+			if keepGoing {
+				continue
+			}
 			return nil, err
 		}
-		if watcher != nil {
-			watchers = append(watchers, watcher)
-			log.Infof("synchronizing in background to %s engine, API %s",
-				watcher.Name, watcher.API())
+		if observers != nil {
+			for _, observer := range observers {
+				watchers = append(watchers, observer)
+				log.Infof("synchronizing in background to %s engine, API %s",
+					observer.Name, observer.API())
+			}
 		}
 	}
+
 	if len(watchers) == 0 {
 		return nil, nil
 	}
-	cizer := whalefriend.New(ctx, watchers)
+
+	numworkers, _ := cmd.PersistentFlags().GetUint("engine-workers")
+	cizer := whalefriend.New(ctx, watchers, whalefriend.WithWorkers(numworkers))
 	for _, w := range watchers {
 		if wait {
 			<-w.Ready()
@@ -102,4 +114,6 @@ func init() {
 // EngineSetupCLI registers the engine-agnostic specific CLI options.
 func EngineSetupCLI(cmd *cobra.Command) {
 	cmd.PersistentFlags().Bool("noengines", false, "do not consult any container engines")
+	cmd.PersistentFlags().Bool("keep-going", false, "skip non-responsive container engines")
+	cmd.PersistentFlags().Uint("engine-workers", 1, "maximum number of workers for container engine workload discovery")
 }

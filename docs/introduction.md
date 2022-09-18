@@ -10,7 +10,7 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-![lxkns logo](_images/lxkns-gophers.jpeg ':size=150')
+![lxkns logo](_images/lxkns-gophers.png ':size=150')
 
 ## Abstract
 

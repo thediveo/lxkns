@@ -28,7 +28,7 @@ type NamedWatcher struct {
 	Name string // descriptive engine name
 }
 
-// NewWatcher plugin function returns a new (named) watcher configured according
-// to the CLI flags passed in, or nil if a particular engine should not be
-// watched.
-type NewWatcher func(cmd *cobra.Command) (*NamedWatcher, error)
+// NewWatchers plugin function returns a one or more (named) watcher(s)
+// configured according to the CLI flags passed in, or nil if a particular
+// engine should not be watched at all.
+type NewWatchers func(cmd *cobra.Command) ([]*NamedWatcher, error)

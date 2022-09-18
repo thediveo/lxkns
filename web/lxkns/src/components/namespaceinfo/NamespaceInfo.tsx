@@ -19,7 +19,7 @@ import { Person } from '@mui/icons-material'
 import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
-import { Namespace, NamespaceType } from 'models/lxkns'
+import { Namespace, NamespaceType, ProcessMap } from 'models/lxkns'
 
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
@@ -86,6 +86,8 @@ const countNamespaceWithChildren = (sum: number, ns: Namespace) =>
 export interface NamespaceInfoProps {
     /** namespace with type, identifier and initial namespace indication. */
     namespace: Namespace,
+    /** information about all processes (for some render support) */
+    processes?: ProcessMap,
     /** suppress rendering leader process information.  */
     noprocess?: boolean,
     /** show short process information. */
@@ -105,7 +107,7 @@ export interface NamespaceInfoProps {
  * given namespace is either a PID or user namespace).
  */
 export const NamespaceInfo = ({
-    namespace, noprocess, shortprocess, shared, className
+    namespace, processes, noprocess, shortprocess, shared, className
 }: NamespaceInfoProps) => {
     if (!namespace) {
         return <></>
@@ -126,7 +128,7 @@ export const NamespaceInfo = ({
     // hierarchy without any other references to them anymore beyond the
     // parent-child references.
     const pathinfo = !namespace.ealdorman &&
-        <PathInformation namespace={namespace} />
+        <PathInformation namespace={namespace} processes={processes} />
 
     // For user namespaces also prepare ownership information: the user name as
     // well as the UID of the Linux user "owning" the user namespace.

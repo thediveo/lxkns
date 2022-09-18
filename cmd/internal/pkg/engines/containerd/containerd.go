@@ -28,31 +28,32 @@ func init() {
 	plugger.Register(
 		plugger.WithName("containerd"),
 		plugger.WithGroup(engineplugin.Group),
-		plugger.WithNamedSymbol("Watcher", engineplugin.NewWatcher(Watcher)))
+		plugger.WithNamedSymbol("Watchers", engineplugin.NewWatchers(Watchers)))
 	plugger.Register(
 		plugger.WithName("containerd"),
 		plugger.WithGroup("cli"),
-		plugger.WithNamedSymbol("SetupCLI", ContainerdSetupCLI))
+		plugger.WithNamedSymbol("SetupCLI", SetupCLI))
 }
 
-// ContainerdSetupCLI registers the Docker-engine specific CLI options.
-func ContainerdSetupCLI(cmd *cobra.Command) {
+// SetupCLI registers the Docker-engine specific CLI options.
+func SetupCLI(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("containerd", "/run/containerd/containerd.sock",
 		"containerd engine API socket path")
 	cmd.PersistentFlags().Bool("nocontainerd", false, "do not consult a containerd engine")
 }
 
-// Watcher returns a moby engine watcher taking the supplied optional CLI flags
-// into consideration. If this engine shouldn't be watched then it returns a nil
-// watcher.
-func Watcher(cmd *cobra.Command) (*engineplugin.NamedWatcher, error) {
+// Watchers returns a moby engine watcher taking the supplied optional CLI flags
+// into consideration. If this engine shouldn't be watched then it returns nil.
+func Watchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
 	if nocontainerd, _ := cmd.PersistentFlags().GetBool("nocontainerd"); !nocontainerd {
 		apipath, _ := cmd.PersistentFlags().GetString("containerd")
 		w, err := containerd.New(apipath, nil)
 		if err != nil {
 			return nil, err
 		}
-		return &engineplugin.NamedWatcher{Watcher: w, Name: "containerd"}, nil
+		return []*engineplugin.NamedWatcher{
+			{Watcher: w, Name: "containerd"},
+		}, nil
 	}
 	return nil, nil
 }
