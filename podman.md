@@ -4,7 +4,13 @@
 
 Building anything using the Podman sources, even it is just the REST API client,
 is ... _awkward_. In consequence, the Podman support in `lxkns` must be opted in
-using the `podman` build tag.
+using the `podman` build tag. Additional Podman-specific build tags help in
+avoiding building some of the unnecessary Podman parts; so use these build tags
+for full glory:
+
+```
+-tags porman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove
+```
 
 Additionally, several C header packages as well as C shared libraries must be
 available, even when just the REST API client is needed; sadly, the Podman code
@@ -17,12 +23,7 @@ base hasn't still been cleaned up with a separated client module.
 
 - Debian/Ubuntu:
   ```bash
-  sudo apt-get install \
-    btrfs-progs go-md2man iptables libassuan-dev libbtrfs-dev libc6-dev \
-    libdevmapper-dev libglib2.0-dev libgpgme-dev libgpg-error-dev \
-    libprotobuf-dev libprotobuf-c-dev \
-    libseccomp-dev libselinux1-dev \
-    libsystemd-dev pkg-config runc uidmap
+  sudo apt-get install build-essential pkg-config libbtrfs-dev libgpgme-dev
   ```
 
 ## `lxkns` System Service
