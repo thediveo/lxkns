@@ -15,7 +15,7 @@ jobs:
     steps:
       - run: |
           sudo docker version
-          sudo docker -H /proc/1/root/run/docker.sock version
+          sudo docker -H unix:///proc/1/root/run/docker.sock version
     
       - name: Set up Go ${{matrix.go}}
         uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # pin@v3
