@@ -19,11 +19,11 @@ jobs:
           go-version: ${{matrix.go}}
         id: go
 
-      - name: Set up podman and start as *cough* daemon
-        run: |
-          sudo apt-get -y install podman
-          sudo systemctl enable podman.socket
-          sudo systemctl start podman.socket
+      #- name: Set up podman and start as *cough* daemon
+      #  run: |
+      #    sudo apt-get -y install podman
+      #    sudo systemctl enable podman.socket
+      #    sudo systemctl start podman.socket
 
       - name: Set up podman dev dependencies
         run: |
@@ -40,10 +40,12 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Test Go packages as root
-        run: go test -v -p 1 -tags podman -exec sudo ./...
+        #run: go test -v -p 1 -tags podman -exec sudo ./...
+        run: go test -v -p 1 -exec sudo ./...
 
       - name: Test Go packages as ordinary user
-        run: go test -v -p 1 -tags podman ./...
+        #run: go test -v -p 1 -tags podman ./...
+        run: go test -v -p 1 ./...
 
   testwebapp:
     name: Test web ui of lxkns service
