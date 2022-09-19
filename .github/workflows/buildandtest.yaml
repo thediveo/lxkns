@@ -8,30 +8,34 @@ jobs:
 
   buildandtest:
     name: Build and Test on Go ${{matrix.go}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         go: [ '1.19', '1.18' ]
     steps:
+      - run: |
+          sudo docker version
+          sudo docker -H unix:///proc/1/root/run/docker.sock version
+    
       - name: Set up Go ${{matrix.go}}
         uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # pin@v3
         with:
           go-version: ${{matrix.go}}
         id: go
 
-      - name: Set up podman and start as *cough* daemon
-        run: |
-          sudo apt-get -y install podman
-          sudo systemctl enable podman.socket
-          sudo systemctl start podman.socket
+      #- name: Set up podman and start as *cough* daemon
+      #  run: |
+      #    sudo apt-get -y install podman
+      #    sudo systemctl enable podman.socket
+      #    sudo systemctl start podman.socket
 
-      - name: Set up podman dev dependencies
-        run: |
-          sudo apt-get -y install \
-            btrfs-progs go-md2man iptables libassuan-dev libbtrfs-dev libc6-dev \
-            libdevmapper-dev libglib2.0-dev libgpgme-dev libgpg-error-dev libprotobuf-dev \
-            libprotobuf-c-dev libseccomp-dev libselinux1-dev libsystemd-dev pkg-config \
-            runc uidmap
+      #- name: Set up podman dev dependencies
+      #  run: |
+      #    sudo apt-get -y install \
+      ##      btrfs-progs go-md2man iptables libassuan-dev libbtrfs-dev libc6-dev \
+      #      libdevmapper-dev libglib2.0-dev libgpgme-dev libgpg-error-dev libprotobuf-dev \
+      #      libprotobuf-c-dev libseccomp-dev libselinux1-dev libsystemd-dev pkg-config \
+      #      runc uidmap
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # pin@v3
@@ -40,10 +44,12 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Test Go packages as root
-        run: go test -v -p 1 -tags podman -exec sudo ./...
+        #run: go test -v -p 1 -tags podman -exec sudo ./...
+        run: go test -v -p 1 -exec sudo ./...
 
       - name: Test Go packages as ordinary user
-        run: go test -v -p 1 -tags podman ./...
+        #run: go test -v -p 1 -tags podman ./...
+        run: go test -v -p 1 ./...
 
   testwebapp:
     name: Test web ui of lxkns service
