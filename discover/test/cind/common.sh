@@ -1,5 +1,5 @@
 # Work from kindes/base image for linux/amd64 and linux/arm64.
-KINDBASE_IMAGE="kindest/base:v20210729-302b42d2"
+KINDBASE_IMAGE="kindest/base:v20220811-20da9c7c"
 
 # Our image name:tag for a containerd-in-Docker testing image.
 CIND_IMAGE="lxkns/cind:inception"
