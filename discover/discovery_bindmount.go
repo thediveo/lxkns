@@ -91,10 +91,16 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	// outer result.Namespaces map and easily update it.
 	updateNamespaces := func(ownedbindmounts []BindmountedNamespaceInfo) {
 		for _, bmntns := range ownedbindmounts {
-			// Did we see this bind-mounted namespace already elsewhere...?
+			// Did we see this bind-mounted namespace already elsewhere...? If
+			// not, then we will add it to our discovered namespaces bag. But
+			// even if we know it already, we check if the newly found namespace
+			// reference is "better" than the one we already know: if we so far
+			// only had a process-based reference and new also get a
+			// process-based reference we prefer the newer one if it comes from
+			// a process older than the one we already know.
 			typeidx := model.TypeIndex(bmntns.Type)
 			ns, ok := result.Namespaces[typeidx][bmntns.ID]
-			if !ok {
+			if !ok || NewlyProcfsPathIsBetter(bmntns.Ref, ns.Ref(), result.Processes) {
 				// As we haven't seen this namespace yet, record it with our
 				// results.
 				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)

@@ -13,6 +13,7 @@
         "go.testFlags": [
             "-v"
         ],
-        "makefile.extensionOutputFolder": "./.vscode"
+		"makefile.extensionOutputFolder": "./.vscode",
+		"go.buildTags": "podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove"
 	}
 }
