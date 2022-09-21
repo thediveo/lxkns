@@ -54,11 +54,13 @@ var _ = Describe("Discovering containers in containers", func() {
 			Skip("needs root")
 			return
 		}
+		By("setting things up, hopefully not upsetting them")
 		out, err := exec.Command("./test/cind/setup.sh").CombinedOutput()
 		Expect(err).NotTo(HaveOccurred(), "with output:", out)
 	})
 
 	AfterEach(func() {
+		By("tearing things down")
 		out, err := exec.Command("./test/cind/teardown.sh").CombinedOutput()
 		Expect(err).NotTo(HaveOccurred(), "with output:", out)
 	})
