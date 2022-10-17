@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 	asciitree "github.com/thediveo/go-asciitree"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -41,24 +41,23 @@ type TreeStyle enumflag.Flag
 // Enumeration of allowed Theme values.
 const (
 	TreeStyleLine  TreeStyle = iota // default tree line style
-	TreeStyleAscii                  // simple ASCII tree style
+	TreeStyleASCII                  // simple ASCII tree style
 )
 
 // Defines the textual representations for the TreeStyle values.
 var treeStyleIds = map[TreeStyle][]string{
 	TreeStyleLine:  {"line"},
-	TreeStyleAscii: {"ascii", "plain"},
+	TreeStyleASCII: {"ascii", "plain"},
 }
 
 // Register our plugin functions for delayed registration of CLI flags we bring
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("treestyle"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", TreeStyleSetupCLI),
-		plugger.WithNamedSymbol("BeforeRun", TreeStyleBeforeRun))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		TreeStyleSetupCLI, plugger.WithPlugin("treestyle"))
+	plugger.Group[cliplugin.BeforeCommand]().Register(
+		TreeStyleBeforeCommand, plugger.WithPlugin("treestyle"))
 }
 
 // TreeStyleSetupCLI is a plugin function that registers the CLI "treestyle"
@@ -71,11 +70,11 @@ func TreeStyleSetupCLI(rootCmd *cobra.Command) {
 		"select the tree render style; can be 'line' or 'ascii'")
 }
 
-// TreeStyleBeforeRun is a plugin function that handles selection, reading, or
+// TreeStyleBeforeCommand is a plugin function that handles selection, reading, or
 // dumping of styling profiles, just before the selected command runs. In case
 // of dumping, it also exits this process, so the itself command won't ever
 // start.
-func TreeStyleBeforeRun() error {
+func TreeStyleBeforeCommand() error {
 	switch treestyle {
 	case TreeStyleLine:
 		NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
@@ -85,7 +84,7 @@ func TreeStyleBeforeRun() error {
 			Lastnode: "└",
 			Property: "⋄─",
 		})
-	case TreeStyleAscii:
+	case TreeStyleASCII:
 		NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{
 			Fork:     `\`,
 			Nodeconn: "_",

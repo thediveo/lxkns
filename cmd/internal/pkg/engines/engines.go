@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/lxkns/containerizer"
@@ -43,11 +43,11 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 	keepGoing, _ := cmd.PersistentFlags().GetBool("keep-going")
 	watchers := []watcher.Watcher{}
 
-	for _, plugf := range plugger.New(engineplugin.Group).PluginsFunc("Watchers") {
-		log.Debugf("querying engine watcher plugin '%s'", plugf.Plugin.Name)
-		observers, err := plugf.F.(engineplugin.NewWatchers)(cmd)
+	for _, exposedSymbol := range plugger.Group[engineplugin.NewWatchers]().PluginsSymbols() {
+		log.Debugf("querying engine watcher plugin '%s'", exposedSymbol.Plugin)
+		observers, err := exposedSymbol.S(cmd)
 		if err != nil {
-			log.Errorf("engine watcher plugin '%s' failure: %s", plugf.Plugin.Name, err.Error())
+			log.Errorf("engine watcher plugin '%s' failure: %s", exposedSymbol.Plugin, err.Error())
 			if keepGoing {
 				continue
 			}
@@ -105,10 +105,8 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("engines"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", EngineSetupCLI))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		EngineSetupCLI, plugger.WithPlugin("engines"))
 }
 
 // EngineSetupCLI registers the engine-agnostic specific CLI options.

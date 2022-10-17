@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/model"
@@ -143,10 +143,8 @@ var ControlGroupNameModes = map[ControlGroupNames][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("controlgroup"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", LabelSetupCLI))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		LabelSetupCLI, plugger.WithPlugin("controlgroup"))
 }
 
 // LabelSetupCLI adds the flags for controlling control group name display.
