@@ -23,7 +23,8 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/sealwatcher"
@@ -33,14 +34,10 @@ import (
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("podman"),
-		plugger.WithGroup(engineplugin.Group),
-		plugger.WithNamedSymbol("Watchers", engineplugin.NewWatchers(Watchers)))
-	plugger.Register(
-		plugger.WithName("podman"),
-		plugger.WithGroup("cli"),
-		plugger.WithNamedSymbol("SetupCLI", SetupCLI))
+	plugger.Group[engineplugin.NewWatchers]().Register(
+		NewWatchers, plugger.WithPlugin("podman"))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		SetupCLI, plugger.WithPlugin("podman"))
 }
 
 // SetupCLI registers the Podman-engine specific CLI options.
@@ -53,10 +50,10 @@ func SetupCLI(cmd *cobra.Command) {
 	cmd.PersistentFlags().Lookup("user-podmen").NoOptDefVal = "/run/user"
 }
 
-// Watchers returns a Podman engine watcher(s) taking the supplied optional CLI
+// NewWatchers returns a Podman engine watcher(s) taking the supplied optional CLI
 // flags into consideration. If this engine shouldn't be watched then it returns
 // nil.
-func Watchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
+func NewWatchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
 	watchers, err := systemPodmanWatcher(cmd)
 	if err != nil {
 		return nil, err

@@ -2,7 +2,7 @@ package output
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -38,10 +38,8 @@ var showNamespaceIcons bool
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("icon"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", IconSetupCLI))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		IconSetupCLI, plugger.WithPlugin("icon"))
 }
 
 // IconSetupCLI is a plugin function that registers the CLI "--icon" flag.

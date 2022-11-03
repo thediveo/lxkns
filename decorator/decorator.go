@@ -16,16 +16,14 @@ package decorator
 
 import "github.com/thediveo/lxkns/model"
 
-// PluginGroup specifies the name of the [@thediveo/plugger] group (simple
-// plugin manager) for decorator plugins.
-//
-// [@thediveo/plugger]: https://github.com/thediveo/go-plugger
-const PluginGroup = "lxkns/plugingroup/decorator"
-
 // Decorate the discovered containers with groups, group-related container
 // labels, et cetera. Instead of passing in all containers as a flat list, the
 // containers are implicitly specified through their responsible container
 // engines in order to allow decorators to apply engine-specific optimizations.
 // The decoration can optionally be controlled for supporting decorators through
 // labels (key-value pairs) specified as part of the discovery process.
+//
+// This type doubles as an exposed plugin symbol type for use with [plugger/v3].
+//
+// [plugger/v3]: https://github.com/thediveo/go-plugger
 type Decorate func(engines []*model.ContainerEngine, labels map[string]string)

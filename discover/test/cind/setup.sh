@@ -12,7 +12,10 @@ docker build --build-arg "KINDBASE_IMAGE=${KINDBASE_IMAGE}" -t ${CIND_IMAGE} ${T
 docker run -d -it --rm --name ${CNTR_NAME} --privileged ${CIND_IMAGE} || exit 1
 
 # Now wait for the test container to have spun up and be ready...
-exec 3< <(docker logs -f ${CNTR_NAME})
+
+# Avoid long idle delays in this script, see
+# https://github.com/onsi/gomega/issues/473#issuecomment-929980754
+exec 3< <(docker logs -f ${CNTR_NAME} </dev/null 2>/dev/null )
 DOCKERLOGS_PID=$!
 NEXTDOT=0
 echo -n "waiting for test containers"

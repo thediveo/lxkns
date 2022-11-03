@@ -25,7 +25,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -55,11 +55,10 @@ var themeIds = map[Theme][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("theme"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", ThemeSetupCLI),
-		plugger.WithNamedSymbol("BeforeRun", ThemeBeforeRun))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		ThemeSetupCLI, plugger.WithPlugin("theme"))
+	plugger.Group[cliplugin.BeforeCommand]().Register(
+		ThemeBeforeCommand, plugger.WithPlugin("theme"))
 }
 
 // ThemeSetupCLI is a plugin function that registers the CLI flags related to
@@ -72,11 +71,11 @@ func ThemeSetupCLI(rootCmd *cobra.Command) {
 		"dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)")
 }
 
-// ThemeBeforeRun is a plugin function that handles selection, reading, or
+// ThemeBeforeCommand is a plugin function that handles selection, reading, or
 // dumping of styling profiles, just before the selected command runs. In case
 // of dumping, it also exits this process, so the itself command won't ever
 // start.
-func ThemeBeforeRun() error {
+func ThemeBeforeCommand() error {
 	// If the user wants to dump a theme using "--dump" then the selected
 	// default theme, light or dark, takes precedence and any user
 	// definitions get ignored in this special case. This allows users to

@@ -21,7 +21,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 )
 
@@ -54,11 +54,10 @@ var colorModeIds = map[ColorMode][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("colormode"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", ColorModeSetupCLI),
-		plugger.WithNamedSymbol("BeforeRun", ColorModeBeforeRun))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		ColorModeSetupCLI, plugger.WithPlugin("colormode"))
+	plugger.Group[cliplugin.BeforeCommand]().Register(
+		ColorModeBeforeCommand, plugger.WithPlugin("colormode"))
 }
 
 // ColorModeSetupCLI is a plugin function that registers the CLI "color" flag.
@@ -71,10 +70,10 @@ func ColorModeSetupCLI(rootCmd *cobra.Command) {
 	rootCmd.PersistentFlags().Lookup("color").NoOptDefVal = "always"
 }
 
-// ColorModeBeforeRun is a plugin function that delays color profile selection
-// based on our CLI flag and terminal profile detection until the last minute,
-// just before the selected command runs.
-func ColorModeBeforeRun() error {
+// ColorModeBeforeCommand is a plugin function that delays color profile
+// selection based on our CLI flag and terminal profile detection until the last
+// minute, just before the selected command runs.
+func ColorModeBeforeCommand() error {
 	// Colorization mode...
 	switch colorize {
 	case ColorAlways:

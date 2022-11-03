@@ -28,7 +28,7 @@ var _ = Describe("--filter flag", func() {
 	It("rejects unknown namespaces", func() {
 		rootCmd := cobra.Command{}
 		rootCmd.SetArgs([]string{"--filter=foobar"})
-		FilterSetupCLI(&rootCmd)
+		SetupCLI(&rootCmd)
 		var err error
 		_ = getstdout.Stdouterr(func() { err = rootCmd.Execute() })
 		Expect(err).To(HaveOccurred())
@@ -38,7 +38,7 @@ var _ = Describe("--filter flag", func() {
 	It("gets namespace type list", func() {
 		rootCmd := cobra.Command{}
 		rootCmd.SetArgs([]string{"--filter=m,c,uts,U"})
-		FilterSetupCLI(&rootCmd)
+		SetupCLI(&rootCmd)
 		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
 		Expect(namespaceFilters).To(HaveLen(4))
 		Expect(namespaceFilters).To(ContainElements(

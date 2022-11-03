@@ -24,6 +24,7 @@ import (
 	"github.com/containers/podman/v3/pkg/bindings"
 	"github.com/containers/podman/v3/pkg/bindings/pods"
 	"github.com/containers/podman/v3/pkg/domain/entities"
+	"github.com/containers/podman/v3/pkg/rootless"
 	"github.com/containers/podman/v3/pkg/specgen"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
@@ -54,7 +55,7 @@ var _ = Describe("Decorates Podman pods", Ordered, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
-		if os.Getuid() != 0 {
+		if os.Getuid() != 0 || rootless.IsRootless() /* work around botched podman code base */ {
 			Skip("needs root")
 		}
 
@@ -68,7 +69,7 @@ var _ = Describe("Decorates Podman pods", Ordered, func() {
 
 	It("decorated Podman pods", func() {
 		By("watching seals")
-		pw, err := sealwatcher.New("unix://run/podman/podman.sock", nil)
+		pw, err := sealwatcher.New("unix:///run/podman/podman.sock", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

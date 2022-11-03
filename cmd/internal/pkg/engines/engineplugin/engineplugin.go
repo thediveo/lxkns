@@ -19,16 +19,13 @@ import (
 	"github.com/thediveo/whalewatcher/watcher"
 )
 
-// Group specifies the container engine watchers plugin group name.
-const Group = "engines"
-
 // NamedWatcher wraps a watcher and gives it a descriptive engine name.
 type NamedWatcher struct {
 	watcher.Watcher
 	Name string // descriptive engine name
 }
 
-// NewWatchers plugin function returns a one or more (named) watcher(s)
-// configured according to the CLI flags passed in, or nil if a particular
-// engine should not be watched at all.
+// NewWatchers is an exposed plugin function that returns a one or more (named)
+// watcher(s) configured according to the CLI flags passed in, or nil if a
+// particular engine should not be watched at all.
 type NewWatchers func(cmd *cobra.Command) ([]*NamedWatcher, error)
