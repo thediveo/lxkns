@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
@@ -86,8 +86,7 @@ func discoverContainers(result *Result) {
 		plural.Elements(len(containers), "containers"),
 		plural.Elements(len(engines), "container engines"))
 	// Run registered Decorators on discovered containers.
-	decorators := plugger.New(decorator.PluginGroup)
-	for _, decorateur := range decorators.Func("Decorate") {
-		decorateur.(decorator.Decorate)(engines, result.Options.Labels)
+	for _, decorator := range plugger.Group[decorator.Decorate]().Symbols() {
+		decorator(engines, result.Options.Labels)
 	}
 }

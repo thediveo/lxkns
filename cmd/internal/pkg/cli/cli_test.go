@@ -18,7 +18,7 @@ import (
 	"errors"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -26,11 +26,8 @@ import (
 )
 
 func init() {
-	plugger.Register(
-		plugger.WithName("cli_test"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", UnittestSetupCLI),
-		plugger.WithNamedSymbol("BeforeRun", UnittestBeforeRun))
+	plugger.Group[cliplugin.SetupCLI]().Register(UnittestSetupCLI)
+	plugger.Group[cliplugin.BeforeCommand]().Register(UnittestBeforeRun)
 }
 
 var setupCLI = 0

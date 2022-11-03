@@ -17,7 +17,7 @@ package style
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 )
@@ -61,10 +61,8 @@ var procNameModeIds = map[ProcNameMode][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("procmode"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", ProcModeSetupCLI))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		ProcModeSetupCLI, plugger.WithPlugin("procmode"))
 }
 
 // ProcModeSetupCLI is a plugin function that registers the CLI "--proc" flag.

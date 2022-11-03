@@ -26,7 +26,7 @@ import (
 	"unsafe"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
@@ -172,7 +172,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	log.Infof("with effective capabilities: %s", mycaps)
 
 	log.Infof("available decorator plugins: %s",
-		strings.Join(plugger.New(decorator.PluginGroup).PluginNames(), ", "))
+		strings.Join(plugger.Group[decorator.Decorate]().Plugins(), ", "))
 
 	// Create the containerizer for the specified container engines...
 	ctx, cancel := context.WithCancel(context.Background())

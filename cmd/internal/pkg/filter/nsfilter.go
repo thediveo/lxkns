@@ -17,7 +17,7 @@ package filter
 import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"github.com/thediveo/go-plugger/v2"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -66,16 +66,14 @@ var nsFilterIds = map[species.NamespaceType][]string{
 // into the game and the things to check or carry out before the selected
 // command is finally run.
 func init() {
-	plugger.Register(
-		plugger.WithName("filter"),
-		plugger.WithGroup(cliplugin.Group),
-		plugger.WithNamedSymbol("SetupCLI", FilterSetupCLI))
+	plugger.Group[cliplugin.SetupCLI]().Register(
+		SetupCLI, plugger.WithPlugin("filter"))
 }
 
-// FilterSetupCLI adds the "--filter" flag to the specified command. The filter
+// SetupCLI adds the "--filter" flag to the specified command. The filter
 // flag accepts a set of namespace type names, either separated by commas, or
 // specified using multiple "--filter" flags.
-func FilterSetupCLI(cmd *cobra.Command) {
+func SetupCLI(cmd *cobra.Command) {
 	filterMask = species.NamespaceType(0) // ensure clean initial state for testing
 	cmd.PersistentFlags().VarP(
 		enumflag.NewSlice(&namespaceFilters, "filter", nsFilterIds, enumflag.EnumCaseSensitive),
