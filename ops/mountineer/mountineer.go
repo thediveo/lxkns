@@ -17,6 +17,7 @@ package mountineer
 import (
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -230,6 +231,18 @@ func (m *Mountineer) ReadFile(name string) ([]byte, error) {
 		return nil, err
 	}
 	return os.ReadFile(pathname) // #nosec G304
+}
+
+// ReadDir reads the named directory, returning all its directory entries sorted
+// by filename. If there was an error, then ReadDir returns not only the error,
+// but for fun also all directory entries it was able to read up to the point of
+// the error.
+func (m *Mountineer) ReadDir(name string) ([]fs.DirEntry, error) {
+	pathname, err := m.Resolve(name)
+	if err != nil {
+		return nil, err
+	}
+	return os.ReadDir(pathname)
 }
 
 // Resolve resolves a pathname inside the open mount namespace to a pathname
