@@ -37,35 +37,34 @@ import (
 
 const cindName = "containerd-in-docker" // name of Docker container with containerd
 
-var _ = Describe("Discovering containers in containers", func() {
+var _ = Describe("Discovering containers in containers", Serial, func() {
 
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
-	BeforeEach(func() {
-		goodfds := Filedescriptors()
-		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
-			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
-		})
-	})
-
-	BeforeEach(func() {
+	BeforeEach(slowSpec, func(_ context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 			return
 		}
+
 		By("setting things up, hopefully not upsetting them")
 		out, err := exec.Command("./test/cind/setup.sh").CombinedOutput()
 		Expect(err).NotTo(HaveOccurred(), "with output:", out)
+		DeferCleanup(slowSpec, func(_ context.Context) {
+			By("tearing things down")
+			out, err := exec.Command("./test/cind/teardown.sh").CombinedOutput()
+			Expect(err).NotTo(HaveOccurred(), "with output:", out)
+		})
+
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
 	})
 
-	AfterEach(func() {
-		By("tearing things down")
-		out, err := exec.Command("./test/cind/teardown.sh").CombinedOutput()
-		Expect(err).NotTo(HaveOccurred(), "with output:", out)
-	})
-
-	It("translates container-in-container PIDs", func() {
+	It("translates container-in-container PIDs", slowSpec, func(ctx context.Context) {
 		By("finding the Docker daemon PID")
 		mobyproc := model.NewProcessTable(false).ByName("dockerd")
 		Expect(mobyproc).To(HaveLen(1))
@@ -76,7 +75,7 @@ var _ = Describe("Discovering containers in containers", func() {
 		mw, err := moby.New("", nil, mobyengine.WithPID(int(mobypid)))
 		Expect(err).NotTo(HaveOccurred())
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()

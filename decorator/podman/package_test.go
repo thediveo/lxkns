@@ -24,9 +24,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var slowSpec = NodeTimeout(30 * time.Second)
+
 func TestPodmanDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, reporterConfig := GinkgoConfiguration()
-	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/podman package", reporterConfig)
+	RunSpecs(t, "lxkns/decorator/podman package")
 }

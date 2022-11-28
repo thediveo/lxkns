@@ -22,9 +22,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var slowSpec = NodeTimeout(30 * time.Second)
+
 func TestK8sContainerdDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, reporterConfig := GinkgoConfiguration()
-	reporterConfig.SlowSpecThreshold = 30 * time.Second
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package", reporterConfig)
+	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
 }

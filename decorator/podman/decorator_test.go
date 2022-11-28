@@ -50,7 +50,7 @@ var (
 	}
 )
 
-var _ = Describe("Decorates Podman pods", Ordered, func() {
+var _ = Describe("Decorates Podman pods", Serial, func() {
 
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
@@ -62,17 +62,18 @@ var _ = Describe("Decorates Podman pods", Ordered, func() {
 		goodgos := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(goodgos))
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
-	It("decorated Podman pods", func() {
+	It("decorated Podman pods", slowSpec, func(ctx context.Context) {
 		By("watching seals")
 		pw, err := sealwatcher.New("unix:///run/podman/podman.sock", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{pw})
 		defer cizer.Close()
