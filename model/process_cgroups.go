@@ -36,6 +36,11 @@ func (p ProcessTable) scanCgroups() {
 		controllers := processCgroup(cgrouptypes, pid)
 		proc.CpuCgroup = controllers[0]
 		proc.FridgeCgroup = controllers[1]
+		for _, task := range proc.Tasks {
+			controllers := processCgroup(cgrouptypes, task.TID)
+			task.CpuCgroup = controllers[0]
+			task.FridgeCgroup = controllers[1]
+		}
 	}
 }
 
@@ -46,13 +51,16 @@ var cgrouptypes = []string{"cpu", "freezer"}
 // cgroups v2 hierarchy.
 func (p ProcessTable) scanFridges() {
 	// First determine the list of unique cgroup freezer paths, as not every
-	// process will have its own personal freezer and we can thus avoid reading
-	// the same states over and over again via the PID 1 wormhole (well, the
-	// wormhole doesn't matter here, just hammering the VFS over and over again
-	// without real need).
+	// process (and most probably tasks) will have its own personal freezer and
+	// we can thus avoid reading the same states over and over again via the PID
+	// 1 wormhole (well, the wormhole doesn't matter here, just hammering the
+	// VFS over and over again without a real need).
 	fridges := map[string]bool{} // maps unique paths to freezer states
 	for _, proc := range p {
 		fridges[proc.FridgeCgroup] = false
+		for _, task := range proc.Tasks {
+			fridges[task.FridgeCgroup] = false
+		}
 	}
 	fridgepaths := make([]string, len(fridges)) // our unique list to be.
 	idx := 0
@@ -61,20 +69,21 @@ func (p ProcessTable) scanFridges() {
 		idx++
 	}
 	// Now read the freezer states ... via the initial mount namespace because
-	// we can safely assume that there we have the proper full cgroup glory
+	// we can safely assume that there we have the proper full cgroup gory glory
 	// mounted to.
 	frozens := fridgeStates(fridgepaths)
 	// ...and finally distribute the freezer states into the appropriate process
-	// objects. As there is no stable iteration order over the map between
-	// cgroup paths and freezer states we now propagate the states into the map,
-	// so we finally can look up these states based on path. Remember that we
-	// limited the amount of data transferred forth and back the re-executed
-	// action as much as possible.
+	// (and task) objects. As there is no stable iteration order over the map
+	// between cgroup paths and freezer states we now propagate the states into
+	// the map, so we finally can look up these states based on path.
 	for idx, fridgepath := range fridgepaths {
 		fridges[fridgepath] = frozens[idx]
 	}
 	for _, proc := range p {
 		proc.FridgeFrozen = fridges[proc.FridgeCgroup]
+		for _, task := range proc.Tasks {
+			task.FridgeFrozen = fridges[task.FridgeCgroup]
+		}
 	}
 }
 
@@ -113,8 +122,8 @@ func frozenV2(fridgepath string) (frozen bool) {
 	/* #nosec G304 */
 	if events, err := os.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
 		for _, event := range strings.Split(string(events), "\n") {
-			if strings.HasPrefix(event, "frozen ") {
-				if event[7] == '1' {
+			if strings.HasPrefix(event, frozenEventName+" ") {
+				if event[len(frozenEventName)+1] == '1' {
 					frozen = true
 				}
 				break
@@ -123,6 +132,8 @@ func frozenV2(fridgepath string) (frozen bool) {
 	}
 	return
 }
+
+const frozenEventName = "frozen"
 
 // frozenV1 returns the effective freezer status information for the specified
 // process and maps it onto our v2-like simplified state model.

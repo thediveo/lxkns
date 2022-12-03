@@ -19,13 +19,14 @@ import { Person } from '@mui/icons-material'
 import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
-import { Namespace, NamespaceType, ProcessMap } from 'models/lxkns'
+import { compareBusybodies, Namespace, NamespaceType, ProcessMap } from 'models/lxkns'
 
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
 import clsx from 'clsx'
 import ChildrenIcon from 'icons/Children'
 import { styled } from '@mui/material'
+import TaskInfo from 'components/taskinfo/TaskInfo'
 
 
 const namespaceShared = "shared-namespace"
@@ -76,6 +77,10 @@ const ProcessInformation = styled(ProcessInfo)(({ theme }) => ({
     marginLeft: '0.5em',
 }))
 
+const TaskInformation = styled(TaskInfo)(({ theme }) => ({
+    marginLeft: '0.5em',
+}))
+
 
 // Reduce function returning the (recursive) sum of children and grand-children
 // plus this namespace itself.
@@ -122,12 +127,19 @@ export const NamespaceInfo = ({
             short={shortprocess}
         />
 
+    // Or is there one or more loose threads joined to this namespace? Then show
+    // the oldest loose thread instead.
+    const oldesttask = !procinfo && namespace.loosethreads.slice().sort(compareBusybodies)[0]
+    const taskinfo = !!oldesttask 
+    && (!noprocess || shortprocess)
+    && <TaskInformation task={oldesttask} short={shortprocess} />
+
     // If there isn't any process attached to this namespace, prepare
     // information about bind mounts and fd references, if possible. This also
     // covers "hidden" (PID, user) namespaces which are somewhere in the
     // hierarchy without any other references to them anymore beyond the
     // parent-child references.
-    const pathinfo = !namespace.ealdorman &&
+    const pathinfo = !noprocess && !procinfo && !taskinfo &&
         <PathInformation namespace={namespace} processes={processes} />
 
     // For user namespaces also prepare ownership information: the user name as
@@ -159,7 +171,7 @@ export const NamespaceInfo = ({
         <NamespaceInformation className={clsx(namespace.type, shared && namespaceShared, className)}>
             <NamespaceBadge namespace={namespace} shared={shared} />
             {childrenCount}
-            {procinfo || pathinfo} {ownerinfo}
+            {procinfo || taskinfo || pathinfo} {ownerinfo}
         </NamespaceInformation>
     )
 }

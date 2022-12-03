@@ -85,7 +85,7 @@ func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual interface{})
 func sameIDType(ns1, ns2 interface{}) bool {
 	return ns1 == ns2 ||
 		(ns1 != nil && ns2 != nil &&
-			ns1.(model.Namespace).ID() == ns2.(model.Namespace).ID() &&
+			ns1.(model.Namespace).ID().Ino == ns2.(model.Namespace).ID().Ino &&
 			ns1.(model.Namespace).Type() == ns2.(model.Namespace).Type())
 }
 

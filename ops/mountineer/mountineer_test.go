@@ -190,7 +190,7 @@ read # wait for test to proceed()
 			Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
 		})
 
-		When("using a mountineer", func() {
+		When("using a mountineer", Ordered, func() {
 
 			var m *Mountineer
 
@@ -207,22 +207,24 @@ read # wait for test to proceed()
 				Expect(m.sandbox).NotTo(BeNil())
 				// And the sandbox must not have terminated even if waiting a few
 				// moments.
-				Consistently(func() *os.ProcessState {
-					return m.sandbox.ProcessState
-				}).WithTimeout(3 * time.Second).WithPolling(250 * time.Millisecond).Should(BeNil())
+				Consistently(func() error {
+					_, err := os.Stat(fmt.Sprintf("/proc/%d", m.sandbox.PID()))
+					return err
+				}).Within(3 * time.Second).ProbeEvery(250 * time.Millisecond).
+					ShouldNot(HaveOccurred())
 			})
 
 			It("sets the contentsroot to the sandbox process", func() {
 				Expect(m.contentsRoot).To(Equal(
-					fmt.Sprintf("/proc/%d/root", m.sandbox.Process.Pid)))
-				Expect(m.PID()).To(Equal(model.PIDType(m.sandbox.Process.Pid)))
+					fmt.Sprintf("/proc/%d/root", m.sandbox.PID())))
+				Expect(m.PID()).To(Equal(m.sandbox.PID()))
 			})
 
 			It("correctly resolves and opens a path", func() {
 				path, err := m.Resolve(canary)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(path).To(Equal(
-					fmt.Sprintf("/proc/%d/root%s", m.sandbox.Process.Pid, canary)))
+					fmt.Sprintf("/proc/%d/root%s", m.sandbox.PID(), canary)))
 
 				f, err := os.Open(path)
 				Expect(err).NotTo(HaveOccurred())
@@ -234,11 +236,13 @@ read # wait for test to proceed()
 			})
 
 			It("shuts down correctly and doesn't leak sandboxes", func() {
-				sandbox := m.sandbox
+				pid := m.PID()
 				m.Close()
-				Eventually(func() *os.ProcessState {
-					return sandbox.ProcessState
-				}).WithTimeout(1 * time.Second).WithPolling(250 * time.Millisecond).ShouldNot(BeNil())
+				Eventually(func() error {
+					_, err := os.Stat(fmt.Sprintf("/proc/%d", pid))
+					return err
+				}).Within(1 * time.Second).ProbeEvery(250 * time.Millisecond).
+					Should(HaveOccurred())
 				Expect(m.sandbox).To(BeNil())
 			})
 

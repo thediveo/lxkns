@@ -20,7 +20,6 @@ import (
 	"reflect"
 
 	"github.com/onsi/gomega"
-	"github.com/onsi/gomega/gstruct"
 	"github.com/onsi/gomega/types"
 	"github.com/thediveo/lxkns/model"
 )
@@ -52,8 +51,7 @@ type beSameProcessMatcher struct {
 	intree   bool // check Parent and Children?
 }
 
-var dummyproc = model.Process{}
-var processT = reflect.TypeOf(dummyproc)
+var processT = reflect.TypeOf(model.Process{})
 
 func (matcher *beSameProcessMatcher) Match(actual interface{}) (bool, error) {
 	if actual == nil && matcher.expected == nil {
@@ -124,13 +122,19 @@ func similarProcess(proc1, proc2 *model.Process) bool {
 		return proc1 == proc2
 	}
 	// "flat" equal: don't dig into the details ;)
-	matches, err := gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-		"PID":       gomega.Equal(proc2.PID),
-		"PPID":      gomega.Equal(proc2.PPID),
-		"Name":      gomega.Equal(proc2.Name),
-		"Cmdline":   gomega.Equal(proc2.Cmdline),
-		"Starttime": gomega.Equal(proc2.Starttime),
-	}).Match(*proc1)
+	similarTasks := []any{}
+	for _, task := range proc2.Tasks {
+		similarTasks = append(similarTasks, BeSimilarTask(task))
+	}
+
+	matches, err := gomega.SatisfyAll(
+		gomega.HaveField("PID", proc2.PID),
+		gomega.HaveField("PPID", proc2.PPID),
+		gomega.HaveField("Cmdline", proc2.Cmdline),
+		gomega.HaveField("ProTaskCommon.Name", proc2.Name),
+		gomega.HaveField("ProTaskCommon.Starttime", proc2.Starttime),
+		gomega.HaveField("Tasks", gomega.ConsistOf(similarTasks...)),
+	).Match(proc1)
 	if err != nil {
 		panic(err)
 	}

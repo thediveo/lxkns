@@ -77,8 +77,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "dumpns outputs discovered namespaces and processes as JSON",
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return cli.BeforeCommand()
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.BeforeCommand(cmd)
 		},
 		RunE: dumpns,
 	}

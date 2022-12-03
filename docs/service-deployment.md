@@ -5,10 +5,11 @@ Features of deploying the containerized lxkns service:
 - **read-only:** the lxkns service can be used on a read-only container file
   system without any issues.
 
-- **non-root:** the holy grail of container hardening … wait till you get to
-  see our capabilities below.
+- **non-root:** the holy grail of container hardening … wait till you get to see
+  our capabilities below. Ah, the sweet scent of security snake oil.
 
-- **unprivileged:** because that doesn't mean in-capable.
+- **unprivileged:** because that doesn't mean in-capable when not using the
+  `--privileged` nuke option.
 
 - **capabilities:** not much to see here, just…
   - `CAP_SYS_PTRACE` gives us access to the namespace information in the proc
@@ -34,15 +35,15 @@ Features of deploying the containerized lxkns service:
 The convertainerized lxkns service correctly handles these pitfalls:
 
 - **reading from other mount namespaces**: in order to discover mount points
-  from a process-less bind-mounted mount namespace, lxkns forks itself and then
-  re-executes the child in the mount namespace to read its procfs `mountinfo`
-  from. The child here acts as the required procfs entry to be able to read the
-  correct `mountinfo` at all. However, when containerized, lxkns runs in its own
-  mount namespace, whereas the bindmount of the mount namespace will be in some
-  other mount namespace, such as the host's initial mount namespace. In order to
-  successfully reference the bindmount in the VFS, lxkns uses the Linux kernel's
-  procfs wormholes: `/proc/[PID]/root/...`, see also
-  [proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html).
+  from a process-less bind-mounted mount namespace, lxkns usually simply kicks
+  off a new thread that then attaches itself to the bind-mounted mount namespace
+  and does nothing more. With this "sandbox" thread idling, lxkns then can read
+  from the bind-mounted mount namespace (such as its `mountinfo`) via the Linux
+  kernel's procfs "wormholes": `/proc/[PID]/root/...`, see also
+  [proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html). In case a mount
+  namespace is in a different user namespace, lxkns uses a separate "sandbox"
+  process instead – which it can create by simply forking and re-executing
+  itself.
 
 - **cgroup namespaced container**: during startup, lxkns detects when it has
   been placed into its own cgroup namespace ... as, for example, it is the case

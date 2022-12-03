@@ -163,8 +163,8 @@ var _ = Describe("ProcessTable", func() {
 var _ = Describe("ProcessListByPID", func() {
 
 	It("sorts Process lists", func() {
-		p1 := &Process{PID: 1, Name: "foo"}
-		p42 := &Process{PID: 42, Name: "bar"}
+		p1 := &Process{PID: 1, ProTaskCommon: ProTaskCommon{Name: "foo"}}
+		p42 := &Process{PID: 42, ProTaskCommon: ProTaskCommon{Name: "bar"}}
 		pls := [][]*Process{
 			{p1, p42},
 			{p42, p1},

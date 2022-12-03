@@ -30,6 +30,8 @@ interface Namespace {
   L Leaders() []*Process
   LeaderPIDs() []PIDType
   L Ealdorman() *Process
+  L LooseThreads() []*Task
+  LooseThreadsIDs() []PIDType
   String() string
 }
 

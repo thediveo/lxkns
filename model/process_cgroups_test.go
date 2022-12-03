@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
-	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/fdooze"
 )
 
@@ -62,10 +61,10 @@ var _ = Describe("cgrouping", func() {
 
 	It("finds control groups of processes", func() {
 		procs := NewProcessTable(false)
-		Expect(procs).To(ContainElement(PointTo(MatchFields(IgnoreExtras, Fields{
-			"CpuCgroup":    Not(BeEmpty()),
-			"FridgeCgroup": Not(BeEmpty()),
-		}))))
+		Expect(procs).To(ContainElement(And(
+			HaveField("CpuCgroup", Not(BeEmpty())),
+			HaveField("FridgeCgroup", Not(BeEmpty())),
+		)))
 	})
 
 	It("gets fridge status", func() {
@@ -138,25 +137,24 @@ rmdir $CTRL
 			p := NewProcessTable(true)
 			return p[pid]
 		}
-		Expect(f()).Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"FridgeFrozen": BeFalse(),
-			"FridgeCgroup": Equal(filepath.Join("/", freezercgname)),
-		})))
+		Expect(f()).Should(And(
+			HaveField("FridgeFrozen", BeFalse()),
+			HaveField("FridgeCgroup", Equal(filepath.Join("/", freezercgname))),
+		))
 
 		// Freeze
 		cmd.Proceed()
-		Eventually(f, "4s", "500ms").Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"FridgeFrozen": BeTrue(),
-		})))
+		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", BeTrue()))
 
 		// Thaw
 		cmd.Proceed()
-		Eventually(f, "4s", "500ms").Should(PointTo(MatchFields(IgnoreExtras, Fields{
-			"FridgeFrozen": BeFalse(),
-		})))
+		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", BeFalse()))
 
 		cmd.Proceed()
-		Eventually(f, "4s", "500ms").Should(BeNil())
+		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(BeNil())
 	})
 
 })

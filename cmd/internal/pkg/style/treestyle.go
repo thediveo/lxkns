@@ -74,7 +74,7 @@ func TreeStyleSetupCLI(rootCmd *cobra.Command) {
 // dumping of styling profiles, just before the selected command runs. In case
 // of dumping, it also exits this process, so the itself command won't ever
 // start.
-func TreeStyleBeforeCommand() error {
+func TreeStyleBeforeCommand(*cobra.Command) error {
 	switch treestyle {
 	case TreeStyleLine:
 		NamespaceStyler = asciitree.NewTreeStyler(asciitree.TreeStyle{

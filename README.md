@@ -14,10 +14,13 @@
 
 ## Overview
 
-`lxkns` discovers Linux namespaces and also the mount points inside mount
-namespaces. The discovery engine then relates the found namespaces to
-containers, where possible. In (almost) every nook and cranny of your Linux
-hosts, for instance by looking at bind-mounts and open file descriptors.
+`lxkns` discovers:
+- Linux namespaces in almost every nook and cranny of your hosts (open file
+  descriptors, bind-mounts, tasks),
+- the mount points inside mount namespaces (correctly representing
+  "overmounts").
+- container workloads: these are then related to the underlying Linux
+  namespaces.
 
 The following container engine workloads are detected:
 - Docker,
@@ -71,5 +74,5 @@ one, _erm_, go.
 
 ## ⚖️ Copyright and License
 
-`lxkns` is Copyright 2020‒22 Harald Albrecht, and licensed under the Apache
+`lxkns` is Copyright 2020‒23 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.

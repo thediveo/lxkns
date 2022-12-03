@@ -124,7 +124,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		sleepy = containerds[0]
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).NotTo(BeNil())
-		Expect(sleepy.Process.Cmdline).To(ConsistOf("sleep", ContainSubstring("1000")))
+		Expect(sleepy.Process.Cmdline).To(ConsistOf("/bin/sh", "-c", ContainSubstring("sleep 1000")))
 		Expect(sleepy.PID).To(Equal(sleepy.Process.PID))
 	})
 

@@ -42,4 +42,9 @@ partitioning of processes using Linux kernel namespaces. For instance, processes
 in Docker containers will show control group names in the form of `docker/<id>`
 (or `docker-<id>.scope`, or ...), where the id is the usual 64 hex char string.
 Plain containerd container processes will show up with `<namespace>/<id>`
-control group names.
+control group names. However, the exact cgroup path structure changes all the
+time depending on distribution, systemd moon phase, and Debian server load.
+
+Thankfully, **lxkns**' [Containerizer and Decorator technology](containers)
+provides a far superior discovery experience as it properly identifies container
+processes with their correct container names as managed by container engines.  

@@ -6,7 +6,7 @@ into the ("target") mount namespace passed to it via the `sleepy_mntns`
 environment variable, saying "OK", and then go to sleep.
 
 If available, `mntnssandbox` is automatically used by the
-[mountineers](mountineers) API.
+[mountineers](mountineers) API when in need of a "sandbox" process.
 
 The "OK" is a necessary synchronization message as the process spinning up the
 sandbox process otherwise cannot know when the sandbox process has switched its

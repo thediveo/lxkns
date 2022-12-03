@@ -3,14 +3,21 @@
 * [Features](features)
 * [Getting Started](getting-started)
 * [Getting Around](getting-around)
+  * [Sidebar/Help](sidebar-help)
+  * [Discovery Refresh](refresh)
+  * [All Namespaces View](all-namespaces)
+  * [Namespace Type Views](typed-namespace)
+  * [Mount Namespaces View](mount-namespace)
+  * [Settings](settings)
 * Discovery
   * [Namespaces](discovery)
   * [Containers](containers)
   * [Cgroups](cgroup)
   * [Mount Points](mountpoint)
+  * [Docker Managed Plugins](docker-managed-plugins)
 * Service
   * [Deployment](service-deployment)
-  * [Behind Proxy](service-behind-proxy)
+  * [Behind a Proxy](service-behind-proxy)
   * [Extensible](service-extensible)
 * API
   * [Important Changes](changelog)

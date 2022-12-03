@@ -47,8 +47,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			}
 			return nil
 		},
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return cli.BeforeCommand()
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.BeforeCommand(cmd)
 		},
 		RunE: nscapscmd,
 	}

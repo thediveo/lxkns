@@ -13,7 +13,6 @@
 // limitations under the License.
 
 //go:build linux
-// +build linux
 
 package discover
 
@@ -45,8 +44,8 @@ var _ = Describe("procfs references", func() {
 	)
 
 	procs := model.ProcessTable{
-		42:  {Starttime: 100},
-		666: {Starttime: 666},
+		42:  {ProTaskCommon: model.ProTaskCommon{Starttime: 100}},
+		666: {ProTaskCommon: model.ProTaskCommon{Starttime: 666}},
 	}
 
 	DescribeTable("preferring procfs references",

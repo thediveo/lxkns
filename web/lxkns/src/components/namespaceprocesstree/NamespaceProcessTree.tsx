@@ -25,10 +25,11 @@ import TreeItem from '@mui/lab/TreeItem'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
-import { compareNamespaceById, compareProcessByNameId, Discovery, Namespace, NamespaceMap, NamespaceType, Process, ProcessMap } from 'models/lxkns'
+import { Busybody, compareBusybodies, compareNamespaceById, compareProcessByNameId, Discovery, isProcess, Namespace, NamespaceMap, NamespaceType, Process, ProcessMap } from 'models/lxkns'
 import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 import { MountpointInfoModalProvider } from 'components/mountpointinfomodal'
+import { TaskInfo } from 'components/taskinfo'
 
 
 /** Internal helper to filter "system(d)" processes. */
@@ -107,10 +108,12 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
 }
 
 /**
- * Renders a single namespace node including processes joined to this namespace,
- * as well as child namespaces (hierarchical namespaces only). Instead of just
- * dumping a rather useless plain process tree, this component renders only
- * leaders and then sub-processes in different cgroups.
+ * Renders a single namespace node including processes (and loose threads)
+ * joined to this namespace, and child namespaces in case of hierarchical
+ * namespaces. Instead of just dumping a rather useless plain process tree, this
+ * component renders only leaders and then additionally only those sub-processes
+ * in different cgroups. Loose threads are simply listed (but not grouped in any
+ * way).
  *
  * @param namespace namespace information.
  */
@@ -121,14 +124,30 @@ const NamespaceTreeItem = (
     DetailsFactory?: NamespaceProcessTreeDetailFactory
 ) => {
 
+    // For later display we want to know if there is only one loose threads and
+    // no leaders so that we don't render the loose thread twice...
+    const loosethreads = namespace.ealdorman === null && namespace.loosethreads.length === 1
+        ? [] : namespace.loosethreads
+
     // Get the leader processes and maybe some sub-processes (in different
     // cgroups), all inside this namespace. Please note that if there is only a
     // single leader process, then it won't show up -- it has already been
     // indicated as part of the namespace information and thus
     // controlledProcessTreeItem will drop it.
-    const procs = namespace.leaders
-        .sort(compareProcessByNameId)
-        .map(proc => controlledProcessTreeItem(proc, namespace.type, showSystemProcesses))
+    //
+    // Also get the loose threads, if any.
+    const busybodies = (namespace.leaders as Busybody[])
+        .concat(loosethreads)
+        .sort(compareBusybodies)
+        .map(busybody => isProcess(busybody)
+            ? controlledProcessTreeItem(busybody, namespace.type, showSystemProcesses)
+            : <TreeItem
+            className="controlledtask"
+            key={busybody.tid}
+            nodeId={busybody.tid.toString()}
+            label={<TaskInfo task={busybody} />}
+        />
+        )
         .flat()
 
     // In case of hierarchical namespaces also render the child namespaces.
@@ -141,7 +160,8 @@ const NamespaceTreeItem = (
         nodeId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} processes={processes} />}
     >{[
-        ...procs.concat(childnamespaces),
+        ...busybodies,
+        ...childnamespaces,
         ...(DetailsFactory ? [<DetailsFactory key="42" namespace={namespace} />] : [])
     ]}</TreeItem>
 }
@@ -228,7 +248,7 @@ export const NamespaceProcessTree = ({
                     .flat()
                     .map(proc => proc.pid.toString())
                 setExpanded(allnsids.concat(
-                    allprocids, 
+                    allprocids,
                     details.expandAll ? details.expandAll(discovery.namespaces) : []))
                 break
             case COLLAPSEALL:

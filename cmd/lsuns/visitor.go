@@ -25,6 +25,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/internal/tool"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 )
@@ -33,18 +34,12 @@ import (
 // root user namespaces and then recursively dives into the user namespace
 // hierarchy.
 type UserNSVisitor struct {
-	Details bool
+	Details bool // when true, also show all owned non-user namespaces.
 }
 
 // Roots returns the given topmost hierarchical user namespaces sorted.
-func (v *UserNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	userroots := discover.SortNamespaces(roots.Interface().([]model.Namespace))
-	count := len(userroots)
-	children = make([]reflect.Value, count)
-	for idx := 0; idx < count; idx++ {
-		children[idx] = reflect.ValueOf(userroots[idx])
-	}
-	return
+func (v *UserNSVisitor) Roots(roots reflect.Value) []reflect.Value {
+	return tool.SortRootNamespaces(roots)
 }
 
 // Label returns the text label for a namespace node. Everything else will have
@@ -52,19 +47,20 @@ func (v *UserNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	if ns, ok := node.Interface().(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = fmt.Sprintf("%s%s %s",
-			output.NamespaceIcon(ns),
-			style.V(ns.(model.NamespaceStringer).TypeIDString()),
+		label = tool.Separate(
+			output.NamespaceIcon(ns)+
+				style.V(ns.(model.NamespaceStringer).TypeIDString()).String(),
 			output.NamespaceReferenceLabel(ns))
 	}
+	// If it is a user namespace we render information about the user that
+	// created this particular user namespace: the user ID and, if available,
+	// the user name.
 	if uns, ok := node.Interface().(model.Ownership); ok {
-		username := ""
+		label = tool.Separate(label, fmt.Sprintf("created by UID %d",
+			style.OwnerStyle.V(uns.UID())))
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
-			username = fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
+			label += fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
 		}
-		label += fmt.Sprintf(" created by UID %d%s",
-			style.OwnerStyle.V(uns.UID()),
-			username)
 	}
 	return
 }
@@ -73,17 +69,22 @@ func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 // always a user namespace), as well as the list of properties (owned
 // non-user namespaces) and the list of child user namespace nodes.
 func (v *UserNSVisitor) Get(node reflect.Value) (
-	label string, properties []string, children reflect.Value) {
-	// Label for this user namespace...
+	label string,
+	properties []string,
+	children reflect.Value,
+) {
+	// Determine the label text for this user namespace.
 	label = v.Label(node)
-	// Children of this user namespace...
-	if hns, ok := node.Interface().(model.Hierarchy); ok {
-		children = reflect.ValueOf(discover.SortChildNamespaces(hns.Children()))
+	// Determine the children of this user namespace, which are in turn user
+	// namespaces.
+	if hierns, ok := node.Interface().(model.Hierarchy); ok {
+		children = reflect.ValueOf(discover.SortChildNamespaces(hierns.Children()))
 	}
-	// Owned (non-user) namespaces...
+	// In case a detailed tree has been requested, determine the owned non-user
+	// namespaces.
 	if v.Details {
-		if uns, ok := node.Interface().(model.Ownership); ok {
-			ownedns := uns.Ownings()
+		if userns, ok := node.Interface().(model.Ownership); ok {
+			ownedns := userns.Ownings()
 			for _, nstype := range model.TypeIndexLexicalOrder {
 				if nstype == model.UserNS {
 					// The lxkns information model does not add child user

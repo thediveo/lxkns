@@ -22,4 +22,4 @@ type SetupCLI func(*cobra.Command)
 
 // BeforeCommand defines an exposed plugin symbol type for running checks after
 // the command line args have been processed and before running the command.
-type BeforeCommand func() error
+type BeforeCommand func(*cobra.Command) error

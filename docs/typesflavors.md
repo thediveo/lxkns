@@ -14,8 +14,17 @@ container *types*.
 
 #### Containers
 
-- `Type`: `"docker.com"`
-- `Flavor`: `"docker.com"`
+- "ordinary" containers -- in particular, just the genuine flavor.
+  - `Type`: `"docker.com"`
+  - `Flavor`: `"docker.com"`
+- ["managed" plugin containers](https://docs.docker.com/engine/extend/) --
+  flavored by the `dockerplugin` decorator.
+  - `Type`: `"containerd.io"` ⚠
+  - `Flavor`: `"plugin.docker.com"`
+- [Siemens Industrial Edge](http://siemens.com/industrial-edge) App containers
+  -- flavored by the `industrialedge` decorator.
+  - `Type`: `"docker.com"`
+  - `Flavor`: `"com.siemens.industrialedge.app"`
 
 ## Containerd
 
@@ -30,7 +39,10 @@ container *types*.
 - `Type`: `"containerd.io"`
 - `Flavor`: `"containerd.io"`
 
-> [!ATTENTION] As the containerd namespace (not: Linux-kernel namespace) named
-> `"moby"` is used by the Docker engine for its containers and the names(!) of
-> Docker containers are not accessible via `containerd` this particular `"moby"`
-> namespace is always ignored by the `containerd`-specific discovery.
+> [!ATTENTION] The containerd namespaces (not: Linux-kernel namespace) named
+> `"moby"` and `"plugins.moby"` are used by the Docker engine for its (plugin)
+> containers. Now, the names(!) of Docker containers are not accessible via
+> `containerd` so the `"moby"` namespace is always ignored by the
+> `containerd`-specific discovery. However, the `"plugins.moby"` is handled as a
+> containerd Container instead of a Docker container, and later post-processed
+> by the `dockerplugin` decorator.

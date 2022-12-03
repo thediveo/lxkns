@@ -204,8 +204,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "lxkns provides Linux-kernel namespace discovery as a service",
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return cli.BeforeCommand()
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.BeforeCommand(cmd)
 		},
 		RunE: lxknsservice,
 	}

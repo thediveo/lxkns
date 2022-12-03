@@ -50,6 +50,28 @@ detach from namespaces.
 However, given enough privileges ("capabilities"), processes can switch between
 namespaces; subject to some further restrictions based on the type of namespace.
 
+## Threads/Tasks
+
+Now terminology gets really murky, thanks to the confusion the Linux kernel code
+base and documentation is sowing here.
+
+The Linux kernel uses the term "task" when referring to some unit of execution –
+and a task may or may not share certain system resources with other tasks in the
+Linux system. For instance, a bunch of tasks may share their file descriptors,
+file system view, and memory: such tasks usually are termed "threads".
+
+Threads (tasks) are also always attached to exactly one namespace of each type.
+
+Tasks can be "thread group leaders" and then can be regarded as representing the
+traditional unix processes. Contrary to some [kernel
+documentation](https://www.kernel.org/doc/html/latest/accounting/taskstats.html)
+there actually is an asymmetry between a thread group leader and the other tasks
+of the same process. As pointed out in the
+[proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html) man page certain
+elements, such as `/proc/$PID/cwd` in the process filesystem become unavailable
+when the thread group leader has terminated while other tasks in this group are
+still alive.
+
 ## Initial Namespaces
 
 The so-called "initial namespaces" are created automatically by the Linux kernel

@@ -32,8 +32,8 @@ import (
 // initialize styling to a well-known minimal state suitable for testing.
 func PrepareForTest() {
 	rootCmd := &cobra.Command{
-		Run: func(_ *cobra.Command, _ []string) {
-			_ = cli.BeforeCommand()
+		Run: func(cmd *cobra.Command, _ []string) {
+			_ = cli.BeforeCommand(cmd)
 		},
 	}
 	cli.AddFlags(rootCmd)

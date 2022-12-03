@@ -28,6 +28,8 @@ packages:
   namespace IDs, types and relationships; additionally offers (limited)
   namespaces switching for individual Go routines (respective their specific
   backing OS thread).
+  - `lxkns/ops/mountineer`: allows to use ordinary file I/O operations to access
+    files and directories in a different mount namespace.
 
 Auxiliary packages:
 
@@ -240,7 +242,7 @@ if the process' UID is the same as the owner UID of the child user namespace, or
 if it has sufficient capabilities in the current user namespace and thus in all
 child namespaces thereof.
 
-## Linux Namespace Representation in lxkns
+## Namespace Representation in lxkns
 
 `model` represents the namespace concepts we've just learned. It represents them
 using four interfaces, each interface grouping related aspects of namespaces.
@@ -266,12 +268,14 @@ using four interfaces, each interface grouping related aspects of namespaces.
   namespaces owned by a specific "user" namespace. This interface is available
   only on "user" namespaces.
 
-## Linux Namespaces and Processes
+## Namespaces and Processes & Tasks
 
-While not all namespaces are necessarily always related to processes, many
-namespaces usually have processes "attached" to them. Not least is the `proc`
-filesystem an important place to discover namespaces. `lxkns` automatically
-discovers the tree of processes, and the links between processes and namespaces.
+While not all namespaces are necessarily always related to processes (and thus
+tasks), many namespaces usually have processes (and tasks) "attached" to them.
+Not least is the `proc` filesystem an important place to discover namespaces.
+`lxkns` automatically discovers the tree of processes, and the links between
+processes and namespaces. It additionally discovers the tasks of all processes
+and again the namespaces the tasks are attached to.
 
 ![Processes and Namespaces](_images/lxkns-processes.svg)
 
@@ -301,6 +305,18 @@ Finally, a process might be associated with a container.
 > [!WARNING] **lxkns** only associates the initial process of a container with
 > its container. It does **no** associate any child processes of an initial
 > container process with the container.
+
+In the same way, a `Namespace` _only_ references `Task`s in form of "loose
+threads": these are tasks that are attached to different namespaces compared to
+their corresponding processes. Please note that there is no "leader" hierarchy
+defined for tasks. The underlying idea here is that there usually will only be
+few "stray" tasks and organizing them would increase the model's complexity and
+most probably not fit various use cases anyway.
+
+Please note that since container engines deal only with container processes --
+as tasks are private process business anyway -- tasks are not directly
+associated to a container. Instead, they are indirectly related via the
+processes of tasks.
 
 ## PID Translation Map
 
@@ -335,6 +351,8 @@ _namespace-to_&gt; tuples with their corresponding _PID-to's_.
 A `Translate()` operation then looks up the specified namespaced PID, getting
 the corresponding process' list of namespaced PIDs. It then returns the PID
 matching the destination "PID" namespace.
+
+Please note that currently there is no support for task ID (TID) translation.
 
 ## Containers!
 

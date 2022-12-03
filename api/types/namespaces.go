@@ -32,6 +32,7 @@ import (
 type NamespacesDict struct {
 	*model.AllNamespaces
 	ProcessTable // our enhanced process table ;)
+	TaskTable    // ...and the Task dictionary for unmarshalling.
 }
 
 // NewNamespacesDict returns a new and properly initialized [NamespacesDict]
@@ -51,6 +52,7 @@ func NewNamespacesDict(discoveryresults *discover.Result) *NamespacesDict {
 			ProcessTable:  ProcessTable{discoveryresults.Processes, nil},
 		}
 	}
+	d.TaskTable = TaskTable{}
 	d.ProcessTable.Namespaces = d
 	return d
 }
@@ -120,14 +122,15 @@ func (d *NamespacesDict) UnmarshalJSON(data []byte) error {
 // after unmarshalling (such as the list of children and the owned
 // namespaces).
 type NamespaceUnMarshal struct {
-	ID       uint64             `json:"nsid"`                // namespace ID.
-	Type     string             `json:"type"`                // "net", "user", et cetera...
-	Owner    uint64             `json:"owner,omitempty"`     // namespace ID of owning user namespace.
-	Ref      model.NamespaceRef `json:"reference,omitempty"` // file system path reference(s).
-	Leaders  []model.PIDType    `json:"leaders,omitempty"`   // list of leader PIDs.
-	Parent   uint64             `json:"parent,omitempty"`    // PID/user: namespace ID of parent namespace.
-	UserUID  int                `json:"user-id,omitempty"`   // user: owner's user ID (UID).
-	UserName string             `json:"user-name,omitempty"` // user: name.
+	ID           uint64             `json:"nsid"`                    // namespace ID.
+	Type         string             `json:"type"`                    // "net", "user", et cetera...
+	Owner        uint64             `json:"owner,omitempty"`         // namespace ID of owning user namespace.
+	Ref          model.NamespaceRef `json:"reference,omitempty"`     // file system path reference(s).
+	Leaders      []model.PIDType    `json:"leaders,omitempty"`       // list of leader PIDs attached to this namespace.
+	LooseThreads []model.PIDType    `json:"loose-threads,omitempty"` // list of "loose" tasks attached to this namespace.
+	Parent       uint64             `json:"parent,omitempty"`        // PID/user: namespace ID of parent namespace.
+	UserUID      int                `json:"user-id,omitempty"`       // user: owner's user ID (UID).
+	UserName     string             `json:"user-name,omitempty"`     // user: name.
 }
 
 // NamespaceMarshal adds those fields to [NamespaceUnmarshal] we marshal as a
@@ -140,16 +143,20 @@ type NamespaceMarshal struct {
 	Tenants   []uint64      `json:"possessions,omitempty"` // user: list of owned namespace IDs
 }
 
-// MarshalNamespace emits a Namespace in JSON textual format.
+// marshalNamespace emits a Namespace in JSON textual format. It uses a user ID
+// to user name mapping, if available. This marshalling method is a helper to
+// marshal an individual Namespace when marshalling a complete namespaces
+// dictionary.
 func (d NamespacesDict) marshalNamespace(ns model.Namespace, usernames map[uint32]string) ([]byte, error) {
 	// First set up the marshalling data used with all types of namespaces,
 	// albeit some fields might not be marshalled when not in use.
 	aux := NamespaceMarshal{
 		NamespaceUnMarshal: NamespaceUnMarshal{
-			ID:      ns.ID().Ino,
-			Type:    ns.Type().Name(),
-			Ref:     ns.Ref(),
-			Leaders: ns.LeaderPIDs(),
+			ID:           ns.ID().Ino,
+			Type:         ns.Type().Name(),
+			Ref:          ns.Ref(),
+			Leaders:      ns.LeaderPIDs(),
+			LooseThreads: ns.LooseThreadIDs(),
 		},
 	}
 	// For convenience, throw in the ealdoman's PID, if available...
@@ -215,13 +222,15 @@ func (d NamespacesDict) UnmarshalNamespace(data []byte) (model.Namespace, error)
 	// before its "definition", or create a suitable namespace object right
 	// now.
 	ns := d.Get(nsid, nstype)
-	cns := ns.(namespaces.NamespaceConfigurer)
-	cns.SetRef(aux.Ref)
+	cfgns := ns.(namespaces.NamespaceConfigurer)
+	cfgns.SetRef(aux.Ref)
 	// Resolve leader process references, if a process table was given...
-	if len(aux.Leaders) != 0 {
-		for _, pid := range aux.Leaders {
-			cns.AddLeader(d.ProcessTable.Get(pid))
-		}
+	for _, pid := range aux.Leaders {
+		cfgns.AddLeader(d.ProcessTable.Get(pid))
+	}
+	// Next, resolve any loose threads (tasks)...
+	for _, tid := range aux.LooseThreads {
+		cfgns.AddLooseThread(d.TaskTable.Get(nil /* no yet */, tid))
 	}
 	// Resolve the reference to the owning user namespace, if any...
 	if aux.Owner != 0 {
@@ -229,11 +238,11 @@ func (d NamespacesDict) UnmarshalNamespace(data []byte) (model.Namespace, error)
 		// Working around my own internal API for configuring Namespaces, it
 		// seems...
 		_ = d.Get(ownernsid, species.CLONE_NEWUSER)
-		cns.SetOwner(ownernsid)
+		cfgns.SetOwner(ownernsid)
 		// This will correctly set references from our namespace <--> user
 		// namespace in both(!) directions; thus we're ignoring the list of
 		// owned namespaces for user namespaces during unmarshalling.
-		cns.ResolveOwner(d.AllNamespaces[model.UserNS])
+		cfgns.ResolveOwner(d.AllNamespaces[model.UserNS])
 	}
 	// Resolve the reference to the parent namespace, if any...
 	if hns, ok := ns.(model.Hierarchy); ok && aux.Parent != 0 {

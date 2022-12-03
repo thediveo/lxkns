@@ -23,12 +23,14 @@ import (
 )
 
 var proc1 = &model.Process{
-	PID:        1,
-	PPID:       0,
-	Cmdline:    []string{"/sbin/domination", "--world"},
-	Name:       "(init)",
-	Starttime:  123,
-	Namespaces: namespaceset,
+	PID:     1,
+	PPID:    0,
+	Cmdline: []string{"/sbin/domination", "--world"},
+	ProTaskCommon: model.ProTaskCommon{
+		Name:       "(init)",
+		Starttime:  123,
+		Namespaces: namespaceset,
+	},
 }
 
 func init() {
@@ -37,12 +39,14 @@ func init() {
 }
 
 var proc2 = &model.Process{
-	PID:        666,
-	PPID:       proc1.PID,
-	Cmdline:    []string{"/sbin/fool"},
-	Name:       "fool",
-	Starttime:  666666,
-	Namespaces: namespaceset,
+	PID:     666,
+	PPID:    proc1.PID,
+	Cmdline: []string{"/sbin/fool"},
+	ProTaskCommon: model.ProTaskCommon{
+		Name:       "fool",
+		Starttime:  666666,
+		Namespaces: namespaceset,
+	},
 }
 
 var namespaceset = model.NamespacesSet{
