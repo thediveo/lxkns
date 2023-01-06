@@ -21,7 +21,27 @@
                 "time": 4026531840,
                 "user": 4026531841,
                 "uts": 4026531842
-            }
+            },
+            "tasks": [
+                {
+                    "namespaces": {
+                        "cgroup": 4026531835,
+                        "ipc": 4026531836,
+                        "mnt": 4026531837,
+                        "net": 4026531838,
+                        "pid": 4026531839,
+                        "time": 4026531840,
+                        "user": 4026531841,
+                        "uts": 4026531842
+                    },
+                    "name": "süstemdee",
+                    "starttime": 0,
+                    "cpucgroup": "/init.scope",
+                    "fridgegroup": "/",
+                    "fridgefrozen": false,
+                    "tid": 1
+                }
+            ]
         },
         "2": {
             "pid": 2,
@@ -43,7 +63,26 @@
                 "time": 4026531840,
                 "user": 4026531841,
                 "uts": 4026531842
-            }
+            },
+            "tasks": [
+                {
+                    "name": "kthreadd",
+                    "starttime": 0,
+                    "cpucgroup": "/",
+                    "fridgegroup": "/",
+                    "fridgefrozen": false,
+                    "namespaces": {
+                        "cgroup": 4026531835,
+                        "ipc": 4026531836,
+                        "mnt": 4026531837,
+                        "net": 4026531838,
+                        "pid": 4026531839,
+                        "time": 4026531840,
+                        "user": 4026531841,
+                        "uts": 4026531842
+                    }
+                }
+            ]
         },
         "666": {
             "pid": 666,
@@ -66,7 +105,26 @@
                 "time": 4026531840,
                 "user": 4026532666,
                 "uts": 4026531842
-            }
+            },
+            "tasks": [
+                {
+                    "name": "looser",
+                    "starttime": 777666,
+                    "cpucgroup": "/loosers.scope",
+                    "fridgegroup": "/loosers",
+                    "fridgefrozen": false,
+                    "namespaces": {
+                        "cgroup": 4026531835,
+                        "ipc": 4026531836,
+                        "mnt": 4026531837,
+                        "net": 4026531838,
+                        "pid": 4026531839,
+                        "time": 4026531840,
+                        "user": 4026532666,
+                        "uts": 4026531842
+                    }
+                }
+            ]
         }
     },
     "namespaces": {
@@ -74,7 +132,9 @@
             "nsid": 4026531835,
             "type": "cgroup",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/cgroup"],
+            "reference": [
+                "/proc/1/ns/cgroup"
+            ],
             "leaders": [
                 1
             ],
@@ -84,7 +144,9 @@
             "nsid": 4026531836,
             "type": "ipc",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/ipc"],
+            "reference": [
+                "/proc/1/ns/ipc"
+            ],
             "leaders": [
                 1
             ],
@@ -94,7 +156,9 @@
             "nsid": 4026531837,
             "type": "mnt",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/mnt"],
+            "reference": [
+                "/proc/1/ns/mnt"
+            ],
             "leaders": [
                 1
             ],
@@ -104,7 +168,9 @@
             "nsid": 4026531838,
             "type": "net",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/net"],
+            "reference": [
+                "/proc/1/ns/net"
+            ],
             "leaders": [
                 1
             ],
@@ -114,7 +180,9 @@
             "nsid": 4026531839,
             "type": "pid",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/pid"],
+            "reference": [
+                "/proc/1/ns/pid"
+            ],
             "leaders": [
                 1
             ],
@@ -124,7 +192,9 @@
             "nsid": 4026531840,
             "type": "time",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/time"],
+            "reference": [
+                "/proc/1/ns/time"
+            ],
             "leaders": [
                 1
             ],
@@ -135,7 +205,9 @@
             "type": "user",
             "user-id": 0,
             "user-name": "root",
-            "reference": ["/proc/1/ns/user"],
+            "reference": [
+                "/proc/1/ns/user"
+            ],
             "leaders": [
                 1
             ],
@@ -145,7 +217,9 @@
             "nsid": 4026531842,
             "type": "uts",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/uts"],
+            "reference": [
+                "/proc/1/ns/uts"
+            ],
             "leaders": [
                 1
             ],
@@ -155,7 +229,10 @@
             "nsid": 4026532123,
             "type": "mnt",
             "owner": 4026531841,
-            "reference": ["/proc/1/ns/mnt", "/run/snackd/ns/calcium.mnt"],
+            "reference": [
+                "/proc/1/ns/mnt",
+                "/run/snackd/ns/calcium.mnt"
+            ],
             "leaders": []
         },
         "4026532666": {
@@ -163,7 +240,9 @@
             "type": "user",
             "user-id": 65534,
             "user-name": "looser",
-            "reference": ["/proc/666/ns/user"],
+            "reference": [
+                "/proc/666/ns/user"
+            ],
             "leaders": [
                 666
             ],

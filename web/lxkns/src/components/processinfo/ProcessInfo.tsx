@@ -14,14 +14,13 @@
 
 import clsx from 'clsx'
 
-import { Pause, PlayArrow } from '@mui/icons-material'
 import { styled, Tooltip } from '@mui/material'
 
-import CgroupNamespace from 'icons/namespaces/Cgroup'
 import ProcessIcon from 'icons/Process'
 import Init1Icon from 'icons/Init1'
 import { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
+import CgroupInfo from 'components/cgroupinfo/CgroupInfo'
 
 
 const piShort = "short-processinfo"
@@ -49,29 +48,7 @@ const ContainerInformation = styled(ContainerInfo)(({ theme }) => ({
     marginRight: '0.5em',
 }))
 
-const CgroupInfo = styled('span')(({ theme }) => ({
-    marginLeft: '0.5em',
-    '& .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
-        color: theme.palette.cgroup,
-    },
-}))
-
-const CgroupIcon = styled(CgroupNamespace)(({ theme }) => ({
-    '&.MuiSvgIcon-root + .MuiSvgIcon-root': {
-        marginLeft: '-0.2em',
-    }
-}))
-
-const CgroupPath = styled('span')(({ theme }) => ({
-    color: theme.palette.cgroup,
-    '&::before': { content: '"«"' },
-    '&::after': { content: '"»"' },
-}))
-
-const ProcessName = styled('span')(({ theme }) => ({
+export const ProcessName = styled('span')(({ theme }) => ({
     fontStyle: 'italic',
     color: theme.palette.process,
     '&::before': {
@@ -115,9 +92,6 @@ export interface ProcessInfoProps {
  * contexts, such as a single process tree node.
  */
 export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
-    const fridge = process.fridgefrozen ?
-        <Pause fontSize="inherit" /> : <PlayArrow fontSize="inherit" />
-
     return !!process && (
         <ProcessInformation className={clsx(className, short && piShort)}>
             {process.container && <ContainerInformation container={process.container} />}
@@ -126,14 +100,8 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>
-            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container && (
-                <Tooltip title="control-group path" className="cgroupinfo">
-                    <CgroupInfo className={className}>
-                        <CgroupIcon fontSize="inherit" />
-                        {fridge}
-                        <CgroupPath>{process.cpucgroup}</CgroupPath>
-                    </CgroupInfo>
-                </Tooltip>)}
+            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container 
+                && <CgroupInfo busybody={process} />}
         </ProcessInformation>
     )
 }

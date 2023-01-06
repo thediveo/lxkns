@@ -38,10 +38,12 @@ var (
 
 	OwnerStyle        Style // styles owner username and UID
 	ProcessStyle      Style // styles process names
+	TaskStyle         Style // styles task names
 	ControlGroupStyle Style // control group names/references
 	UnknownStyle      Style // styles undetermined elements, such as unknown PIDs.
 
 	ContainerStyle Style // styles container names/IDs
+	PathStyle      Style // styles bindmounted/procfs path references.
 )
 
 // Styles maps style configuration top-level element names to their
@@ -62,8 +64,10 @@ var Styles = map[string]*Style{
 
 	"owner":        &OwnerStyle,
 	"process":      &ProcessStyle,
+	"task":         &TaskStyle,
 	"controlgroup": &ControlGroupStyle,
 	"unknown":      &UnknownStyle,
 
 	"container": &ContainerStyle,
+	"path":      &PathStyle,
 }

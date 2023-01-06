@@ -62,6 +62,8 @@ export interface Namespace {
     ealdorman: Process | null
     /** list of top-most processes joined to this namespace. */
     leaders: Process[]
+    /** list of loose threads (tasks). */
+    loosethreads: Task[]
     /** user and pid namespaces only: the parent namespace, otherwise null */
     parent: Namespace | null
     /** user and pid namespaces only: the child namespaces, otherwise []. */
@@ -73,6 +75,14 @@ export interface Namespace {
     /** calculated: mount paths in this mount namespace */
     mountpaths?: MountPathMap
 }
+
+/** 
+ * isPassive returns true if the given Namespace has been bindmounted or
+ * otherwise referenced (such as by an open file descriptor) and also has
+ * neither an ealdorman process nor any loose threads attached to it.
+ */
+export const isPassive = (ns: Namespace) =>
+    !!ns && ns.ealdorman === null && ns.loosethreads.length === 0
 
 /**
  * Each OS-level process is attached to namespaces, exactly one of each type.
@@ -105,6 +115,7 @@ export interface Process {
     ppid: number
     parent: Process | null
     children: Process[]
+    tasks: Task[]
     name: string
     cmdline: string
     starttime: number
@@ -116,6 +127,30 @@ export interface Process {
 }
 
 export interface ProcessMap { [key: string]: Process }
+
+/**
+ * Information about a Linux task, which represents a thread inside a single
+ * OS-level process. One of these tasks is the main/initial task (thread)
+ * representing the process itself: its TID will the its process' PID.
+ */
+export interface Task {
+    tid: number
+    process: Process
+    name: string
+    starttime: number
+    cpucgroup: string
+    fridgecgroup: string
+    fridgefrozen: boolean
+    namespaces: NamespaceSet
+}
+
+export interface TaskMap { [key: string]: Task }
+
+export type Busybody = (Process | Task)
+
+export const isTask = (bb: Busybody): bb is Task => bb && (bb as Task).tid !== undefined 
+export const isProcess = (bb: Busybody): bb is Process => bb && (bb as Process).pid !== undefined
+
 export interface ContainerMap { [id: string]: Container }
 export interface EngineMap { [id: string]: Engine }
 export interface GroupMap { [id: string]: Group }

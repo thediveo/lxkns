@@ -53,7 +53,7 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 	var sleepies []*dockertest.Resource
 	var docksock string
 
-	BeforeAll(func() {
+	BeforeAll(slowSpec, func(ctx context.Context) {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -71,7 +71,7 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 			Eventually(func() error {
 				_, err := pool.Client.InspectContainer(name)
 				return err
-			}).WithTimeout(5 * time.Second).WithPolling(100 * time.Millisecond).
+			}).WithContext(ctx).Within(5 * time.Second).ProbeEvery(100 * time.Millisecond).
 				Should(HaveOccurred())
 			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
 				Repository: "busybox",
@@ -97,7 +97,8 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
 				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
 				return c.State.Running
-			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
+			}).WithContext(ctx).Within(5*time.Second).ProbeEvery(100*time.Millisecond).
+				Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 		}
 
 		DeferCleanup(func() {
@@ -105,8 +106,11 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 				Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
 			}
 		})
+
+		// Settle down things before proceeding with the real unit test.
 		pool.Client.HTTPClient.CloseIdleConnections()
-		Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+		Eventually(Goroutines).WithContext(ctx).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+			ShouldNot(HaveLeaked())
 	})
 
 	// Ensure to run the goroutine leak test *last* after all (defered)
@@ -115,16 +119,17 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 		ignoreGood := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(ignoreGood))
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(ignoreGood))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
-	It("decorates k8s pods", func() {
+	It("decorates k8s pods", slowSpec, func(ctx context.Context) {
 		mw, err := moby.New(docksock, nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()

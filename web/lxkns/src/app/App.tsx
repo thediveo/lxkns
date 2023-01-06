@@ -59,6 +59,7 @@ import { About } from 'views/about'
 import { Help } from 'views/help'
 import { AllNamespaces } from 'views/allnamespaces'
 import { TypedNamespaces } from 'views/typednamespaces'
+import Logo from 'app/lxkns.svg'
 
 import { basename } from 'utils/basename'
 
@@ -195,7 +196,7 @@ const LxknsApp = () => {
                 </>}
                 drawertitle={() =>
                     <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">
-                        lxkns
+                        <img alt="lxkns logo" src={Logo} style={{height: '2ex', position: 'relative', top: '0.4ex'}} />&nbsp;lxkns
                     </Typography>
                 }
                 drawer={closeDrawer =>

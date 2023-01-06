@@ -20,10 +20,11 @@ import { OwnerIcon } from 'icons/Owner'
 
 import { ProcessInfo } from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
-import { compareNamespaceById, compareProcessByNameId, ProcessMap, Namespace, NamespaceType } from 'models/lxkns'
+import { compareNamespaceById, ProcessMap, Namespace, NamespaceType, isPassive, TaskMap, Busybody, isProcess, compareBusybodies } from 'models/lxkns'
 import { showSharedNamespacesAtom } from 'views/settings'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { styled } from '@mui/material'
+import { TaskInfo } from 'components/taskinfo'
 
 // Return the ealdormen processes attached to namespaces owned by the specified
 // user namespace.
@@ -35,13 +36,22 @@ export const uniqueProcsOfTenants = (usernamespace: Namespace, showSharedNamespa
     if (showSharedNamespaces && usernamespace.ealdorman) {
         uniqueprocs[usernamespace.ealdorman.pid] = usernamespace.ealdorman
     }
-    Object.values(usernamespace.tenants)
-        .forEach(tenantnamespace => {
-            if (tenantnamespace.ealdorman) {
-                uniqueprocs[tenantnamespace.ealdorman.pid] = tenantnamespace.ealdorman
-            }
-        })
+    usernamespace.tenants.forEach(tenantnamespace => {
+        if (tenantnamespace.ealdorman) {
+            uniqueprocs[tenantnamespace.ealdorman.pid] = tenantnamespace.ealdorman
+        }
+    })
     return Object.values(uniqueprocs)
+}
+
+// Return the unique tasks for all loose threads of the specified user namespace
+// as well as all of its tenant namespaces.
+const uniqueTasks = (usernamespace: Namespace) => {
+    const uniquetasks: TaskMap = {}
+    usernamespace.loosethreads
+        .concat(usernamespace.tenants.map(tenantnamespace => tenantnamespace.loosethreads).flat())
+        .forEach(task => uniquetasks[task.tid] = task)
+    return Object.values(uniquetasks)
 }
 
 const OwningUserNamespace = styled('span')(({ theme }) => ({
@@ -68,13 +78,15 @@ export interface UserNamespaceTreeItemProps {
 export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: UserNamespaceTreeItemProps) => {
     const [showSharedNamespaces] = useAtom(showSharedNamespacesAtom)
 
-    // Generally speaking, we now separate the "tenants" into bind-mounted
-    // namespaces and namespaces "inhabited" by processes.
+    // Generally speaking, we now separate the "tenants" into (a) passive
+    // namespaces and (b) namespaces with processes or tasks attached to them.
+    // The presentation differs between (a) and (b) in that for (b) we present
+    // the process or task attached to a particular namespace.
 
-    // Bind-mounted namespaces can be found by checking that a namespace has no
-    // ealdorman process.
-    const bindmounts = Object.values(usernamespace.tenants)
-        .filter(tenant => tenant.ealdorman === null)
+    // "Passive" namespaces (for lack of better terminology) are without any
+    // process or task attached to it.
+    const passives = Object.values(usernamespace.tenants)
+        .filter(tenant => isPassive(tenant))
         .sort(compareNamespaceById)
         .map(tenant => <TreeItem
             className="tenant"
@@ -88,37 +100,42 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
     // navigating the discovery information. So, we collect all ealdorman
     // processes and then sort them by their names and PIDs, and then we start
     // rendering the process nodes.
-    const procs = uniqueProcsOfTenants(usernamespace, showSharedNamespaces)
-        .sort(compareProcessByNameId)
-        .map(proc =>
-            <TreeItem
+    //
+    // Also render loose threads that are either attached to our user namespace
+    // here, or that are attached to one of the namespaces owned by our user
+    // namespace.
+    const busybodies = (uniqueProcsOfTenants(usernamespace, showSharedNamespaces) as Busybody[])
+        .concat(uniqueTasks(usernamespace))
+        .sort(compareBusybodies)
+        .map(busybody => isProcess(busybody)
+            ? <TreeItem
                 className="controlledprocess"
-                key={proc.pid}
-                nodeId={`${usernamespace.nsid}-${proc.pid}`}
-                label={<ProcessInfo process={proc} />}
+                key={busybody.pid}
+                nodeId={`${usernamespace.nsid}-${busybody.pid}`}
+                label={<ProcessInfo process={busybody} />}
             >
-                {Object.values(proc.namespaces)
+                {Object.values(busybody.namespaces)
                     // either (a) show all non-user namespaces to which a
                     // process is attached, or (b) show only those non-user
                     // namespaces that are specific to this process and not
                     // "shared" with other leaders in the same user namespace. 
                     .filter(showSharedNamespaces
                         ? (procns: Namespace) => (procns.type !== NamespaceType.user || procns !== usernamespace)
-                        : (procns: Namespace) => procns.owner === usernamespace && procns.ealdorman === proc)
+                        : (procns: Namespace) => procns.owner === usernamespace && procns.ealdorman === busybody)
                     .sort((procns1, procns2) => procns1.type.localeCompare(procns2.type))
                     .map((procns: Namespace) => <TreeItem
                         className="tenant"
                         key={procns.nsid}
-                        nodeId={`${usernamespace.nsid}-${proc.pid}-${procns.nsid}`}
+                        nodeId={`${usernamespace.nsid}-${busybody.pid}-${procns.nsid}`}
                         label={<>
                             <NamespaceInfo
-                                shared={procns.owner !== usernamespace || procns.ealdorman !== proc}
+                                shared={procns.owner !== usernamespace || procns.ealdorman !== busybody}
                                 noprocess={true}
-                                shortprocess={procns.ealdorman !== proc}
+                                shortprocess={procns.ealdorman !== busybody}
                                 namespace={procns}
                                 processes={processes}
                             />
-                            {procns.ealdorman === proc
+                            {procns.ealdorman === busybody
                                 && procns.owner && procns.type !== NamespaceType.user
                                 && procns.owner !== usernamespace
                                 && <OwningUserNamespace>
@@ -130,6 +147,37 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
                                 </OwningUserNamespace>}
                         </>}
                     />)
+                }
+            </TreeItem>
+            : <TreeItem
+                className="controlledtask"
+                key={busybody.tid}
+                nodeId={`${usernamespace.nsid}-${busybody.tid}`}
+                label={<TaskInfo task={busybody} />}
+            >
+                {Object.values(busybody.namespaces)
+                    .filter(showSharedNamespaces
+                        ? (taskns: Namespace) => (taskns.type !== NamespaceType.user || taskns !== usernamespace)
+                        : (taskns: Namespace) => taskns.owner === usernamespace /* FIXME:??? */)
+                    .sort((taskns1, taskns2) => taskns1.type.localeCompare(taskns2.type))
+                    .map((taskns: Namespace) => {
+                        const selftask = taskns.loosethreads.includes(busybody)
+                        return <TreeItem
+                            className="tenant"
+                            key={taskns.nsid}
+                            nodeId={`${usernamespace.nsid}-${busybody.tid}-${taskns.nsid}`}
+                            label={<>
+                                <NamespaceInfo
+                                    shared={taskns.owner !== usernamespace || !selftask}
+                                    noprocess={true}
+                                    shortprocess={!selftask}
+                                    namespace={taskns}
+                                    processes={processes}
+                                />
+                                {/* TODO:??? */}
+                            </>}
+                        />
+                    })
                 }
             </TreeItem>
         )
@@ -153,7 +201,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
             nodeId={`${usernamespace.nsid}`}
             label={<NamespaceInfo namespace={usernamespace} processes={processes} />}
         >
-            {[...procs, ...bindmounts, ...children]}
+            {[...busybodies, ...passives, ...children]}
         </TreeItem>
     )
 }

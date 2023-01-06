@@ -25,6 +25,8 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/discover"
+
+	_ "github.com/thediveo/lxkns/cmd/internal/pkg/debug"
 )
 
 func newRootCmd() (rootCmd *cobra.Command) {
@@ -33,8 +35,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "lspidns shows the tree of PID namespaces",
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return cli.BeforeCommand()
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.BeforeCommand(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			user, _ := cmd.PersistentFlags().GetBool("user")

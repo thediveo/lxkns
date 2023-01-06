@@ -81,3 +81,11 @@ separate groups, based on the cgroup paths found.
 Additionally, the "freezer" cgroup state is also shown: a <Pause
 className="icon"/> paused process is said to be "frozen" in Linux, while a
 &#32;<PlayArrow className="icon"/> running process is also said to be "thawed".
+
+### Loose Threads
+
+Loose threads – for lack of better official terminology – are Linux OS-level
+threads (that is, _non-process_ tasks) that are attached to at least some
+namespaces that differ from the namespaces a thread's process is attached to. In
+particular, these threads might keep namespace references that no other process
+yet has attached to.

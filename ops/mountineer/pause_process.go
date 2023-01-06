@@ -23,7 +23,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops/mountineer/mntnssandbox" // ensure to pull in the pre-Go initializer.
 )
 
@@ -64,22 +66,29 @@ func StandaloneSandboxBinary() string {
 	return sandboxBinary
 }
 
-// NewPauseProcess starts a new pause process that immediately attaches itself
+// newPauseProcess starts a new pause process that immediately attaches itself
 // to the mount namespace referenced by mntnsref. This function only returns
 // after the pause process has finally attached to the mount namespace, or
 // failed to do so. It does not return before success or failure is clear.
 //
-// Where available, NewPauseProcess will start the dedicated "mntnssandbox"
+// Where available, newPauseProcess will start the dedicated "mntnssandbox"
 // binary. It will automatically fall back to re-executing itself for switching
 // the mount namespace and pausing when the "mntnssandbox" binary cannot be
 // found.
-func NewPauseProcess(mntnsref string, usernsref string) (*exec.Cmd, error) {
-	return newPauseProcess(sandboxBinary, mntnsref, usernsref)
+func newPauseProcess(mntnsref string, usernsref string) (Pauser, error) {
+	return newPauseProcessWithBinary(sandboxBinary, mntnsref, usernsref)
 }
 
-// newPauseProcess starts a new pause process using the specified sandbox
+type processPauser struct {
+	sleeper *exec.Cmd
+	once    sync.Once
+}
+
+var _ (Pauser) = (*processPauser)(nil)
+
+// newPauseProcessWithBinary starts a new pause process using the specified sandbox
 // binary.
-func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cmd, error) {
+func newPauseProcessWithBinary(binary string, mntnsref string, usernsref string) (Pauser, error) {
 	sleepychild := exec.Command(binary) // #nosec G204
 	sleepychild.Env = append(os.Environ(),
 		mntnssandbox.MntnsEnvironmentVariableName+"="+mntnsref)
@@ -91,7 +100,7 @@ func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cm
 	// while it hasn't yet terminated.
 	childout, err := sleepychild.StdoutPipe()
 	if err != nil {
-		panic(fmt.Sprintf("failed to prepare to start pause process: %s", err.Error()))
+		return nil, fmt.Errorf("failed to prepare to start pause process, reason: %w", err)
 	}
 	// Collect all stderr output into a buffer so we have it ready when Wait()
 	// returns and has closed the pipes.
@@ -99,7 +108,7 @@ func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cm
 	sleepychild.Stderr = &childerr
 	// Take off...
 	if err := sleepychild.Start(); err != nil {
-		return nil, fmt.Errorf("cannot start pause process: %s", err.Error())
+		return nil, fmt.Errorf("cannot start pause process, reason: %w", err)
 	}
 	// Now wait for pause process to attach to the specified mount namespace;
 	// this avoids race conditions where we otherwise would access the wrong
@@ -159,5 +168,17 @@ func newPauseProcess(binary string, mntnsref string, usernsref string) (*exec.Cm
 		return nil, errors.New("premature pause process termination")
 	}
 	// Keep the pause ... erm, running.
-	return sleepychild, nil
+	return &processPauser{sleeper: sleepychild}, nil
+}
+
+// PID of the pauser process that can be used to access a mount namespace via
+// the process filesystem.
+func (p *processPauser) PID() model.PIDType {
+	return model.PIDType(p.sleeper.Process.Pid)
+}
+
+// Close the Pauser (by terminating it) and release allocated system resources.
+// Close is idempotent.
+func (p *processPauser) Close() {
+	p.once.Do(func() { _ = p.sleeper.Process.Kill() })
 }

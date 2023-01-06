@@ -12,10 +12,20 @@ following targets:
   discovery service.
 
 - `coverage`: runs a full coverage on all tests in the module, once as root,
-  once as non-root, resulting in a single `coverage.html`.
+  once as non-root, resulting in a single `coverage.html`. This also updates
+  the coverage badge in `README.md`.
 
 - `clean`: removes coverage files, as well as any top-level CLI tool binaries
   that happened to end up there instead of `${GOPATH}/bin`.
+
+- `pkgsite`: serves the Go module documentation of **lxkns** module on port
+  6060.
+
+- `manual`: serves the **lxkns** manual on port 3030 (and 3031 for automatic
+  refreshes).
+
+- `report`: runs the [Go Report Card](https://goreportcard.com/) on the local
+  code base.
 
 - `install`: builds and installs the CLI binaries into `${GOPATH}/bin`, then
   installs these binaries into `/usr/local/bin`.

@@ -17,21 +17,25 @@ The following places are searched for traces of namespaces:
 
 1. of course, from the **procfs** filesystem in `/proc/[PID]/ns/*` – as `lsns`
    and all the other namespace-related tools do.
-2. **bind-mounted namespaces**, via `/proc/[PID]/mountinfo`. lxkns even takes
+2. all **[tasks](https://en.wikipedia.org/wiki/Task_(computing)#Linux_kernel)**
+   in `/proc/[PID]/task/[TID]/ns/*` ([Michael Kerrisk](https://www.man7.org/) of
+   [The Linux Programming Interface](https://www.man7.org/tlpi/index.html) fame
+   nudged me to finally fill in this gap).
+3. **bind-mounted namespaces**, via `/proc/[PID]/mountinfo`. lxkns even takes
    bind-mounted namespaces in _other_ mount namespaces than the current/initial
    mount namespace into account.
-3. **fd-referenced namespaces**, via `/proc/[PID]/fd/*`.
-4. **intermediate hierarchical user and PID namespaces**, via `NS_GET_PARENT`
+4. **fd-referenced namespaces**, via `/proc/[PID]/fd/*`.
+5. **intermediate hierarchical user and PID namespaces**, via `NS_GET_PARENT`
    ([man 2 ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
-5. **user namespaces owning non-user namespaces**, via `NS_GET_USERNS` ([man 2
+6. **user namespaces owning non-user namespaces**, via `NS_GET_USERNS` ([man 2
    ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
 
 Or in table format:
 
-| tool | `/proc/[PID]/ns/*` ① | bind mounts ② | `/proc/[PID]/fd/*` ③ | hierarchy ④ | owning user namespaces ⑤ |
-| --- | --- | --- | --- | --- | --- |
-| `lsns` | ✓ | | | |
-| `lxkns` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| tool | `/proc/*/ns/*` ① | tasks `/proc/*/task/*/ns/*` ② | bind mounts ③ | `/proc/*/fd/*` ➃ | hierarchy ➄ | owning user namespaces ➅ |
+| --- | --- | --- | --- | --- | --- | -- |
+| `lsns` | ✓ | see **¹** | | | |
+| `lxkns` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Applications can control the extent to which a `lxkns` discovery tries to
 ferret out namespaces from the nooks and crannies of Linux hosts.
@@ -68,3 +72,8 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 
 - `CAP_DAC_READ_SEARCH` grants discovering bind-mounted namespaces without
   interference by any DAC, or "(in)descretionary axcess control".
+
+#### Notes
+
+[^1]: `lsns --task $TID` doesn't seem to work at all (as per lsns from
+    util-linux 2.37.2).

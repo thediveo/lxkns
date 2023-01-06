@@ -19,149 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
-
-// ProcessTable is the JSON serializable (digital!) twin to the process table
-// returned from discoveries. The processes (process tree) is represented in
-// JSON as a JSON object, where the members (keys) are the stringified PIDs and
-// the values are process objects.
-//
-// In order to unmarshal a ProcessTable a namespace dictionary is required,
-// which can either be prefilled or empty: it is used to share the namespace
-// objects with the same ID between individual process objects in the table.
-//
-// Additionally, a ProcessTable can be primed with ("preliminary") Process
-// objects. In this case, these process objects will be reused and updated with
-// the new state. Please see also the [ProcessTable.Get] method, which will
-// automatically do priming for yet unknown PIDs.
-type ProcessTable struct {
-	model.ProcessTable
-	Namespaces *NamespacesDict // for resolving (and priming) namespace references
-}
-
-// NewProcessTable creates a new process table that can be un/marshalled from or
-// to JSON. Without any options, the process table returned can be used for
-// unmarshalling right from the start. For marshalling an existing (hopefully
-// filled) process table, use the [WithProcessTable] option to specify the
-// process table to use.
-func NewProcessTable(opts ...NewProcessTableOption) ProcessTable {
-	proctable := ProcessTable{}
-	for _, opt := range opts {
-		opt(&proctable)
-	}
-	if proctable.ProcessTable == nil {
-		proctable.ProcessTable = model.ProcessTable{}
-	}
-	if proctable.Namespaces == nil {
-		proctable.Namespaces = NewNamespacesDict(nil)
-	}
-	return proctable
-}
-
-// NewProcessTableOption defines so-called functional options to be used with
-// [NewProcessTable].
-type NewProcessTableOption func(newproctable *ProcessTable)
-
-// WithProcessTable specifies an existing (model) process table to use for
-// marshalling.
-func WithProcessTable(proctable model.ProcessTable) NewProcessTableOption {
-	return func(npt *ProcessTable) {
-		npt.ProcessTable = proctable
-	}
-}
-
-// WithNamespacesDict specifies an existing namespaces dictionary to make use of
-// while unmarshalling the namespace references of processes in a process table.
-func WithNamespacesDict(nsdict *NamespacesDict) NewProcessTableOption {
-	return func(npt *ProcessTable) {
-		npt.Namespaces = nsdict
-	}
-}
-
-// Get always(!) returns a [model.Process] object with the given PID. When the
-// process is already known, then it is returned, else a new preliminary process
-// object gets created, registered, and returned instead. Preliminary process
-// objects have only their PID set, but nothing else with the sole exception for
-// the list of child processes being initialized.
-func (p *ProcessTable) Get(pid model.PIDType) *model.Process {
-	proc, ok := p.ProcessTable[pid]
-	if !ok {
-		proc = &model.Process{
-			PID:      pid,
-			Children: []*model.Process{},
-		}
-		p.ProcessTable[pid] = proc
-	}
-	return proc
-}
-
-// MarshalJSON emits the JSON textual representation of a complete process
-// table.
-func (p ProcessTable) MarshalJSON() ([]byte, error) {
-	// Similar to Golang's mapEncoder.encode, we iterate over the key-value
-	// pairs ourselves, because we need to serialize alias types for the
-	// individual process values, not the process values verbatim. By
-	// iterating ourselves, we avoid building a new transient map with process
-	// alias objects.
-	b := bytes.Buffer{}
-	b.WriteRune('{')
-	first := true
-	for _, proc := range p.ProcessTable {
-		if first {
-			first = false
-		} else {
-			b.WriteRune(',')
-		}
-		b.WriteRune('"')
-		b.WriteString(strconv.Itoa(int(proc.PID)))
-		b.WriteString(`":`)
-		procjson, err := json.Marshal((*Process)(proc))
-		if err != nil {
-			return nil, err
-		}
-		b.Write(procjson)
-	}
-	b.WriteRune('}')
-	return b.Bytes(), nil
-}
-
-// UnmarshalJSON reads in the textual JSON representation of a complete
-// process table. It makes use of the namespace object dictionary associated
-// with this process table instance.
-func (p *ProcessTable) UnmarshalJSON(data []byte) error {
-	// Unmarshal all the processes using our "JSON-empowered" type of Process,
-	// which we will later need to post-process in order to resolve the
-	// process fields which we don't serialize and which allow easy
-	// navigation, et cetera. Since a process table consists of objects of
-	// objects of objects, we play it safe by using json.RawMessage, so the
-	// json package can still do the generic JSON parsing part for us here so
-	// that we don't need to count brackets, quotes, handle escapes, and the
-	// other JSON hell.
-	aux := map[model.PIDType]json.RawMessage{}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	for _, rawproc := range aux {
-		proc := model.Process{}
-		if err := (*Process)(&proc).unmarshalJSON(rawproc, p.Namespaces); err != nil {
-			return err
-		}
-		*p.Get(proc.PID) = proc
-	}
-	// Scan through the processes and resolve the parent-child process
-	// relationships, based on the PPIDs and PIDs.
-	for _, proc := range p.ProcessTable {
-		if pproc, ok := p.ProcessTable[proc.PPID]; ok {
-			proc.Parent = pproc
-			pproc.Children = append(pproc.Children, proc)
-		}
-	}
-	return nil
-}
 
 // Process is the JSON representation of the information about a single process.
 // The Process type is designed to be used under the hood of ProcessTable and
@@ -186,17 +47,24 @@ func (p *Process) MarshalJSON() ([]byte, error) {
 	if cmdline == nil {
 		cmdline = []string{}
 	}
-	// Using an anonymous alias structure allows us to override serialization
-	// of the namespaces the process is attached to: we just want them as
-	// typed references (namespace type and ID), not as deeply serialized
-	// first-class data elements.
+	// Using an anonymous alias structure allows us to override serialization of
+	// the namespaces the process is attached to: we just want them as typed
+	// references (namespace type and ID), not as deeply serialized first-class
+	// data elements. In contrast, the tasks of a process are flat and thus can
+	// be marshalled without taking too many special measures.
+	tasks := make([]*Task, 0, len(p.Tasks))
+	for _, task := range p.Tasks {
+		tasks = append(tasks, (*Task)(task))
+	}
 	return json.Marshal(&struct {
 		Namespaces *NamespacesSetReferences `json:"namespaces"`
 		Cmdline    []string                 `json:"cmdline"`
+		Tasks      []*Task                  `json:"tasks"`
 		*model.Process
 	}{
 		Namespaces: (*NamespacesSetReferences)(&p.Namespaces),
 		Cmdline:    cmdline,
+		Tasks:      tasks,
 		Process:    (*model.Process)(p),
 	})
 }
@@ -206,19 +74,22 @@ func (p *Process) MarshalJSON() ([]byte, error) {
 // namespaces in or add new ones just learnt to. Unfortunately, Golang's
 // generic json (un)marshalling mechanism doesn't allow "contexts".
 func (p *Process) UnmarshalJSON(data []byte) error {
-	panic("cannot directly unmarshal lxkns.api.types.Process")
+	panic("cannot directly unmarshal github.com/thediveo/lxkns/api/types.Process")
 }
 
 // unmarshalJSON reads in the textual JSON representation of a single process.
 // It uses the associated namespace dictionary to resolve existing references
-// into namespace objects and also adds missing namespaces.
+// into namespace objects and also adds missing namespaces. The task disctionary
+// is additionally used to correctly allocate the same Task only once by its
+// TID, even if already been seen before as a loose thread reference.
 func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	// While we unmarshal "most" of the process data using json's automated
 	// mechanics, we need to deal with the namespaces a process is attached to
 	// separately. Because we need context for the namespaces, we do it
 	// manually and then extract only the parts we need here.
 	aux := struct {
-		Namespaces json.RawMessage `json:"namespaces"`
+		Namespaces json.RawMessage   `json:"namespaces"`
+		Tasks      []json.RawMessage `json:"tasks"`
 		*model.Process
 	}{
 		Process: (*model.Process)(p),
@@ -232,11 +103,30 @@ func (p *Process) unmarshalJSON(data []byte, allns *NamespacesDict) error {
 	if p.PPID < 0 {
 		return errors.New("Process invalid PPID")
 	}
-	// Unmarshal the remaining Process fields which don't need any special
+	// Unmarshal the remaining Process fields that need further special
 	// treatment.
 	if err := (*NamespacesSetReferences)(&p.Namespaces).unmarshalJSON(aux.Namespaces, allns); err != nil {
 		return err
 	}
+	tasks := make([]*model.Task, len(aux.Tasks))
+	for idx, rawtask := range aux.Tasks {
+		var auxtask struct {
+			TID model.PIDType `json:"tid"`
+			// ...ignore everything else that is present in the JSON
+		}
+		if err := json.Unmarshal(rawtask, &auxtask); err != nil {
+			return err
+		}
+		if auxtask.TID <= 0 {
+			return errors.New("Task of Process invalid TID")
+		}
+		task := allns.TaskTable.Get((*model.Process)(p), auxtask.TID)
+		if err := (*Task)(task).unmarshalJSON(rawtask, allns); err != nil {
+			return err
+		}
+		tasks[idx] = task
+	}
+	p.Tasks = tasks
 	// Convert a potential null command line into an empty command line.
 	if p.Cmdline == nil {
 		p.Cmdline = []string{}

@@ -36,14 +36,19 @@ declare module '@mui/material/styles' {
             uts: string,
             time: string,
         },
-        nsref: string, // filesystem reference of a namespace
-        container: string, // container information
-        process: string, // process information (name&PID)
-        cgroup: string, // process cgroup path
-        ownername: string, // owner user name
-        ownerroot: string, // owner user root
-        fstype: string, // filesystem type
-        init1: string, // PID1 icon
+        nsref: string, // filesystem reference of a namespace color
+        container: string, // container information color
+        process: string, // process information (name&PID) color
+        task: string // task information color
+        cgroup: string, // process cgroup path color
+        ownername: string, // owner user name color
+        ownerroot: string, // owner user root color
+        fstype: string, // filesystem type color
+        init1: string, // PID1 icon color
+        freezer: {
+            run: string // color for run icon.
+            frozen: string // color for pause icon.
+        }
     }
     // allow configuration using `createTheme`
     interface PaletteOptions {
@@ -60,11 +65,16 @@ declare module '@mui/material/styles' {
         nsref?: string,
         container?: string,
         process?: string,
+        task?: string,
         cgroup?: string,
         ownername?: string,
         ownerroot?: string,
         fstype?: string,
         init1?: string,
+        freezer?: {
+            run?: string,
+            frozen?: string,
+        },
     }
 }
 
@@ -79,10 +89,10 @@ export const lxknsLightTheme = {
                     '& .MuiTreeItem-group': {
                         marginLeft: '2em',
                     },
-                    '& .namespace .controlledprocess': {
+                    '& .namespace .controlledprocess, & .namespace .controlledtask': {
                         marginLeft: '2em',
                     },
-                    '& .namespace .controlledprocess .MuiTreeItem-content::before': {
+                    '& .namespace .controlledprocess .MuiTreeItem-content::before, & .namespace .controlledtask .MuiTreeItem-content::before': {
                         content: '"····"',
                         marginRight: '0.35em',
                         color: grey[500],
@@ -112,11 +122,16 @@ export const lxknsLightTheme = {
         nsref: yellow[800],
         container: lightBlue[700],
         process: teal[700],
+        task: lime[800],
         cgroup: grey[600],
         ownername: lime[800],
         ownerroot: pink[700],
         fstype: grey[600],
         init1: amber[500],
+        freezer: {
+            run: green[500],
+            froozen: red[900],
+        },
     },
 }
 
@@ -156,11 +171,16 @@ export const lxknsDarkTheme = mergeDeep(
                 time: amber[900],
             },
             process: teal[300],
+            task: lime[400],
             container: lightBlue[300],
             cgroup: grey[500],
             ownername: lime[500],
             ownerroot: pink[500],
             fstype: grey[500],
+            freezer: {
+                run: green[500],
+                froozen: red[700],
+            },
         },
     }
 )

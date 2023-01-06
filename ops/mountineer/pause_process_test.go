@@ -28,7 +28,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("mountineer", func() {
+var _ = Describe("process-based pauser", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -39,13 +39,15 @@ var _ = Describe("mountineer", func() {
 	})
 
 	It("returns error for non-existing sandbox binary", func() {
-		Expect(newPauseProcess("/not-existing", "/proc/self/ns/mnt", "")).Error().To(MatchError(
-			MatchRegexp(`cannot start pause process: .* /not-existing: no such file or directory`)))
+		Expect(newPauseProcessWithBinary("/not-existing", "/proc/self/ns/mnt", "")).
+			Error().To(MatchError(MatchRegexp(
+			`cannot start pause process, reason: .* /not-existing: no such file or directory`)))
 	})
 
 	It("returns sandbox errors", func() {
-		Expect(newPauseProcess("/proc/self/exe", "/proc/self/non-existing", "")).Error().To(MatchError(
-			MatchRegexp(`invalid mount namespace reference .* No such file or directory`)))
+		Expect(newPauseProcessWithBinary("/proc/self/exe", "/proc/self/non-existing", "")).
+			Error().To(MatchError(MatchRegexp(
+			`invalid mount namespace reference .* No such file or directory`)))
 	})
 
 	It("mounts a mount namespace", func() {
@@ -67,11 +69,12 @@ read
 		var pid int
 		cmd.Decode(&pid)
 
-		p, err := NewPauseProcess(
+		p, err := newPauseProcess(
 			fmt.Sprintf("/proc/%d/ns/mnt", pid),
 			fmt.Sprintf("/proc/%d/ns/user", pid))
 		Expect(err).NotTo(HaveOccurred())
-		_ = p.Process.Kill()
+		Expect(p.PID()).NotTo(BeZero())
+		p.Close()
 	})
 
 })

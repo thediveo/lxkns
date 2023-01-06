@@ -24,11 +24,13 @@ import PodmanIcon from 'icons/containers/Podman'
 //import PodIcon from 'icons/containers/Pod'
 //import K8sPodIcon from 'icons/containers/K8sPod'
 import { Container } from 'models/lxkns'
+import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
 //import ComposerProjectIcon from 'icons/containers/ComposerProject'
 
 const ContainerTypeIcons = {
     'unknowntype': ContainerIcon,
     'docker.com': DockerIcon,
+    'plugin.docker.com': DockerManagedPluginIcon,
     'containerd.io': ContainerdIcon,
     'com.siemens.industrialedge.runtime': IERuntimeIcon,
     'com.siemens.industrialedge.app': IEAppIcon,

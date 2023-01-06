@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-    result := discover.Namespaces(discover.StandardDiscovery())
+    result := discover.Namespaces(discover.WithStandardDiscovery())
     for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
         for _, ns := range result.SortedNamespaces(nsidx) {
             fmt.Println(ns.String())

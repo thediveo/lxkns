@@ -8,22 +8,37 @@ package "lxkns.model" {
 interface Namespace {
   L Leaders() []*Process
   L Ealdorman() *Process
+  L LooseThreads() []*Task
 }
 
 Namespace ---> "0,1" Process : Ealdorman
 Namespace ---> "*" Process : Leaders
+Namespace ---> "*" Task: LooseThreads
 
 class ProcessTable
-ProcessTable -> Process : "[PID]"
+Process <-- ProcessTable : "[PID]"
+
+class ProTaskCommon {
+  L Namespaces NamespacesSet
+}
+
+ProTaskCommon --o Task
+ProTaskCommon --o Process
+ProTaskCommon -> "8" Namespace : Namespaces
+
+
+class Task {
+  L Process *Process
+}
 
 class Process {
   L Parent *Process
-  L Namespaces NamespacesSet
+  L Tasks []*Task
   L *Container
 }
 
-Process --> "7" Namespace : Namespaces
 Process "*" --> Process : Parent
+Task <- Process : "Tasks" "1,*"
 
 class Container {
   PID int

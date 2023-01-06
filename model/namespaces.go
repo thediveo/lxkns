@@ -18,7 +18,6 @@
 // under the License.
 
 //go:build linux
-// +build linux
 
 package model
 
@@ -159,6 +158,14 @@ type Namespace interface {
 	// times from /proc/[PID]/stat. Me thinks, me has read too many Bernard
 	// Cornwell books. Wyrd bið ful aræd.
 	Ealdorman() *Process
+	// LooseThreads returns those [Task] objects that are attached to this
+	// namespace but whose [Process] objects are attached to a different
+	// namespace of this type.
+	LooseThreads() []*Task
+	// LooseThreadIDs returns the list of IDs of "loose" threads (tasks). This
+	// is a convenience method for such situations where only the task IDs are
+	// needed, but no further details.
+	LooseThreadIDs() []PIDType
 	// String describes this namespace with type, id, joined leader processes,
 	// and optionally information about owner, children, parent.
 	String() string

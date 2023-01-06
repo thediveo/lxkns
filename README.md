@@ -7,17 +7,20 @@
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-86.6%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-85.7%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 ## Overview
 
-`lxkns` discovers Linux namespaces and also the mount points inside mount
-namespaces. The discovery engine then relates the found namespaces to
-containers, where possible. In (almost) every nook and cranny of your Linux
-hosts, for instance by looking at bind-mounts and open file descriptors.
+`lxkns` discovers:
+- Linux namespaces in almost every nook and cranny of your hosts (open file
+  descriptors, bind-mounts, tasks),
+- the mount points inside mount namespaces (correctly representing
+  "overmounts").
+- container workloads: these are then related to the underlying Linux
+  namespaces.
 
 The following container engine workloads are detected:
 - Docker,
@@ -71,5 +74,5 @@ one, _erm_, go.
 
 ## ⚖️ Copyright and License
 
-`lxkns` is Copyright 2020‒22 Harald Albrecht, and licensed under the Apache
+`lxkns` is Copyright 2020‒23 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.

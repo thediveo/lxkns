@@ -16,7 +16,7 @@ import (
 func main() {
     b, _ := json.Marshal(
         apitypes.NewDiscoveryResult(
-            discover.Namespaces(discover.StandardDiscovery())))
+            discover.Namespaces(discover.WithStandardDiscovery())))
 
     dr := apitypes.NewDiscoveryResult(nil)
     _ = json.Unmarshal(b, &dr)

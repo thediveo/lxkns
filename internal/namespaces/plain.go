@@ -16,12 +16,13 @@ import (
 // interface leaderAdder. (There, I did it. I documented implemented
 // interfaces explicitly for clarity.)
 type PlainNamespace struct {
-	nsid      species.NamespaceID
-	nstype    species.NamespaceType
-	ownernsid species.NamespaceID
-	owner     model.Ownership
-	ref       model.NamespaceRef
-	leaders   []*model.Process
+	nsid         species.NamespaceID
+	nstype       species.NamespaceType
+	ownernsid    species.NamespaceID
+	owner        model.Ownership
+	ref          model.NamespaceRef
+	leaders      []*model.Process
+	loosethreads []*model.Task
 }
 
 // Ensure that our "class" *does* implement the required interfaces.
@@ -105,6 +106,22 @@ func (pns *PlainNamespace) LeaderPIDs() []model.PIDType {
 	return pids
 }
 
+// LooseThreads returns those [Task] objects that are attached to this
+// namespace but whose [Process] objects are attached to a different
+// namespace of this type.
+func (pns *PlainNamespace) LooseThreads() []*model.Task { return pns.loosethreads }
+
+// LooseThreadIDs returns the list of IDs of "loose" threads (tasks). This
+// is a convenience method for such situations where only the task IDs are
+// needed, but no further details.
+func (pns *PlainNamespace) LooseThreadIDs() []model.PIDType {
+	tids := make([]model.PIDType, len(pns.loosethreads))
+	for idx, task := range pns.loosethreads {
+		tids[idx] = task.TID
+	}
+	return tids
+}
+
 // String describes this instance of a non-hierarchical ("plain") Linux kernel
 // namespace.
 func (pns *PlainNamespace) String() string {
@@ -157,6 +174,13 @@ func (pns *PlainNamespace) AddLeader(proc *model.Process) {
 		}
 	}
 	pns.leaders = append(pns.leaders, proc)
+}
+
+// AddLooseThread adds another loose thread (task) to this namespace, where a
+// loose thread is a task that is joined to a different namespace of a
+// particular type than its process.
+func (pns *PlainNamespace) AddLooseThread(task *model.Task) {
+	pns.loosethreads = append(pns.loosethreads, task)
 }
 
 // SetRef sets a filesystem path to reference this namespace.

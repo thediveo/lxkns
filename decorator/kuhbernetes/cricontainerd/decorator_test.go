@@ -66,7 +66,7 @@ var _ = Describe("Decorates containerd pod containers", Ordered, func() {
 	var pool *containerdtest.Pool
 	var sleepies []*containerdtest.Container
 
-	BeforeAll(func() {
+	BeforeAll(slowSpec, func(_ context.Context) {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -99,15 +99,16 @@ var _ = Describe("Decorates containerd pod containers", Ordered, func() {
 		for _, sleepy := range sleepies {
 			Eventually(func() bool {
 				return sleepy.Status() == containerd.Running
-			}).WithTimeout(5*time.Second).WithPolling(100*time.Millisecond).
+			}).Within(5*time.Second).ProbeEvery(100*time.Millisecond).
 				Should(BeTrue(), "container %s", sleepy.Container.ID())
 		}
-		DeferCleanup(func() {
+		DeferCleanup(slowSpec, func(_ context.Context) {
 			for _, sleepy := range sleepies {
 				pool.Purge(sleepy)
 			}
 			pool.Client.Close()
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked())
 		})
 	})
 
@@ -117,17 +118,18 @@ var _ = Describe("Decorates containerd pod containers", Ordered, func() {
 		goodfds := Filedescriptors()
 		ignoreGood := Goroutines()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(ignoreGood))
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(ignoreGood))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
-	It("decorates k8s pods", func() {
+	It("decorates k8s pods", slowSpec, func(ctx context.Context) {
 		mw, err := cdwatcher.New(cdsock, nil)
 		Expect(err).NotTo(HaveOccurred())
 		defer mw.Close()
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cizer := whalefriend.New(ctx, []watcher.Watcher{mw})
 		defer cizer.Close()

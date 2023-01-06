@@ -32,6 +32,7 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+	"golang.org/x/exp/slices"
 )
 
 // NamespaceRow stores information about a single namespace, to be printed
@@ -45,6 +46,45 @@ type NamespaceRow struct {
 	Comment       string
 }
 
+// rowItem returns the row information about the specified namespace.
+func rowItem(ns model.Namespace) NamespaceRow {
+	item := NamespaceRow{
+		ID:   uint64(ns.ID().Ino),
+		Type: ns.Type().Name(),
+	}
+	// Try to be consistent by always showing the "most senior"
+	// process joined to a particular namespace. And yes, namespaces
+	// might be kind of a Last Kingdom ;)
+	if proc := ns.Ealdorman(); proc != nil {
+		item.PID = int(proc.PID)
+		item.ProcName = proc.Name
+		if proc.Container != nil {
+			item.ContainerName = proc.Container.Name
+		}
+		item.Comment = "cgroup:" + proc.CpuCgroup
+		return item
+	}
+	if looseThreads := ns.LooseThreads(); len(looseThreads) > 0 {
+		looseThreads = slices.Clone(looseThreads)
+		slices.SortFunc(looseThreads,
+			func(task1, task2 *model.Task) bool { return task1.Starttime < task2.Starttime })
+		task := looseThreads[0]
+		item.PID = int(task.TID)
+		item.ProcName = "[" + task.Name + "]"
+		if task.Process.Container != nil {
+			item.ContainerName = task.Process.Container.Name
+		}
+		item.Comment = "cgroup:" + task.CpuCgroup
+		return item
+	}
+	if ref := ns.Ref(); len(ref) != 0 {
+		item.Comment = "bound:" + ns.Ref().String()
+		return item
+	}
+	item.Comment = "???"
+	return item
+}
+
 // dumpresult takes discovery results, extracts the required fields, and then
 // dumps the extracted data to stdout in a neat ASCII table.
 func dumpresult(result *discover.Result) error {
@@ -53,32 +93,15 @@ func dumpresult(result *discover.Result) error {
 	// namespaces organized by type of namespace.
 	list := []NamespaceRow{}
 	for nsidx := range result.Namespaces {
-		for _, ns := range result.SortedNamespaces(model.NamespaceTypeIndex(nsidx)) {
-			item := NamespaceRow{
-				ID:   uint64(ns.ID().Ino),
-				Type: ns.Type().Name(),
-			}
-			// Try to be consistent by always showing the "most senior"
-			// process joined to a particular namespace. And yes, namespaces
-			// might be kind of a Last Kingdom ;)
-			if proc := ns.Ealdorman(); proc != nil {
-				item.PID = int(proc.PID)
-				item.ProcName = proc.Name
-				if proc.Container != nil {
-					item.ContainerName = proc.Container.Name
-				}
-				item.Comment = "cgroup:" + proc.CpuCgroup
-			} else if ref := ns.Ref(); len(ref) != 0 {
-				item.Comment = "bound:" + ns.Ref().String()
-			}
-			list = append(list, item)
+		for _, namespace := range result.SortedNamespaces(model.NamespaceTypeIndex(nsidx)) {
+			list = append(list, rowItem(namespace))
 		}
 	}
 	// For outputting a neat table, which is even sorted, we rely on "klo",
 	// the "kubectl-like outputter". The DefaultColumnSpec specifies the table
 	// headers in the form of "<Headertext>:{<JSON-Path-Expression>}".
 	prn, err := klo.PrinterFromFlag("",
-		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},CONTAINER:{.ContainerName},PID:{.PID},PROCESS:{.ProcName},COMMENT:{.Comment}"})
+		&klo.Specs{DefaultColumnSpec: "NAMESPACE:{.ID},TYPE:{.Type},CONTAINER:{.ContainerName},PID:{.PID},PROCESS/[TASK]:{.ProcName},COMMENT:{.Comment}"})
 	if err != nil {
 		return err
 	}

@@ -22,9 +22,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var slowSpec = NodeTimeout(30 * time.Second)
+
 func TestLinuxKernelNamespaces(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, reporterConfig := GinkgoConfiguration()
-	reporterConfig.SlowSpecThreshold = 90 * time.Second // ...yes, THAT slow.
-	RunSpecs(t, "lxkns/discover package", reporterConfig)
+	RunSpecs(t, "lxkns/discover package")
 }

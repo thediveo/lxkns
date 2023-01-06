@@ -13,7 +13,7 @@
 // under the License.
 
 import { Container, Engine, Group } from './container'
-import { Namespace, NamespaceType, Process, Discovery, EngineMap, GroupMap } from './model'
+import { Namespace, NamespaceType, Process, Discovery, EngineMap, GroupMap, TaskMap, Task } from './model'
 import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
@@ -23,11 +23,12 @@ import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint
 // later able to quickly chase around the information model.
 interface NamespaceSetJson { [key: string]: Namespace | number }
 interface NamespaceJson extends Omit<Namespace,
-    'ealdorman' | 'leaders' | 'namespaces' | 'owner' | 'parent'
+    'ealdorman' | 'leaders' | 'namespaces' | 'loosethreads' | 'owner' | 'parent'
 > {
     parent: Namespace | number
     ealdorman: Process | number
     leaders: (Process | number)[]
+    loosethreads: (Task | number)[]
     owner: Namespace | number
     namespaces: NamespaceSetJson
 }
@@ -108,6 +109,7 @@ export const fromjson = (discoverydata: any): Discovery => {
 
     // Now with initial null references in places, resolve references,
     // wherever possible.
+    const alltasks: TaskMap = {}
     Object.values(discovery.processes).forEach(proc => {
         // Resolve the parent-child relationships.
         if (proc.ppid.toString() in discovery.processes) {
@@ -115,11 +117,28 @@ export const fromjson = (discoverydata: any): Discovery => {
             proc.parent.children.push(proc)
         }
 
-        // Resolve the attached namespaces relationships.
+        // Resolve the attached namespaces relationships...
         for (const [type, nsref] of Object.entries(proc.namespaces)) {
             proc.namespaces[type] = discovery.namespaces[nsref]
         }
+        // ...and now for the namespaces the tasks of this process are attached
+        // to.
+        proc.tasks.forEach(task => {
+            for (const [type, nsref] of Object.entries(task.namespaces)) {
+                task.namespaces[type] = discovery.namespaces[nsref]
+                task.process = proc
+            }
+            // while we're at it, build the map of all tasks.
+            alltasks[task.tid] = task
+        })
     });
+
+    // Literally resolve the loose threads...
+    Object.values(discovery.namespaces).forEach(ns => {
+        ns.loosethreads = ns['loose-threads']
+            ? ns['loose-threads'].map(tid => alltasks[(tid as unknown as Number).toString()])
+            : []
+    })
 
     // Try to figure out which namespaces are the initial namespaces...
     if (discovery.processes[1] && discovery.processes[2]) {

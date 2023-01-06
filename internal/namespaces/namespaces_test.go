@@ -50,8 +50,8 @@ var _ = Describe("namespaces", func() {
 			Expect(pns.LeaderString()).To(Equal(""))
 
 			pns.leaders = []*model.Process{
-				{PID: 666, Starttime: 666, Name: "foo"},
-				{PID: 42, Starttime: 42, Name: "bar"},
+				{PID: 666, ProTaskCommon: model.ProTaskCommon{Starttime: 666, Name: "foo"}},
+				{PID: 42, ProTaskCommon: model.ProTaskCommon{Starttime: 42, Name: "bar"}},
 			}
 			s := pns.String()
 			Expect(s).To(ContainSubstring(`net:[123]`))
@@ -76,11 +76,11 @@ var _ = Describe("namespaces", func() {
 		It("find an ealdorman", func() {
 			pns := &PlainNamespace{
 				leaders: []*model.Process{
-					{PID: 666, Starttime: 666},
-					{PID: 42, Starttime: 42},
+					{PID: 666, ProTaskCommon: model.ProTaskCommon{Starttime: 666}},
+					{PID: 42, ProTaskCommon: model.ProTaskCommon{Starttime: 42}},
 				},
 			}
-			Expect(pns.Ealdorman()).To(Equal(&model.Process{PID: 42, Starttime: 42}))
+			Expect(pns.Ealdorman()).To(Equal(&model.Process{PID: 42, ProTaskCommon: model.ProTaskCommon{Starttime: 42}}))
 		})
 
 		It("find no ealdorman when there isn't one", func() {
@@ -137,8 +137,10 @@ var _ = Describe("namespaces", func() {
 			uns := New(species.CLONE_NEWUSER, species.NamespaceID{Dev: 1, Ino: 1111}, nil).(*UserNamespace)
 			uns.owneruid = os.Getuid()
 			uns.AddLeader(&model.Process{
-				PID:  88888,
-				Name: "foobar",
+				PID: 88888,
+				ProTaskCommon: model.ProTaskCommon{
+					Name: "foobar",
+				},
 			})
 			uns.ownedns[model.NetNS][species.NamespaceID{Dev: 1, Ino: 1234}] = &PlainNamespace{
 				nsid:   species.NamespaceID{Dev: 1, Ino: 1234},

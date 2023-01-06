@@ -22,14 +22,15 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/api/types"
+	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var lxknsapispec *openapi3.T
@@ -80,21 +81,29 @@ func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error
 var _ = Describe("lxkns OpenAPI specification", func() {
 
 	It("validates PIDMap", func() {
-		j, err := json.Marshal(types.NewPIDMap(types.WithPIDMap(pidmap)))
+		j, err := json.Marshal(apitypes.NewPIDMap(apitypes.WithPIDMap(pidmap)))
 		Expect(err).To(Succeed())
 		Expect(validate(lxknsapispec, "PIDMap", j)).To(Succeed())
 	})
 
 	It("validates Process", func() {
-		proc := &types.Process{PID: 12345, PPID: 0, Name: "foobar"}
+		proc := &apitypes.Process{
+			PID:           12345,
+			PPID:          0,
+			ProTaskCommon: model.ProTaskCommon{Name: "foobar"},
+		}
+		proc.Tasks = append(proc.Tasks, &model.Task{
+			TID:           12345,
+			ProTaskCommon: proc.ProTaskCommon,
+		})
 		j, err := json.Marshal(proc)
 		Expect(err).To(Succeed())
 		Expect(validate(lxknsapispec, "Process", j)).To(Succeed(), string(j))
 	})
 
 	It("validates simple ProcessTable", func() {
-		proc := &model.Process{PID: 12345, PPID: 0, Name: "foobar"}
-		pt := types.NewProcessTable(types.WithProcessTable(
+		proc := &model.Process{PID: 12345, PPID: 0, ProTaskCommon: model.ProTaskCommon{Name: "foobar"}}
+		pt := apitypes.NewProcessTable(apitypes.WithProcessTable(
 			model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
@@ -112,7 +121,18 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 				"starttime": 745077,
 				"cpucgroup": "/user.slice",
 				"fridgecgroup": "/fridge.sliced/user",
-				"fridgefrozen": true
+				"fridgefrozen": true,
+				"tasks": [
+					{
+						"tid": 24566,
+						"name": "bash",
+						"namespaces": {},
+						"starttime": 745077,
+						"cpucgroup": "/user.slice",
+						"fridgecgroup": "/fridge.sliced/user",
+						"fridgefrozen": true
+					}
+				]
 			},
 			"2574": {
 				"namespaces": {
@@ -128,27 +148,38 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 					"--user"
 				],
 				"fridgecgroup": "/outofcontrol",
-				"fridgefrozen": false
+				"fridgefrozen": false,
+				"tasks": [
+					{
+						"tid": 2574,
+						"name": "systemd",
+						"namespaces": {},
+						"starttime": 51628,
+						"cpucgroup": "/user.slice",
+						"fridgecgroup": "/outofcontrol",
+						"fridgefrozen": false
+					}
+				]
 			}
 		}`)
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed())
 	})
 
 	It("validates actual ProcTable", func() {
-		pt := types.NewProcessTable(types.WithProcessTable(allns.Processes))
+		pt := apitypes.NewProcessTable(apitypes.WithProcessTable(allns.Processes))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})
 
 	It("validates a full DiscoveryResult round-trip", func() {
-		disco := types.NewDiscoveryResult(types.WithResult(allns))
+		disco := apitypes.NewDiscoveryResult(apitypes.WithResult(allns))
 		j, err := json.Marshal(disco)
 		Expect(err).To(Succeed())
 
 		Expect(validate(lxknsapispec, "DiscoveryResult", j)).To(Succeed(), string(j))
 
-		disco2 := types.NewDiscoveryResult()
+		disco2 := apitypes.NewDiscoveryResult()
 		Expect(json.Unmarshal(j, disco2)).To(Succeed())
 	})
 

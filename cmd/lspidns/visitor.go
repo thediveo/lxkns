@@ -24,8 +24,11 @@ import (
 
 	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/internal/tool"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
+	"golang.org/x/exp/maps"
 )
 
 // PIDNSVisitor is an asciitree.Visitor which starts from a list (slice) of root
@@ -39,34 +42,21 @@ type PIDNSVisitor struct {
 // be honest, it returns the owning user namespaces instead in case user
 // namespaces should be shown too.
 func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	pidroots := discover.SortNamespaces(roots.Interface().([]model.Namespace))
 	if !v.ShowUserNS {
 		// When only showing PID namespaces, then sort all PID "root" namespaces
 		// numerically and then visit them, descending down the hierarchy.
-		count := len(pidroots)
-		children = make([]reflect.Value, count)
-		for idx := 0; idx < count; idx++ {
-			children[idx] = reflect.ValueOf(pidroots[idx])
-		}
+		children = tool.SortRootNamespaces(roots)
 		return
 	}
 	// When showing the owning user namespaces in the tree, find the (unique)
 	// user namespaces for all PID "root" namespaces, so we start with the user
 	// namespaces.
-	userns := map[model.Namespace]bool{}
-	for _, pidns := range pidroots {
-		userns[pidns.Owner().(model.Namespace)] = true
+	uniqueuserns := map[species.NamespaceID]model.Namespace{}
+	for _, pidns := range roots.Interface().([]model.Namespace) {
+		userns := pidns.Owner().(model.Namespace)
+		uniqueuserns[userns.ID()] = userns
 	}
-	userroots := []model.Namespace{}
-	for uns := range userns {
-		userroots = append(userroots, uns)
-	}
-	userroots = discover.SortNamespaces(userroots)
-	count := len(userroots)
-	children = make([]reflect.Value, count)
-	for idx := 0; idx < count; idx++ {
-		children[idx] = reflect.ValueOf(userroots[idx])
-	}
+	children = tool.ReflectValuesSlice(discover.SortNamespaces(maps.Values(uniqueuserns)))
 	return
 }
 

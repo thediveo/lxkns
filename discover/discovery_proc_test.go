@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"runtime"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,7 +31,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("Discover from processes", func() {
+var _ = Describe("Discover from processes", Ordered, func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -98,6 +100,44 @@ var _ = Describe("Discover from processes", func() {
 				Fail(fmt.Sprintf("PIDs %v not found in leaders %v", pids, leaders))
 			}()
 		}
+	})
+
+	It("finds a task-held namespace", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+		By("setting up a stray task with its own namespace...")
+		tidch := make(chan int)
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+			runtime.LockOSThread() // never unlock, as this task is going to be tainted.
+
+			// I owe Micheal Kerrisk several beers for opening my eyes to this
+			// twist: a task can create its own new mount namespace after it has
+			// declared itself independent of the effects of CLONE_FS when it
+			// was created as a task (=thread) inside a process. And yes, this
+			// allows the mountineers to work without the separate pause process
+			// and instead using a throw-away thread/task.
+			Expect(unix.Unshare(unix.CLONE_FS | unix.CLONE_NEWNS)).To(Succeed())
+
+			tidch <- unix.Gettid()
+			<-done
+		}()
+
+		var tid int
+		Eventually(tidch).Should(Receive(&tid))
+		defer close(done)
+
+		By("scanning all processes and tasks...")
+		allns := Namespaces(FromProcs())
+		var tasknetns model.Namespace
+		Expect(allns.Namespaces[model.MountNS]).To(ContainElement(
+			HaveField("LooseThreadIDs()", ConsistOf(model.PIDType(tid))), &tasknetns))
+		loose := tasknetns.LooseThreads()
+		Expect(loose).To(HaveLen(1))
+		Expect(loose[0].Namespaces[model.MountNS].ID()).NotTo(Equal(
+			loose[0].Process.Namespaces[model.MountNS].ID()))
 	})
 
 })

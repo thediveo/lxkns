@@ -3,11 +3,12 @@ import Logo from 'app/lxkns.svg';
 
 # <img src={Logo} style={{height: '2ex', position: 'relative', top: '0.3ex'}} /> Linux Kernel Namespaces Discovery
 
-This app displays Linux-kernel
-[namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) discovered
-by the lxkns service in a Linux host. These namespaces partition certain kinds
-of Linux resources, so that processes that are members of a particular namespace
-only see these resources isolated in that namespace.
+This app displays [Linux-kernel
+namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) discovered
+by the lxkns service deployed to a Linux host. These [namespaces](namespaces)
+partition certain kinds of Linux resources (such as the file system, processes,
+network interfaces), so that processes that are members of a particular
+namespace only see these resources isolated in that namespace.
 
 Namespaces can be either displayed in an all-inclusive view (the "all
 namespaces" view), or filtered for each type of namespace individually.

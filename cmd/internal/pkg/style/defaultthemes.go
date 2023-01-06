@@ -39,6 +39,9 @@ uts:
 
 process:
 - foreground: '#00c000'
+task:
+- foreground: '#00c000'
+- italic
 owner:
 - foreground: '#e0e000'
 controlgroup:
@@ -49,6 +52,10 @@ unknown:
 container:
 - bold
 - foreground: '#0099ff'
+
+path:
+- bold
+- foreground: '#009999'
 `
 
 const defaultLightTheme = `# light lxkns colorization theme
@@ -78,6 +85,9 @@ uts:
 # namespace-related elements
 process:
 - foreground: '#004000'
+task:
+- foreground: '#004000'
+- italic
 owner:
 - foreground: '#808000'
 controlgroup:
@@ -100,4 +110,8 @@ user-fullcaps:
 container:
 - bold
 - foreground: '#0099ff'
+
+path:
+- bold
+- foreground: '#009999'
 `

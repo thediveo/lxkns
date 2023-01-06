@@ -75,7 +75,7 @@ func ThemeSetupCLI(rootCmd *cobra.Command) {
 // dumping of styling profiles, just before the selected command runs. In case
 // of dumping, it also exits this process, so the itself command won't ever
 // start.
-func ThemeBeforeCommand() error {
+func ThemeBeforeCommand(*cobra.Command) error {
 	// If the user wants to dump a theme using "--dump" then the selected
 	// default theme, light or dark, takes precedence and any user
 	// definitions get ignored in this special case. This allows users to
