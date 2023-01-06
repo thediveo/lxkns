@@ -3,6 +3,7 @@
 - finds all 8 types of currently defined Linux-kernel
   [namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) even [in
   arcane places](discovery), such as bind mounts and open file descriptors.
+  Starting with v0.24.0+, tasks (that is, threads) are also scanned by default.
 
 - finally gives names to namespaces (sic!):
   - derived from container names where possible,
@@ -17,6 +18,9 @@
     [nerdctl](https://github.com/containerd/nerdctl)).
   - [Kubernetes](https://kubernetes.io) pod-aware, without any need for k8s API
     access.
+  - detects [Docker managed plugins](https://docs.docker.com/engine/extend/).
+  - optional [Podman](https://podman.io) support when building with the `podman`
+    build tag.
 
 - [discovers the the freezer state](cgroup) and (freezer) cgroup controller path
   information for the processes attached to namespaces (transparently supports
@@ -32,7 +36,8 @@
 - the Go API supports not only discovery, but also switching namespaces (OS
   thread switching).
 
-- tested with Go 1.16-1.18.
+- tested with Go 1.18-1.19. Please note that as of v0.24.0+ Go Generics are used
+  in some parts of the code base to reduce duplicated boilerplates.
 
 - namespace discovery can be integrated into other applications or run as a
   containerized discovery backend service with REST API and web front-end.

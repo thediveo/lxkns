@@ -41,23 +41,23 @@ Applications integrating **lxkns** can add their own decorators in order to
 post-process containers after discovery and decorate them with groups, adapt
 container flavors, et cetera. Decorators are registered using the simple
 [thediveo/go-plugger](https://github.com/thediveo/go-plugger) plugin management
-by calling `plugger.RegisterPlugin()` and specifying a
+by calling `plugger.Group[]().Register()` and specifying a
 `decorator.Decorator`-compatible function.
 
 ```go
+import (
+    "github.com/thediveo/go-plugger/v3"
+    "github.com/thediveo/lxkns/decorator"
+)
+
 // Register this Decorator plugin.
 func init() {
-    plugger.RegisterPlugin(&plugger.PluginSpec{
-        Name:  "mydecorator",
-        Group: decorator.PluginGroup,
-        Symbols: []plugger.Symbol{
-            decorator.Decorate(Decorate),
-        },
-    })
+    plugger.Group[decorator.Decorate]().Register(
+		Decorate, plugger.WithPlugin("mydecorator"))
 }
 
 // Decorate the discovered containers, where applicable...
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
     // ...
 }
 ```
@@ -71,7 +71,7 @@ A good example is `decorator/compose/decorator.go`: this decorator looks for
 their corresponding project groups.
 
 ```go
-func Decorate(engines []*model.ContainerEngine) {
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
     for _, engine := range engines {
         projects := map[string]*model.Group{}
         for _, container := range engine.Containers {

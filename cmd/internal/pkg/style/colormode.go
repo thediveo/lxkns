@@ -73,7 +73,7 @@ func ColorModeSetupCLI(rootCmd *cobra.Command) {
 // ColorModeBeforeCommand is a plugin function that delays color profile
 // selection based on our CLI flag and terminal profile detection until the last
 // minute, just before the selected command runs.
-func ColorModeBeforeCommand() error {
+func ColorModeBeforeCommand(*cobra.Command) error {
 	// Colorization mode...
 	switch colorize {
 	case ColorAlways:

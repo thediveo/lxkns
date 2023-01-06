@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/cmd/internal/tool"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -41,13 +41,7 @@ type TreeVisitor struct {
 // exactly one PID namespace, the "root" PID namespace. However, we leave this
 // code in for instructional purposes.
 func (v *TreeVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	pidroots := discover.SortNamespaces(roots.Interface().([]model.Namespace))
-	count := len(pidroots)
-	children = make([]reflect.Value, count)
-	for idx := 0; idx < count; idx++ {
-		children[idx] = reflect.ValueOf(pidroots[idx])
-	}
-	return
+	return tool.SortRootNamespaces(roots)
 }
 
 // Label returns a node label text, which varies depending on whether the node

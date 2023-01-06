@@ -27,13 +27,26 @@ import (
 )
 
 var proc1 = &model.Process{
-	PID:          1,
-	PPID:         0,
-	Cmdline:      []string{"/sbin/domination", "--world"},
-	Name:         "(init)",
-	Starttime:    123,
-	Namespaces:   namespaceset,
-	FridgeFrozen: false,
+	PID:     1,
+	PPID:    0,
+	Cmdline: []string{"/sbin/domination", "--world"},
+	ProTaskCommon: model.ProTaskCommon{
+		Name:         "(init)",
+		Starttime:    123,
+		Namespaces:   namespaceset,
+		FridgeFrozen: false,
+	},
+	Tasks: []*model.Task{
+		{
+			TID: 1,
+			ProTaskCommon: model.ProTaskCommon{
+				Name:         "(init)",
+				Starttime:    123,
+				Namespaces:   namespaceset,
+				FridgeFrozen: false,
+			},
+		},
+	},
 }
 
 const proc1JSON = `{
@@ -48,19 +61,45 @@ const proc1JSON = `{
 	"starttime": 123,
 	"cpucgroup": "",
 	"fridgecgroup": "",
-	"fridgefrozen": false
+	"fridgefrozen": false,
+	"tasks": [
+		{
+			"namespaces": ` + namespacesJSON + `,
+			"tid": 1,
+			"name": "(init)",
+			"starttime": 123,
+			"cpucgroup": "",
+			"fridgecgroup": "",
+			"fridgefrozen": false
+		}
+	]
 }`
 
 var proc2 = &model.Process{
-	PID:          666,
-	PPID:         proc1.PID,
-	Cmdline:      []string{"/sbin/fool"},
-	Name:         "fool",
-	Starttime:    666666,
-	Namespaces:   namespaceset,
-	CpuCgroup:    "süstem.sluice",
-	FridgeCgroup: "süstem.sluice/lxkns",
-	FridgeFrozen: true,
+	PID:     666,
+	PPID:    proc1.PID,
+	Cmdline: []string{"/sbin/fool"},
+	ProTaskCommon: model.ProTaskCommon{
+		Name:         "fool",
+		Starttime:    666666,
+		Namespaces:   namespaceset,
+		CpuCgroup:    "süstem.sluice",
+		FridgeCgroup: "süstem.sluice/lxkns",
+		FridgeFrozen: true,
+	},
+	Tasks: []*model.Task{
+		{
+			TID: 666,
+			ProTaskCommon: model.ProTaskCommon{
+				Name:         "fool",
+				Starttime:    666666,
+				Namespaces:   namespaceset,
+				CpuCgroup:    "süstem.sluice",
+				FridgeCgroup: "süstem.sluice/lxkns",
+				FridgeFrozen: true,
+			},
+		},
+	},
 }
 
 const proc2JSON = `{
@@ -74,7 +113,18 @@ const proc2JSON = `{
 	"starttime": 666666,
 	"cpucgroup": "süstem.sluice",
 	"fridgecgroup": "süstem.sluice/lxkns",
-	"fridgefrozen": true
+	"fridgefrozen": true,
+	"tasks": [
+		{
+			"namespaces": ` + namespacesJSON + `,
+			"tid": 666,
+			"name": "fool",
+			"starttime": 666666,
+			"cpucgroup": "süstem.sluice",
+			"fridgecgroup": "süstem.sluice/lxkns",
+			"fridgefrozen": true
+		}
+	]
 }`
 
 var namespaceset = model.NamespacesSet{
@@ -245,7 +295,7 @@ var _ = Describe("process JSON", func() {
 	})
 
 	It("rejects bad processes", func() {
-		proc := &model.Process{PID: 12345, PPID: -1, Name: "foobar"}
+		proc := &model.Process{PID: 12345, PPID: -1, ProTaskCommon: model.ProTaskCommon{Name: "foobar"}}
 		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
 		Expect(err).To(Succeed())

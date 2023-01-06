@@ -41,6 +41,7 @@ sibling project:
 
 - Docker
 - containerd
+- Podman, when building **lxkns** with the `podman` build tag.
 
 > [!TIP] Applications can easily add their own containerizers (via so-called
 > "watchers") to the lxkns service and the CLI tools, extending them via the

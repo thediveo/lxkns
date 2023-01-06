@@ -1,5 +1,26 @@
 # Important Changes
 
+## 0.24.0
+
+1. In addition to processes, lxkns now scans all tasks (threads) for namespaces,
+   so the existing information model was extended accordingly (without any
+   breaking changes):
+   - `model.Process` got a new field `Tasks []*model.Task` that mirrors the way
+     the Linux `procfs` works. The main (initial) task that represents the
+     corresponding process is always included in this task list. This list in
+     unordered.
+   - Tasks that are attached to a particular namespace appear in the list of
+     "loose threads" (`model.Namespace.LooseThreads`) of that namespace **only
+     if** the process of the task itself is attached to a different namespace of
+     the same type. Thus, if a task is attached to the _same_ namespace of a
+     particular type as its main/initial task (process), then it won't
+     explicitly be listed as a "loose thread".
+2. Thanks to [Michael Kerrisk](https://www.man7.org/) sending some enlightment
+   my way, the Mountineers have been optimized and often don't need to spawn a
+   full-blown sandbox process anymore. Instead, they simply use a throw-away
+   sandbox task when opening `procfs` wormholes into far distant mount namespace
+   galaxies whenever possible.
+
 ## 0.20.0
 
 1. lxkns has grown tremendously in the past more than one-and-a-half years since

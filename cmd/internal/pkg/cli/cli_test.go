@@ -39,7 +39,7 @@ func UnittestSetupCLI(rootCmd *cobra.Command) {
 var beforeRun = 0
 var beforeRunErr = error(nil)
 
-func UnittestBeforeRun() error {
+func UnittestBeforeRun(*cobra.Command) error {
 	beforeRun++
 	return beforeRunErr
 }
@@ -57,11 +57,11 @@ var _ = Describe("CLI cmd plugins", func() {
 	It("calls BeforeCommand plugin method", func() {
 		beforeRun = 0
 		beforeRunErr = errors.New("fooerror")
-		Expect(BeforeCommand()).To(HaveOccurred())
+		Expect(BeforeCommand(nil)).To(HaveOccurred())
 		Expect(beforeRun).To(Equal(1))
 
 		beforeRunErr = nil
-		Expect(BeforeCommand()).ToNot(HaveOccurred())
+		Expect(BeforeCommand(nil)).ToNot(HaveOccurred())
 		Expect(beforeRun).To(Equal(2))
 	})
 

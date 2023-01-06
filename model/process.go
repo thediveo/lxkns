@@ -17,7 +17,6 @@
 // under the License.
 
 //go:build linux
-// +build linux
 
 package model
 
@@ -40,17 +39,11 @@ import (
 // [acronym]: https://en.wikipedia.org/wiki/Acronym
 type PIDType int32
 
-// Process represents our very limited view and even more limited interest in
-// a specific Linux process. Well, the limitation comes from what we need for
-// namespace discovery to be useful.
-type Process struct {
-	PID        PIDType       `json:"pid"`       // this process' identifier.
-	PPID       PIDType       `json:"ppid"`      // parent's process identifier.
-	Parent     *Process      `json:"-"`         // our parent's process description.
-	Children   []*Process    `json:"-"`         // child processes.
-	Name       string        `json:"name"`      // synthesized name of process.
-	Cmdline    []string      `json:"cmdline"`   // command line of process.
-	Namespaces NamespacesSet `json:"-"`         // the 7 namespaces joined by this process.
+// ProTaskCommon defines the fields we're interested in that are common to both
+// [Process] and [Task] objects.
+type ProTaskCommon struct {
+	Name       string        `json:"name"`      // (limited) name, from the comm status field.
+	Namespaces NamespacesSet `json:"-"`         // the 8 namespaces joined by this process.
 	Starttime  uint64        `json:"starttime"` // time of process start, since the Kernel boot epoch.
 	CpuCgroup  string        `json:"cpucgroup"` // (relative) path of CPU control group for this process.
 	// (relative) path of freezer control group for this process. Please note
@@ -58,18 +51,48 @@ type Process struct {
 	// always be the same as for CpuCgroup.
 	FridgeCgroup string `json:"fridgecgroup"`
 	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
+}
 
-	Container *Container `json:"-"` // associated container.
+// Task represents our very, very limited view and interest in a particular
+// Linux task (including the main task that represents the whole process).
+type Task struct {
+	ProTaskCommon
+	TID     PIDType  `json:"tid"` // our task's identifier.
+	Process *Process `json:"-"`   // our main task ~process.
+}
+
+// Process represents our very limited view and even more limited interest in
+// a specific Linux process. Well, the limitation comes from what we need for
+// namespace discovery to be useful.
+type Process struct {
+	ProTaskCommon
+	PID       PIDType    `json:"pid"`             // this process' identifier.
+	PPID      PIDType    `json:"ppid"`            // parent's process identifier.
+	Parent    *Process   `json:"-"`               // our parent's process description.
+	Children  []*Process `json:"-"`               // child processes.
+	Cmdline   []string   `json:"cmdline"`         // command line of process.
+	Tasks     []*Task    `json:"tasks,omitempty"` // tasks of this process, including the main task.
+	Container *Container `json:"-"`               // associated container; only for the leader.
 }
 
 // ProcessTable maps PIDs to their [model.Process] descriptions, allowing for
 // quick lookups.
 type ProcessTable map[PIDType]*Process
 
+// Process/task status field indices for a split /proc/$PID/stat line, with
+// zero-based indices. See also
+// https://man7.org/linux/man-pages/man5/proc.5.html.
+const (
+	statlineFieldPID       = 1 - 1 //nolint:staticcheck // SA4000 stupid, stupid lill' linter.
+	statlineFieldComm      = 2 - 1
+	statlineFieldPPID      = 4 - 1
+	statlineFieldStarttime = 22 - 1
+)
+
 // Basename returns the process executable name with the directory stripped off,
-// similar to what [basename(1)] does when applied to the “$0” argument. In case
-// the basename would be empty, then the process name is returned instead as
-// fallback.
+// similar to what [basename(1)] does when applied to the “$0” argument.
+// However, in case the basename would be empty, then the process name is
+// returned instead as fallback.
 //
 // [basename(1)]: https://man7.org/linux/man-pages/man1/basename.1.html
 func (p *Process) Basename() (basename string) {
@@ -116,78 +139,127 @@ func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 	// either go for the process name or the executable basename, et
 	// cetera.
 	cmdline, err := os.ReadFile(procbase + "/cmdline") // #nosec G304
-	if err == nil {
+	if err == nil {                                    // be forgiving
 		cmdparts := bytes.Split(bytes.TrimRight(cmdline, "\x00"), []byte{0x00})
 		proc.Cmdline = make([]string, len(cmdparts))
 		for idx, part := range cmdparts {
 			proc.Cmdline[idx] = string(part)
 		}
 	}
+	proc.discoverTasks(procbase)
 	return proc
+}
+
+// discoverTasks discovers the tasks of this particular process in the process
+// filesystem pointed to by procbase.
+func (p *Process) discoverTasks(procbase string) {
+	procbase += "/task"
+	taskentries, err := os.ReadDir(procbase)
+	if err != nil {
+		return
+	}
+	for _, taskentry := range taskentries {
+		// Get the task TID as a number and then read its
+		// /proc/[PID]/task/[TASK]/stat procfs entry in order to get some
+		// details about the task.
+		tid, err := strconv.ParseInt(taskentry.Name(), 10, 32)
+		if err != nil || tid <= 0 {
+			continue
+		}
+		line, err := os.ReadFile(procbase + "/" + taskentry.Name() + "/stat") // #nosec G304
+		if err != nil {
+			continue
+		}
+		task := newTaskFromStatline(string(line), p)
+		if task == nil {
+			continue
+		}
+		p.Tasks = append(p.Tasks, task)
+	}
 }
 
 // newProcessStat parses a process status line (as read from /proc/[PID]/status)
 // into a Process object. Factoring out the parsing functionality allows unit
 // testing it separately from the live process tree.
 func newProcessFromStatline(procstat string) (proc *Process) {
-	proc = &Process{}
-	// Gather the PID from the (1) pid field. Please note that the bracketed
-	// numbers and field names are following man proc(5),
-	// http://man7.org/linux/man-pages/man5/proc.5.html. Fields are separated
-	// by spaces.
-	pidmore := strings.SplitN(procstat, " ", 2)
-	if len(pidmore) < 2 {
+	pid, starttime, statFields := commonFromStatline(procstat)
+	if statFields == nil {
 		return nil
 	}
-	pid, err := strconv.ParseInt(pidmore[0], 10, 32)
-	if err != nil || pid <= 0 {
-		return nil
+	proc = &Process{
+		PID: pid,
+		ProTaskCommon: ProTaskCommon{
+			Name:      statFields[statlineFieldComm],
+			Starttime: starttime,
+		},
 	}
-	proc.PID = PIDType(pid)
-	// Extract the process name from the process status line. Please note that
-	// the process name (2) is in parentheses. Now, process names may contain
-	// parentheses themselves, so we have to look for the last ")" to
-	// terminate the process name. And, of course, process names may also
-	// container spaces.
-	remainder := pidmore[1]
-	namestart := strings.Index(remainder, "(")
-	if namestart < 0 {
-		return nil
-	}
-	nameend := strings.LastIndex(remainder, ")")
-	if nameend < 0 {
-		return nil
-	}
-	proc.Name = remainder[namestart+1 : nameend]
-	// Now split the remainder of the process status line into fields
-	// separated by simple spaces. As of Linux 3.5 there are 52 fields in
-	// total (according to "man proc"), but we've alread chopped off the first
-	// two ones. However, as we're only interested in the fields of up to
-	// (22), we're getting sloppy and don't care about what happens after
-	// field (22).
-	if nameend+2 > len(remainder) {
-		return nil
-	}
-	fields := strings.Split(remainder[nameend+2:], " ")
-	if len(fields) < 22-2 {
-		return nil
-	}
-	// Extract the Parent PID (field 4). Please note that we've chopped off
-	// two fields, and array indices start at 0: so the index is 3 less than
-	// the field number.
-	ppid, err := strconv.ParseUint(fields[4-3], 10, 32)
+	ppid, err := strconv.ParseUint(statFields[statlineFieldPPID], 10, 32)
 	if err != nil {
 		return nil
 	}
 	proc.PPID = PIDType(ppid)
-	// The (22) starttime filed is the start time of this process since the
-	// Kernel boot epoch.
-	st, err := strconv.ParseInt(fields[22-3], 10, 64)
-	if err != nil || st < 0 {
+	return
+}
+
+// commonFromStatline returns the PID, starttime and finally all stat line
+// fields, or nil for the fields if the stat line turns out to be invalid.
+func commonFromStatline(statline string) (PIDType, uint64, []string) {
+	statFields := splitStatline(statline)
+	if statFields == nil {
+		return 0, 0, nil
+	}
+	pid, err := strconv.ParseInt(statFields[statlineFieldPID], 10, 32)
+	if err != nil || pid <= 0 {
+		return 0, 0, nil
+	}
+	starttime, err := strconv.ParseInt(statFields[statlineFieldStarttime], 10, 64)
+	if err != nil || starttime < 0 {
+		return 0, 0, nil
+	}
+	return PIDType(pid), uint64(starttime), statFields
+}
+
+// splitStatline returns the individual fields of a /proc/$PID/stat line,
+// properly handling the name field with its special round bracket escaping.
+// splitStatline returns nil if the supplied stat line is malformed, such as not
+// offering fields up to the start time field. It does not check for correct
+// individual field values though.
+func splitStatline(statline string) []string {
+	// As the second field may contain spaces, it is always bracket in itself.
+	// So we first split of the first field, the PID (or TID) and then deal with
+	// the second field separately, before all the remaining fields again are
+	// simply separated by spaces.
+	firstAndMore := strings.SplitN(statline, " ", 2)
+	if len(firstAndMore) < 2 {
 		return nil
 	}
-	proc.Starttime = uint64(st)
-	return
+	// Now isolate the process name from the process status line. Please note
+	// that the process name (2) is in parentheses. Now, process names may
+	// contain parentheses themselves, so we have to look for the last ")" to
+	// terminate the process name. And, of course, process names may also
+	// container spaces.
+	nameAndMore := firstAndMore[1]
+	nameStart := strings.Index(nameAndMore, "(")
+	if nameStart < 0 {
+		return nil
+	}
+	nameEnd := strings.LastIndex(nameAndMore, ")")
+	if nameEnd < 0 {
+		return nil
+	}
+	name := nameAndMore[nameStart+1 : nameEnd]
+	if nameEnd+2 > len(nameAndMore) {
+		return nil
+	}
+	fields := strings.Split(nameAndMore[nameEnd+2:], " ")
+	if len(fields) < 22-2 {
+		return nil
+	}
+	statfields := []string{
+		firstAndMore[0],
+		name,
+	}
+	return append(statfields, fields...)
 }
 
 // Valid checks for the same process to still be present in the OS process
@@ -231,7 +303,8 @@ func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) 
 	pt = map[PIDType]*Process{}
 	for _, procentry := range procentries {
 		// Get the process PID as a number and then read its /proc/[PID]/stat
-		// procfs entry in order to get some details about the process.
+		// procfs entry in order to get some details about the process. Skip
+		// entries that do not represent PIDs.
 		pid, err := strconv.ParseInt(procentry.Name(), 10, 32)
 		if err != nil || pid <= 0 {
 			continue
@@ -303,4 +376,27 @@ func (l ProcessListByPID) Len() int      { return len(l) }
 func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l ProcessListByPID) Less(i, j int) bool {
 	return l[i].PID < l[j].PID
+}
+
+// newTaskFromStatline parses a task (process) status line (as read from
+// /proc/[PID]/task/[TID]/status) into a Task object.
+func newTaskFromStatline(procstat string, proc *Process) (task *Task) {
+	tid, starttime, statFields := commonFromStatline(procstat)
+	if statFields == nil {
+		return nil
+	}
+	task = &Task{
+		TID:     tid,
+		Process: proc,
+		ProTaskCommon: ProTaskCommon{
+			Name:      statFields[statlineFieldComm],
+			Starttime: starttime,
+		},
+	}
+	return
+}
+
+// MainTask returns true if the given Task is the process main task.
+func (t *Task) MainTask() bool {
+	return t.TID == t.Process.PID
 }

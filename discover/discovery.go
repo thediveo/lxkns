@@ -16,18 +16,18 @@
 // limitations under the License.
 
 //go:build linux
-// +build linux
 
 package discover
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 // Result stores the results of a tour through Linux processes and
@@ -47,10 +47,9 @@ type Result struct {
 // SortNamespaces returns a sorted copy of a list of namespaces. The
 // namespaces are sorted by their namespace ids in ascending order.
 func SortNamespaces(nslist []model.Namespace) []model.Namespace {
-	newnslist := make([]model.Namespace, len(nslist))
-	copy(newnslist, nslist)
-	sort.Slice(newnslist, func(i, j int) bool {
-		return newnslist[i].ID().Ino < newnslist[j].ID().Ino
+	newnslist := slices.Clone(nslist)
+	slices.SortFunc(newnslist, func(ns1, ns2 model.Namespace) bool {
+		return ns1.ID().Ino < ns2.ID().Ino
 	})
 	return newnslist
 }
@@ -60,26 +59,21 @@ func SortNamespaces(nslist []model.Namespace) []model.Namespace {
 // order. Please note that the list itself is flat, but this function can only
 // be used on hierarchical namespaces (PID, user).
 func SortChildNamespaces(nslist []model.Hierarchy) []model.Hierarchy {
-	newnslist := make([]model.Hierarchy, len(nslist))
-	copy(newnslist, nslist)
-	sort.Slice(newnslist, func(i, j int) bool {
-		return newnslist[i].(model.Namespace).ID().Ino < newnslist[j].(model.Namespace).ID().Ino
+	newnslist := slices.Clone(nslist)
+	slices.SortFunc(newnslist, func(ns1, ns2 model.Hierarchy) bool {
+		return ns1.(model.Namespace).ID().Ino < ns2.(model.Namespace).ID().Ino
 	})
 	return newnslist
 }
 
-// SortedNamespaces returns the namespaces from a map sorted.
+// SortedNamespaces returns the namespaces from a map sorted by their namespace
+// identifiers (inode numbers).
 func SortedNamespaces(nsmap model.NamespaceMap) []model.Namespace {
 	// Copy the namespaces from the map into a slice, so we can then sort it
 	// next.
-	nslist := make([]model.Namespace, len(nsmap))
-	idx := 0
-	for _, ns := range nsmap {
-		nslist[idx] = ns
-		idx++
-	}
-	sort.Slice(nslist, func(i, j int) bool {
-		return nslist[i].ID().Ino < nslist[j].ID().Ino
+	nslist := maps.Values(nsmap)
+	slices.SortFunc(nslist, func(ns1, ns2 model.Namespace) bool {
+		return ns1.ID().Ino < ns2.ID().Ino
 	})
 	return nslist
 }

@@ -17,12 +17,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -65,7 +67,7 @@ read
 		})
 	})
 
-	It("CLI --foobar fails correctly", func() {
+	It("fails for unknown CLI flag", func() {
 		oldExit := osExit
 		defer func() { osExit = oldExit }()
 		exit := 0
@@ -76,7 +78,7 @@ read
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
-	It("CLI w/o args renders user tree", func() {
+	It("renders just the user tree without any CLI args", func() {
 		os.Args = append(os.Args[:1], "--noengines")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
@@ -85,7 +87,7 @@ read
 			usernsid.Ino)))
 	})
 
-	It("CLI -d renders user tree with owned namespaces", func() {
+	It("renders user tree with owned namespaces with CLI -d", func() {
 		os.Args = append(os.Args[:1], "--noengines", "-d")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
@@ -96,7 +98,43 @@ read
 			usernsid.Ino, netnsid.Ino)))
 	})
 
-	It("CLI -f filters owned namespaces", func() {
+	It("renders user tree with loose threads with CLI -d", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+		By("creating a stray task with its own namespace...")
+		tidch := make(chan int)
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+			runtime.LockOSThread() // never unlock, as this task is going to be tainted.
+
+			// I owe Micheal Kerrisk several beers for opening my eyes to this
+			// twist: a task can create its own new mount namespace after it has
+			// declared itself independent of the effects of CLONE_FS when it
+			// was created as a task (=thread) inside a process. And yes, this
+			// allows the mountineers to work without the separate pause process
+			// and instead using a throw-away thread/task.
+			Expect(unix.Unshare(unix.CLONE_FS | unix.CLONE_NEWNS)).To(Succeed())
+
+			tidch <- unix.Gettid()
+			<-done
+		}()
+
+		var tid int
+		Eventually(tidch).Should(Receive(&tid))
+		defer close(done)
+
+		os.Args = append(os.Args[:1], "--noengines", "-d")
+		out := getstdout.Stdouterr(main)
+		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			initusernsid.Ino)))
+		Expect(out).To(MatchRegexp(fmt.Sprintf(`
+[│ ]+⋄─ mnt:\[.*\] task ".*" \[%d\] of ".*" \(%d\)`,
+			tid, os.Getpid())))
+	})
+
+	It("filters owned namespaces with CLI -f", func() {
 		os.Args = append(os.Args[:1], "--noengines", "-d", "-f=pid")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,

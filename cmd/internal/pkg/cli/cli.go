@@ -31,9 +31,9 @@ func AddFlags(rootCmd *cobra.Command) {
 // BeforeCommand runs all registered BeforeRun plugin functions (in group "cli")
 // just before the selected command runs; it terminates as soon as the first
 // plugin function returns a non-nil error.
-func BeforeCommand() error {
+func BeforeCommand(cmd *cobra.Command) error {
 	for _, beforeCmd := range plugger.Group[cliplugin.BeforeCommand]().Symbols() {
-		if err := beforeCmd(); err != nil {
+		if err := beforeCmd(cmd); err != nil {
 			return err
 		}
 	}

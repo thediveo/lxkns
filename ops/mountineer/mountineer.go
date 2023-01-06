@@ -16,10 +16,10 @@ package mountineer
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -44,7 +44,7 @@ type Mountineer struct {
 	// system view provided by a mount namespace.
 	contentsRoot string
 	// pause/sandbox process, if any.
-	sandbox *exec.Cmd
+	sandbox Pauser
 	// PID to report back: this can be either of the pause/sandbox process or
 	// PID 1 (alternatively the own PID if PID 1 is out of reach), depending on
 	// the reference: this allows API users to unify usage without having to
@@ -172,17 +172,21 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, e
 		// by "ref" (in the mount namespace reachable via process with "pid").
 		wormholedref := contentsRoot + evilrefpath
 		log.Debugf("opening pandora's sandbox at %s", wormholedref)
-		var sandbox *exec.Cmd
-		sandbox, err = NewPauseProcess(wormholedref, m.usernsref(wormholedref, usernsmap))
+		var sandbox Pauser
+		if usernsref := m.usernsref(wormholedref, usernsmap); usernsref != "" {
+			sandbox, err = newPauseProcess(wormholedref, usernsref)
+		} else {
+			sandbox, err = newPauseTask(wormholedref)
+		}
 		if err != nil {
-			err = errors.New("sandbox failure: " + err.Error())
+			err = fmt.Errorf("sandbox failure, reason: %w", err)
 			return
 		}
-		// Sandbox has attached to the mount namespace, now we can "safely"
+		// The sandbox has attached to the mount namespace, now we can "safely"
 		// access the latter via the proc file system.
-		pid = model.PIDType(sandbox.Process.Pid)
-		// Retire previous pause process, if any. Do not retire the process
-		// giving us the initial context though.
+		pid = sandbox.PID()
+		// Retire the previous sandbox, if any. Do not retire the process giving
+		// us the initial context though ... that would be ... bad, really bad.
 		m.Close()
 		m.pid = pid
 		m.sandbox = sandbox // switch over, and rinse+repeat.
@@ -197,7 +201,7 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, e
 // for opening the mount namespace and keeping it open.
 func (m *Mountineer) Close() {
 	if m.sandbox != nil {
-		_ = m.sandbox.Process.Kill()
+		m.sandbox.Close()
 		m.sandbox = nil
 	}
 }
@@ -269,7 +273,7 @@ func (m *Mountineer) Resolve(pathname string) (string, error) {
 	return m.contentsRoot + pathname, nil
 }
 
-// PID returns the PID of the sandbox process (if any), or PID 1 in case a
+// PID returns the PID of the sandbox pauser (if any), or PID 1 in case a
 // sandbox wasn't needed.
 func (m *Mountineer) PID() model.PIDType {
 	return m.pid

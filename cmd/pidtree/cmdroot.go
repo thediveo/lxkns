@@ -49,8 +49,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
   pidtree -n pid:[4026531836] -p 1
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return cli.BeforeCommand()
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return cli.BeforeCommand(cmd)
 		},
 		RunE: runPidtree,
 	}
@@ -107,7 +107,12 @@ type SingleBranch struct {
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
 // specific PID, optionally in a specific PID namespace.
-func renderPIDBranch(out io.Writer, pid model.PIDType, pidnsid species.NamespaceID, cizer containerizer.Containerizer) error {
+func renderPIDBranch(
+	out io.Writer,
+	pid model.PIDType,
+	pidnsid species.NamespaceID,
+	cizer containerizer.Containerizer,
+) error {
 	// Run a full namespace discovery and also get the PID translation map.
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),

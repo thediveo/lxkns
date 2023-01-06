@@ -27,7 +27,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("maps PIDs", func() {
+var _ = Describe("PID maps", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -64,10 +64,13 @@ read # wait for test to proceed()
 		pidnsid := nstest.CmdDecodeNSId(cmd)
 		var leafpid model.PIDType
 		cmd.Decode(&leafpid)
+		Expect(leafpid).NotTo(BeZero())
 
 		allns := Namespaces(FromProcs(), WithHierarchy())
 		pidns := allns.Namespaces[model.PIDNS][pidnsid]
+		Expect(pidns).NotTo(BeNil())
 		initialpidns := allns.PIDNSRoots[0]
+		Expect(initialpidns).NotTo(BeNil())
 
 		pidmap := NewPIDMap(allns)
 

@@ -150,10 +150,17 @@ export interface NamespaceRefProps {
  * namespaces thus don't have their own explicit reference, so no path.
  */
 export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefProps) => {
-    const isProcfdPath = namespace.reference &&
-        namespace.reference[0].startsWith('/proc/') &&
-        namespace.reference[0].includes('/fd/')
 
+    const isInProcfs = namespace.reference &&
+        namespace.reference[0].startsWith('/proc/')
+
+    const isProcfdPath = isInProcfs && namespace.reference[0].includes('/fd/')
+
+    // render a UI representation of the namespace reference element(s);
+    // remember, there might be multiple namespace reference elements chained
+    // together, such as first some mount namespace reference that must be
+    // entered for the next element to become accessible, followed by the
+    // "ultimate" namespace reference.
     const ref = (namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
         ? namespace.reference.slice(1) : (namespace.reference || []))
         .map((refpath, idx) => [
@@ -175,7 +182,14 @@ export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefPr
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="bindmount">"{namespace.reference[0]}"</span>
+                    <span className="file descriptor">"{namespace.reference[0]}"</span>
+                </NamespaceReference>
+            </Tooltip>
+        ) || (isInProcfs && !isProcfdPath &&
+            <Tooltip title={`${namespace.type} namespace kept alive by process/task`}>
+                <NamespaceReference className={className}>
+                    <NamespaceIcon fontSize="inherit" />
+                    <span className="process/task reference">"{namespace.reference[0]}"</span>
                 </NamespaceReference>
             </Tooltip>
         ) || (
