@@ -31,7 +31,7 @@ import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom 
  * @param name name (without .mdx extension and without any path) of a chapter
  * .mdx file; chapter files are located in the chapters/ subdirectory.
  */
-const ch = (name: string) => React.lazy(() => import(`!babel-loader!mdx-loader!./chapters/${name}.mdx`))
+const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
 
 const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },

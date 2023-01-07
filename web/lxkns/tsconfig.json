@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "downlevelIteration": true,
     "lib": [
       "dom",
@@ -24,7 +24,8 @@
     "types": [
       "cypress",
       "cypress-react-selector",
-      "cypress-react-router"
+      "cypress-react-router",
+      "mdx"
     ],
   },
   "include": [

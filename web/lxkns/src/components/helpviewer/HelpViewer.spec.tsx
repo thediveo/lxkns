@@ -19,9 +19,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { CypressHistorySupport } from 'cypress-react-router'
 import { mount } from '@cypress/react'
 
-import chintro from "!babel-loader!mdx-loader!./01-intro.mdx"
-import chfoobar from "!babel-loader!mdx-loader!./02-foobar.mdx"
-import chnew from "!babel-loader!mdx-loader!./03-newchapter.mdx"
+import chintro from "!@mdx-js/loader!./01-intro.mdx"
+import chfoobar from "!@mdx-js/loader!./02-foobar.mdx"
+import chnew from "!@mdx-js/loader!./03-newchapter.mdx"
 import HelpViewer from './HelpViewer'
 
 const chapters = [
