@@ -2,6 +2,9 @@
   "name": "lxkns",
   "version": "0.24.0",
   "private": true,
+  "resolutions": {
+    "nth-check": "^2.0.1"
+  },
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
