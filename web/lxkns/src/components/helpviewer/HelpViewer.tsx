@@ -154,7 +154,7 @@ export interface HelpViewerProps {
 }
 
 /**
- * A multi-page help view component including "chapter" navigation. The rendered
+ * A multi-page help view component with "chapter" navigation. The rendered
  * chapter (in MDX) is selected via the current route. When selecting a
  * different chapter, the component will change the route in order to show it.
  *

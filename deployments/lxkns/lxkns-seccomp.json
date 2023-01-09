@@ -574,7 +574,8 @@
         },
         {
             "names": [
-                "setns"
+                "setns",
+                "unshare"
             ],
             "action": "SCMP_ACT_ALLOW",
             "args": [],

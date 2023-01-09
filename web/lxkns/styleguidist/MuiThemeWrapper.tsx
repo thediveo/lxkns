@@ -47,9 +47,7 @@ const lightTheme = createTheme(
 const MuiThemeWrapper = ({ children }) => (
     <ThemeProvider theme={lightTheme}>
         <ScopedCssBaseline>
-            <Router>
-                {children}
-            </Router>
+            {children}
         </ScopedCssBaseline>
     </ThemeProvider>
 )

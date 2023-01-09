@@ -11,6 +11,8 @@ declare global {
              * @example cy.history().its('location.pathname')
              */
             history(): Chainable<Element>
+
+            mount: typeof mount
         }
     }
 }

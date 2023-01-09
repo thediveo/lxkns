@@ -123,7 +123,7 @@ export const fromjson = (discoverydata: any): Discovery => {
         }
         // ...and now for the namespaces the tasks of this process are attached
         // to.
-        proc.tasks.forEach(task => {
+        proc.tasks && proc.tasks.forEach(task => {
             for (const [type, nsref] of Object.entries(task.namespaces)) {
                 task.namespaces[type] = discovery.namespaces[nsref]
                 task.process = proc
