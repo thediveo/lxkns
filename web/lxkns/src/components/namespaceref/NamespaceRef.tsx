@@ -110,6 +110,8 @@ const ProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
     return process.name
 }
 
+// Returns the name of the process referenced by a procfs-based path, if
+// available. Otherwise, returns undefined. 
 const FancyProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
     const processName = ProcessNameOfProcPath(path, processes)
     return processName ? ` [${processName}]` : undefined
@@ -118,9 +120,13 @@ const FancyProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
 export interface NamespaceRefProps {
     /** namespace object, with type and reference information. */
     namespace: Namespace
-    /** information about all processes (for some render support) */
+    /** 
+     * information about all processes; while optional, passing this process
+     * information allows rendering the name of the process belonging to a
+     * particular procfs-based path in addition to just the plain path.
+     */
     processes?: ProcessMap,
-    /** optional CSS class name(s) for the badge. */
+    /** optional CSS class name(s) for the namespace reference component. */
     className?: string
 }
 
@@ -164,14 +170,14 @@ export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefPr
     // "ultimate" namespace reference.
     const ref = (namespace.reference && namespace.reference[0] === '/proc/1/ns/mnt'
         ? namespace.reference.slice(1) : (namespace.reference || []))
-        .map((refpath, idx) => [
+        .map((refelement, idx) => [
             idx > 0 ? <PathsSeparator key={`pathssep-${idx}`} fontSize="inherit" /> : undefined,
-            <span key={idx} className="bindmount">{refpath}</span>,
-            FancyProcessNameOfProcPath(refpath, processes),
+            <span key={idx} className="bindmount">"{refelement}"</span>,
+            FancyProcessNameOfProcPath(refelement, processes),
         ]).flat()
 
     return (
-        (!namespace.reference &&
+        ((!namespace.reference || !namespace.reference.length) &&
             <Tooltip title={`intermediate hidden ${namespace.type} namespace`}>
                 <Blinky className={className}>
                     &nbsp;
@@ -183,14 +189,14 @@ export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefPr
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="file descriptor">"{namespace.reference[0]}"</span>
+                    <span className="file descriptor">{ref}</span>
                 </NamespaceReference>
             </Tooltip>
         ) || (isInProcfs && !isProcfdPath &&
             <Tooltip title={`${namespace.type} namespace kept alive by process/task`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="process/task reference">"{namespace.reference[0]}"</span>
+                    <span className="process/task reference">{ref}</span>
                 </NamespaceReference>
             </Tooltip>
         ) || (

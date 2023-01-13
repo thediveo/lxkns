@@ -54,7 +54,7 @@ import { initProc } from "models/lxkns/mock";
   <NamespaceInfo
     namespace={{
       ...initProc.namespaces.pid,
-      reference: [""],
+      reference: [],
       ealdorman: null,
       leaders: [],
     }}

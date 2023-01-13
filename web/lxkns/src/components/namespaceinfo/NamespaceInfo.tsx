@@ -130,9 +130,9 @@ export const NamespaceInfo = ({
     // Or is there one or more loose threads joined to this namespace? Then show
     // the oldest loose thread instead.
     const oldesttask = !procinfo && namespace.loosethreads.slice().sort(compareBusybodies)[0]
-    const taskinfo = !!oldesttask 
-    && (!noprocess || shortprocess)
-    && <TaskInformation task={oldesttask} short={shortprocess} />
+    const taskinfo = !!oldesttask
+        && (!noprocess || shortprocess)
+        && <TaskInformation task={oldesttask} short={shortprocess} />
 
     // If there isn't any process attached to this namespace, prepare
     // information about bind mounts and fd references, if possible. This also
