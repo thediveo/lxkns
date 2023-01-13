@@ -14,8 +14,6 @@
 
 import React, { memo } from 'react'
 
-import { MDXProvider } from '@mdx-js/react'
-
 import {
     Divider,
     Table,
@@ -27,14 +25,14 @@ import {
     lighten,
     styled,
 } from '@mui/material'
-
 import { ChapterSkeleton } from 'components/chapterskeleton'
+import { MDXContent } from 'mdx/types'
 
 
 // Defines how to map the components emitted by MDX onto Material-UI components,
 // and especially the Typography component. See also:
 // https://mdxjs.com/advanced/components
-const MuiComponents = {
+const muiComponents = {
     // Get us rid of that pesky "validateDOMNesting(...): <p> cannot appear as a
     // descendant of <p>" by using a <div> instead of Typography's default <p>.
     p: (() => {
@@ -193,7 +191,7 @@ const MarkdownArea = styled('div')(({ theme }) => ({
 
 export interface MuiMarkdownProps {
     /** compiled MDX, which can also be lazy loaded. */
-    mdx: (props: any) => JSX.Element
+    mdx: MDXContent
     /** shortcodes, that is, available components. */
     shortcodes?: { [key: string]: React.ComponentType<any> }
     /** CSS class name(s). */
@@ -210,7 +208,7 @@ export interface MuiMarkdownProps {
  * `React.Suspense` child component and shows a `ChapterSkeleton` component
  * while lazily loading MDX.
  *
- * - uses [mdx-js/mdx](https://github.com/mdx-js/mdx).
+ * - uses [mdx.js](https://github.com/mdx-js/mdx).
  * - headings automatically get `id` slugs via
  *   [remark-slug](https://github.com/remarkjs/remark-slug).
  * - some typography goodies via
@@ -225,11 +223,9 @@ export interface MuiMarkdownProps {
  */
 export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => (
     <React.Suspense fallback={fallback || <ChapterSkeleton />}>
-        <MDXProvider components={{ ...MuiComponents, ...shortcodes }}>
-            <MarkdownArea className={className}>
-                <Mdx />
-            </MarkdownArea>
-        </MDXProvider>
+        <MarkdownArea className={className}>
+            <Mdx components={{ ...muiComponents, ...shortcodes }} />
+        </MarkdownArea>
     </React.Suspense>
 )
 

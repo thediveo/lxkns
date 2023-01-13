@@ -145,20 +145,22 @@ const AppBarDrawer = ({
     return <>
         <AppBar position="static" elevation={0}>
             <Toolbar>
-                <ToolbarActionButton
-                    edge="start"
-                    color="inherit"
-                    aria-label="menu"
-                    onClick={toggleDrawer}
-                    size="large">
-                    <MenuIcon />
-                </ToolbarActionButton>
+                <>
+                    <ToolbarActionButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        onClick={toggleDrawer}
+                        size="large">
+                        <MenuIcon />
+                    </ToolbarActionButton>
 
-                {title && ((typeof title === 'function' && title()) || title)}
+                    {title && ((typeof title === 'function' && title()) || title)}
 
-                <Box component="span" sx={{ flexGrow: 1 }}/>
+                    <Box component="span" sx={{ flexGrow: 1 }} />
 
-                {tools && ((typeof tools === 'function' && tools()) || tools)}
+                    {tools && ((typeof tools === 'function' && tools()) || tools)}
+                </>
             </Toolbar>
         </AppBar>
         <SwappyDrawer
@@ -171,7 +173,7 @@ const AppBarDrawer = ({
         >
             <DrawerHeader>
                 {drawertitle &&
-                    <Box component="span" sx={{ flexGrow: 1 }}>{(typeof drawertitle === 'function' && drawertitle()) || drawertitle}</Box>}
+                    <Box component="span" sx={{ flexGrow: 1 }}>{typeof drawertitle === 'function' ? drawertitle() : drawertitle}</Box>}
                 <IconButton onClick={closeDrawer} size="large">
                     {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                 </IconButton>

@@ -17,11 +17,10 @@
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { CypressHistorySupport } from 'cypress-react-router'
-import { mount } from '@cypress/react'
 
-import chintro from "!babel-loader!mdx-loader!./01-intro.mdx"
-import chfoobar from "!babel-loader!mdx-loader!./02-foobar.mdx"
-import chnew from "!babel-loader!mdx-loader!./03-newchapter.mdx"
+import chintro from "./01-intro.mdx"
+import chfoobar from "./02-foobar.mdx"
+import chnew from "./03-newchapter.mdx"
 import HelpViewer from './HelpViewer'
 
 const chapters = [
@@ -33,7 +32,7 @@ const chapters = [
 describe('HelpViewer', () => {
 
     it('helps', () => {
-        mount(
+        cy.mount(
             <MemoryRouter initialEntries={['/foo/help']}>
                 <CypressHistorySupport />
                 <HelpViewer chapters={chapters} baseroute='/foo/help' />

@@ -13,16 +13,16 @@
 // under the License.
 
 import React from 'react'
-import { mount } from '@cypress/react'
 import ExtLink from './ExtLink'
 
 describe('ExtLink', () => {
 
     it('adorns external links', () => {
-        mount(
+        cy.mount(
             <ExtLink href="http://endoftheinternet.null">End of The Internet</ExtLink>
         )
         cy.waitForReact()
+        cy.react('ExtLink').should('exist')
         cy.react('ExtLink')
             .find('svg')
             .should('exist')

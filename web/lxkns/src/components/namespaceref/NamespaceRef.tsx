@@ -151,8 +151,9 @@ export interface NamespaceRefProps {
  */
 export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefProps) => {
 
-    const isInProcfs = namespace.reference &&
-        namespace.reference[0].startsWith('/proc/')
+    const isInProcfs = namespace.reference
+        && namespace.reference.length === 1
+        && namespace.reference[0].startsWith('/proc/')
 
     const isProcfdPath = isInProcfs && namespace.reference[0].includes('/fd/')
 

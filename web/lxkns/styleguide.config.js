@@ -87,7 +87,9 @@ module.exports = {
             rules: [
                 {
                     test: /\.tsx?$/,
-                    exclude: /node_modules/,
+                    exclude: [
+                        /node_modules/,
+                    ],
                     use: [
                         {
                             loader: 'babel-loader',
@@ -110,8 +112,33 @@ module.exports = {
                     ],
                 },
                 {
+                    test: /\.mdx$/,
+                    use: [
+                        {
+                            loader: 'babel-loader',
+                            options: {
+                                presets: [
+                                    "@babel/preset-env",
+                                    "@babel/react",
+                                ]
+                            },
+                        },
+                        {
+                            loader: '@mdx-js/loader',
+                        },
+                    ],
+                },
+                {
                     test: /\.css$/,
-                    loader: 'style-loader!css-loader?modules',
+                    use: [
+                        { loader: 'style-loader' }, 
+                        {
+                            loader: 'css-loader',
+                            options: { 
+                                modules: true, 
+                            }
+                        },
+                    ],
                 },
                 {
                     test: /\.svg$/,

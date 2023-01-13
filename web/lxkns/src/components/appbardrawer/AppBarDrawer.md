@@ -50,7 +50,7 @@ import CachedIcon from "@mui/icons-material/Cached";
             path="/"
           />
           <DrawerLinkItem
-            key="home"
+            key="about"
             label="About"
             icon={<AnnouncementIcon />}
             path="/about"
