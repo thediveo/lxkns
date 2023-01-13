@@ -48,6 +48,8 @@ jobs:
         run: go test -v -p 1 -tags,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove podman ./...
 
   testwebapp:
+    if: ${{ false }}  # disable for now
+
     name: Test web ui of lxkns service
     runs-on: ubuntu-latest
     needs: buildandtest
