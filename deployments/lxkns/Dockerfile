@@ -42,7 +42,12 @@ WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
-COPY web/lxkns/package.json web/lxkns/craco.config.js web/lxkns/yarn.lock web/lxkns/tsconfig.json ./
+COPY web/lxkns/package.json \
+     web/lxkns/craco.config.js \
+     web/lxkns/mdxplugins.js \
+     web/lxkns/yarn.lock \
+     web/lxkns/tsconfig.json \
+        ./
 # While not being a true production install in the original sense, this avoids
 # installing cypress and the react styleguidist which we all don't need in
 # creating the production build.
