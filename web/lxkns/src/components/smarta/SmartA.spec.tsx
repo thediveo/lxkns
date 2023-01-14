@@ -14,13 +14,12 @@
 
 import React from 'react'
 import { BrowserRouter } from 'react-router-dom'
-import { mount } from '@cypress/react'
 import SmartA from './SmartA'
 
 describe('SmartA', () => {
 
     it('adorns external links', () => {
-        mount(
+        cy.mount(
             <SmartA href="http://nottheendoftheinternet.null">Not the End of The Internet</SmartA>
         )
         cy.waitForReact()
@@ -30,7 +29,7 @@ describe('SmartA', () => {
     })
 
     it('renders internal links plainly', () => {
-        mount(
+        cy.mount(
             <BrowserRouter>
                 <SmartA href="/help">help</SmartA>
             </BrowserRouter>

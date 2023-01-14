@@ -78,14 +78,16 @@ const NameValueRow = ({ name, value }: NameValueRowProps) => {
     </>
 }
 
-
+/**
+ * Renders a list of options (strings).
+ */
 const Options = ({ options }: { options: string[] }) =>
     <>{options
         .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
-        .map((opt, idx) => <>
-            {idx > 0 && <>,<br /></>}
-            {opt}
-        </>)
+        .map((opt, idx) => [
+            idx > 0 && <span key={`optionvals-br-${idx}`}>,<br/></span>,
+            <span key={idx}>{opt}</span>
+        ])
     }</>
 
 
@@ -104,22 +106,16 @@ export interface MountpointInfoProps {
  */
 export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) => {
 
-    const options = mountpoint.mountoptions
-        .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
-        .map((opt, idx) => [
-            idx > 0 && <>,<br /></>,
-            <>{opt}</>
-        ])
-
     // Please note: mount point tags cannot contain spaces in their names or
     // values, as spaces are used as separators between tags. Values are
     // optional.
-    const tags = Object.entries(mountpoint.tags)
+    const Tags = () => <>{Object.entries(mountpoint.tags)
         .sort(([tagname1,], [tagname2,]) => tagname1.localeCompare(tagname2, undefined, { numeric: true }))
         .map(([tagname, tagvalue], idx) => [
-            idx > 0 && <br />,
-            <>{tagname}{tagvalue ? `:${tagvalue}` : ''}</>
+            idx > 0 && <br key={`tags-br-${idx}`} />,
+            <span key={idx}>{tagname}{tagvalue ? `:${tagvalue}` : ''}</span>
         ])
+    }</>
 
     const parent = <>
         {mountpoint.parentid}
@@ -158,11 +154,12 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
         </MountPathTitle>
         <MountProperties>
             <NameValueRow
+                key="mountns"
                 name={'mount namespace'}
                 value={<NamespaceInfo shortprocess={true} namespace={mountpoint.mountnamespace} />}
             />
-            <NameValueRow name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
-            <NameValueRow name="filesystem type" value={<>
+            <NameValueRow key="device" name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
+            <NameValueRow key="fstype" name="filesystem type" value={<>
                 {mountpoint.fstype}
                 &nbsp;<ExternalDocumentation>
                     <Tooltip title="open external filesystem documentation">
@@ -180,26 +177,29 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
                 </ExternalDocumentation>
             </>}
             />
-            <NameValueRow name="root" value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />} />
-            <NameValueRow name="options" value={options} />
-            <NameValueRow name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
-            <NameValueRow name="source" value={mountpoint.source} />
-            <NameValueRow name="propagation mode" value={propagationmodes.join(', ')} />
+            <NameValueRow key="root" name="root" value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />} />
+            <NameValueRow key="opts" name="options" value={<Options options={mountpoint.mountoptions} />} />
+            <NameValueRow key="superopts" name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
+            <NameValueRow key="source" name="source" value={mountpoint.source} />
+            <NameValueRow key="propa" name="propagation mode" value={propagationmodes.join(', ')} />
             {peers && peers.length > 0 && <NameValueRow
+                key="peers"
                 name="peer mounts"
                 value={<GroupedPropagationMembers members={peers} />}
             />}
             {masters && masters.length > 0 && <NameValueRow
+                key="masterpeers"
                 name="master peer mounts"
                 value={<GroupedPropagationMembers members={masters} />}
             />}
             {slaves && slaves.length > 0 && <NameValueRow
+                key="slaves"
                 name="slave mounts"
                 value={<GroupedPropagationMembers members={slaves} />}
             />}
-            <NameValueRow name="ID" value={mountpoint.mountid} />
-            <NameValueRow name="parent ID" value={parent} />
-            <NameValueRow name="tags" value={tags} />
+            <NameValueRow key="mntid" name="ID" value={mountpoint.mountid} />
+            <NameValueRow key="parentid" name="parent ID" value={parent} />
+            <NameValueRow key="tags" name="tags" value={<Tags />} />
         </MountProperties>
     </>
 }

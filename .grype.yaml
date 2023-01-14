@@ -1,58 +1,24 @@
 ignore:
 
-    # fixed in replacement packages...
-    - vulnerability: CVE-2021-23424 # ansi-html-community resolution
+    - vulnerability: CVE-2021-20066 # nonsense, see issue tracker
       package:
         type: npm
 
-    # Barking up the wrong tree..
-    - vulnerability: CVE-2002-1647 # weburl, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2009-4590 # php, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2009-4591 # sql engine, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2009-4592 # php, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2011-0220 # apfel bonjour, not npm package
+    # Barking up the wrong tree ... that is, CVE creators aren't up to th
+    # task of correctly filling in the information, especially about the
+    # package ecosystems.
+    - vulnerability: CVE-2017-18589 # rust, not npm package
       package:
         type: npm
     - vulnerability: CVE-2013-1779 # drupal, not npm package
       package:
         type: npm
-    - vulnerability: CVE-2014-2980 # gnustep, not npm package
+    - vulnerability: CVE-2002-1647 # Slashdot website ffs, not npm package
+      package:
+        type: npm
+    - vulnerability: CVE-2020-36634 # wrong util package, not npm package
       package:
         type: npm
     - vulnerability: CVE-2015-5237 # C, not Go module
       package:
         type: go-module
-    - vulnerability: CVE-2017-18589 # rust, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2020-7663 # ruby, not npm package
-      package:
-        type: npm
-    - vulnerability: CVE-2020-7753 # component/trim, not Trott/trim
-      package:
-        type: npm
-    - vulnerability: CVE-2021-29940 # rust, not npm package
-      package:
-        type: npm
-
-    # Invalid
-    - vulnerability: CVE-2021-20066 # see https://github.com/jsdom/jsdom/issues/3124
-      package:
-        type: npm
-
-    # Invalid in context of CRA tool
-    - vulnerability: CVE-2021-33587 # see https://github.com/facebook/create-react-app/issues/11174
-      package:
-        type: npm
-
-    # Beyond fixing...
-    - vulnerability: CVE-2004-2761 # no fix for MD5
-

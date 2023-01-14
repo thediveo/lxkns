@@ -17,7 +17,7 @@ import { mount } from '@cypress/react'
 import { MuiMarkdown } from './MuiMarkdown'
 import pDefer from 'p-defer'
 
-import TestMDX from "!babel-loader!mdx-loader!./MuiMarkdown.spec.mdx"
+import TestMDX from "./MuiMarkdown.spec.mdx"
 
 
 describe('MuiMarkdown', () => {

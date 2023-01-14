@@ -1,9 +1,9 @@
 # Requires Docker buildx in order to correctly produce the final image with the
 # extended file attributes for capabilities still intact.
 
-ARG ALPINE_VERSION=3.16
-ARG ALPINE_PATCH=2
-ARG GO_VERSION=1.19.1
+ARG ALPINE_VERSION=3.17
+ARG ALPINE_PATCH=1
+ARG GO_VERSION=1.19.4
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
@@ -42,7 +42,12 @@ WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
-COPY web/lxkns/package.json web/lxkns/yarn.lock web/lxkns/tsconfig.json ./
+COPY web/lxkns/package.json \
+     web/lxkns/craco.config.js \
+     web/lxkns/mdxplugins.js \
+     web/lxkns/yarn.lock \
+     web/lxkns/tsconfig.json \
+        ./
 # While not being a true production install in the original sense, this avoids
 # installing cypress and the react styleguidist which we all don't need in
 # creating the production build.

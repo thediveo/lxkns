@@ -14,7 +14,7 @@
 
 import flat from 'core-js/features/array/flat'
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './app'
 
@@ -36,9 +36,9 @@ if (Array.flat === undefined) {
 
 // Allow development version to temporarily drop strict mode in order to see
 // performance without strict-mode double rendering.
-ReactDOM.render(
-	process.env.REACT_APP_UNSTRICT ?
-	<App/> 
-	: <React.StrictMode><App /></React.StrictMode>,
-	document.getElementById('root')
+const container = document.getElementById('root');
+createRoot(container).render(
+	process.env.REACT_APP_UNSTRICT
+		? <App />
+		: <React.StrictMode><App /></React.StrictMode>
 );

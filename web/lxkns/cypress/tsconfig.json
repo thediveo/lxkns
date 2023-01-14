@@ -7,14 +7,16 @@
             "dom"
         ],
         "types": [
-            "node",
             "cypress",
+            "node",
             "cypress-react-router",
             "cypress-react-selector"
-        ]
+        ],
+        "jsx": "preserve"
     },
     "include": [
         "**/*.ts",
-        "**/*.tsx"
+        "**/*.tsx",
+        "../cypress.d.ts"
     ]
 }

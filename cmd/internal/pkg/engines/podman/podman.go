@@ -30,6 +30,12 @@ import (
 	"github.com/thediveo/sealwatcher"
 )
 
+// Names of the CLI flags defined and used in this package.
+const (
+	PodmanFlagName     = "podman"
+	UserPodmenFlagName = "user-podmen"
+)
+
 // Register our plugin functions for delayed registration of CLI flags we bring
 // into the game and the things to check or carry out before the selected
 // command is finally run.
@@ -42,12 +48,12 @@ func init() {
 
 // SetupCLI registers the Podman-engine specific CLI options.
 func SetupCLI(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("podman", "",
+	cmd.PersistentFlags().String(PodmanFlagName, "",
 		"Podman service API socket path")
-	cmd.PersistentFlags().Lookup("podman").NoOptDefVal = "unix:///run/podman/podman.sock"
+	cmd.PersistentFlags().Lookup(PodmanFlagName).NoOptDefVal = "unix:///run/podman/podman.sock"
 
-	cmd.PersistentFlags().String("user-podmen", "", "discover user podman services inside runtime directory")
-	cmd.PersistentFlags().Lookup("user-podmen").NoOptDefVal = "/run/user"
+	cmd.PersistentFlags().String(UserPodmenFlagName, "", "discover user podman services inside runtime directory")
+	cmd.PersistentFlags().Lookup(UserPodmenFlagName).NoOptDefVal = "/run/user"
 }
 
 // NewWatchers returns a Podman engine watcher(s) taking the supplied optional CLI
@@ -69,7 +75,7 @@ func NewWatchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
 // if the "--podman" flag has been specified (with either the default API path,
 // or an explicitly specified different API path).
 func systemPodmanWatcher(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
-	apipath, _ := cmd.PersistentFlags().GetString("podman")
+	apipath, _ := cmd.PersistentFlags().GetString(PodmanFlagName)
 	if apipath == "" {
 		return nil, nil
 	}
@@ -86,7 +92,7 @@ func systemPodmanWatcher(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, erro
 // "--user-podmen" flag for user-specific Podman service API endpoints,
 // returning watchers for the ones found.
 func userPodmanWatchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
-	usersRuntimeDir, _ := cmd.PersistentFlags().GetString("user-podmen")
+	usersRuntimeDir, _ := cmd.PersistentFlags().GetString(UserPodmenFlagName)
 	if usersRuntimeDir == "" {
 		return nil, nil
 	}

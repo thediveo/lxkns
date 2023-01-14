@@ -1,7 +1,0 @@
-{
-    "baseUrl": "http://localhost:3030",
-    "componentFolder": "src",
-    "testFiles": "**/*.spec.[j|t]s?(x)",
-    "screenshotOnRunFailure": true,
-    "video": false
-}
