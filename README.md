@@ -16,13 +16,13 @@
 
 `lxkns` discovers:
 - Linux namespaces in almost every nook and cranny of your hosts (open file
-  descriptors, bind-mounts, tasks),
+  descriptors, bind-mounts, processes, and now even tasks),
 - the mount points inside mount namespaces (correctly representing
   "overmounts").
 - container workloads: these are then related to the underlying Linux
   namespaces.
 
-The following container engine workloads are detected:
+The following container engine types are supported:
 - Docker,
 - plain containerd,
 - Podman (but please see the [separate instructions](podman.md)).
@@ -51,6 +51,15 @@ frontend:
 app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 ## Notes
+
+### CLI Tools
+
+If you use the CLI tools on systems without any container engine(s) please
+consider using the `--noengines` flag to avoid unsuppressable error notices from
+the Docker client library and a delay in startup until the containerd client is
+satisfied that there isn't any containerd engine present.
+
+### Supported Go Versions
 
 `lxkns` supports versions of Go that are noted by the [Go release
 policy](https://golang.org/doc/devel/release.html#policy), that is, major
