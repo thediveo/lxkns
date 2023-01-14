@@ -22,6 +22,12 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/moby"
 )
 
+// Names of the CLI flags defined and used in this package.
+const (
+	DockerFlagName   = "docker"
+	NoDockerFlagName = "nodocker"
+)
+
 // Register our plugin functions for delayed registration of CLI flags we bring
 // into the game and the things to check or carry out before the selected
 // command is finally run.
@@ -34,16 +40,16 @@ func init() {
 
 // SetupCLI registers the Docker-engine specific CLI options.
 func SetupCLI(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("docker", "unix:///var/run/docker.sock",
+	cmd.PersistentFlags().String(DockerFlagName, "unix:///var/run/docker.sock",
 		"Docker engine API socket path")
-	cmd.PersistentFlags().Bool("nodocker", false, "do not consult a Docker engine")
+	cmd.PersistentFlags().Bool(NoDockerFlagName, false, "do not consult a Docker engine")
 }
 
 // NewWatchers returns a moby engine watcher taking the supplied optional CLI flags
 // into consideration. If this engine shouldn't be watched then it returns nil.
 func NewWatchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
-	if nodocker, _ := cmd.PersistentFlags().GetBool("nodocker"); !nodocker {
-		apipath, _ := cmd.PersistentFlags().GetString("docker")
+	if nodocker, _ := cmd.PersistentFlags().GetBool(NoDockerFlagName); !nodocker {
+		apipath, _ := cmd.PersistentFlags().GetString(DockerFlagName)
 		w, err := moby.New(apipath, nil)
 		if err != nil {
 			return nil, err

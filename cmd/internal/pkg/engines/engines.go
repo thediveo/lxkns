@@ -33,14 +33,21 @@ import (
 	_ "github.com/thediveo/lxkns/cmd/internal/pkg/engines/moby"       // pull in plugin
 )
 
+// Names of the CLI flags defined and used in this package.
+const (
+	NoEnginesFlagName     = "noengines"
+	KeepGoingFlagName     = "keep-going"
+	EngineWorkersFlagName = "engine-workers"
+)
+
 // Containerizer returns a Containerizer watching the container engines
 // specified on the CLI. Optionally waits for all container engines to come
 // online.
 func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containerizer.Containerizer, error) {
-	if ignoramus, _ := cmd.PersistentFlags().GetBool("noengines"); ignoramus {
+	if ignoramus, _ := cmd.PersistentFlags().GetBool(NoEnginesFlagName); ignoramus {
 		return nil, nil
 	}
-	keepGoing, _ := cmd.PersistentFlags().GetBool("keep-going")
+	keepGoing, _ := cmd.PersistentFlags().GetBool(KeepGoingFlagName)
 	watchers := []watcher.Watcher{}
 
 	for _, exposedSymbol := range plugger.Group[engineplugin.NewWatchers]().PluginsSymbols() {
@@ -66,7 +73,7 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 		return nil, nil
 	}
 
-	numworkers, _ := cmd.PersistentFlags().GetUint("engine-workers")
+	numworkers, _ := cmd.PersistentFlags().GetUint(EngineWorkersFlagName)
 	cizer := whalefriend.New(ctx, watchers, whalefriend.WithWorkers(numworkers))
 	for _, w := range watchers {
 		if wait {
@@ -111,7 +118,7 @@ func init() {
 
 // EngineSetupCLI registers the engine-agnostic specific CLI options.
 func EngineSetupCLI(cmd *cobra.Command) {
-	cmd.PersistentFlags().Bool("noengines", false, "do not consult any container engines")
-	cmd.PersistentFlags().Bool("keep-going", false, "skip non-responsive container engines")
-	cmd.PersistentFlags().Uint("engine-workers", 1, "maximum number of workers for container engine workload discovery")
+	cmd.PersistentFlags().Bool(NoEnginesFlagName, false, "do not consult any container engines")
+	cmd.PersistentFlags().Bool(KeepGoingFlagName, true, "skip non-responsive container engines")
+	cmd.PersistentFlags().Uint(EngineWorkersFlagName, 1, "maximum number of workers for container engine workload discovery")
 }

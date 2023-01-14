@@ -22,6 +22,12 @@ import (
 	"github.com/thediveo/whalewatcher/watcher/containerd"
 )
 
+// Names of the CLI flags defined and used in this package.
+const (
+	ContainerdFlagName   = "containerd"
+	NoContainerdFlagName = "nocontainerd"
+)
+
 // Register our plugin functions for delayed registration of CLI flags we bring
 // into the game and the things to check or carry out before the selected
 // command is finally run.
@@ -34,16 +40,16 @@ func init() {
 
 // SetupCLI registers the Docker-engine specific CLI options.
 func SetupCLI(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("containerd", "/run/containerd/containerd.sock",
+	cmd.PersistentFlags().String(ContainerdFlagName, "/run/containerd/containerd.sock",
 		"containerd engine API socket path")
-	cmd.PersistentFlags().Bool("nocontainerd", false, "do not consult a containerd engine")
+	cmd.PersistentFlags().Bool(NoContainerdFlagName, false, "do not consult a containerd engine")
 }
 
 // NewWatchers returns a moby engine watcher taking the supplied optional CLI flags
 // into consideration. If this engine shouldn't be watched then it returns nil.
 func NewWatchers(cmd *cobra.Command) ([]*engineplugin.NamedWatcher, error) {
-	if nocontainerd, _ := cmd.PersistentFlags().GetBool("nocontainerd"); !nocontainerd {
-		apipath, _ := cmd.PersistentFlags().GetString("containerd")
+	if nocontainerd, _ := cmd.PersistentFlags().GetBool(NoContainerdFlagName); !nocontainerd {
+		apipath, _ := cmd.PersistentFlags().GetString(ContainerdFlagName)
 		w, err := containerd.New(apipath, nil)
 		if err != nil {
 			return nil, err
