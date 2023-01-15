@@ -14,7 +14,7 @@ Features of deploying the containerized lxkns service:
 - **capabilities:** not much to see here, just…
   - `CAP_SYS_PTRACE` gives us access to the namespace information in the proc
     file system.
-  - `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` allow us to switch (especially mount)
+  - `CAP_SYS_CHROOT` and `CAP_SYS_ADMIN` allow us to switch (especially mount)
     namespaces in order to look into more places compared to standard discovery
     tools.
     
@@ -32,7 +32,7 @@ Features of deploying the containerized lxkns service:
   - `CAP_DAC_OVERRIDE` allows us to connect to the containerd API socket without
     being root.
 
-The convertainerized lxkns service correctly handles these pitfalls:
+The containerized **lxkns** service correctly handles these pitfalls:
 
 - **reading from other mount namespaces**: in order to discover mount points
   from a process-less bind-mounted mount namespace, lxkns usually simply kicks

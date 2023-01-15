@@ -279,12 +279,12 @@ and again the namespaces the tasks are attached to.
 
 ![Processes and Namespaces](_images/lxkns-processes.svg)
 
-To reduce interlinking, each `Namespace` only references those topmost
-processes in the process tree which are associated to it: the so-called
-"leaders" (`Leaders()`). For instance, for a "Docker" container (greetings to
-Dan Welsh!) without any "uninvited" guest processes, there is only exactly one
-such leader process "inside" the container (often with PID 1 inside the
-container's PID namespace).
+To reduce interlinking, each `Namespace` only references those topmost processes
+in the process tree which are associated with itself: the so-called "leaders"
+(`Leaders()`). For instance, for a "Docker" incontinentainer (greetings to Dan
+Welsh!) without any "uninvited" guest processes, there is only exactly one such
+leader process "inside" the container (often with PID 1 inside the container's
+PID namespace).
 
 Uninvited (privileged) processes which have joined by themselved will show up
 as additional leaders. As an aid, especially for display purposes, the oldest
@@ -306,7 +306,7 @@ Finally, a process might be associated with a container.
 > its container. It does **no** associate any child processes of an initial
 > container process with the container.
 
-In the same way, a `Namespace` _only_ references `Task`s in form of "loose
+In the same way, a `Namespace` _only_ references some `Task`s in form of "loose
 threads": these are tasks that are attached to different namespaces compared to
 their corresponding processes. Please note that there is no "leader" hierarchy
 defined for tasks. The underlying idea here is that there usually will only be

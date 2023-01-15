@@ -6,9 +6,12 @@ nice web-based UI.
 
 ![lxkns teaser](_images/teaser.png)
 
-1. make sure you have Docker and `docker-compose` installed, as well as the Go
-   tools and build essentials (namely, `make`).
-2. do `make deploy` in the top-level of the repository. Then wait...
+1. make sure you have installed:
+   - Docker and with the [Docker compose plugin](https://docs.docker.com/ compose/install/linux/)
+   - Go tool chain,
+   - and git and build essentials (namely, `make`).
+2. do `make deploy` in the top-level of the repository. Then wait for the
+   service to get built and deployed.
 3. navigate your web browser to [http://localhost:5010](http://localhost:5010),
    where you should be greeted by the [lxkns web app](getting-around).
 

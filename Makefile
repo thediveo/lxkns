@@ -112,9 +112,6 @@ startapp: ## starts web UI app for development
 	@echo "starting version" $(GIT_VERSION)
 	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn start
 
-docsify: ## serves docsified docs on host port(s) 3030 and 3031
-	@docsify serve -p 3030 -P 3031 docs
-
 scan: ## scans the repository for CVEs
 	@scripts/scan.sh
 

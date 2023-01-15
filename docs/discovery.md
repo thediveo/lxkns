@@ -10,8 +10,9 @@ a specific container engine.
 
 **lxkns** features an "extended discovery range", when compared to most
 well-known and openly available CLI tools and especially the golden oldie
-`lsns`. lxkns detects namespaces even in places of a running Linux system other
-tools typically do not consider.
+[lsns(8)](https://man7.org/linux/man-pages/man8/lsns.8.html). lxkns detects
+namespaces even in places of a running Linux system other tools typically do not
+consider.
 
 The following places are searched for traces of namespaces:
 
@@ -56,7 +57,7 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 - `CAP_SYS_PTRACE` grants access to the namespace information in the `/proc`
   file system, as well as access to the file system in other mount namespaces.
 
-- `CAP_SYS_ADMIN` and `CAP_SYS_ADMIN` grant switching into other (especially
+- `CAP_SYS_CHROOT` and `CAP_SYS_ADMIN` grant switching into other (especially
   mount) namespaces in order to look into more places compared to standard
   discovery tools.
   
@@ -72,6 +73,9 @@ ferret out namespaces from the nooks and crannies of Linux hosts.
 
 - `CAP_DAC_READ_SEARCH` grants discovering bind-mounted namespaces without
   interference by any DAC, or "(in)descretionary axcess control".
+
+- `CAP_OVERRIDE` allows access to container engine APIs even as the discovery
+  service runs as non-root (and non-Docker user, et cetera).
 
 #### Notes
 
