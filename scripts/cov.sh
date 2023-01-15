@@ -11,10 +11,7 @@ if ! command -v go-acc; then
 fi
 
 if ! command -v gobadge &>/dev/null; then
-    export PATH="$(go env GOPATH)/bin:$PATH"
-    if ! command -v gobadge &>/dev/null; then
-        go install github.com/AlexBeauchemin/gobadge@latest
-    fi
+    go install github.com/AlexBeauchemin/gobadge@latest
 fi
 
 # First, run the tests as root; this will skip a few tests where we explicitly

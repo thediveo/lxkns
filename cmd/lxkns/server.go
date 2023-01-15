@@ -61,7 +61,10 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 	spa := spaserve.NewSPAHandler(os.DirFS("web/lxkns/build"), "index.html")
 	r.PathPrefix("/").Handler(spa)
 
-	server = &http.Server{Handler: r}
+	server = &http.Server{
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 	go func() {
 		log.Infof("starting lxkns server to serve at %s", listener.Addr().String())
 		if err := server.Serve(listener); err != nil {

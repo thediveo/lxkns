@@ -116,9 +116,7 @@ docsify: ## serves docsified docs on host port(s) 3030 and 3031
 	@docsify serve -p 3030 -P 3031 docs
 
 scan: ## scans the repository for CVEs
-	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
-	syft dir:. -o json > $$BOMFILE && \
-	grype sbom:$$BOMFILE
+	@scripts/scan.sh
 
 systempodman: ## builds lxkns using podman system service
 	$(GOGEN)

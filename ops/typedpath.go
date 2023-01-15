@@ -94,7 +94,7 @@ func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.R
 	}
 	openref, err := NewTypedNamespaceFile(f, nsp.nstype)
 	if err != nil {
-		f.Close() // ...do not leak
+		f.Close() // #nosec G104 -- ...do not leak; any error here is irrelevant.
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return openref, func() { _ = openref.Close() }, nil
