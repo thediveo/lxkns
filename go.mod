@@ -138,6 +138,7 @@ require (
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/samber/lo v1.37.0
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect

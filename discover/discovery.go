@@ -144,7 +144,7 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	}
 	result := &Result{
 		Options:   opts,
-		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
+		Processes: model.NewProcessTable(opts.DiscoverFreezerState, opts.ScanTasks),
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
@@ -156,13 +156,13 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	//   - [...]: call discovery function multiple times, once for each
 	//     namespace type listed in the When field, and in the same order of
 	//     sequence.
-	for _, disco := range discoverers {
-		if len(*disco.When) == 0 {
-			disco.Discover(opts.NamespaceTypes, "/proc", result)
+	for _, discoverer := range discoverers {
+		if len(*discoverer.When) == 0 {
+			discoverer.Discover(opts.NamespaceTypes, "/proc", result)
 		} else {
-			for _, nstypeidx := range *disco.When {
+			for _, nstypeidx := range *discoverer.When {
 				if nstype := model.TypesByIndex[nstypeidx]; opts.NamespaceTypes&nstype != 0 {
-					disco.Discover(nstype, "/proc", result)
+					discoverer.Discover(nstype, "/proc", result)
 				}
 			}
 		}

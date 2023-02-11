@@ -16,9 +16,13 @@ package model
 
 import (
 	"os"
+	"runtime"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/samber/lo"
+	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
@@ -26,7 +30,7 @@ import (
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("Process", func() {
+var _ = Describe("processes and tasks", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -36,96 +40,148 @@ var _ = Describe("Process", func() {
 		})
 	})
 
-	It("stringifies", func() {
-		var p *Process
-		Expect(p.String()).To(MatchRegexp(`<nil>`))
+	Context("processes", func() {
 
-		Expect(NewProcess(1)).To(MatchRegexp(`PID 1.+PPID 0`))
+		It("stringifies", func() {
+			var p *Process
+			Expect(p.String()).To(MatchRegexp(`<nil>`))
+
+			Expect(NewProcess(1, false)).To(MatchRegexp(`PID 1.+PPID 0`))
+		})
+
+		It("rejects invalid /proc/[PID] status lines", func() {
+			// Test various invalid field combinations
+			for _, badstat := range []string{
+				"42",
+				"X (something)",
+				"42 42",
+				"42 (grmpf",
+				"42 (grumpf)",
+				"42 (gru) mpf) ",
+				"42 (gru) mpf) R",
+				//             3 4  5    6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22
+				"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123",
+				"42 (gru) mpf) R x 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 1",
+				"42 (gru) mpf) R -1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 1",
+				"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 -1",
+				"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 x",
+			} {
+				Expect(newProcessFromStatline(badstat)).To(BeNil(), badstat)
+			}
+		})
+
+		It("cannot be created for non-existing process/PID", func() {
+			Expect(NewProcess(0, false)).To(BeNil())
+		})
+
+		It("skips broken process stat", func() {
+			Expect(NewProcessInProcfs(1, false, "test/proctable/kaputt")).To(BeNil())
+		})
+
+		It("properties are read from /proc/[PID]", func() {
+			pid := PIDType(os.Getpid())
+			me := NewProcess(pid, false)
+			Expect(me).NotTo(BeNil())
+			Expect(me.PID).To(Equal(pid))
+			Expect(me.PPID).To(Equal(PIDType(os.Getppid())))
+		})
+
+		It("validates it exists or exits", func() {
+			me := NewProcess(PIDType(os.Getpid()), false)
+			Expect(me.Valid()).To(BeTrue())
+			me.PID = PIDType(1)
+			Expect(me.Valid()).NotTo(BeTrue())
+		})
+
+		It("stringifies descriptive properties", func() {
+			me := NewProcess(PIDType(os.Getpid()), false)
+			s := me.String()
+			const startre = `(^|\s|[[:punct:]])`
+			const endre = `($|\s|[[:punct:]])`
+			Expect(s).To(MatchRegexp(startre + strconv.Itoa(os.Getpid()) + endre))
+			Expect(s).To(MatchRegexp(startre + strconv.Itoa(os.Getppid()) + endre))
+			Expect(s).To(MatchRegexp(startre + me.Name + endre))
+		})
+
+		It("gets basename and command line", func() {
+			proc42 := NewProcessInProcfs(PIDType(42), false, "test/proctable/proc")
+			Expect(proc42.Cmdline).To(HaveLen(3))
+			Expect(proc42.Basename()).To(Equal("mumble.exe"))
+			Expect(proc42.Cmdline[2], "arg2")
+
+			// $0 doesn't contain any "/"
+			proc667 := NewProcessInProcfs(PIDType(667), false, "test/proctable/kaputt")
+			Expect(proc667.Basename()).To(Equal("mumble.exe"))
+		})
+
+		It("falls back on process name", func() {
+			// Please note that our synthetic PID 1 has no command line, but only
+			// a process name in its stat file.
+			proc1 := NewProcessInProcfs(PIDType(1), false, "test/proctable/proc")
+			Expect(proc1.Basename()).To(Equal("init"))
+		})
+
+		It("synthesizes basename if all else fails", func() {
+			proc := NewProcessInProcfs(PIDType(666), false, "test/proctable/kaputt")
+			Expect(proc.Basename()).To(Equal("process (666)"))
+		})
+
 	})
 
-	It("rejects invalid /proc/[PID] status lines", func() {
-		// Test various invalid field combinations
-		for _, badstat := range []string{
-			"42",
-			"X (something)",
-			"42 42",
-			"42 (grmpf",
-			"42 (grumpf)",
-			"42 (gru) mpf) ",
-			"42 (gru) mpf) R",
-			//             3 4  5    6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22
-			"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123",
-			"42 (gru) mpf) R x 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 1",
-			"42 (gru) mpf) R -1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 1",
-			"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 -1",
-			"42 (gru) mpf) R 1 1234 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 123 x",
-		} {
-			Expect(newProcessFromStatline(badstat)).To(BeNil(), badstat)
-		}
-	})
+	Context("tasks", func() {
 
-	It("cannot be created for non-existing process/PID", func() {
-		Expect(NewProcess(0)).To(BeNil())
-	})
+		It("rejects invalid status lines", func() {
+			Expect(newTaskFromStatline("42 (gru) mpf) R", nil)).To(BeNil())
+		})
 
-	It("skips broken process stat", func() {
-		Expect(NewProcessInProcfs(1, "test/proctable/kaputt")).To(BeNil())
-	})
+		It("discovers the tasks of a process", func() {
+			done := make(chan struct{})
+			tidch := make(chan int)
+			defer close(done)
+			defer close(tidch)
+			for i := 1; i <= 2; i++ {
+				go func(i int) {
+					runtime.LockOSThread()
+					tidch <- unix.Gettid()
+					<-done
+				}(i)
+			}
+			proc := NewProcess(PIDType(os.Getpid()), true)
+			Expect(proc).NotTo(BeNil())
 
-	It("properties are read from /proc/[PID]", func() {
-		pid := PIDType(os.Getpid())
-		me := NewProcess(pid)
-		Expect(me).NotTo(BeNil())
-		Expect(me.PID).To(Equal(pid))
-		Expect(me.PPID).To(Equal(PIDType(os.Getppid())))
-	})
+			Expect(proc.Tasks).NotTo(BeEmpty())
+			tids := lo.Map(proc.Tasks,
+				func(task *Task, _ int) int { return int(task.TID) })
 
-	It("validates it exists or exits", func() {
-		me := NewProcess(PIDType(os.Getpid()))
-		Expect(me.Valid()).To(BeTrue())
-		me.PID = PIDType(1)
-		Expect(me.Valid()).NotTo(BeTrue())
-	})
+			for i := 1; i <= 2; i++ {
+				Eventually(tidch).Should(Receive(
+					BeElementOf(tids)))
+			}
 
-	It("stringifies descriptive properties", func() {
-		me := NewProcess(PIDType(os.Getpid()))
-		s := me.String()
-		const startre = `(^|\s|[[:punct:]])`
-		const endre = `($|\s|[[:punct:]])`
-		Expect(s).To(MatchRegexp(startre + strconv.Itoa(os.Getpid()) + endre))
-		Expect(s).To(MatchRegexp(startre + strconv.Itoa(os.Getppid()) + endre))
-		Expect(s).To(MatchRegexp(startre + me.Name + endre))
-	})
+			for _, task := range proc.Tasks {
+				Expect(task.TID).NotTo(BeZero())
+				Expect(task.Process).To(Equal(proc))
+				Expect(task.Name).NotTo(BeEmpty())
+				Expect(task.Starttime).To(BeNumerically(">=", proc.Starttime))
+			}
 
-	It("gets basename and command line", func() {
-		proc42 := NewProcessInProcfs(PIDType(42), "test/proctable/proc")
-		Expect(proc42.Cmdline).To(HaveLen(3))
-		Expect(proc42.Basename()).To(Equal("mumble.exe"))
-		Expect(proc42.Cmdline[2], "arg2")
+			var taskgroupleader *Task
+			Expect(proc.Tasks).To(ContainElement(
+				HaveField("TID", proc.PID),
+				&taskgroupleader))
+			lo.ForEach(proc.Tasks, func(task *Task, _ int) {
+				Expect(task.MainTask()).To(Equal(task == taskgroupleader))
+			})
+		})
 
-		// $0 doesn't contain any "/"
-		proc667 := NewProcessInProcfs(PIDType(667), "test/proctable/kaputt")
-		Expect(proc667.Basename()).To(Equal("mumble.exe"))
-	})
-
-	It("falls back on process name", func() {
-		// Please note that our synthetic PID 1 has no command line, but only
-		// a process name in its stat file.
-		proc1 := NewProcessInProcfs(PIDType(1), "test/proctable/proc")
-		Expect(proc1.Basename()).To(Equal("init"))
-	})
-
-	It("synthesizes basename if all else fails", func() {
-		proc := NewProcessInProcfs(PIDType(666), "test/proctable/kaputt")
-		Expect(proc.Basename()).To(Equal("process (666)"))
 	})
 
 })
 
-var _ = Describe("ProcessTable", func() {
+var _ = Describe("process table", func() {
 
 	It("reads synthetic /proc", func() {
-		pt := NewProcessTableFromProcfs(false, "test/proctable/proc")
+		pt := NewProcessTableFromProcfs(false, false, "test/proctable/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(2))
 
@@ -138,11 +194,11 @@ var _ = Describe("ProcessTable", func() {
 	})
 
 	It("returns nil for inaccessible /proc", func() {
-		Expect(NewProcessTableFromProcfs(false, "test/nirvana")).To(BeNil())
+		Expect(NewProcessTableFromProcfs(false, false, "test/nirvana")).To(BeNil())
 	})
 
 	It("gathers from real /proc", func() {
-		pt := NewProcessTable(false)
+		pt := NewProcessTable(false, false)
 		Expect(pt).NotTo(BeNil())
 		proc := pt[PIDType(os.Getpid())]
 		Expect(proc).NotTo(BeZero())
@@ -151,7 +207,7 @@ var _ = Describe("ProcessTable", func() {
 	})
 
 	It("returns Process objects for PIDs", func() {
-		pt := NewProcessTable(false)
+		pt := NewProcessTable(false, false)
 		Expect(pt).NotTo(BeNil())
 		procs := pt.ProcessesByPIDs(PIDType(os.Getpid()))
 		Expect(procs).To(HaveLen(1))
@@ -160,9 +216,9 @@ var _ = Describe("ProcessTable", func() {
 
 })
 
-var _ = Describe("ProcessListByPID", func() {
+var _ = Describe("process lists", func() {
 
-	It("sorts Process lists", func() {
+	It("sorts Process slices numerically by PID", func() {
 		p1 := &Process{PID: 1, ProTaskCommon: ProTaskCommon{Name: "foo"}}
 		p42 := &Process{PID: 42, ProTaskCommon: ProTaskCommon{Name: "bar"}}
 		pls := [][]*Process{

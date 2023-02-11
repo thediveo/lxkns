@@ -33,6 +33,7 @@ type DiscoverOpts struct {
 	NamespaceTypes species.NamespaceType `json:"-"`
 
 	ScanProcs            bool              `json:"from-procs"`      // Scan processes for attached namespaces.
+	ScanTasks            bool              `json:"from-tasks"`      // Scan all tasks for attached namespaces.
 	ScanFds              bool              `json:"from-fds"`        // Scan open file descriptors for namespaces.
 	ScanBindmounts       bool              `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
 	DiscoverHierarchy    bool              `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
@@ -55,6 +56,9 @@ type DiscoveryOption func(*DiscoverOpts)
 // namespace hierarchy and ownership, and freezer states. All types of
 // namespaces will be discovered. Please note that time namespaces can only be
 // discovered on newer kernels with support for them.
+//
+// Tasks will not be scanned, except for the task group leader that represents
+// the process.
 //
 // Please note that mount point discovery (including visibility calculation) is
 // not automatically opted in; it has to be opted in individually.
@@ -80,6 +84,7 @@ var stddisco = WithStandardDiscovery()
 func WithFullDiscovery() DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		stddisco(o)
+		o.ScanTasks = true
 		o.DiscoverMounts = true
 		o.withPIDmap = true
 	}

@@ -43,18 +43,25 @@ import (
 )
 
 // discoverFromProc discovers Linux kernel namespaces from the process table
-// (including tasks), using the namespace links inside the proc filesystem:
-// "/proc/[PID]/ns/...". It does not check any other places, as these are
-// covered by separate discovery functions.
+// (including tasks when requested), using the namespace links inside the proc
+// filesystem: "/proc/[PID]/ns/...". It does not check any other places, as
+// these are covered by separate discovery functions.
 func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
+	andTasks := ""
+	if result.Options.ScanTasks {
+		andTasks = " and tasks"
+	}
 	if !result.Options.ScanProcs {
-		log.Infof("skipping discovery of %s namespaces used by processes", nstype.Name())
+		log.Infof("skipping discovery of %s namespaces used by processes%s",
+			andTasks, nstype.Name())
 		return
 	}
-	log.Debugf("discovering %s namespaces used by processes and tasks...", nstype.Name())
+	log.Debugf("discovering %s namespaces used by processes%s...",
+		andTasks, nstype.Name())
 
 	// Things we want to do only once in order to not do them inside the
-	// loops...
+	// loops... yeah, we obviously don't trust the compiler to correctly
+	// optimize this.
 	nstypename := nstype.Name()
 	nstypeidx := model.TypeIndex(nstype)
 	hasForChildrenRef := nstype == species.CLONE_NEWPID || nstype == species.CLONE_NEWTIME
@@ -160,8 +167,8 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		}
 	}
 
-	log.Infof("found %s joined by processes and tasks",
-		plural.Elements(total, "%s namespaces", nstype.Name()))
+	log.Infof("found %s joined by processes%s",
+		andTasks, plural.Elements(total, "%s namespaces", nstype.Name()))
 }
 
 type determineNamespaceFlags uint8

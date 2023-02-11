@@ -60,7 +60,7 @@ var _ = Describe("Freezer", func() {
 var _ = Describe("cgrouping", func() {
 
 	It("finds control groups of processes", func() {
-		procs := NewProcessTable(false)
+		procs := NewProcessTable(false, false)
 		Expect(procs).To(ContainElement(And(
 			HaveField("CpuCgroup", Not(BeEmpty())),
 			HaveField("FridgeCgroup", Not(BeEmpty())),
@@ -134,7 +134,7 @@ rmdir $CTRL
 		Expect(pid).NotTo(BeZero())
 
 		f := func() *Process {
-			p := NewProcessTable(true)
+			p := NewProcessTable(true, false)
 			return p[pid]
 		}
 		Expect(f()).Should(And(
