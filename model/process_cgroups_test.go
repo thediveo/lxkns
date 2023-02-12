@@ -16,18 +16,23 @@ package model
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"path"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/thediveo/go-mntinfo"
-	"github.com/thediveo/testbasher"
 
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/lxkns/test/success"
 )
 
 var _ = Describe("Freezer", func() {
@@ -73,87 +78,103 @@ var _ = Describe("cgrouping", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
+
+		By("detecting the freezer cgroup path")
 		// Pick up the path of the freezer v1 cgroup root; this allows this test
 		// to automatically adjust. However it requires that when we run inside
 		// a test container we got full cgroup access by bind-mounting the
 		// cgroups root into our container. Otherwise, we won't be able to
 		// create our own freezer (sub) cgroup controller :(
-		fridgeroot := ""
 		cgroupsv2 := false
-	Fridge:
-		for _, mountinfo := range mntinfo.MountsOfType(-1, "cgroup") {
-			for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
-				if sopt == "freezer" {
-					fridgeroot = mountinfo.MountPoint
-					break Fridge
-				}
-			}
-		}
-		// If we couldn't find a v1 freezer then there must be a unified v2
-		// hierarchy, so let's take that instead.
-		if fridgeroot == "" {
+		mount, ok := lo.Find(mntinfo.MountsOfType(-1, "cgroup"),
+			func(m mntinfo.Mountinfo) bool {
+				return lo.Contains(strings.Split(m.SuperOptions, ","), "freezer")
+			})
+		var fridgeroot string
+		if ok {
+			fridgeroot = mount.MountPoint
+		} else {
+			// If we couldn't find a v1 freezer then there must be a unified v2
+			// hierarchy, so let's take that instead.
 			fridgeroot = mntinfo.MountsOfType(-1, "cgroup2")[0].MountPoint
 			cgroupsv2 = true
 		}
-		Expect(fridgeroot).NotTo(BeZero(), "detecting freezer cgroup root")
+		Expect(fridgeroot).NotTo(BeZero(), "not detecting freezer cgroup root")
+		By("freezer cgroup path: " + fridgeroot)
 
-		freezercgname := fmt.Sprintf("lxkns%d", os.Getpid())
+		// We unfortunately can't use a thread of our own process due to the
+		// limitations in cgroups v2.
+		By("spawning process as specimen")
+		session := Successful(gexec.Start(exec.Command("/bin/sleep", "60"), nil, nil))
+		defer session.Kill() // can be called multiple times.
+		sleepypid := PIDType(session.Command.Process.Pid)
 
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-		scripts.Script("main", fmt.Sprintf(`
-set -e
-CTRL=%s
-CGROUPSV2=%t
-sleep 2m &
-PID=$!
-# create new freezer controller and put the sleep task under its control,
-# then freeze it.
-mkdir $CTRL 2>&1 # crash reading PID with error message from mkdir if it failed
-echo $PID > $CTRL/cgroup.procs
-# Safety guard: check that there's exactly one process under control.
-cat $CTRL/cgroup.procs | wc -l
-cat $CTRL/cgroup.procs
-read # wait to proceed() and only then freeze the process.
-$CGROUPSV2 && echo "1" > $CTRL/cgroup.freeze || echo "FROZEN" > $CTRL/freezer.state
-read # wait to proceed() and then thaw the process again.
-$CGROUPSV2 && echo "0" > $CTRL/cgroup.freeze || echo "THAWED" > $CTRL/freezer.state
-read # wait to proceed().
-kill $PID
-rmdir $CTRL
-`, filepath.Join(fridgeroot, freezercgname), cgroupsv2))
-		cmd := scripts.Start("main")
-		defer cmd.Close()
+		By("creating a new freezer controller and putting the specimen under its control")
+		freezerctrl := path.Join(fridgeroot, fmt.Sprintf("lxkns%d", os.Getpid()))
+		Expect(os.Mkdir(freezerctrl, 0o755)).To(Succeed())
+		Expect(os.WriteFile(path.Join(freezerctrl, "cgroup.procs"),
+			[]byte(strconv.Itoa(int(sleepypid))), fs.ModePerm)).To(Succeed())
 
-		var controlleds int
-		cmd.Decode(&controlleds)
-		Expect(controlleds).To(Equal(1), "oh, no! Fridge %q is empty.", filepath.Join(fridgeroot, freezercgname))
+		By("cross-checking")
+		undercontrol := string(Successful(os.ReadFile(path.Join(freezerctrl, "cgroup.procs"))))
+		Expect(strings.Count(undercontrol, "\n")).To(Equal(1))
 
-		var pid PIDType
-		cmd.Decode(&pid)
-		Expect(pid).NotTo(BeZero())
-
-		f := func() *Process {
-			p := NewProcessTable(true, false)
-			return p[pid]
+		sleepyproc := func() *Process {
+			p := NewProcessTable(true, true)
+			proc, _ := p[sleepypid]
+			return proc
 		}
-		Expect(f()).Should(And(
-			HaveField("FridgeFrozen", BeFalse()),
-			HaveField("FridgeCgroup", Equal(filepath.Join("/", freezercgname))),
+		sleepytask := func() *Task {
+			p := NewProcessTable(true, true)
+			proc, ok := p[sleepypid]
+			if !ok {
+				return nil
+			}
+			task, _ := lo.Find(proc.Tasks,
+				func(t *Task) bool { return t.TID == sleepypid })
+			return task
+		}
+
+		Expect(sleepyproc()).To(And(
+			HaveField("FridgeFrozen", false),
+			HaveField("FridgeCgroup", path.Join("/", path.Base(freezerctrl))),
+		))
+		Expect(sleepytask()).To(And(
+			HaveField("FridgeFrozen", false),
+			HaveField("FridgeCgroup", path.Join("/", path.Base(freezerctrl))),
 		))
 
-		// Freeze
-		cmd.Proceed()
-		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
-			Should(HaveField("FridgeFrozen", BeTrue()))
+		By("freezing the specimen")
+		if cgroupsv2 {
+			Expect(os.WriteFile(path.Join(freezerctrl, "cgroup.freeze"),
+				[]byte("1\n"), os.ModePerm)).To(Succeed())
+		} else {
+			Expect(os.WriteFile(path.Join(freezerctrl, "freezer.state"),
+				[]byte("FROZEN\n"), os.ModePerm)).To(Succeed())
+		}
+		Eventually(sleepyproc).Within(5 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", true))
+		Eventually(sleepytask).Within(1 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", true))
 
-		// Thaw
-		cmd.Proceed()
-		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
-			Should(HaveField("FridgeFrozen", BeFalse()))
+		By("thawing the specimen")
+		if cgroupsv2 {
+			Expect(os.WriteFile(path.Join(freezerctrl, "cgroup.freeze"),
+				[]byte("0\n"), os.ModePerm)).To(Succeed())
+		} else {
+			Expect(os.WriteFile(path.Join(freezerctrl, "freezer.state"),
+				[]byte("THAWED\n"), os.ModePerm)).To(Succeed())
+		}
+		Eventually(sleepyproc).Within(5 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", false))
+		Eventually(sleepytask).Within(1 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(HaveField("FridgeFrozen", false))
 
-		cmd.Proceed()
-		Eventually(f).Within(4 * time.Second).ProbeEvery(500 * time.Millisecond).
+		By("getting rid of the specimen")
+		session.Kill()
+		Eventually(sleepyproc).Within(5 * time.Second).ProbeEvery(500 * time.Millisecond).
+			Should(BeNil())
+		Eventually(sleepytask).Within(1 * time.Second).ProbeEvery(500 * time.Millisecond).
 			Should(BeNil())
 	})
 

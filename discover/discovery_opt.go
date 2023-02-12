@@ -115,6 +115,21 @@ func NotFromProcs() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.ScanProcs = false }
 }
 
+// FromTasks opts to find namespaces attached to tasks (as opposed to
+// processes). FromTask implies [FromProcs].
+func FromTasks() DiscoveryOption {
+	return func(o *DiscoverOpts) {
+		o.ScanTasks = true
+		o.ScanTasks = true
+	}
+}
+
+// NotFromTasks opts out of looking at tasks when searching for namespaces. This
+// does not include [NotFromProcs], so a full opt-out should specify both.
+func NotFromTasks() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.ScanTasks = false }
+}
+
 // FromFds opts to find namespaces from the open file descriptors of processes.
 func FromFds() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.ScanFds = true }
