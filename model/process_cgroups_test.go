@@ -65,7 +65,7 @@ var _ = Describe("Freezer", func() {
 var _ = Describe("cgrouping", func() {
 
 	It("finds control groups of processes", func() {
-		procs := NewProcessTable(false, false)
+		procs := NewProcessTable(false)
 		Expect(procs).To(ContainElement(And(
 			HaveField("CpuCgroup", Not(BeEmpty())),
 			HaveField("FridgeCgroup", Not(BeEmpty())),
@@ -120,12 +120,12 @@ var _ = Describe("cgrouping", func() {
 		Expect(strings.Count(undercontrol, "\n")).To(Equal(1))
 
 		sleepyproc := func() *Process {
-			p := NewProcessTable(true, true)
+			p := NewProcessTable(true)
 			proc, _ := p[sleepypid]
 			return proc
 		}
 		sleepytask := func() *Task {
-			p := NewProcessTable(true, true)
+			p := NewProcessTable(true)
 			proc, ok := p[sleepypid]
 			if !ok {
 				return nil

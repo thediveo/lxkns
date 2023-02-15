@@ -142,9 +142,11 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	if opts.NamespaceTypes == 0 {
 		opts.NamespaceTypes = species.AllNS
 	}
-	result := &Result{
-		Options:   opts,
-		Processes: model.NewProcessTable(opts.DiscoverFreezerState, opts.ScanTasks),
+	result := &Result{Options: opts}
+	if opts.ScanTasks {
+		result.Processes = model.NewProcessTableWithTasks(opts.DiscoverFreezerState)
+	} else {
+		result.Processes = model.NewProcessTable(opts.DiscoverFreezerState)
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {

@@ -198,7 +198,7 @@ var _ = Describe("process table", func() {
 	})
 
 	It("gathers from real /proc", func() {
-		pt := NewProcessTable(false, false)
+		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		proc := pt[PIDType(os.Getpid())]
 		Expect(proc).NotTo(BeZero())
@@ -207,7 +207,7 @@ var _ = Describe("process table", func() {
 	})
 
 	It("returns Process objects for PIDs", func() {
-		pt := NewProcessTable(false, false)
+		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		procs := pt.ProcessesByPIDs(PIDType(os.Getpid()))
 		Expect(procs).To(HaveLen(1))

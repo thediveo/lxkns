@@ -43,28 +43,28 @@ var _ = Describe("maps PIDs", func() {
 	})
 
 	It("returns empty PID slice for non-existing PID 0", func() {
-		Expect(NSpid(&model.Process{})).To(BeEmpty())
+		Expect(NSpid(0)).To(BeEmpty())
 	})
 
 	It("panics on invalid process status", func() {
-		p := model.NewProcessInProcfs(model.PIDType(668), "test/proc")
+		p := model.NewProcessInProcfs(model.PIDType(668), false, "test/proc")
 		Expect(p).NotTo(BeNil())
-		Expect(func() { nspid(p, "test/proc") }).To(PanicWith(MatchRegexp(`filesystem broken`)))
+		Expect(func() { nspid(p.PID, "test/proc") }).To(PanicWith(MatchRegexp(`filesystem broken`)))
 	})
 
 	It("ignores invalid NSpid entries", func() {
-		p := model.NewProcessInProcfs(model.PIDType(669), "test/proc")
+		p := model.NewProcessInProcfs(model.PIDType(669), false, "test/proc")
 		Expect(p).NotTo(BeNil())
-		Expect(nspid(p, "test/proc")).To(HaveLen(0))
+		Expect(nspid(p.PID, "test/proc")).To(HaveLen(0))
 	})
 
 	It("reads namespaced PIDs of process", func() {
-		pt := model.NewProcessTableFromProcfs(false, "test/proc")
+		pt := model.NewProcessTableFromProcfs(false, false, "test/proc")
 		Expect(pt).NotTo(BeNil())
 		Expect(pt).To(HaveLen(4))
 		Expect(pt).To(HaveKey(model.PIDType(4200)))
 
-		pids := nspid(pt[model.PIDType(4200)], "test/proc")
+		pids := nspid(model.PIDType(4200), "test/proc")
 		Expect(pids).To(ConsistOf(model.PIDType(4200), model.PIDType(1)))
 	})
 
@@ -93,7 +93,7 @@ var _ = Describe("maps PIDs", func() {
 		# in order to get the PID in the parent PID namespace we rely on
 		# procfs not remounted yet and /proc/self pointing to us in the
 		# parent PID namespace. We must not spawn a new child process in
-		# trying to get our PID, so bas built-ins to the rescue.
+		# trying to get our PID, so bash built-ins to the rescue.
 		read </proc/self/stat PID _ && echo "$PID" # "outer" PID
 		# remount procfs to pick up the new PID namespace.
 		mount -t proc proc /proc

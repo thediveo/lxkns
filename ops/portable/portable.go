@@ -125,7 +125,7 @@ func (portref PortableReference) openPath(path string) (rel relations.Relation, 
 	// specified process is still attached to the namespace in question. Not
 	// that is completely bullet-proof, but it raises the bar.
 	if portref.PID != 0 {
-		proc := model.NewProcess(portref.PID)
+		proc := model.NewProcess(portref.PID, false)
 		if proc == nil || proc.Starttime != portref.Starttime {
 			return nil, nil, fmt.Errorf("process PID %d is gone", portref.PID)
 		}

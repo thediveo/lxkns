@@ -283,14 +283,22 @@ func (p *Process) String() string {
 	return fmt.Sprintf("process PID %d %q, PPID %d", p.PID, p.Name, p.PPID)
 }
 
-// NewProcessTable takes returns the currently available processes (as usual,
-// without tasks/threads). The process table is in fact a map, indexed by PIDs.
-// When the freezer parameter is true then additionally the cgroup freezer
-// states will also be discovered; as this might require switching into the
-// initial mount namespace and this is possible in Go only when re-executing as
-// a child, the caller must explicitly request this additional discovery.
-func NewProcessTable(freezer bool, withtasks bool) (pt ProcessTable) {
-	pt = NewProcessTableFromProcfs(freezer, withtasks, "/proc")
+// NewProcessTable returns the currently available processes (as usual, without
+// tasks/threads). The process table is in fact a map, indexed by PIDs. When the
+// freezer parameter is true then additionally the cgroup freezer states will
+// also be discovered; as this might require switching into the initial mount
+// namespace and this is possible in Go only when re-executing as a child, the
+// caller must explicitly request this additional discovery.
+func NewProcessTable(freezer bool) (pt ProcessTable) {
+	pt = NewProcessTableFromProcfs(freezer, false, "/proc")
+	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
+	return
+}
+
+// NewProcessTableWithTasks returns not only the currently available tasks, but
+// optionally also the tasks/threads.
+func NewProcessTableWithTasks(freezer bool) (pt ProcessTable) {
+	pt = NewProcessTableFromProcfs(freezer, true, "/proc")
 	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
 	return
 }
