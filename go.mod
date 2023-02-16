@@ -6,7 +6,7 @@ replace github.com/containernetworking/cni => github.com/containernetworking/cni
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.6.15
+	github.com/containerd/containerd v1.6.18
 	github.com/getkin/kin-openapi v0.112.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.13.0
