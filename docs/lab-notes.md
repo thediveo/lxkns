@@ -38,9 +38,7 @@ In consequence, `lxkns` will then return multiple PID and/or user namespace
 ## Process Discovery
 
 - type `ProcessTable`
-- factory `NewProcessTable()`
-
-Nota bene:
+- factory `NewProcessTable()` or `NewProcessTableWithTasks()`
 
 Discovering the process hierarchy and process status doesn't need special
 privileges (capabilities). In particular, free access is given to:
@@ -89,3 +87,33 @@ This has ramifications especially to the `pidtree` command (package
   - we might discover other bind-mounted or fd-referenced PID namespaces, which
     seem to have **no parent** PID namespace, so they appear to be "root
     namespaces". Please see above for further discussion of this situation.
+
+## Task Discovery
+
+First, there is constant confusion between the terms `process`, `task` and
+`thread`. And seriously, StuckOvershrew™® isn't of any help either. No! Yes!
+Ohh!
+
+Somehow, the terms seem to be used as follows:
+- **process** is used to refer to a bunch of tasks/threads being grouped
+  together and sharing their memory as well as open files, sockets, et cetera.
+- **task** seems to be more commonly used in kernel space; nevertheless, it
+  leaks very prominently into user space as part of proc file system paths like
+  `/proc/$PID/task/$TID`.
+- **thread** is often preferred by speakers with a strong background in user
+  space and multi-threading.
+
+**lxkns** stays with the terminology exposed in the process (hah!) file system:
+"task".
+
+Linux tasks can do things that would make a POSIX<sup>†</sup> or Microsoft
+Windows thread immediately drop dead. Such as opting out of the file descriptors
+shared between all threads of a process and getting its own personal table of
+file descriptors.
+
+Given a task ID ("TID") its process file system properties can be immediately
+looked up as `/proc/$TID/...`, so there's no need to dive into the
+process-specific task list `/proc/$PID/task/$TID/...`. It is only that the
+process file system does not list tasks at the process level, but still allows
+directly accessing their information as if they were processes (or rather, as if
+processes were tasks, but that's another story).
