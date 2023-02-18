@@ -10,8 +10,8 @@ require (
 	github.com/getkin/kin-openapi v0.114.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.14.0
-	github.com/onsi/ginkgo/v2 v2.8.1
-	github.com/onsi/gomega v1.27.0
+	github.com/onsi/ginkgo/v2 v2.8.3
+	github.com/onsi/gomega v1.27.1
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -34,12 +34,15 @@ require (
 require (
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
+	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mistifyio/go-zfs/v3 v3.0.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 )
 
 require (
@@ -161,8 +164,8 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
-	golang.org/x/net v0.6.0 // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20220524023933-508584e28198 // indirect
 	google.golang.org/grpc v1.47.0 // indirect
