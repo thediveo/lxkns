@@ -47,7 +47,7 @@ func (v *UserNSVisitor) Roots(roots reflect.Value) []reflect.Value {
 func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	if ns, ok := node.Interface().(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = tool.Separate(
+		label = tool.Space(
 			output.NamespaceIcon(ns)+
 				style.V(ns.(model.NamespaceStringer).TypeIDString()).String(),
 			output.NamespaceReferenceLabel(ns))
@@ -56,7 +56,7 @@ func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 	// created this particular user namespace: the user ID and, if available,
 	// the user name.
 	if uns, ok := node.Interface().(model.Ownership); ok {
-		label = tool.Separate(label, fmt.Sprintf("created by UID %d",
+		label = tool.Space(label, fmt.Sprintf("created by UID %d",
 			style.OwnerStyle.V(uns.UID())))
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
 			label += fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
