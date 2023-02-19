@@ -15,7 +15,7 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
-	github.com/thediveo/enumflag/v2 v2.0.1
+	github.com/thediveo/enumflag/v2 v2.0.2
 	github.com/thediveo/fdooze v0.1.5
 	github.com/thediveo/go-asciitree v0.0.0-20200317220821-6ebd8fd21039
 	github.com/thediveo/go-mntinfo v1.0.0
