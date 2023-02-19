@@ -60,6 +60,7 @@ var nsFilterIds = map[species.NamespaceType][]string{
 	species.CLONE_NEWUSER:   {"user", "U"},
 	species.CLONE_NEWPID:    {"pid", "p"},
 	species.CLONE_NEWNET:    {"net", "n"},
+	species.CLONE_NEWTIME:   {"time", "t"},
 }
 
 // Register our plugin functions for delayed registration of CLI flags we bring
@@ -79,5 +80,5 @@ func SetupCLI(cmd *cobra.Command) {
 		enumflag.NewSlice(&namespaceFilters, "filter", nsFilterIds, enumflag.EnumCaseSensitive),
 		"filter", "f",
 		"shows only selected namespace types; can be 'cgroup'/'c', 'ipc'/'i', 'mnt'/'m',\n"+
-			"'net'/'n', 'pid'/'p', 'user'/'U', 'uts'/'u'")
+			"'net'/'n', 'pid'/'p', 'time/t', 'user'/'U', 'uts'/'u'")
 }
