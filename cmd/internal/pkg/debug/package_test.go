@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCmdInternalDebug(t *testing.T) {
+func TestDebug(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns/cmd/internal/pkg/debug package")
 }

@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCmdInternalEngines(t *testing.T) {
+func TestEngines(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns/cmd/internal/pkg/engines package")
 }

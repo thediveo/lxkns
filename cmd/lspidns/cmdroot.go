@@ -47,15 +47,12 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			if err != nil {
 				return err
 			}
-			opts := []discover.DiscoveryOption{
+			allns := discover.Namespaces(
 				discover.WithStandardDiscovery(),
 				discover.WithContainerizer(cizer),
 				discover.WithPIDMapper(), // recommended when using WithContainerizer.
-			}
-			if task.Enabled(rootCmd) {
-				opts = append(opts, discover.FromTasks())
-			}
-			allns := discover.Namespaces(opts...)
+				task.FromTasks(cmd),
+			)
 			fmt.Print(
 				asciitree.Render(
 					allns.PIDNSRoots,

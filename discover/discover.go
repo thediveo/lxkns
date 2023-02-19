@@ -127,15 +127,18 @@ func init() {
 }
 
 // Namespaces returns the Linux kernel namespaces found, based on discovery
-// options specified in the call. The discovery results also specify the initial
-// namespaces, as well the process table/tree on which the discovery bases at
-// least in part.
+// options specified in the call. It is allowed to pass nil discovery options to
+// allow more concise code without the need for lots of “if”s. The discovery
+// results also specify the initial namespaces, as well the process table/tree
+// on which the discovery bases at least in part.
 func Namespaces(options ...DiscoveryOption) *Result {
 	opts := DiscoverOpts{
 		Labels: map[string]string{},
 	}
 	for _, opt := range options {
-		opt(&opts)
+		if opt != nil {
+			opt(&opts)
+		}
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.

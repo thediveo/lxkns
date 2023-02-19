@@ -1,4 +1,5 @@
 @startuml lxkns-processes
+skinparam nodesep 70
 hide empty fields
 hide empty methods
 !define L <size:12><&link-intact></size><i>
@@ -18,7 +19,7 @@ Namespace ---> "*" Task: LooseThreads
 class ProcessTable
 Process <-- ProcessTable : "[PID]"
 
-class ProTaskCommon {
+class ProTaskCommon <<abstract>> {
   L Namespaces NamespacesSet
 }
 

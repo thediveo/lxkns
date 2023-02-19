@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
+	"github.com/thediveo/lxkns/discover"
 )
 
 // Names of the CLI flags defined and used in this package.
@@ -42,4 +43,13 @@ func SetupCLI(cmd *cobra.Command) {
 func Enabled(cmd *cobra.Command) bool {
 	enabled, _ := cmd.PersistentFlags().GetBool(TaskFlagName)
 	return enabled
+}
+
+// FromTasks returns a discover.FromTasks option if task discovery has been
+// requested on the CLI, otherwise nil.
+func FromTasks(cmd *cobra.Command) discover.DiscoveryOption {
+	if !Enabled(cmd) {
+		return nil
+	}
+	return discover.FromTasks()
 }

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package caps
+package output
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCaps(t *testing.T) {
+func TestOutput(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/cmd/internal/pkg/caps package")
+	RunSpecs(t, "lxkns/cmd/internal/pkg/output package")
 }
