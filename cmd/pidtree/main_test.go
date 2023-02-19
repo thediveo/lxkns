@@ -20,6 +20,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
@@ -85,9 +86,10 @@ echo "$$"
 
 	It("CLI renders only a branch", func() {
 		out := bytes.Buffer{}
-		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NoneID, nil)).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, model.PIDType(initpid), species.NamespaceIDfromInode(123), nil)).To(HaveOccurred())
-		Expect(renderPIDBranch(&out, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino), nil)).To(HaveOccurred())
+		cmd := &cobra.Command{}
+		Expect(renderPIDBranch(cmd, &out, model.PIDType(-1), species.NoneID, nil)).To(HaveOccurred())
+		Expect(renderPIDBranch(cmd, &out, model.PIDType(initpid), species.NamespaceIDfromInode(123), nil)).To(HaveOccurred())
+		Expect(renderPIDBranch(cmd, &out, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino), nil)).To(HaveOccurred())
 
 		for _, run := range []struct {
 			ns  string

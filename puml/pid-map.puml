@@ -9,6 +9,10 @@ class "PIDMap" <<(S,YellowGreen)>> {
   m map[NamespacedPID]NamespacedPIDs
   Translate(pid PIDType, from Namespace, to Namespace) PIDType
 }
+note top {
+    also accepts TIDs (task IDs) in place of PIDs
+    when created using a process table containing tasks.
+}
 
 PIDMap -[hidden]- NamespacedPID
 PIDMap -[hidden]-- NamespacedPIDs
@@ -17,8 +21,8 @@ class NamespacedPIDs <<(T,Khaki)>> {
     []NamespacedPID
 }
 note left {
-    slice of <PID; namespace ID> pairs
-    which refer to the same process
+    slice of <PID/TID; namespace ID> pairs
+    which refer to the same process (task)
     in its own PID namespace, as well as
     in all parent PID namespaces.
 }
@@ -27,7 +31,7 @@ class NamespacedPID {
   PIDNS Namespace
   PID PIDType
 }
-note right: a PID and the namespace ID\nthe PID is valid in.
+note right: a PID (or TID) and the namespace ID\nthe PID (TID) is valid in.
 
 }
 

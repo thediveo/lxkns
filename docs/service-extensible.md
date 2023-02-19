@@ -8,10 +8,11 @@ module.
 
 ## Plugin Groups
 
-In `go-plugger` v3 parlance, a "plugin group" basically is a dedicated function
-or interface type for which plugins then can register their plugin
-implementations. The **lxkns** core can then call the registered plugin
-functionalities in appropriate places.
+In `go-plugger/v3` parlance, a "plugin group" is a bunch of plugins that
+registered themselves with a particular function or interface type. The
+**lxkns** core can then call the registered plugin functionalities in
+appropriate places. These plugin groups are simply identified by their function
+or interface type, so the groups are actually nameless.
 
 ### CLI
 
@@ -21,8 +22,9 @@ and handling of the **lxkns** CLI tools and service.
 - `cliplugin.SetupCLI`: a `func(*cobra.Command)` that gets passed a cobra root
   `Command` in order to register CLI flags.
 
-- `cliplugin.BeforeCommand`: a `func() error` that is run before the root
-  command or a subcommand runs. This typically is used to validate CLI flags.
+- `cliplugin.BeforeCommand`: a `func(*cobra.Command) error` that is run before
+  the root command or a subcommand runs. This typically is used to validate CLI
+  flags.
 
 ### Container Engine Watchers
 

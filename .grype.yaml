@@ -19,6 +19,15 @@ ignore:
     - vulnerability: CVE-2020-36634 # wrong util package, not npm package
       package:
         type: npm
+
+    # Ffs, do these CVE writers ever think about the mess they create because
+    # they're too stupid to correctly limit them to the correct language and
+    # module ecosystem? How braindead must they be to be totally ignorant of the
+    # large trouble they're constantly creating by their huge egos and total
+    # ignorance?
     - vulnerability: CVE-2015-5237 # C, not Go module
+      package:
+        type: go-module
+    - vulnerability: CVE-2021-22570 # C, not Go module
       package:
         type: go-module

@@ -118,14 +118,15 @@ func (p *Process) Basename() (basename string) {
 
 // NewProcess returns a [model.Process] object describing certain properties of
 // the Linux process with the specified PID. In particular, the parent PID and
-// the name of the process, as well as the command line.
-func NewProcess(PID PIDType) (proc *Process) {
-	return NewProcessInProcfs(PID, "/proc")
+// the name of the process, as well as the command line. If withtasks is true,
+// it will additionally discover all tasks of the process.
+func NewProcess(PID PIDType, withtasks bool) (proc *Process) {
+	return NewProcessInProcfs(PID, withtasks, "/proc")
 }
 
 // NewProcessInProcfs implements [model.NewProcess] and additionally allows for
 // testing on fake /proc "filesystems".
-func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
+func NewProcessInProcfs(PID PIDType, withtasks bool, procroot string) (proc *Process) {
 	procbase := procroot + "/" + strconv.Itoa(int(PID))
 	line, err := os.ReadFile(procbase + "/stat") // #nosec G304
 	if err != nil {
@@ -145,6 +146,9 @@ func NewProcessInProcfs(PID PIDType, procroot string) (proc *Process) {
 		for idx, part := range cmdparts {
 			proc.Cmdline[idx] = string(part)
 		}
+	}
+	if !withtasks {
+		return proc
 	}
 	proc.discoverTasks(procbase)
 	return proc
@@ -267,7 +271,7 @@ func splitStatline(statline string) []string {
 // the start time of the process, so stale PIDs can be detected even if they
 // get reused after some time.
 func (p *Process) Valid() bool {
-	digitaltwin := NewProcess(p.PID)
+	digitaltwin := NewProcess(p.PID, false)
 	return digitaltwin != nil && p.Starttime == digitaltwin.Starttime
 }
 
@@ -279,21 +283,29 @@ func (p *Process) String() string {
 	return fmt.Sprintf("process PID %d %q, PPID %d", p.PID, p.Name, p.PPID)
 }
 
-// NewProcessTable takes returns the currently available processes (as usual,
-// without tasks/threads). The process table is in fact a map, indexed by PIDs.
-// When the freezer parameter is true then additionally the cgroup freezer
-// states will also be discovered; as this might require switching into the
-// initial mount namespace and this is possible in Go only when re-executing as
-// a child, the caller must explicitly request this additional discovery.
+// NewProcessTable returns the currently available processes (as usual, without
+// tasks/threads). The process table is in fact a map, indexed by PIDs. When the
+// freezer parameter is true then additionally the cgroup freezer states will
+// also be discovered; as this might require switching into the initial mount
+// namespace and this is possible in Go only when re-executing as a child, the
+// caller must explicitly request this additional discovery.
 func NewProcessTable(freezer bool) (pt ProcessTable) {
-	pt = NewProcessTableFromProcfs(freezer, "/proc")
+	pt = NewProcessTableFromProcfs(freezer, false, "/proc")
+	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
+	return
+}
+
+// NewProcessTableWithTasks returns not only the currently available tasks, but
+// optionally also the tasks/threads.
+func NewProcessTableWithTasks(freezer bool) (pt ProcessTable) {
+	pt = NewProcessTableFromProcfs(freezer, true, "/proc")
 	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
 	return
 }
 
 // NewProcessTableFromProcfs implements [model.NewProcessTable] and allows for
 // testing on fake /proc "filesystems".
-func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) {
+func NewProcessTableFromProcfs(freezer bool, withtasks bool, procroot string) (pt ProcessTable) {
 	procentries, err := os.ReadDir(procroot)
 	if err != nil {
 		return nil
@@ -309,7 +321,7 @@ func NewProcessTableFromProcfs(freezer bool, procroot string) (pt ProcessTable) 
 		if err != nil || pid <= 0 {
 			continue
 		}
-		proc := NewProcessInProcfs(PIDType(pid), procroot)
+		proc := NewProcessInProcfs(PIDType(pid), withtasks, procroot)
 		if proc == nil {
 			continue
 		}

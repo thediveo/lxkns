@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan systempodman systempodman-down
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan systempodman systempodman-down
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -112,13 +112,8 @@ startapp: ## starts web UI app for development
 	@echo "starting version" $(GIT_VERSION)
 	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn start
 
-docsify: ## serves docsified docs on host port(s) 3030 and 3031
-	@docsify serve -p 3030 -P 3031 docs
-
 scan: ## scans the repository for CVEs
-	BOMFILE=$$(mktemp "/tmp/lxkns.XXXXXXXXXXXX.json") && \
-	syft dir:. -o json > $$BOMFILE && \
-	grype sbom:$$BOMFILE
+	@scripts/scan.sh
 
 systempodman: ## builds lxkns using podman system service
 	$(GOGEN)
@@ -136,3 +131,6 @@ userpodman: ## builds lxkns using podman system service
 	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
 	$(eval UID := $(shell id -u))
 	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up
+
+vuln: ## run go vulnerabilities check
+	@scripts/vuln.sh

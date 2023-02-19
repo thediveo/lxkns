@@ -1,5 +1,31 @@
 # Important Changes
 
+## 0.26.0
+
+1. This release finishes the task (thread) support introduced in 0.24.0. In
+   particular, this release gives API users control over opting _in_ to task
+   discovery. The rationale is that full task discovery consumes additionally
+   resources, especially when building the PID (TID) maps necessary for
+   translating between different PID namespaces.
+2. New in API:
+   - `discover.DiscoveryOpts` has a new `ScanTasks` field that defaults to
+     `false` in `discover.WithStandardDiscovery`. Accordingly,
+     `discover.WithFullDiscovery` sets `ScanTasks` to `true`.
+   - new discovery options `FromTasks()` and `NotFromTasks()`.
+   - `NewProcessTableWithTasks()` discovers not only processes, but also their
+     tasks.
+   - when passing `discover.NewPIDMap()` a process map created by
+     `NewProcessTableWithTasks()` then the returned PID map will also map task
+     TIDs between different PID namespaces. Simply lookup a TID as if it were a
+     PID (which arguably it is in some way or other).
+3. In a few places, API changes of existing functions where necessary in order
+   to allow if and when task discovery happens.
+   - the default discovery options **now switch task discovery off**. Enable
+     task discovery using the `ScanTasks()` option.
+   - `NewProcessTable()` reverts to its behavior pre 0.24.0: it never discovers
+     tasks. Use `NewProcessTableWithTasks()` instead when explicitly creating a
+     process table with tasks.
+
 ## 0.24.0
 
 1. In addition to processes, lxkns now scans all tasks (threads) for namespaces,

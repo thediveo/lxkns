@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestNamespaceTypes(t *testing.T) {
+func TestCaps(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns/cmd/internal/pkg/caps package")
 }

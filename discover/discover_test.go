@@ -44,6 +44,10 @@ var _ = Describe("Discover", func() {
 		}
 	})
 
+	It("ignores a nil option", func() {
+		Expect(func() { _ = Namespaces(nil) }).NotTo(Panic())
+	})
+
 	It("sorts namespace maps", func() {
 		nsmap := model.NamespaceMap{
 			species.NamespaceID{Dev: 1, Ino: 5678}: namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceID{Dev: 1, Ino: 5678}, ""),

@@ -24,6 +24,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
 	"github.com/thediveo/lxkns/discover"
 
 	_ "github.com/thediveo/lxkns/cmd/internal/pkg/debug"
@@ -49,6 +50,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 				discover.WithStandardDiscovery(),
 				discover.WithContainerizer(cizer),
 				discover.WithPIDMapper(), // recommended when using WithContainerizer.
+				task.FromTasks(cmd),
 			)
 			fmt.Print(
 				asciitree.Render(

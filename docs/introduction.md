@@ -35,7 +35,9 @@ into consideration.
 
 ## Eye Candy
 
-The lxkns service provides a web user interface for comfy discovery.
+The lxkns service provides a web user interface for comfy discovery. Run `make
+deploy` and then point your web browser to `http://localhost:5010` after the
+service has been successfully deployed.
 
 ![lxkns teaser](_images/teaser.png ':class=teaser')
 ![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
@@ -49,8 +51,10 @@ The lxkns service provides a web user interface for comfy discovery.
 - a Go module for discovering **namespaces** and **mount points**, with the
   ability to relate namespaces to **containers**,
 - a Go package for **switching namespaces** (including safely returning),
-- a **REST API discovery service** return JSON discovery results with an
-  additional **web-based user interface** on top,
+- another Go package for **directly(!) reading from other mount namespaces**
+  using ordinary file operations,
+- a **REST API discovery service** returns JSON discovery results, with an
+  additional **web-based user interface** as the icing on top,
 - a set of **CLI tools**, as well as our `lsns`-on-drugs example in
   `examples/lsallns` that lists *all* namespaces with their corresponding
   *containers*.
@@ -69,7 +73,7 @@ NAMESPACE  TYPE   CONTAINER     PID   PROCESS/[TASK]    COMMENT
 [^1]: The name **lxkns** derives from **L**inu**x** **k**ernel
       **n**ame**sp**aces. Simply naming it "namespaces" instead would have been
       a too generic name. And Go is *very* opinionated when it comes to module
-      names that are too long, too generic, or not generic enough. Alice must
+      names that are "too long", "too generic", or "not generic" enough. Alice must
       have gone down a Gopher hole, Lewis Caroll didn't got that part right.
 
 [^2]: Michael Kerrisk of "The Linux Programming Interface" and

@@ -8,6 +8,11 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
+// Names of the CLI flags defined and used in this package.
+const (
+	IconFlagName = "icon"
+)
+
 // NamespaceTypeIcons maps individual Linux-kernel namespace types
 // (species.NNamespaceTypeIcons) to Unicode characters to be used as icons.
 var NamespaceTypeIcons = map[species.NamespaceType]string{
@@ -39,7 +44,7 @@ var showNamespaceIcons bool
 // command is finally run.
 func init() {
 	plugger.Group[cliplugin.SetupCLI]().Register(
-		IconSetupCLI, plugger.WithPlugin("icon"))
+		IconSetupCLI, plugger.WithPlugin(IconFlagName))
 }
 
 // IconSetupCLI is a plugin function that registers the CLI "--icon" flag.

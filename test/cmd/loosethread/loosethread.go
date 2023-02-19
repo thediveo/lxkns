@@ -48,7 +48,7 @@ func main() {
 	go func() {
 		runtime.LockOSThread()
 		name := []byte("stray thread :p\x00")
-		_ = unix.Prctl(unix.PR_SET_NAME, uintptr(unsafe.Pointer(&name[0])), 0, 0, 0)
+		_ = unix.Prctl(unix.PR_SET_NAME, uintptr(unsafe.Pointer(&name[0])), 0, 0, 0) //#nosec G103 -- safe use of unsafe
 		if err := unix.Unshare(unix.CLONE_NEWNET | unix.CLONE_NEWIPC); err != nil {
 			panic(fmt.Errorf("cannot create new network namespace, reason: %w", err))
 		}

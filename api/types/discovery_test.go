@@ -31,6 +31,7 @@ var _ = Describe("discovery result JSON", func() {
 		Expect(err).To(Succeed())
 		Expect(j).To(MatchJSON(`{
 			"from-procs": true,
+			"from-tasks": false,
 			"from-fds": false,
 			"from-bindmounts": false,
 			"with-hierarchy": true,

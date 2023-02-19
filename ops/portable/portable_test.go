@@ -80,7 +80,7 @@ var _ = Describe("portable reference", func() {
 			Starttime: 0,
 		}
 		Expect(portref.Open()).Error().To(MatchError(`process PID -1 is gone`))
-		proc := model.NewProcess(model.PIDType(os.Getpid()))
+		proc := model.NewProcess(model.PIDType(os.Getpid()), false)
 		portref = PortableReference{
 			Path:      "/proc/self/ns/net",
 			PID:       proc.PID,
@@ -99,7 +99,7 @@ var _ = Describe("portable reference", func() {
 	})
 
 	It("Open()s with path and process cross-check", func() {
-		proc := model.NewProcess(model.PIDType(os.Getpid()))
+		proc := model.NewProcess(model.PIDType(os.Getpid()), false)
 		portref := PortableReference{
 			Path:      "/proc/self/ns/net",
 			Type:      species.CLONE_NEWNET,

@@ -26,6 +26,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -122,6 +123,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+		task.FromTasks(cmd),
 	)
 	pidmap := allns.PIDMap
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]

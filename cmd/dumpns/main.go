@@ -26,11 +26,12 @@ import (
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
 	"github.com/thediveo/lxkns/discover"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes
-// formatting options into account, such as not indenting output, or using
+// JSON formatting options into account, such as not indenting output, or using
 // tabs or a specific number of spaces for indentation.
 func dumpns(cmd *cobra.Command, _ []string) error {
 	containerizer, err := engines.Containerizer(context.Background(), cmd, true)
@@ -41,11 +42,12 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(containerizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
+		task.FromTasks(cmd),
 	)
-	var j []byte
+	var jsondata []byte
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.
-		j, err = json.Marshal(apitypes.NewDiscoveryResult(apitypes.WithResult(allns)))
+		jsondata, err = json.Marshal(apitypes.NewDiscoveryResult(apitypes.WithResult(allns)))
 	} else {
 		// Pretty-printed JSON output, with either tabs or spaces for
 		// indentation.
@@ -57,15 +59,17 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 			if spaces > 8 {
 				spaces = 8
 			}
+			// ...still wondering why Repeat(" ", -2) should be even accepted at
+			// compile time and using uint instead of int?? 😕
 			indent = strings.Repeat(" ", int(spaces))
 		}
-		j, err = json.MarshalIndent(
+		jsondata, err = json.MarshalIndent(
 			apitypes.NewDiscoveryResult(apitypes.WithResult(allns)), "", indent)
 	}
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(j))
+	fmt.Println(string(jsondata))
 	return nil
 }
 

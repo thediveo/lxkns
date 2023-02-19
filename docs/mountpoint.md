@@ -11,10 +11,10 @@ it mildly, so lxkns does it for you.
 
 The mount point hierarchy is separate from the mount path hierarchy:
 
-- the mount **path hierarchy** is the tree of mount points along **VFS paths**.
-  At any given VFS path name there might be none, one, or even several mount
-  points (see "overmounts" below). This hierarchy answers the question: "which
-  mount(s) are at a specific path?".
+- the mount (point) **path hierarchy** is the tree of mount points along **VFS
+  paths**. At any given VFS path name there might be none, one, or even several
+  mount points (see "overmounts" below). This hierarchy answers the question:
+  "which mount(s) are at a specific path?".
 
 - the mount **point hierarchy** is the tree of mount points as managed by the
   Linux kernel and reflects both the history and hierarchy of mounts.

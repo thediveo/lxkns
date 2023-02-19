@@ -130,7 +130,7 @@ var _ = Describe("Discover from processes", Ordered, func() {
 		defer close(done)
 
 		By("scanning all processes and tasks...")
-		allns := Namespaces(FromProcs())
+		allns := Namespaces(FromProcs(), FromTasks())
 		var tasknetns model.Namespace
 		Expect(allns.Namespaces[model.MountNS]).To(ContainElement(
 			HaveField("LooseThreadIDs()", ConsistOf(model.PIDType(tid))), &tasknetns))
@@ -138,6 +138,11 @@ var _ = Describe("Discover from processes", Ordered, func() {
 		Expect(loose).To(HaveLen(1))
 		Expect(loose[0].Namespaces[model.MountNS].ID()).NotTo(Equal(
 			loose[0].Process.Namespaces[model.MountNS].ID()))
+
+		By("scanning only processes")
+		allns = Namespaces(FromProcs())
+		Expect(allns.Namespaces[model.MountNS]).NotTo(ContainElement(
+			HaveField("LooseThreadIDs()", ConsistOf(model.PIDType(tid)))))
 	})
 
 })

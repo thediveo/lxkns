@@ -80,7 +80,7 @@ func (p *pauseTask) pause(mntnsref string) {
 		return
 	}
 	err = unix.Setns(mntnsfd, unix.CLONE_NEWNS)
-	unix.Close(mntnsfd)
+	unix.Close(mntnsfd) // #nosec G104 -- any error here is totally irrelevant.
 	if err != nil {
 		p.outcome <- fmt.Errorf("cannot join mount namespace using reference %q, reason: %w",
 			mntnsref, err)
