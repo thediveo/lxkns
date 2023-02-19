@@ -35,6 +35,11 @@ var _ = Describe("renders pid namespaces", func() {
 	var initusernsid, initpidnsid, usernsid, pidnsid species.NamespaceID
 
 	BeforeEach(func() {
+		osExit = func(int) {}
+		DeferCleanup(func() { osExit = os.Exit })
+	})
+
+	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())

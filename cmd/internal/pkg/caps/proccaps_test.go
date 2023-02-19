@@ -15,61 +15,52 @@
 package caps
 
 import (
-	"fmt"
 	"os"
+
+	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/model"
 )
 
 var _ = Describe("effective caps", func() {
 
-	It("reads empty octet string from bad status file", func() {
+	It("reads nil capabilities set from bad status file", func() {
 		f, err := os.Open("./test/status-bad")
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		b := statusEffectiveCaps(f)
-		Expect(b).To(HaveLen(0))
+		Expect(statusEffectiveCaps(f)).To(BeNil())
 	})
 
-	It("reads empty octet string from corrupt status file", func() {
+	It("reads nil capabilities set from corrupt status file", func() {
 		f, err := os.Open("./test/status-corrupt")
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		b := statusEffectiveCaps(f)
-		Expect(b).To(HaveLen(0))
+		Expect(statusEffectiveCaps(f)).To(BeNil())
 	})
 
-	It("reads octet string from good status file", func() {
+	It("reads capabilities set from good status file", func() {
 		f, err := os.Open("./test/status-good")
 		Expect(err).ToNot(HaveOccurred())
 		defer f.Close()
-		b := statusEffectiveCaps(f)
-		Expect(b).To(HaveLen(8))
-		Expect(b[0]).To(Equal(byte(0xff)))
-		Expect(b[4]).To(Equal(byte(0x3f)))
+		caps := statusEffectiveCaps(f)
+		Expect(caps).To(HaveLen(2))
+		Expect(caps[0]).To(Equal(uint32(0xffffffff)))
+		Expect(caps[1]).To(Equal(uint32(0x3f)))
 	})
 
-	It("reads octet string from process status", func() {
-		b := processEffectiveCaps(model.PIDType(-1))
-		Expect(b).To(BeEmpty())
-		b = processEffectiveCaps(model.PIDType(os.Getpid()))
-		Expect(b).ToNot(BeEmpty())
+	It("reads nil capabilities set for non-existing process", func() {
+		Expect(processEffectiveCaps(model.PIDType(-1))).To(BeNil())
 	})
 
-	It("returns caps of init process", func() {
+	It("reads effective capabilities set from process status", func() {
+		Expect(processEffectiveCaps(model.PIDType(os.Getpid()))).ToNot(BeNil())
+	})
+
+	It("returns capabilities of init process", func() {
 		caps := ProcessCapabilities(model.PIDType(1))
-		Expect(len(caps)).To(BeNumerically(">=", 8))
+		Expect(len(caps)).To(BeNumerically(">=", 2))
 		Expect(caps).To(ContainElement("cap_sys_ptrace"))
-	})
-
-	It("converts cap byte strings to cap names", func() {
-		caps := []byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80}
-		names := capsToNames(caps)
-		Expect(names).To(HaveLen(2))
-		Expect(names).To(ContainElement(CapNames[0]))
-		Expect(names).To(ContainElement(fmt.Sprintf("cap_%d", len(caps)*8-1)))
 	})
 
 })

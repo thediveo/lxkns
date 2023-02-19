@@ -1,4 +1,4 @@
-// Copyright 2022 Harald Albrecht.
+// Copyright 2020 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,18 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package tool
+package output
 
-// Separate concatenates the passed strings, ensuring they are properly
-// separated by a single space between each source string, where necessary.
-// Empty strings are correctly handled without inserting unnecessary separating
-// spaces.
-func Separate(s string, more ...string) string {
-	for _, s2 := range more {
-		if s != "" && s2 != "" {
-			s += " "
-		}
-		s += s2
-	}
-	return s
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+func TestOutput(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "lxkns/cmd/internal/pkg/output package")
 }

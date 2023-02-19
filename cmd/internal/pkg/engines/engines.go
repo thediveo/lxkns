@@ -50,11 +50,16 @@ func Containerizer(ctx context.Context, cmd *cobra.Command, wait bool) (containe
 	keepGoing, _ := cmd.PersistentFlags().GetBool(KeepGoingFlagName)
 	watchers := []watcher.Watcher{}
 
-	for _, exposedSymbol := range plugger.Group[engineplugin.NewWatchers]().PluginsSymbols() {
-		log.Debugf("querying engine watcher plugin '%s'", exposedSymbol.Plugin)
-		observers, err := exposedSymbol.S(cmd)
+	warned := false
+	for _, newWatchers := range plugger.Group[engineplugin.NewWatchers]().PluginsSymbols() {
+		log.Debugf("querying engine watcher plugin '%s'", newWatchers.Plugin)
+		observers, err := newWatchers.S(cmd)
 		if err != nil {
-			log.Errorf("engine watcher plugin '%s' failure: %s", exposedSymbol.Plugin, err.Error())
+			log.Errorf("engine watcher plugin '%s' failure: %s", newWatchers.Plugin, err.Error())
+			if !warned {
+				warned = true
+				log.Errorf("maybe you want to skip connecting to container engines using --%s?", NoEnginesFlagName)
+			}
 			if keepGoing {
 				continue
 			}

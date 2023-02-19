@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean coverage deploy undeploy help install test report manual docsify pkgsite buildapp startapp docsify scan systempodman systempodman-down
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan systempodman systempodman-down
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -131,3 +131,6 @@ userpodman: ## builds lxkns using podman system service
 	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
 	$(eval UID := $(shell id -u))
 	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up
+
+vuln: ## run go vulnerabilities check
+	@scripts/vuln.sh

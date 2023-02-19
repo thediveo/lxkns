@@ -5,6 +5,9 @@ on:
       - master
       - develop
 
+permissions:
+  contents: read
+      
 jobs:
 
   buildandtest:

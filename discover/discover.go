@@ -127,24 +127,29 @@ func init() {
 }
 
 // Namespaces returns the Linux kernel namespaces found, based on discovery
-// options specified in the call. The discovery results also specify the initial
-// namespaces, as well the process table/tree on which the discovery bases at
-// least in part.
+// options specified in the call. It is allowed to pass nil discovery options to
+// allow more concise code without the need for lots of “if”s. The discovery
+// results also specify the initial namespaces, as well the process table/tree
+// on which the discovery bases at least in part.
 func Namespaces(options ...DiscoveryOption) *Result {
 	opts := DiscoverOpts{
 		Labels: map[string]string{},
 	}
 	for _, opt := range options {
-		opt(&opts)
+		if opt != nil {
+			opt(&opts)
+		}
 	}
 	// If no namespace types are specified for discovery, we take this as
 	// discovering all types of namespaces.
 	if opts.NamespaceTypes == 0 {
 		opts.NamespaceTypes = species.AllNS
 	}
-	result := &Result{
-		Options:   opts,
-		Processes: model.NewProcessTable(opts.DiscoverFreezerState),
+	result := &Result{Options: opts}
+	if opts.ScanTasks {
+		result.Processes = model.NewProcessTableWithTasks(opts.DiscoverFreezerState)
+	} else {
+		result.Processes = model.NewProcessTable(opts.DiscoverFreezerState)
 	}
 	// Finish initialization.
 	for idx := range result.Namespaces {
@@ -156,13 +161,13 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	//   - [...]: call discovery function multiple times, once for each
 	//     namespace type listed in the When field, and in the same order of
 	//     sequence.
-	for _, disco := range discoverers {
-		if len(*disco.When) == 0 {
-			disco.Discover(opts.NamespaceTypes, "/proc", result)
+	for _, discoverer := range discoverers {
+		if len(*discoverer.When) == 0 {
+			discoverer.Discover(opts.NamespaceTypes, "/proc", result)
 		} else {
-			for _, nstypeidx := range *disco.When {
+			for _, nstypeidx := range *discoverer.When {
 				if nstype := model.TypesByIndex[nstypeidx]; opts.NamespaceTypes&nstype != 0 {
-					disco.Discover(nstype, "/proc", result)
+					discoverer.Discover(nstype, "/proc", result)
 				}
 			}
 		}

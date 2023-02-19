@@ -37,6 +37,11 @@ var _ = Describe("renders user namespaces", func() {
 	var initusernsid, usernsid, netnsid species.NamespaceID
 
 	BeforeEach(func() {
+		osExit = func(int) {}
+		DeferCleanup(func() { osExit = os.Exit })
+	})
+
+	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
@@ -105,6 +110,7 @@ read
 		By("creating a stray task with its own namespace...")
 		tidch := make(chan int)
 		done := make(chan struct{})
+		defer close(done)
 		go func() {
 			defer GinkgoRecover()
 			runtime.LockOSThread() // never unlock, as this task is going to be tainted.
@@ -123,13 +129,22 @@ read
 
 		var tid int
 		Eventually(tidch).Should(Receive(&tid))
-		defer close(done)
 
+		By("discovering from processes and tasks")
 		os.Args = append(os.Args[:1], "--noengines", "-d")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`
+[│ ]+⋄─ mnt:\[.*\] task ".*" \[%d\] of ".*" \(%d\)`,
+			tid, os.Getpid())))
+
+		By("discovering from processes only")
+		os.Args = append(os.Args[:1], "--noengines", "-d", "--task=false")
+		out = getstdout.Stdouterr(main)
+		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			initusernsid.Ino)))
+		Expect(out).NotTo(MatchRegexp(fmt.Sprintf(`
 [│ ]+⋄─ mnt:\[.*\] task ".*" \[%d\] of ".*" \(%d\)`,
 			tid, os.Getpid())))
 	})

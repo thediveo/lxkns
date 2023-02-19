@@ -119,7 +119,7 @@ func reexeced() {
 	// is not terribly useful and user/admin friendly, so we try to set our
 	// own process name from our first command line argument.
 	runtime.LockOSThread() // this still runs on the main thread...!
-	proc := model.NewProcess(model.PIDType(os.Getpid()))
+	proc := model.NewProcess(model.PIDType(os.Getpid()), false)
 	procname := append([]byte(proc.Basename()), 0)
 	ptr := unsafe.Pointer(&procname[0]) // #nosec G103
 	// prctl(PR_SET_NAME, ...) will silently truncate any process name

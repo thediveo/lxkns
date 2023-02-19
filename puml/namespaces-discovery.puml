@@ -14,6 +14,7 @@ namespace lxkns {
   class "DiscoverOpts" <<(S,YellowGreen)>> {
     NamespaceTypes species.NamespaceType
     ScanProcs bool
+    ScanTasks bool
     ScanFds bool
     ScanBindmounts bool
     DiscoverHierarchy bool

@@ -47,10 +47,10 @@ func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 	}
 }
 
-// GetProcessesHandler returns the process table with namespace references, as
-// JSON.
+// GetProcessesHandler returns the process table (including tasks) with
+// namespace references, as JSON.
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
-	disco := discover.Namespaces(discover.FromProcs())
+	disco := discover.Namespaces(discover.FromProcs(), discover.FromTasks())
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -65,7 +65,10 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 // GetPIDMapHandler returns data for translating PIDs between hierarchical PID
 // namespaces, as JSON.
 func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
-	pidmap := discover.NewPIDMap(discover.Namespaces(discover.WithStandardDiscovery(), discover.WithNamespaceTypes(species.CLONE_NEWPID)))
+	pidmap := discover.NewPIDMap(discover.Namespaces(
+		discover.WithStandardDiscovery(),
+		discover.FromTasks(),
+		discover.WithNamespaceTypes(species.CLONE_NEWPID)))
 
 	w.Header().Set("Content-Type", "application/json")
 
