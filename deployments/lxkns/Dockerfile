@@ -2,8 +2,8 @@
 # extended file attributes for capabilities still intact.
 
 ARG ALPINE_VERSION=3.17
-ARG ALPINE_PATCH=1
-ARG GO_VERSION=1.19.4
+ARG ALPINE_PATCH=2
+ARG GO_VERSION=1.20.1
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
@@ -12,6 +12,7 @@ ARG GO_VERSION=1.19.4
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 WORKDIR /src
 RUN apk add --no-cache --update-cache gcc musl-dev libcap
+RUN go build std
 # We now try to cache only the dependencies in a separate layer, so we can speed
 # up things in case the dependencies do not change. This then reduces the amount
 # of fetching and compiling required when compiling the final binary later.
