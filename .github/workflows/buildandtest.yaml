@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-      
+
 jobs:
 
   buildandtest:
@@ -22,7 +22,7 @@ jobs:
           sudo docker -H unix:///proc/1/root/run/docker.sock version
 
       - name: Set up Go ${{matrix.go}}
-        uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # pin@v3
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # pin@v4
         with:
           go-version: ${{matrix.go}}
         id: go
@@ -39,19 +39,23 @@ jobs:
             build-essential pkg-config libbtrfs-dev libgpgme-dev
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # pin@v3
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # pin@v3
 
       - name: Get dependencies
         run: go get -v -t -d ./...
 
       - name: Test Go packages as root
-        run: go test -v -p 1 -tags podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove -exec sudo ./...
+        run: go test -v -p 1 -tags
+          podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove
+          -exec sudo ./...
 
       - name: Test Go packages as ordinary user
-        run: go test -v -p 1 -tags,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove podman ./...
+        run: go test -v -p 1
+          -tags,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove
+          podman ./...
 
   testwebapp:
-    if: ${{ false }}  # disable for now
+    if: ${{ false }} # disable for now
 
     name: Test web ui of lxkns service
     runs-on: ubuntu-latest
@@ -61,13 +65,13 @@ jobs:
         go: [ '1.20' ]
     steps:
       - name: Set up Go ${{matrix.go}}
-        uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f # pin@v3
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # pin@v3
         with:
           go-version: ${{matrix.go}}
         id: go
 
       - name: Check out code
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # pin@v3
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # pin@v3
         with:
           fetch-depth: 0
 
