@@ -3,7 +3,7 @@
 
 ARG ALPINE_VERSION=3.17
 ARG ALPINE_PATCH=2
-ARG GO_VERSION=1.20.1
+ARG GO_VERSION=1.20.2
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
@@ -32,8 +32,8 @@ COPY ops/ ./ops/
 COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
-RUN go build -v -ldflags "-s -w" -o /lxkns ./cmd/lxkns && \
-    go build -v -ldflags "-s -w" -o /mntnssandbox ./cmd/mntnssandbox && \
+RUN go build -v -tags osusergo,netgo -ldflags "-s -w" -o /lxkns ./cmd/lxkns && \
+    go build -v -tags osusergo,netgo -ldflags "-s -w" -o /mntnssandbox ./cmd/mntnssandbox && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns && \
     setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 

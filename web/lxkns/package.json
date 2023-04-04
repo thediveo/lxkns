@@ -4,7 +4,8 @@
   "private": true,
   "resolutions": {
     "nth-check": "^2.0.1",
-    "resq": "^1.11.0"
+    "resq": "^1.11.0",
+    "webpack": "^5.76.0"
   },
   "dependencies": {
     "@craco/craco": "^7.0.0",
