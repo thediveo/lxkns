@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var slowSpec = NodeTimeout(30 * time.Second)
+var slowSpec = NodeTimeout(60 * time.Second)
 
 func TestLinuxKernelNamespaces(t *testing.T) {
 	RegisterFailHandler(Fail)

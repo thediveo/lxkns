@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/thediveo/ioctl"
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 )
 
 // NamespaceFile is an open [os.File] which references a Linux-kernel namespace.
@@ -86,7 +89,7 @@ func (nsf NamespaceFile) String() (s string) {
 //
 // 🛈 A Linux kernel version 4.11 or later is required.
 func (nsf NamespaceFile) Type() (species.NamespaceType, error) {
-	t, err := ioctl(int(nsf.Fd()), _NS_GET_NSTYPE)
+	t, err := unix.IoctlRetInt(int(nsf.Fd()), nsioctl.NS_GET_NSTYPE)
 	if err != nil {
 		return 0, newInvalidNamespaceError(nsf, err)
 	}
@@ -106,14 +109,14 @@ func (nsf NamespaceFile) ID() (species.NamespaceID, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) User() (relations.Relation, error) {
-	userfd, err := ioctl(int(nsf.Fd()), _NS_GET_USERNS)
+	userfd, err := ioctl.RetFd(int(nsf.Fd()), nsioctl.NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
 	// seriously broken), so we return the properly typed parent namespace
 	// reference object. And we're returning an os.File-based namespace
 	// reference, as this allows us to reuse the lifecycle control over the
 	// newly gotten file descriptor implemented in os.File.
-	return typedNamespaceFileFromFd(nsf, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
+	return typedNamespaceFileFromFd(nsf, "NS_GET_USERNS", uint(userfd), species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -123,11 +126,11 @@ func (nsf NamespaceFile) User() (relations.Relation, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsf NamespaceFile) Parent() (relations.Relation, error) {
-	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
+	fd, err := ioctl.RetFd(int(nsf.Fd()), nsioctl.NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
 	// management of os.File.
-	return namespaceFileFromFd(nsf, fd, err)
+	return namespaceFileFromFd(nsf, uint(fd), err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this

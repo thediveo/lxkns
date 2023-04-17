@@ -22,7 +22,7 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/plural"
-	"github.com/thediveo/sealwatcher/podman"
+	"github.com/thediveo/sealwatcher/v2/podman"
 )
 
 // PodGroupType identifies container groups representing Podman pods.

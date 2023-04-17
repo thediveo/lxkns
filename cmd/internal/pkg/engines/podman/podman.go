@@ -27,7 +27,7 @@ import (
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli/cliplugin"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/engines/engineplugin"
 	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/sealwatcher"
+	"github.com/thediveo/sealwatcher/v2"
 )
 
 // Names of the CLI flags defined and used in this package.

@@ -7,20 +7,30 @@
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-86.2%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-82.1%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 ## Overview
 
-`lxkns` discovers:
+`lxkns` discovers...
 - Linux namespaces in almost every nook and cranny of your hosts (open file
-  descriptors, bind-mounts, processes, and now even tasks),
+  descriptors, bind-mounts, processes, and now even tasks) – please see the table below,
 - the mount points inside mount namespaces (correctly representing
   "overmounts").
 - container workloads: these are then related to the underlying Linux
   namespaces.
+
+| | Where? | `lsns` | `lxkns` |
+| --- | --- | :---: | :---: |
+| ①  | `/proc/*/ns/*` | ✓ | ✓ |
+| ②  | `/proc/*/task/*/ns/*` | ✗ | ✓ |
+| ③  | bind mounts | ✗ | ✓ |
+| ➃a | `/proc/*/fd/*` namespace fds | ✗ | ✓ |
+| ➃b | `/proc/*/fd/*` socket fds | ✗ | ✓ |
+| ➄  | namespace hierarchy | ✗ | ✓ |
+| ➅  | owning user namespaces | ✗ | ✓ |
 
 The following container engine types are supported:
 - Docker,

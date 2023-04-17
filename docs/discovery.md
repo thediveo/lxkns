@@ -12,9 +12,17 @@ a specific container engine.
 well-known and openly available CLI tools and especially the golden oldie
 [lsns(8)](https://man7.org/linux/man-pages/man8/lsns.8.html). lxkns detects
 namespaces even in places of a running Linux system other tools typically do not
-consider.
+consider:
 
-The following places are searched for traces of namespaces:
+| | Where? | `lsns` | `lxkns` |
+| --- | --- | :---: | :---: |
+| ①  | `/proc/*/ns/*` | ✓ | ✓ |
+| ②  | `/proc/*/task/*/ns/*` | ✗**¹** | ✓ |
+| ③  | bind mounts | ✗ | ✓ |
+| ➃a | `/proc/*/fd/*` namespace fds | ✗ | ✓ |
+| ➃b | `/proc/*/fd/*` socket fds | ✗ | ✓ |
+| ➄  | hierarchy | ✗ | ✓ |
+| ➅  | owning user namespaces | ✗ | ✓ |
 
 1. of course, from the **procfs** filesystem in `/proc/[PID]/ns/*` – as `lsns`
    and all the other namespace-related tools do.
@@ -26,17 +34,14 @@ The following places are searched for traces of namespaces:
    bind-mounted namespaces in _other_ mount namespaces than the current/initial
    mount namespace into account.
 4. **fd-referenced namespaces**, via `/proc/[PID]/fd/*`.
+   - fd directly referencing a namespace (of any type),
+   - fd referencing a socket (thus, network namespaces only).
 5. **intermediate hierarchical user and PID namespaces**, via `NS_GET_PARENT`
-   ([man 2 ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
-6. **user namespaces owning non-user namespaces**, via `NS_GET_USERNS` ([man 2
-   ioctl_ns](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
-
-Or in table format:
-
-| tool | `/proc/*/ns/*` ① | tasks `/proc/*/task/*/ns/*` ② | bind mounts ③ | `/proc/*/fd/*` ➃ | hierarchy ➄ | owning user namespaces ➅ |
-| --- | --- | --- | --- | --- | --- | -- |
-| `lsns` | ✓ | see **¹** | | | |
-| `lxkns` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+   (for details, please refer to
+   [ioctl_ns(2)](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
+6. **user namespaces owning non-user namespaces**, via `NS_GET_USERNS` (for
+   details, please refer to
+   [ioctl_ns(2)](http://man7.org/linux/man-pages/man2/ioctl_ns.2.html)).
 
 Applications can control the extent to which a `lxkns` discovery tries to
 ferret out namespaces from the nooks and crannies of Linux hosts.

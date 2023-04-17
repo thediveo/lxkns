@@ -17,6 +17,8 @@ package ops
 import (
 	"fmt"
 
+	"github.com/thediveo/ioctl"
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
@@ -43,7 +45,7 @@ func (nsfd NamespaceFd) String() string {
 //
 // 🛈 A Linux kernel version 4.11 or later is required.
 func (nsfd NamespaceFd) Type() (species.NamespaceType, error) {
-	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
+	t, err := unix.IoctlRetInt(int(nsfd), nsioctl.NS_GET_NSTYPE)
 	if err != nil {
 		return 0, newInvalidNamespaceError(nsfd, err)
 	}
@@ -67,14 +69,14 @@ func (nsfd NamespaceFd) ID() (species.NamespaceID, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) User() (relations.Relation, error) {
-	userfd, err := ioctl(int(nsfd), _NS_GET_USERNS)
+	userfd, err := ioctl.RetFd(int(nsfd), nsioctl.NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
 	// seriously broken), so we return the properly typed parent namespace
 	// reference object. And we're returning an os.File-based namespace
 	// reference, as this allows us to reuse the lifecycle control over the
 	// newly gotten file descriptor implemented in os.File.
-	return typedNamespaceFileFromFd(nsfd, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
+	return typedNamespaceFileFromFd(nsfd, "NS_GET_USERNS", uint(userfd), species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of the Linux-kernel namespace referenced
@@ -86,11 +88,11 @@ func (nsfd NamespaceFd) User() (relations.Relation, error) {
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsfd NamespaceFd) Parent() (relations.Relation, error) {
-	fd, err := ioctl(int(nsfd), _NS_GET_PARENT)
+	fd, err := ioctl.RetFd(int(nsfd), nsioctl.NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
 	// management of os.File.
-	return namespaceFileFromFd(nsfd, fd, err)
+	return namespaceFileFromFd(nsfd, uint(fd), err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this
@@ -119,7 +121,7 @@ func fdID(ref relations.Relation, fd int) (species.NamespaceID, error) {
 // under the condition that additionally the type of namespace needs to be known
 // at the same time.
 func (nsfd NamespaceFd) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
-	t, err := ioctl(int(nsfd), _NS_GET_NSTYPE)
+	t, err := unix.IoctlRetInt(int(nsfd), nsioctl.NS_GET_NSTYPE)
 	if err != nil {
 		return nil, nil, newNamespaceOperationError(nsfd, "NS_GET_NSTYPE", err)
 	}

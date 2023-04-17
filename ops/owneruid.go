@@ -22,11 +22,12 @@ import (
 	"errors"
 	"unsafe"
 
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/relations"
 	"golang.org/x/sys/unix"
 )
 
-// ownerUID takes an open file descriptor which much reference a user namespace.
+// ownerUID takes an open file descriptor which must reference a user namespace.
 // It then returns the UID of the user "owning" this user namespace, or an
 // error. The Relation reference is only needed in case of errors, to allow for
 // returning meaningful wrapped errors.
@@ -39,7 +40,7 @@ func ownerUID(ref relations.Relation, fd int) (int, error) {
 	uid := ^uint32(0) - 42
 	_, _, errno := unix.Syscall(
 		unix.SYS_IOCTL, uintptr(fd),
-		uintptr(_IO(_NSIO, _NS_GET_OWNER_UID)), uintptr(unsafe.Pointer(&uid))) // #nosec G103
+		uintptr(nsioctl.NS_GET_OWNER_UID), uintptr(unsafe.Pointer(&uid))) // #nosec G103
 	if errno != 0 {
 		return 0, newInvalidNamespaceError(ref, errors.New(errno.Error()))
 	}
