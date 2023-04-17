@@ -19,15 +19,16 @@ require (
 	github.com/thediveo/fdooze v0.1.6
 	github.com/thediveo/go-asciitree v1.0.0
 	github.com/thediveo/go-mntinfo v1.0.1
+	github.com/thediveo/ioctl v0.9.2
 	github.com/thediveo/klo v1.0.2
 	github.com/thediveo/namspill v0.1.5
 	github.com/thediveo/procfsroot v1.0.0
 	github.com/thediveo/sealwatcher v0.8.6
 	github.com/thediveo/spaserve v1.0.1
 	github.com/thediveo/testbasher v1.0.7
-	github.com/thediveo/whalewatcher v0.8.2
-	golang.org/x/sys v0.6.0
-	golang.org/x/text v0.8.0
+	github.com/thediveo/whalewatcher v0.8.3
+	golang.org/x/sys v0.7.0
+	golang.org/x/text v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -89,7 +90,7 @@ require (
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect
 	github.com/docker/cli v20.10.20+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v23.0.1+incompatible // indirect
+	github.com/docker/docker v23.0.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -139,7 +140,7 @@ require (
 	github.com/mtrmac/gpgme v0.1.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
-	github.com/opencontainers/runc v1.1.4 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/opencontainers/runtime-spec v1.1.0-rc.1 // indirect
 	github.com/opencontainers/runtime-tools v0.9.1-0.20221107090550-2e043c6bd626 // indirect
 	github.com/opencontainers/selinux v1.11.0 // indirect

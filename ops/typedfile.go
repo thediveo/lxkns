@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/thediveo/ioctl"
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
+	"golang.org/x/sys/unix"
 )
 
 // TypedNamespaceFile is a NamespaceFile (wrapping an open os.File) with a
@@ -40,7 +43,7 @@ type TypedNamespaceFile struct {
 // to the missing specific ioctl().
 func NewTypedNamespaceFile(f *os.File, nstype species.NamespaceType) (*TypedNamespaceFile, error) {
 	if f != nil && nstype == 0 {
-		t, err := ioctl(int(f.Fd()), _NS_GET_NSTYPE)
+		t, err := unix.IoctlRetInt(int(f.Fd()), nsioctl.NS_GET_NSTYPE)
 		if err != nil {
 			return nil, newNamespaceOperationError(&NamespaceFile{*f}, "NS_GET_NSTYPE", err)
 		}
@@ -92,10 +95,10 @@ func (nsf TypedNamespaceFile) Type() (species.NamespaceType, error) {
 //
 // ℹ️ A Linux kernel version 4.9 or later is required.
 func (nsf TypedNamespaceFile) Parent() (relations.Relation, error) {
-	fd, err := ioctl(int(nsf.Fd()), _NS_GET_PARENT)
+	fd, err := ioctl.RetFd(int(nsf.Fd()), nsioctl.NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
 	// typed parent namespace reference object.
-	return typedNamespaceFileFromFd(nsf, "NS_GET_PARENT", fd, nsf.nstype, err)
+	return typedNamespaceFileFromFd(nsf, "NS_GET_PARENT", uint(fd), nsf.nstype, err)
 }
 
 // OpenTypedReference returns an open and typed namespace reference, from which

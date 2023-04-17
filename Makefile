@@ -63,7 +63,7 @@ install: ## installs lxkns commands
 	install -t $(PREFIX)/bin $(addprefix $(GOPATH)/bin/,$(tools))
 
 test: ## runs all tests
-	go test -v -p 1 -count 1 -exec sudo ./... && go test -v -p 1 -count 1 ./...
+	go test -v -p=1 -count=1 -exec sudo ./... && go test -v -p=1 -count=1 ./...
 
 testc: ## runs all tests in test containers
 	$(GOGEN)

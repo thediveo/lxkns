@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/thediveo/ioctl"
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
@@ -48,7 +50,7 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 		return 0, newInvalidNamespaceError(nsp, err)
 	}
 	defer unix.Close(fd)
-	t, err := ioctl(int(fd), _NS_GET_NSTYPE)
+	t, err := unix.IoctlRetInt(int(fd), nsioctl.NS_GET_NSTYPE)
 	if err != nil {
 		return 0, newNamespaceOperationError(nsp, "NS_GET_TYPE", err)
 	}
@@ -80,14 +82,14 @@ func (nsp NamespacePath) User() (relations.Relation, error) {
 		return nil, err
 	}
 	defer unix.Close(fd)
-	userfd, err := ioctl(fd, _NS_GET_USERNS)
+	userfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
 	// seriously broken), so we return the properly typed parent namespace
 	// reference object. And we're returning an os.File-based namespace
 	// reference, as this allows us to reuse the lifecycle control over the
 	// newly gotten file descriptor implemented in os.File.
-	return typedNamespaceFileFromFd(nsp, "NS_GET_USERNS", userfd, species.CLONE_NEWUSER, err)
+	return typedNamespaceFileFromFd(nsp, "NS_GET_USERNS", uint(userfd), species.CLONE_NEWUSER, err)
 }
 
 // Parent returns the parent namespace of a hierarchical namespaces, that is, of
@@ -103,11 +105,11 @@ func (nsp NamespacePath) Parent() (relations.Relation, error) {
 		return nil, err
 	}
 	defer unix.Close(fd)
-	parentfd, err := ioctl(fd, _NS_GET_PARENT)
+	parentfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
 	// management of os.File.
-	return namespaceFileFromFd(nsp, parentfd, err)
+	return namespaceFileFromFd(nsp, uint(parentfd), err)
 }
 
 // OwnerUID returns the user id (UID) of the user namespace referenced by this

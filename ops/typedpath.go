@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/thediveo/ioctl"
+	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
@@ -74,13 +76,13 @@ func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
 		return nil, newInvalidNamespaceError(nsp, err)
 	}
 	defer unix.Close(fd)
-	parentfd, err := ioctl(fd, _NS_GET_PARENT)
+	parentfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
 	// typed parent namespace reference object. And we're returning an
 	// os.File-based namespace reference, as this allows us to reuse the
 	// lifecycle control over the newly gotten file descriptor implemented in
 	// os.File.
-	return typedNamespaceFileFromFd(nsp, "NS_GET_PARENT", parentfd, nsp.nstype, err)
+	return typedNamespaceFileFromFd(nsp, "NS_GET_PARENT", uint(parentfd), nsp.nstype, err)
 }
 
 // OpenTypedReference returns an open namespace reference, from which an
