@@ -15,11 +15,13 @@
 package discover
 
 import (
+	"os"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/notwork/netns"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
 
@@ -27,6 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/once"
 )
 
 var _ = Describe("Discover from fds", func() {
@@ -40,6 +43,7 @@ var _ = Describe("Discover from fds", func() {
 	})
 
 	It("finds fd-referenced namespaces", func() {
+		By("creating a transient network namespace and keeping only an open fd to it")
 		scripts := testbasher.Basher{}
 		defer scripts.Done()
 		scripts.Common(nstest.NamespaceUtilsScript)
@@ -59,12 +63,13 @@ read # wait for test to proceed()
 		fdnetnsid := nstest.CmdDecodeNSId(cmd)
 		netnsid := nstest.CmdDecodeNSId(cmd)
 		Expect(fdnetnsid).ToNot(Equal(netnsid))
-		// correctly misses fd-referenced namespaces without proper discovery
-		// method enabled.
+
+		By("missing fd referenced namespaces when discovering only from processes")
 		allns := Namespaces(FromProcs())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 		Expect(allns.Namespaces[model.NetNS]).ToNot(HaveKey(fdnetnsid))
-		// correctly finds fd-referenced namespaces now.
+
+		By("finding fd referenced namespaces")
 		allns = Namespaces(FromFds())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(fdnetnsid))
 	})
@@ -91,6 +96,29 @@ read # wait for test to proceed()
 		scanFd(0, "./test/fdscan/proc", true, &r)
 		Expect(r.Namespaces[model.NetNS]).To(HaveLen(1))
 		Expect(r.Namespaces[model.NetNS][species.NamespaceID{Dev: stat.Dev, Ino: 12345678}]).To(BeIdenticalTo(origns))
+	})
+
+	It("finds a network namespace a socket is connected to", func() {
+		if os.Geteuid() != 0 {
+			Skip("needs root")
+		}
+
+		By("creating a transient new network namespace we only keep a socket connected to")
+		netnsFd := netns.NewTransient()
+		closeOnceNetnsFd := Once(func() { unix.Close(netnsFd) })
+		defer closeOnceNetnsFd.Do()
+
+		netnsino := netns.Ino(netnsFd)
+
+		nlh := netns.NewNetlinkHandle(netnsFd)
+		defer nlh.Close()
+
+		By("keeping only a socket as the last reference to the transient network namespace")
+		closeOnceNetnsFd.Do()
+
+		By("discovering the transient network namespace from the RTNETLINK socket")
+		allns := Namespaces(FromFds())
+		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(species.NamespaceIDfromInode(netnsino)))
 	})
 
 })

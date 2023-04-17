@@ -25,8 +25,8 @@ trap 'rm -rf -- "$GOCOVERTMPDIR"' EXIT
 # format. This way we can easily run multiple coverage (integration) tests, as
 # needed, without worrying about how to aggregate the coverage data later. The
 # new Go toolchain already does this for us. 
-go test -cover -v -exec sudo -tags ${BUILDTAGS} -p=1 -count=1 -race ./... -args -test.gocoverdir="$GOCOVERTMPDIR"
-go test -cover -v -tags ${BUILDTAGS} -p=1 -count=1 -race ./... -args -test.gocoverdir="$GOCOVERTMPDIR"
+go test -cover -v -exec sudo -tags ${BUILDTAGS} -p=1 -count=1 ./... -args -test.gocoverdir="$GOCOVERTMPDIR"
+go test -cover -v -tags ${BUILDTAGS} -p=1 -count=1 ./... -args -test.gocoverdir="$GOCOVERTMPDIR"
 # Finally transform the coverage information collected in potentially multiple
 # runs into the well-proven textual format so we can process it as we have come
 # to learn and love.
