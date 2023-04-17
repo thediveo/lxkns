@@ -18,19 +18,19 @@ package podman
 
 import (
 	"context"
+	"net"
 	"os"
 	"time"
 
-	"github.com/containers/podman/v3/pkg/bindings"
-	"github.com/containers/podman/v3/pkg/bindings/pods"
-	"github.com/containers/podman/v3/pkg/domain/entities"
-	"github.com/containers/podman/v3/pkg/rootless"
-	"github.com/containers/podman/v3/pkg/specgen"
+	"github.com/containers/podman/v4/pkg/bindings"
+	"github.com/containers/podman/v4/pkg/bindings/pods"
+	"github.com/containers/podman/v4/pkg/domain/entities"
+	"github.com/containers/podman/v4/pkg/specgen"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/test/matcher"
-	"github.com/thediveo/sealwatcher"
-	"github.com/thediveo/sealwatcher/test"
+	"github.com/thediveo/sealwatcher/v2"
+	"github.com/thediveo/sealwatcher/v2/test"
 	"github.com/thediveo/whalewatcher"
 	"github.com/thediveo/whalewatcher/watcher"
 
@@ -55,8 +55,11 @@ var _ = Describe("Decorates Podman pods", Serial, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
-		if os.Getuid() != 0 || rootless.IsRootless() /* work around botched podman code base */ {
+		if os.Getuid() != 0 {
 			Skip("needs root")
+		}
+		if _, err := net.Dial("unix", "/run/podman/podman.sock"); err != nil {
+			Skip("broken podman client package")
 		}
 
 		goodgos := Goroutines()
