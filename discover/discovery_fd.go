@@ -22,9 +22,7 @@
 package discover
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -57,9 +55,23 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 	// descriptors. The /proc filesystem will give us the required
 	// information.
 	total := 0
+	pidfd := 0 // grudingly accepting zero albeit being a valid fd, sigh.
+	defer func() {
+		// ensure to not leak a process fd in any case.
+		if pidfd > 0 {
+			unix.Close(pidfd)
+		}
+	}()
 	for pid := range result.Processes {
-		basepath := fmt.Sprintf(filepath.Join(procfs, "%d/fd"), pid)
-		fdentries, err := os.ReadDir(basepath)
+		basepath := procfs + "/" + strconv.Itoa(int(pid)) + "/fd"
+		// avoid os.ReadDir as we don't want to waste CPU time on sorting the
+		// directory entries.
+		dirf, err := os.Open(basepath)
+		if err != nil {
+			continue
+		}
+		fdentries, err := dirf.ReadDir(-1)
+		dirf.Close()
 		if err != nil {
 			continue
 		}
@@ -84,16 +96,24 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			var nsid species.NamespaceID
 			var nstype species.NamespaceType
 			if strings.HasPrefix(target, "socket:[") {
-				nsid, nstype = namespaceSocket(pid, fdentry.Name())
+				// It's a socket ... and we want to query it using an ioctl for
+				// the network namespace it is connected to.
+				if pidfd <= 0 {
+					pidfd, err = unix.PidfdOpen(int(pid), 0)
+					if err != nil {
+						continue
+					}
+				}
+				nsid, nstype = namespaceOfSocket(pidfd, fdentry.Name())
 			} else {
-				nsid, nstype = namespaceLink(path, target, fakeprocfs)
+				nsid, nstype = namespaceFromLink(path, target, fakeprocfs)
 			}
 			if nstype == species.NaNS {
 				continue
 			}
-			// Check if we already know this namespace, otherwise is a new
-			// discovery. Add such new discoveries and use the /proc fd path
-			// as a path reference in case we want later to make use of this
+			// Check if we already know this namespace, otherwise it's a new
+			// discovery. Add such new discoveries and use the /proc fd path as
+			// a path reference in case we want later to make use of this
 			// namespace.
 			nstypeidx := model.TypeIndex(nstype)
 			if _, ok := result.Namespaces[nstypeidx][nsid]; ok {
@@ -104,21 +124,26 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 				nstype, nsid, basepath+"/"+fdentry.Name())
 			total++
 		}
+		// Release the process fd as we don't need it anymore because we're
+		// progressing to the next process in our list.
+		if pidfd > 0 {
+			unix.Close(pidfd)
+			pidfd = 0
+		}
 	}
 	log.Infof("discovered %s", plural.Elements(total, "fd-referenced namespaces"))
 }
 
-// namespaceSocket returns the network namespace a socket fd is connected to.
-func namespaceSocket(pid model.PIDType, fdname string) (species.NamespaceID, species.NamespaceType) {
+// namespaceOfSocket returns the network namespace a particular socket fd (of
+// the specified process) is connected to.
+func namespaceOfSocket(pidfd int, fdname string) (species.NamespaceID, species.NamespaceType) {
 	fdno, err := strconv.ParseUint(fdname, 10, 32)
 	if err != nil {
 		return species.NoneID, species.NaNS
 	}
-	pidfd, err := unix.PidfdOpen(int(pid), 0)
-	if err != nil {
-		return species.NoneID, species.NaNS
-	}
-	defer unix.Close(pidfd)
+	// Duplicate the process' fd into our own process in order to issue a query
+	// ioctl on it. This doesn't mess with the other process' socket otherwise
+	// so that is safe to do: look, but don't touch.
 	sockfd, err := unix.PidfdGetfd(pidfd, int(fdno), 0)
 	if err != nil {
 		return species.NoneID, species.NaNS
@@ -139,10 +164,12 @@ func namespaceSocket(pid model.PIDType, fdname string) (species.NamespaceID, spe
 	}, species.CLONE_NEWNET
 }
 
-// namespaceLink takes the target/destination a symbolic namespace link points
-// to and returns its namespace ID (ino plus dev number) as well as the
+// namespaceFromLink takes the target/destination a symbolic namespace link
+// points to and returns its namespace ID (ino plus dev number) as well as the
 // namespace type. It returns a type of species.NaNS in case of any error.
-func namespaceLink(path, target string, fakeprocfs bool) (species.NamespaceID, species.NamespaceType) {
+func namespaceFromLink(path, target string, fakeprocfs bool) (
+	species.NamespaceID, species.NamespaceType,
+) {
 	// Does the "symbolic" link point to a Linux kernel namespace?
 	// This sorts out all other things, such as open sockets, et
 	// cetera.
@@ -151,8 +178,8 @@ func namespaceLink(path, target string, fakeprocfs bool) (species.NamespaceID, s
 		return species.NoneID, species.NaNS
 	}
 	// ...remember that we want to follow the link and get the stat information
-	// from where it points to; we don't want to get the stat for the fd entry
-	// itself. However, we can't stat the target path itself :(
+	// from where it points to; we don't want to get the stat for the fd (link)
+	// entry itself. However, we can't stat the target path itself :(
 	var stat unix.Stat_t
 	if err := unix.Stat(path, &stat); err != nil {
 		if !fakeprocfs {
