@@ -63,6 +63,9 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 		}
 	}()
 	for pid := range result.Processes {
+		// concatenating strings in combination with strconv.Itoa is roughly
+		// 2.3⨉ faster than to fmt.Sprintf, so its worth any minor inconvenience
+		// anyway. (Intel Core i5 with amd64 architecture)
 		basepath := procfs + "/" + strconv.Itoa(int(pid)) + "/fd"
 		// avoid os.ReadDir as we don't want to waste CPU time on sorting the
 		// directory entries.
@@ -88,14 +91,14 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			// such as "net:[...]", and second, "socket:[...]" targets. The
 			// socket targets can be queried for the network namespace the
 			// socket is connected to.
-			path := basepath + "/" + fdentry.Name()
-			target, err := os.Readlink(path)
+			procfdpath := basepath + "/" + fdentry.Name()
+			fdtarget, err := os.Readlink(procfdpath)
 			if err != nil {
 				continue
 			}
 			var nsid species.NamespaceID
 			var nstype species.NamespaceType
-			if strings.HasPrefix(target, "socket:[") {
+			if strings.HasPrefix(fdtarget, "socket:[") {
 				// It's a socket ... and we want to query it using an ioctl for
 				// the network namespace it is connected to.
 				if pidfd <= 0 {
@@ -106,7 +109,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 				}
 				nsid, nstype = namespaceOfSocket(pidfd, fdentry.Name())
 			} else {
-				nsid, nstype = namespaceFromLink(path, target, fakeprocfs)
+				nsid, nstype = namespaceFromLink(procfdpath, fdtarget, fakeprocfs)
 			}
 			if nstype == species.NaNS {
 				continue
@@ -114,14 +117,16 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			// Check if we already know this namespace, otherwise it's a new
 			// discovery. Add such new discoveries and use the /proc fd path as
 			// a path reference in case we want later to make use of this
-			// namespace.
+			// namespace. Consumers of these /proc-based fd paths need to have a
+			// clue about how to correctly deal with them in order to reference
+			// the targeted namespace.
 			nstypeidx := model.TypeIndex(nstype)
 			if _, ok := result.Namespaces[nstypeidx][nsid]; ok {
 				continue
 			}
-			log.Debugf("found namespace %s:[%d] at %s", nstype.Name(), nsid.Ino, path)
-			result.Namespaces[nstypeidx][nsid] = namespaces.NewWithSimpleRef(
-				nstype, nsid, basepath+"/"+fdentry.Name())
+			log.Debugf("found namespace %s:[%d] at %s", nstype.Name(), nsid.Ino, procfdpath)
+			result.Namespaces[nstypeidx][nsid] =
+				namespaces.NewWithSimpleRef(nstype, nsid, procfdpath)
 			total++
 		}
 		// Release the process fd as we don't need it anymore because we're

@@ -31,8 +31,8 @@
 package discover
 
 import (
-	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/log"
@@ -84,7 +84,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		// filesystem, but in fact are behaving like hard links. Nevertheless,
 		// we have to follow them like symbolic links in order to find the
 		// identifier in form of the inode # of the referenced namespace.
-		nsref := fmt.Sprintf("/proc/%d/ns/%s", pid, nstypename)
+		nsref := "/proc/" + strconv.Itoa(int(pid)) + "/ns/" + nstypename
 		foundns, isnew := determineNamespace(discoverOwnership,
 			&proc.ProTaskCommon,
 			nsref, nstype, nstypeidx, nsmap)
@@ -117,8 +117,8 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 	// possible; so we prefer the most senior leader process: the ealdorman.
 	for _, ns := range nsmap {
 		if ealdorman := ns.Ealdorman(); ealdorman != nil {
-			ns.(namespaces.NamespaceConfigurer).SetRef(
-				model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/%s", ealdorman.PID, nstypename)})
+			ref := "/proc/" + strconv.Itoa(int(ealdorman.PID)) + "/ns/" + nstypename
+			ns.(namespaces.NamespaceConfigurer).SetRef(model.NamespaceRef{ref})
 		}
 	}
 	// Now scan tasks for yet unknown namespaces separately; this ensures that
@@ -131,7 +131,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			// tasks are actually also directly addressable in procfs using a
 			// TID instead of a PID. They just don't show up when reading the
 			// process directory.
-			nsref := fmt.Sprintf("/proc/%d/ns/%s", task.TID, nstypename)
+			nsref := "/proc/" + strconv.Itoa(int(task.TID)) + "/ns/" + nstypename
 			newns, isnew := determineNamespace(detSetReference|discoverOwnership,
 				&task.ProTaskCommon,
 				nsref, nstype, nstypeidx, nsmap)
