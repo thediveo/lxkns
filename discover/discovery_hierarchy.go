@@ -139,7 +139,9 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 				// found.
 				parentns = namespaces.New(nstype, parentnsid, nil)
 				nsmap[parentnsid] = parentns
-				log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
+				if log.LevelEnabled(log.DebugLevel) {
+					log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
+				}
 				hidden++
 			}
 			// Now insert the current namespace as a child of its parent in

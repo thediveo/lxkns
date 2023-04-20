@@ -92,9 +92,11 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			continue
 		}
 		if isnew {
-			log.Debugf("found namespace %s at %s[=%s]",
-				foundns.(model.NamespaceStringer).TypeIDString(),
-				nsref, proc.Name)
+			if log.LevelEnabled(log.DebugLevel) {
+				log.Debugf("found namespace %s at %s[=%s]",
+					foundns.(model.NamespaceStringer).TypeIDString(),
+					nsref, proc.Name)
+			}
 			total++
 		}
 		if !hasForChildrenRef {
@@ -107,9 +109,11 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		if foundns == nil || !isnew {
 			continue
 		}
-		log.Debugf("found namespace %s at %s[=%s]",
-			foundns.(model.NamespaceStringer).TypeIDString(),
-			nsref, proc.Name)
+		if log.LevelEnabled(log.DebugLevel) {
+			log.Debugf("found namespace %s at %s[=%s]",
+				foundns.(model.NamespaceStringer).TypeIDString(),
+				nsref, proc.Name)
+		}
 		total++
 	}
 	determineLeaders(nstype, result)
@@ -143,9 +147,11 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 				newns.(namespaces.NamespaceConfigurer).AddLooseThread(task)
 			}
 			if isnew {
-				log.Debugf("found namespace %s at %s[=task of %s]",
-					newns.(model.NamespaceStringer).TypeIDString(),
-					nsref, proc.Name)
+				if log.LevelEnabled(log.DebugLevel) {
+					log.Debugf("found namespace %s at %s[=task of %s]",
+						newns.(model.NamespaceStringer).TypeIDString(),
+						nsref, proc.Name)
+				}
 				total++
 			}
 			if !hasForChildrenRef {
@@ -160,9 +166,11 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			if newns != procns {
 				newns.(namespaces.NamespaceConfigurer).AddLooseThread(task)
 			}
-			log.Debugf("found namespace %s at %s[=%s]",
-				newns.(model.NamespaceStringer).TypeIDString(),
-				nsref, proc.Name)
+			if log.LevelEnabled(log.DebugLevel) {
+				log.Debugf("found namespace %s at %s[=%s]",
+					newns.(model.NamespaceStringer).TypeIDString(),
+					nsref, proc.Name)
+			}
 			total++
 		}
 	}

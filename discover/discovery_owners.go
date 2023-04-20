@@ -46,9 +46,11 @@ func resolveOwnership(nstype species.NamespaceType, _ string, result *Result) {
 	nsmap := result.Namespaces[nstypeidx]
 	for _, ns := range nsmap {
 		ns.(namespaces.NamespaceConfigurer).ResolveOwner(usernsmap)
-		if owner := ns.Owner(); owner != nil {
-			log.Debugf("%s:[%d] owned by user:[%d]",
-				ns.Type().Name(), ns.ID().Ino, owner.(model.Namespace).ID().Ino)
+		if log.LevelEnabled(log.DebugLevel) {
+			if owner := ns.Owner(); owner != nil {
+				log.Debugf("%s:[%d] owned by user:[%d]",
+					ns.Type().Name(), ns.ID().Ino, owner.(model.Namespace).ID().Ino)
+			}
 		}
 	}
 }
