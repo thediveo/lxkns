@@ -51,7 +51,8 @@ pkgsite: ## serves Go documentation on port 6060
 deploy: ## deploys lxkns service on host port 5010
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
+	#docker build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
+	scripts/docker-build.sh deployments/lxkns/Dockerfile -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION)
 	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy: ## removes any deployed lxkns service
