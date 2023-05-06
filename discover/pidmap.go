@@ -17,12 +17,12 @@
 package discover
 
 import (
-	"github.com/thediveo/lxkns/internal/pidmap"
+	ipidmap "github.com/thediveo/lxkns/internal/pidmap"
 	"github.com/thediveo/lxkns/model"
 )
 
 // NewPIDMap returns a new PID map ([model.PIDMapper]) based on the specified
 // discovery results and further information gathered from the /proc filesystem.
 func NewPIDMap(result *Result) model.PIDMapper {
-	return pidmap.NewPIDMap(result.Processes)
+	return ipidmap.NewPIDMap(result.Processes)
 }

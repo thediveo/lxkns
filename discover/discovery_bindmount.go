@@ -105,8 +105,10 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)
 				result.Namespaces[typeidx][bmntns.ID] = ns
 				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Ref)
-				log.Debugf("found bind-mounted namespace %s:[%d] at %s",
-					bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref.String())
+				if log.LevelEnabled(log.DebugLevel) {
+					log.Debugf("found bind-mounted namespace %s:[%d] at %s",
+						bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref.String())
+				}
 				total++
 				// And if its a mount namespace we haven't yet visited, add it
 				// to our backlock.
@@ -132,8 +134,10 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		if _, ok := visitedmntns[mntns.ID()]; ok {
 			continue // We already visited you ... next one!
 		}
-		log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
-			mntns.ID().Ino, refString(mntns, result))
+		if log.LevelEnabled(log.DebugLevel) {
+			log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
+				mntns.ID().Ino, refString(mntns, result))
+		}
 		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
@@ -190,7 +194,9 @@ func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 				bindmount.MountPoint, err.Error())
 			continue
 		}
-		log.Debugf("mount point for %s at %s", bindmount.Root, path)
+		if log.LevelEnabled(log.DebugLevel) {
+			log.Debugf("mount point for %s at %s", bindmount.Root, path)
+		}
 		// Get the type and ID of the bind-mounted namespace. IDwithType now
 		// always returns a complete ID consisting of dev number and inode
 		// number, even though the specified string lacks the dev number (which

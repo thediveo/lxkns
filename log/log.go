@@ -103,11 +103,19 @@ func Tracefn(fn func() string) {
 	callforward(TraceLevel, fn)
 }
 
+// LevelEnabled takes a logging level and returns true, if this level is
+// enabled. Compared with the *fn logging functions LevelEnabled avoids creating
+// closures and allows optimizing hot paths further at the expense of slightly
+// more elaborate logging calling sites.
+func LevelEnabled(level Level) bool {
+	return level <= loglevel && loggeradapter != nil
+}
+
 // forward sends a logging message to an external logging module (if set), if
 // the set logging level is reached or surpassed. Otherwise, it silently drops
 // the message.
 func forward(level Level, format string, args ...interface{}) {
-	if level <= loglevel && loggeradapter != nil {
+	if LevelEnabled(level) {
 		loggeradapter.Log(level, fmt.Sprintf(format, args...))
 	}
 }
@@ -116,7 +124,7 @@ func forward(level Level, format string, args ...interface{}) {
 // an external logging module has been set and the necessary logging level
 // reached or surpassed.
 func callforward(level Level, fn func() string) {
-	if level <= loglevel && loggeradapter != nil && fn != nil {
+	if LevelEnabled(level) {
 		loggeradapter.Log(level, fn())
 	}
 }
