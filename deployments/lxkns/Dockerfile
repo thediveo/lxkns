@@ -1,5 +1,18 @@
-# Requires Docker buildx in order to correctly produce the final image with the
-# extended file attributes for capabilities still intact.
+# ⚠️ Requires Docker Buildx in order to correctly produce the final image with
+# the extended file attributes for capabilities still intact. The Buildx plugin
+# is automatically installed on recent .deb and .rpm based distributions.
+#
+# This multi-stage build uses multiple build contexts. (1) the lxkns Go-based
+# service is build from the main build context in combinationwith several
+# dynamically configured build contexts for optionally workspace-used
+# dependendency Go modules. (2) the web-based frontend (React-based) is build
+# from another separate build context that covers only the web/lxkns directory.
+#
+# This slightly more complex setup avoids overly huge build contexts.
+#
+# Please note that building the lxkns service container image should only be
+# done executing "make deploy" with the current working directory set to this
+# repository's root directory.
 
 ARG ALPINE_VERSION=3.17
 ARG ALPINE_PATCH=2
@@ -77,19 +90,20 @@ WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
-COPY web/lxkns/package.json \
-     web/lxkns/craco.config.js \
-     web/lxkns/mdxplugins.js \
-     web/lxkns/yarn.lock \
-     web/lxkns/tsconfig.json \
+COPY --from=webappsrc \
+    package.json \
+    craco.config.js \
+    mdxplugins.js \
+    yarn.lock \
+    tsconfig.json \
         ./
 # While not being a true production install in the original sense, this avoids
 # installing cypress and the react styleguidist which we all don't need in
 # creating the production build.
 RUN yarn install --production --network-timeout 1000000000
 # Now build the production-optimized web app.
-COPY web/lxkns/public/ ./public/
-COPY web/lxkns/src/ ./src/
+COPY --from=webappsrc public/ ./public/
+COPY --from=webappsrc src/ ./src/
 ARG GIT_VERSION
 RUN yarn imagebuild
 
