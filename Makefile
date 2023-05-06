@@ -51,7 +51,10 @@ pkgsite: ## serves Go documentation on port 6060
 deploy: ## deploys lxkns service on host port 5010
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-	docker buildx build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/lxkns/Dockerfile .
+	scripts/docker-build.sh deployments/lxkns/Dockerfile \
+		-t lxkns \
+		--build-arg GIT_VERSION=$(GIT_VERSION) \
+		--build-context webappsrc=./web/lxkns
 	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
 undeploy: ## removes any deployed lxkns service
@@ -64,15 +67,6 @@ install: ## installs lxkns commands
 
 test: ## runs all tests
 	go test -v -p=1 -count=1 -exec sudo ./... && go test -v -p=1 -count=1 ./...
-
-testc: ## runs all tests in test containers
-	$(GOGEN)
-	@set -e; for GOVERSION in $(goversion); do \
-		echo "🧪 🧪 🧪 Testing on Go $${GOVERSION}"; \
-		docker build -t lxknstest:$${GOVERSION} --build-arg GOVERSION=$${GOVERSION} -f deployments/test/Dockerfile .;  \
-		docker run -it --rm --name lxknstest_$${GOVERSION} $(testcontaineropts) lxknstest:$${GOVERSION}; \
-	done; \
-	echo "🎉 🎉 🎉 All tests passed"
 
 # builds a static webapp and the lxkns service, then runs the service and the
 # webapp unit and end-to-end tests, and finally stops the lxkns service after
@@ -115,22 +109,22 @@ startapp: ## starts web UI app for development
 scan: ## scans the repository for CVEs
 	@scripts/scan.sh
 
-systempodman: ## builds lxkns using podman system service
-	$(GOGEN)
-	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
-	# podman-compose doesn't support "pid:host" which we absolutely need.
-	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
+#systempodman: ## builds lxkns using podman system service
+#	$(GOGEN)
+#	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+#	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+#	# podman-compose doesn't support "pid:host" which we absolutely need.
+#	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
 
-systempodman-down: ## removes any deployed lxkns service
-	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml down
+#systempodman-down: ## removes any deployed lxkns service
+#	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml down
 
-userpodman: ## builds lxkns using podman system service
-	$(GOGEN)
-	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
-	$(eval UID := $(shell id -u))
-	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up
+#userpodman: ## builds lxkns using podman system service
+#	$(GOGEN)
+#	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
+#	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
+#	$(eval UID := $(shell id -u))
+#	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up
 
 vuln: ## run go vulnerabilities check
 	@scripts/vuln.sh
