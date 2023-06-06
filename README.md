@@ -1,6 +1,6 @@
-<!-- markdownlint-disable-next-line MD022 -->
+<img alt="lxkns logo" align="right" width="200" src="docs/_images/lxkns-gophers.png">
+
 # Linux kernel Namespaces
-<img align="right" width="200" src="docs/_images/lxkns-gophers.png">
 
 [![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
@@ -91,7 +91,11 @@ ensures to run all package tests always sequentially, but in case you run `go
 test` yourself, please don't forget `-p 1` when testing multiple packages in
 one, _erm_, go.
 
-## ⚖️ Copyright and License
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Copyright and License
 
 `lxkns` is Copyright 2020‒23 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.
