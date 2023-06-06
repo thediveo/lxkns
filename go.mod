@@ -4,19 +4,21 @@ go 1.20
 
 require github.com/sigstore/rekor v1.1.1 // indirect; CVE-2023-30551
 
+require github.com/docker/distribution v2.8.2+incompatible // indirect; CVE-2023-2253
+
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd v1.7.0
-	github.com/containers/podman/v4 v4.5.0
-	github.com/getkin/kin-openapi v0.116.0
+	github.com/containerd/containerd v1.7.2
+	github.com/containers/podman/v4 v4.5.1
+	github.com/getkin/kin-openapi v0.117.0
 	github.com/gorilla/mux v1.8.0
 	github.com/muesli/termenv v0.15.1
-	github.com/onsi/ginkgo/v2 v2.9.4
-	github.com/onsi/gomega v1.27.6
+	github.com/onsi/ginkgo/v2 v2.9.7
+	github.com/onsi/gomega v1.27.7
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	github.com/thediveo/enumflag/v2 v2.0.2
+	github.com/thediveo/enumflag/v2 v2.0.3
 	github.com/thediveo/fdooze v0.2.0
 	github.com/thediveo/go-asciitree v1.0.0
 	github.com/thediveo/go-mntinfo v1.0.1
@@ -28,7 +30,7 @@ require (
 	github.com/thediveo/sealwatcher/v2 v2.0.0
 	github.com/thediveo/spaserve v1.0.1
 	github.com/thediveo/testbasher v1.0.7
-	github.com/thediveo/whalewatcher v0.8.4
+	github.com/thediveo/whalewatcher v0.8.6
 	golang.org/x/sys v0.8.0
 	golang.org/x/text v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -42,7 +44,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cilium/ebpf v0.9.1 // indirect
 	github.com/container-orchestrated-devices/container-device-interface v0.5.4 // indirect
-	github.com/containerd/typeurl/v2 v2.1.0 // indirect
+	github.com/containerd/typeurl/v2 v2.1.1 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20220623050100-57a0ce2678a7 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -81,15 +83,15 @@ require (
 	go.opentelemetry.io/otel v1.14.0 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/tools v0.8.0 // indirect
+	golang.org/x/tools v0.9.1 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.1 // indirect
 )
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
-	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/Microsoft/hcsshim v0.10.0-rc.7 // indirect
+	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Microsoft/hcsshim v0.10.0-rc.8 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
@@ -97,10 +99,10 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
-	github.com/containerd/continuity v0.3.0 // indirect
+	github.com/containerd/continuity v0.4.1 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
-	github.com/containerd/ttrpc v1.2.1 // indirect
+	github.com/containerd/ttrpc v1.2.2 // indirect
 	github.com/containers/buildah v1.30.0 // indirect
 	github.com/containers/common v0.52.0 // indirect
 	github.com/containers/image/v5 v5.25.0 // indirect
@@ -111,9 +113,8 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect
-	github.com/docker/cli v23.0.1+incompatible // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v23.0.3+incompatible // indirect
+	github.com/docker/cli v23.0.3+incompatible // indirect
+	github.com/docker/docker v24.0.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.1-0.20210727194412-58542c764a11 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -184,10 +185,10 @@ require (
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sync v0.2.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
