@@ -70,5 +70,7 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: WSDISKPATHS=./lxkns
-          build-contexts: ${{ env.BUILDCONTEXTS }}
+          build-contexts: |
+            webappsrc=./web/lxkns
+            ${{ env.BUILDCONTEXTS }}
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux kernel namespaces discovery
