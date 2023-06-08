@@ -24,9 +24,9 @@ ARG NODE_VERSION=16
 # start with the gcc and header stuff, which is kind of base builder image stuff
 # anyway.
 #
-# This stage is run "natively" and we make good use of Go's cross-compiling
-# capabilities.
-FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+# This stage currently cannot be run platform-natively, as we need CGO and
+# alpine has no cross-compiler on offer.
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 
 ARG BUILDPLATFORM
 ARG TARGETOS
@@ -104,9 +104,9 @@ RUN --mount=target=. \
         -o /mntnssandbox ./cmd/mntnssandbox
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
-# 2nd stage: builds the lxkns web client react application. Again, this is
+# 2nd stage: builds the lxkns web client react application. This is
 # platform-neutral, so we stick to the build platform for "optimal" nodejs
-# performance (oh well).
+# performance (for a sufficient definition of "nodejs performance", oh well).
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH

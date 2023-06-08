@@ -48,7 +48,7 @@ pkgsite: ## serves Go documentation on port 6060
 	@echo "navigate to: http://localhost:6060/github.com/thediveo/lxkns"
 	@scripts/pkgsite.sh
 
-dist: ## build distributable multi-arch images
+dist: ## build multi-arch image (amd64, arm64) and push to local running registry on port 5000.
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	scripts/multiarch-builder.sh \
