@@ -12,6 +12,22 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
+## Quick Start
+
+> **NEW:** we now provide a multi-architecture Docker image for linux/amd64 and
+> linux/arm64.
+
+First, ensure that you have the Docker compose v2 plugin installed. Then:
+
+```bash
+wget -q -O - \
+  https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
+  | docker compose -p lxkns -f - up
+```
+
+Then visit `http://localhost:5010` and start looking around Linux kernel
+namespaces, as well as mount points with their hierarchies.
+
 ## Overview
 
 `lxkns` discovers...
@@ -53,6 +69,8 @@ manual](https://thediveo.github.io/lxkns).
 > Please check [Important Changes](https://thediveo.github.io/lxkns#/changelog),
 > especially if you have been used the API in the past, and not only the
 > service.
+
+## Intro Video
 
 Or, watch the short overview video how to find your way around discovery web
 frontend:
