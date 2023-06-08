@@ -46,7 +46,7 @@ done
 echo "args:" ${buildctxargs[*]} ${buildargs[*]}
 echo "build inside:" ${CWD}
 
-docker build \
+docker buildx build \
     -f ${dockerfile} \
     ${buildargs[@]} \
     ${buildctxargs[@]} \

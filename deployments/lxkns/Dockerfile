@@ -14,16 +14,24 @@
 # done executing "make deploy" with the current working directory set to this
 # repository's root directory.
 
-ARG ALPINE_VERSION=3.17
-ARG ALPINE_PATCH=2
-ARG GO_VERSION=1.20.4
+ARG ALPINE_VERSION=3.18
+ARG ALPINE_PATCH=0
+ARG GO_VERSION=1.20.5
 ARG NODE_VERSION=16
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
 # start with the gcc and header stuff, which is kind of base builder image stuff
 # anyway.
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+#
+# This stage is run "natively" and we make good use of Go's cross-compiling
+# capabilities.
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+
+ARG BUILDPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+
 ARG WSDISKPATHS
 ARG MOD1=./
 ARG MOD2=./
@@ -78,14 +86,28 @@ COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
 
-RUN go build -v -tags osusergo,netgo -ldflags "-s -w" -o /lxkns ./cmd/lxkns
+RUN --mount=target=. \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg \
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -v -tags osusergo,netgo \
+        -ldflags "-s -w" \
+        -o /lxkns ./cmd/lxkns
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns
 
-RUN go build -v -tags osusergo,netgo -ldflags "-s -w" -o /mntnssandbox ./cmd/mntnssandbox
+RUN --mount=target=. \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg \
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -v -tags osusergo,netgo \
+        -ldflags "-s -w" \
+        -o /mntnssandbox ./cmd/mntnssandbox
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
-# 2nd stage: builds the lxkns web client react application.
-FROM node:${NODE_VERSION}-alpine AS reactor
+# 2nd stage: builds the lxkns web client react application. Again, this is
+# platform-neutral, so we stick to the build platform for "optimal" nodejs
+# performance (oh well).
+FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 # Cache the dependency hell, so we don't need to recreate it most of the time
