@@ -1,5 +1,6 @@
 version: '2.4'
-services: 
+name: lxkns
+services:
     lxkns:
         image: lxkns:latest
         read_only: true

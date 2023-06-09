@@ -17,15 +17,22 @@
 > **NEW:** we now provide a multi-architecture Docker image for linux/amd64 and
 > linux/arm64.
 
-First, ensure that you have the Docker compose v2 plugin installed. Then:
+First, ensure that you have the Docker compose v2 plugin installed.
+
+> Debian users typically need to install docker-ce instead of docker.io
+> packages, as Debian only backports random "security fixes" and freezes
+> features completely – which absolutely makes sense in a fast moving container
+> world ... _NOT_.
+
+Then:
 
 ```bash
 wget -q -O - \
   https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
-  | docker compose -p lxkns -f - up
+  | docker compose -f - up
 ```
 
-Then visit `http://localhost:5010` and start looking around Linux kernel
+Finally, visit `http://localhost:5010` and start looking around Linux kernel
 namespaces, as well as mount points with their hierarchies.
 
 ## Overview
