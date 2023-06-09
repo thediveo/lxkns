@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan systempodman systempodman-down
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan systempodman systempodman-down dist
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
