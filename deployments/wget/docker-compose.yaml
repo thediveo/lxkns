@@ -1,6 +1,7 @@
 # requires docker compose plugin (=v2)
 #
-# wget -q -O - https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml | docker compose -p lxkns -f - up
+# wget -q -O - https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml | docker compose -f - up
+name: lxkns
 services: 
     lxkns:
         image: ghcr.io/thediveo/lxkns

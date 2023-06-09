@@ -19,18 +19,22 @@ ARG ALPINE_PATCH=0
 ARG GO_VERSION=1.20.5
 ARG NODE_VERSION=16
 
+# 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
+FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
+
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
 # start with the gcc and header stuff, which is kind of base builder image stuff
 # anyway.
 #
-# This stage currently cannot be run platform-natively, as we need CGO and
-# alpine has no cross-compiler on offer.
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+# This stage runs build platform-native in order to speed things up. This relies
+# not only on Go's own cross-platform compiling abilities, but also the
+# incredibly helpful https://github.com/tonistiigi/xx Docker cross-compilation
+# helpers.
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 
 ARG BUILDPLATFORM
-ARG TARGETOS
-ARG TARGETARCH
+ARG TARGETPLATFORM
 
 ARG WSDISKPATHS
 ARG MOD1=./
@@ -44,8 +48,12 @@ ARG MOD8=./
 ARG MOD9=./
 
 # General warm-up
-RUN apk add --no-cache --update-cache gcc musl-dev libcap
-RUN go build std
+RUN apk add clang lld libcap-utils
+COPY --from=cc-helpers / /
+RUN xx-apk add --no-cache gcc musl-dev
+# https://github.com/tonistiigi/xx/blob/master/README.md#go--cgo
+ENV CGO_ENABLED=1
+RUN xx-go build std
 
 WORKDIR /ws
 # Copy the additionally used modules into the soon-to-be workspace.
@@ -89,19 +97,19 @@ COPY *.go ./
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -v -tags osusergo,netgo \
+    xx-go build -v -tags osusergo,netgo \
         -ldflags "-s -w" \
-        -o /lxkns ./cmd/lxkns
+        -o /lxkns ./cmd/lxkns && \
+    xx-verify /lxkns
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns
 
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -v -tags osusergo,netgo \
+    xx-go build -v -tags osusergo,netgo \
         -ldflags "-s -w" \
-        -o /mntnssandbox ./cmd/mntnssandbox
+        -o /mntnssandbox ./cmd/mntnssandbox && \
+    xx-verify /mntnssandbox
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
 # 2nd stage: builds the lxkns web client react application. This is
@@ -131,7 +139,7 @@ RUN yarn imagebuild
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
-FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH}
+FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} as final
 COPY --from=builder /lxkns /mntnssandbox /
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 ENV PATH /
