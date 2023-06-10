@@ -33,6 +33,23 @@ into consideration.
 > [!WARNING] Please check [Important Changes](changelog), especially if you
 > have been used the API in the past, and not only the service.
 
+## Quick Deploy
+
+Make sure that you have a fairly recent Docker engine installed, including the
+Docker compose plugin. (Debian users are advised to install docker-ce packages
+instead of Debian's outdated docker.io ones).
+
+```bash
+# I feel lucky!
+wget -q -O - \
+  https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
+  | docker compose -f - up
+```
+
+This loads a suitable Docker composer deployment file and feeds it directly into
+`docker compose`, deploying the `ghcr.io/thediveo/lxkns` multi-architecture
+container image. Supported architectures are amd64 and arm64.
+
 ## Eye Candy
 
 The lxkns service provides a web user interface for comfy discovery. Run `make
