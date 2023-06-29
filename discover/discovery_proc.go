@@ -176,7 +176,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 	}
 
 	log.Infof("found %s joined by processes%s",
-		andTasks, plural.Elements(total, "%s namespaces", nstype.Name()))
+		plural.Elements(total, "%s namespaces", nstype.Name()), andTasks)
 }
 
 type determineNamespaceFlags uint8

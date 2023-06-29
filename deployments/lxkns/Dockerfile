@@ -98,18 +98,18 @@ RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     xx-go build -v -tags osusergo,netgo \
-        -ldflags "-s -w" \
+        -ldflags "-extldflags '-static' -s -w" \
         -o /lxkns ./cmd/lxkns && \
-    xx-verify /lxkns
+    xx-verify --static /lxkns
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /lxkns
 
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     xx-go build -v -tags osusergo,netgo \
-        -ldflags "-s -w" \
+        -ldflags "-extldflags '-static' -s -w" \
         -o /mntnssandbox ./cmd/mntnssandbox && \
-    xx-verify /mntnssandbox
+    xx-verify --static /mntnssandbox
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override+ep" /mntnssandbox
 
 # 2nd stage: builds the lxkns web client react application. This is
