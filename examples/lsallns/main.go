@@ -67,7 +67,16 @@ func rowItem(ns model.Namespace) NamespaceRow {
 	if looseThreads := ns.LooseThreads(); len(looseThreads) > 0 {
 		looseThreads = slices.Clone(looseThreads)
 		slices.SortFunc(looseThreads,
-			func(task1, task2 *model.Task) bool { return task1.Starttime < task2.Starttime })
+			func(task1, task2 *model.Task) int {
+				switch v := task1.Starttime - task2.Starttime; {
+				case v > ^uint64(0)>>1:
+					return -1
+				case v == 0:
+					return 0
+				default:
+					return 1
+				}
+			})
 		task := looseThreads[0]
 		item.PID = int(task.TID)
 		item.ProcName = "[" + task.Name + "]"

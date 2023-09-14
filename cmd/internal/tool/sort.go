@@ -18,7 +18,7 @@ import "golang.org/x/exp/slices"
 
 // Sort sorts a copy of the passed slice using the specified less function and
 // returns the sorted copy.
-func Sort[E any](s []E, less func(e1, e2 E) bool) []E {
+func Sort[E any](s []E, less func(e1, e2 E) int) []E {
 	s = slices.Clone(s)
 	slices.SortFunc(s, less)
 	return s

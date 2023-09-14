@@ -15,10 +15,10 @@ jobs:
 
   buildandtest:
     name: Build and Test on Go ${{matrix.go}}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.20', '1.19' ]
+        go: [ '1.21', '1.20' ]
     steps:
       - run: |
           sudo docker version
@@ -30,20 +30,6 @@ jobs:
           go-version: ${{matrix.go}}
         id: go
 
-      - name: Set up podman and start as *cough* daemon
-        run: |
-          echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list
-          curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_unstable.gpg > /dev/null
-          sudo apt update
-          sudo apt install podman
-          sudo systemctl enable podman.socket
-          sudo systemctl start podman.socket
-
-      - name: Set up podman dev dependencies
-        run: |
-          sudo apt-get -y install \
-            build-essential pkg-config libbtrfs-dev libgpgme-dev
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
 
@@ -51,14 +37,10 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Test Go packages as root
-        run: go test -v -p 1 -tags
-          podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove
-          -exec sudo ./...
+        run: go test -v -p 1 -exec sudo ./...
 
       - name: Test Go packages as ordinary user
-        run: go test -v -p 1
-          -tags,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove
-          podman ./...
+        run: go test -v -p 1 ./...
 
   testwebapp:
     if: ${{ false }} # disable for now

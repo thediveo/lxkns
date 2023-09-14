@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export BUILDTAGS="podman,exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper,libdm_no_deferred_remove"
+export BUILDTAGS=""
 
 if ! command -v gobadge &>/dev/null; then
     export PATH="$(go env GOPATH)/bin:$PATH"

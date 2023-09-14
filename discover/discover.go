@@ -48,8 +48,15 @@ type Result struct {
 // namespaces are sorted by their namespace ids in ascending order.
 func SortNamespaces(nslist []model.Namespace) []model.Namespace {
 	newnslist := slices.Clone(nslist)
-	slices.SortFunc(newnslist, func(ns1, ns2 model.Namespace) bool {
-		return ns1.ID().Ino < ns2.ID().Ino
+	slices.SortFunc(newnslist, func(ns1, ns2 model.Namespace) int {
+		switch v := ns1.ID().Ino - ns2.ID().Ino; {
+		case v > ^uint64(0)>>1:
+			return -1
+		case v == 0:
+			return 0
+		default:
+			return 1
+		}
 	})
 	return newnslist
 }
@@ -60,8 +67,15 @@ func SortNamespaces(nslist []model.Namespace) []model.Namespace {
 // be used on hierarchical namespaces (PID, user).
 func SortChildNamespaces(nslist []model.Hierarchy) []model.Hierarchy {
 	newnslist := slices.Clone(nslist)
-	slices.SortFunc(newnslist, func(ns1, ns2 model.Hierarchy) bool {
-		return ns1.(model.Namespace).ID().Ino < ns2.(model.Namespace).ID().Ino
+	slices.SortFunc(newnslist, func(ns1, ns2 model.Hierarchy) int {
+		switch v := ns1.(model.Namespace).ID().Ino - ns2.(model.Namespace).ID().Ino; {
+		case v > ^uint64(0)>>1:
+			return -1
+		case v == 0:
+			return 0
+		default:
+			return 1
+		}
 	})
 	return newnslist
 }
@@ -72,8 +86,15 @@ func SortedNamespaces(nsmap model.NamespaceMap) []model.Namespace {
 	// Copy the namespaces from the map into a slice, so we can then sort it
 	// next.
 	nslist := maps.Values(nsmap)
-	slices.SortFunc(nslist, func(ns1, ns2 model.Namespace) bool {
-		return ns1.ID().Ino < ns2.ID().Ino
+	slices.SortFunc(nslist, func(ns1, ns2 model.Namespace) int {
+		switch v := ns1.ID().Ino - ns2.ID().Ino; {
+		case v > ^uint64(0)>>1:
+			return -1
+		case v == 0:
+			return 0
+		default:
+			return 1
+		}
 	})
 	return nslist
 }

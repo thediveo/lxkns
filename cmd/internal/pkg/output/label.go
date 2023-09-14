@@ -32,7 +32,9 @@ import (
 
 // orderProcessByPID is a less function that returns true if the PID of a first
 // process is lower than that of a second process.
-func orderProcessByPID(e1, e2 *model.Process) bool { return e1.PID < e2.PID }
+func orderProcessByPID(e1, e2 *model.Process) int {
+	return int(e1.PID) - int(e2.PID)
+}
 
 // NamespaceReferenceLabel returns a string describing a reference to the
 // specified namespace, either in form of a (leader) process name and PID, or if
@@ -104,7 +106,9 @@ func namespaceProcessLabel(ns model.Namespace, ealdorman *model.Process) string 
 // attached loose threads (tasks). In this case there is no process information
 // available and thus not rendered.
 func namespaceLooseThreadLabel(looseThreads []*model.Task) string {
-	looseThreads = tool.Sort(looseThreads, func(t1, t2 *model.Task) bool { return t1.TID < t2.TID })
+	looseThreads = tool.Sort(looseThreads, func(t1, t2 *model.Task) int {
+		return int(t1.TID) - int(t2.TID)
+	})
 	s := ""
 	for idx, task := range looseThreads {
 		if idx > 0 {

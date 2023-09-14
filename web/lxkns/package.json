@@ -1,6 +1,7 @@
 {
   "name": "lxkns",
   "version": "0.24.0",
+  "license":"Apache-2.0",
   "private": true,
   "resolutions": {
     "nth-check": "^2.0.1",
@@ -9,6 +10,7 @@
     "webpack": "^5.76.0"
   },
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@craco/craco": "^7.0.0",
     "@craco/types": "^7.0.0",
     "@emotion/react": "^11.10.5",

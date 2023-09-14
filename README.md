@@ -58,7 +58,7 @@ namespaces, as well as mount points with their hierarchies.
 The following container engine types are supported:
 - Docker,
 - plain containerd,
-- Podman (but please see the [separate instructions](podman.md)).
+- CRI Evented PLEG: containerd, CRI-O.
 
 The `lxkns` discovery engine can be operated as a stand-alone REST service with
 additional web UI. Alternatively, it can be embedded/integrated into other
