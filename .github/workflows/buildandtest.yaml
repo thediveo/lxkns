@@ -15,10 +15,10 @@ jobs:
 
   buildandtest:
     name: Build and Test on Go ${{matrix.go}}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.20', '1.19' ]
+        go: [ '1.21', '1.20' ]
     steps:
       - run: |
           sudo docker version
