@@ -19,8 +19,6 @@
   - [Kubernetes](https://kubernetes.io) pod-aware, without any need for k8s API
     access.
   - detects [Docker managed plugins](https://docs.docker.com/engine/extend/).
-  - optional [Podman](https://podman.io) support when building with the `podman`
-    build tag.
 
 - [discovers the the freezer state](cgroup) and (freezer) cgroup controller path
   information for the processes attached to namespaces (transparently supports

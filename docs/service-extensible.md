@@ -35,8 +35,7 @@ and handling of the **lxkns** CLI tools and service.
     there is nothing to watch.
   - multiple watchers can be returned in situations where there is not (just) a
     single system container engine service, but potentially multiple (per user)
-    container engine services -- such as in case of [Podman](https://podman.io)
-    (but don't you call them _dæmons_!)
+    container engine services.
 
 ### Decorators
 

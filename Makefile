@@ -7,7 +7,7 @@ GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!=
 
 # Go version to use when building the test containers; see README.md for
 # supported versions strategy.
-goversion = 1.19 1.18
+goversion = 1.21 1.20
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 
@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan systempodman systempodman-down dist
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -115,23 +115,6 @@ startapp: ## starts web UI app for development
 
 scan: ## scans the repository for CVEs
 	@scripts/scan.sh
-
-#systempodman: ## builds lxkns using podman system service
-#	$(GOGEN)
-#	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-#	sudo podman build -t lxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
-#	# podman-compose doesn't support "pid:host" which we absolutely need.
-#	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml up
-
-#systempodman-down: ## removes any deployed lxkns service
-#	sudo docker --host unix:///run/podman/podman.sock compose -p lxkns -f deployments/podman/docker-compose.yaml down
-
-#userpodman: ## builds lxkns using podman system service
-#	$(GOGEN)
-#	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
-#	podman build -t userlxkns --build-arg GIT_VERSION=$(GIT_VERSION) -f deployments/podman/Dockerfile .
-#	$(eval UID := $(shell id -u))
-#	UID=$(UID) docker --host unix:///run/user/$(UID)/podman/podman.sock compose -p userlxkns -f deployments/userpodman/docker-compose.yaml up
 
 vuln: ## run go vulnerabilities check
 	@scripts/vuln.sh

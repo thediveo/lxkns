@@ -15,9 +15,12 @@
 package tool
 
 import (
+	"strings"
+
+	"golang.org/x/exp/slices"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"golang.org/x/exp/slices"
 )
 
 var _ = Describe("sorting", func() {
@@ -25,7 +28,7 @@ var _ = Describe("sorting", func() {
 	DescribeTable("sorting a copy",
 		func(x []string, expected []string) {
 			original := slices.Clone(x)
-			actual := Sort(x, func(a, b string) bool { return a < b })
+			actual := Sort(x, strings.Compare)
 			Expect(actual).To(ConsistOf(expected), "not correctly sorted")
 			Expect(x).To(ConsistOf(original), "modified original")
 		},
