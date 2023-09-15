@@ -22,6 +22,8 @@ import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/Pod'
 import IEAppIcon from 'icons/containers/IEApp'
 
+// https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
+const TurtlefinderContainerPrefixLabelName = "turtlefinder/container/prefix"
 
 const ContainerInformation = styled('span')(({ theme }) => ({
     fontWeight: theme.typography.fontWeightLight,
@@ -34,6 +36,12 @@ const ContainerInformation = styled('span')(({ theme }) => ({
         top: '0.2ex',
         color: theme.palette.container,
     },
+}))
+
+const Turtlepath = styled('span')(({ theme }) => ({
+    fontStyle: 'normal',
+    color: theme.palette.container,
+    fontSize: '80%',
 }))
 
 const ContainerName = styled('span')(({ theme }) => ({
@@ -103,12 +111,14 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
     }
 
     const paused = container.paused && <Pause fontSize="inherit" />
+    const boxed = container.labels[TurtlefinderContainerPrefixLabelName] 
+        && <Turtlepath>[{container.labels[TurtlefinderContainerPrefixLabelName]}]:</Turtlepath>
 
     return !!container && (
         <ContainerInformation className={className}>
             <ContainerIcon fontSize="inherit" />
             {paused}
-            <ContainerName>{container.name}</ContainerName>
+            <ContainerName>{boxed}{container.name}</ContainerName>
             {groupicon && 
                 <GroupInfo>in {groupicon}<GroupName>{groupname}</GroupName></GroupInfo>
             }
