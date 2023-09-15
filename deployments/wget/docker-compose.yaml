@@ -5,6 +5,8 @@ name: lxkns
 services: 
     lxkns:
         image: ghcr.io/thediveo/lxkns
+        pull_policy: always
+        restart: 'unless-stopped'
         read_only: true
         command:
             - "/lxkns"
