@@ -12,10 +12,12 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-## Quick Start
+> **NEW:** the lxkns service the [Turtlefinder technology (Siemens
+> OSS)](https://github.com/siemens/turtlefinder) to autodetect container engines
+> even in hierarchical configurations, such as Kubernetes-in-Docker and Docker
+> Desktop on WSL2.
 
-> **NEW:** we now provide a multi-architecture Docker image for linux/amd64 and
-> linux/arm64.
+## Quick Start
 
 First, ensure that you have the Docker compose v2 plugin installed.
 
@@ -24,7 +26,7 @@ First, ensure that you have the Docker compose v2 plugin installed.
 > features completely – which absolutely makes sense in a fast moving container
 > world ... _NOT_.
 
-Then:
+Then on either an amd64 or arm64 architecture issue the following CLI command:
 
 ```bash
 wget -q -O - \

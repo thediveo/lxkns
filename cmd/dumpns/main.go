@@ -25,8 +25,8 @@ import (
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
 	"github.com/thediveo/lxkns/discover"
 )
 
@@ -34,10 +34,7 @@ import (
 // JSON formatting options into account, such as not indenting output, or using
 // tabs or a specific number of spaces for indentation.
 func dumpns(cmd *cobra.Command, _ []string) error {
-	containerizer, err := engines.Containerizer(context.Background(), cmd, true)
-	if err != nil {
-		return err
-	}
+	containerizer := turtles.Containerizer(context.Background(), cmd)
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(containerizer),
@@ -45,6 +42,7 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 		task.FromTasks(cmd),
 	)
 	var jsondata []byte
+	var err error
 	if compact, _ := cmd.PersistentFlags().GetBool("compact"); compact {
 		// Compact JSON output without spaces and newlines.
 		jsondata, err = json.Marshal(apitypes.NewDiscoveryResult(apitypes.WithResult(allns)))
