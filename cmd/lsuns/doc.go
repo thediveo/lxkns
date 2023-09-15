@@ -20,22 +20,18 @@ The following lsuns flags are available:
 	    --cgroup cgformat        control group name display; can be 'full' or 'short' (default short)
 	-c, --color color[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
 	                             or 'never' (default auto)
-	    --containerd string      containerd engine API socket path (default "/run/containerd/containerd.sock")
 	-d, --details                shows details, such as owned namespaces
-	    --docker string          Docker engine API socket path (default "unix:///var/run/docker.sock")
 	    --dump                   dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
 	-f, --filter filter          shows only selected namespace types; can be 'cgroup'/'c', 'ipc'/'i', 'mnt'/'m',
 	                             'net'/'n', 'pid'/'p', 'user'/'U', 'uts'/'u' (default [mnt,cgroup,uts,ipc,user,pid,net])
 	-h, --help                   help for lsuns
 	    --icon                   show/hide unicode icons next to namespaces
-	    --nocontainerd           do not consult a containerd engine
-	    --nodocker               do not consult a Docker engine
-	    --noengines              do not consult any container engines
 	    --proc proc[=name]       process name style; can be 'name' (default if omitted), 'basename',
 	                             or 'exe' (default name)
 	    --theme theme            colorization theme 'dark' or 'light' (default dark)
 	    --treestyle treestyle    select the tree render style; can be 'line' or 'ascii' (default line)
 	-v, --version                version for lsuns
+	    --wait duration          max duration to wait for container engine workload synchronization (default 3s)
 
 # Colorization
 

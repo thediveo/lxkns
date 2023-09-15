@@ -35,14 +35,9 @@ The following nscaps flags are available:
 	    --cgroup cgformat        control group name display; can be 'full' or 'short' (default short)
 	-c, --color color[=always]   colorize the output; can be 'always' (default if omitted), 'auto',
 	                             or 'never' (default auto)
-	    --containerd string      containerd engine API socket path (default "/run/containerd/containerd.sock")
-	    --docker string          Docker engine API socket path (default "unix:///var/run/docker.sock")
 	    --dump                   dump colorization theme to stdout (for saving to ~/.lxknsrc.yaml)
 	-h, --help                   help for nscaps
 	    --icon                   show/hide unicode icons next to namespaces
-	    --nocontainerd           do not consult a containerd engine
-	    --nodocker               do not consult a Docker engine
-	    --noengines              do not consult any container engines
 	-n, --ns string              PID namespace of PID, if not the initial PID namespace;
 	                             either an unsigned int64 value, such as "4026531836", or a
 	                             PID namespace textual representation like "pid:[4026531836]"
@@ -53,6 +48,7 @@ The following nscaps flags are available:
 	    --theme theme            colorization theme 'dark' or 'light' (default dark)
 	    --treestyle treestyle    select the tree render style; can be 'line' or 'ascii' (default line)
 	-v, --version                version for nscaps
+	    --wait duration          max duration to wait for container engine workload synchronization (default 3s)
 
 # Display
 

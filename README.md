@@ -12,10 +12,10 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-> **NEW:** the lxkns service the [Turtlefinder technology (Siemens
-> OSS)](https://github.com/siemens/turtlefinder) to autodetect container engines
-> even in hierarchical configurations, such as Kubernetes-in-Docker and Docker
-> Desktop on WSL2.
+> **NEW:** lxkns now leverages [(Siemens OSS) Turtlefinder
+> technology](https://github.com/siemens/turtlefinder) to autodetect container
+> engines even in hierarchical configurations, such as Kubernetes-in-Docker and
+> Docker Desktop on WSL2.
 
 ## Quick Start
 
@@ -29,7 +29,7 @@ First, ensure that you have the Docker compose v2 plugin installed.
 Then on either an amd64 or arm64 architecture issue the following CLI command:
 
 ```bash
-wget -q -O - \
+wget -q --no-cache -O - \
   https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
   | docker compose -f - up
 ```
@@ -88,13 +88,6 @@ frontend:
 app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 ## Notes
-
-### CLI Tools
-
-If you use the CLI tools on systems without any container engine(s) please
-consider using the `--noengines` flag to avoid unsuppressable error notices from
-the Docker client library and a delay in startup until the containerd client is
-satisfied that there isn't any containerd engine present.
 
 ### Supported Go Versions
 
