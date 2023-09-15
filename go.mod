@@ -13,7 +13,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.12.0
 	github.com/onsi/gomega v1.27.10
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/siemens/turtlefinder v1.0.0
+	github.com/siemens/turtlefinder v1.0.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/thediveo/enumflag/v2 v2.0.4
