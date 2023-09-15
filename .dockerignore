@@ -19,5 +19,6 @@ README.md
 LICENSE
 Makefile
 
+deployments/
 scripts/
 web/

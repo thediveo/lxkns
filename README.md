@@ -7,15 +7,17 @@
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 
 ![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-82.1%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-82.0%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-## Quick Start
+> **NEW:** lxkns now leverages [(Siemens OSS) Turtlefinder
+> technology](https://github.com/siemens/turtlefinder) to autodetect container
+> engines even in hierarchical configurations, such as Kubernetes-in-Docker and
+> Docker Desktop on WSL2.
 
-> **NEW:** we now provide a multi-architecture Docker image for linux/amd64 and
-> linux/arm64.
+## Quick Start
 
 First, ensure that you have the Docker compose v2 plugin installed.
 
@@ -24,10 +26,10 @@ First, ensure that you have the Docker compose v2 plugin installed.
 > features completely – which absolutely makes sense in a fast moving container
 > world ... _NOT_.
 
-Then:
+Then on either an amd64 or arm64 architecture issue the following CLI command:
 
 ```bash
-wget -q -O - \
+wget -q --no-cache -O - \
   https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
   | docker compose -f - up
 ```
@@ -86,13 +88,6 @@ frontend:
 app](https://img.youtube.com/vi/4e6_jGLM9JA/0.jpg)](https://www.youtube.com/watch?v=4e6_jGLM9JA)
 
 ## Notes
-
-### CLI Tools
-
-If you use the CLI tools on systems without any container engine(s) please
-consider using the `--noengines` flag to avoid unsuppressable error notices from
-the Docker client library and a delay in startup until the containerd client is
-satisfied that there isn't any containerd engine present.
 
 ### Supported Go Versions
 

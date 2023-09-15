@@ -24,9 +24,9 @@ import (
 	"github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -115,10 +115,10 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
-	cizer, err := engines.Containerizer(context.Background(), cmd, true)
-	if err != nil {
-		return err
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := turtles.Containerizer(ctx, cmd)
+	defer cizer.Close()
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),
