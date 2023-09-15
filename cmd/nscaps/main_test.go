@@ -37,7 +37,8 @@ var _ = Describe("renders branches", func() {
 		// otherwise cause false positives, so we take a snapshot here.
 		goodgos := Goroutines()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked(goodgos))
+			Eventually(Goroutines).Within(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})

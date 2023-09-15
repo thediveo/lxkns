@@ -42,7 +42,10 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			details, _ := cmd.PersistentFlags().GetBool("details")
 			// Run a full namespace discovery.
-			cizer := turtles.Containerizer(context.Background(), cmd)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			cizer := turtles.Containerizer(ctx, cmd)
+			defer cizer.Close()
 			allns := discover.Namespaces(
 				discover.WithStandardDiscovery(),
 				discover.WithContainerizer(cizer),

@@ -35,6 +35,7 @@ import (
 // tabs or a specific number of spaces for indentation.
 func dumpns(cmd *cobra.Command, _ []string) error {
 	containerizer := turtles.Containerizer(context.Background(), cmd)
+	defer containerizer.Close()
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(containerizer),

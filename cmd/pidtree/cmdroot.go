@@ -68,7 +68,10 @@ func newRootCmd() (rootCmd *cobra.Command) {
 
 // runPidtree executes the pidtree command.
 func runPidtree(cmd *cobra.Command, _ []string) error {
-	cizer := turtles.Containerizer(context.Background(), cmd)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := turtles.Containerizer(ctx, cmd)
+	defer cizer.Close()
 	out := cmd.OutOrStdout()
 	pid, _ := cmd.PersistentFlags().GetUint32("pid")
 	// If no PID was specified ("zero" PID), then render the usual full PID

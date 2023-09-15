@@ -43,7 +43,10 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			user, _ := cmd.PersistentFlags().GetBool("user")
 			// Run a standard namespace discovery (comprehensive, but without
 			// mount point discovery).
-			cizer := turtles.Containerizer(context.Background(), cmd)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			cizer := turtles.Containerizer(ctx, cmd)
+			defer cizer.Close()
 			allns := discover.Namespaces(
 				discover.WithStandardDiscovery(),
 				discover.WithContainerizer(cizer),

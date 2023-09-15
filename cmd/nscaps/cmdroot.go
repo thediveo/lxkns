@@ -115,7 +115,10 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		pid = model.PIDType(os.Getpid())
 	}
 	// Run a full namespace discovery and also get the PID translation map.
-	cizer := turtles.Containerizer(context.Background(), cmd)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := turtles.Containerizer(ctx, cmd)
+	defer cizer.Close()
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),

@@ -178,6 +178,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cizer := turtles.Containerizer(ctx, cmd)
+	defer cizer.Close()
 
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
