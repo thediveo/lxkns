@@ -30,7 +30,7 @@ import (
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
@@ -177,10 +177,8 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	// Create the containerizer for the specified container engines...
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cizer, err := engines.Containerizer(ctx, cmd, false)
-	if err != nil {
-		return err
-	}
+	cizer := turtles.Containerizer(ctx, cmd)
+	defer cizer.Close()
 
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")

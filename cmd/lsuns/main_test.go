@@ -44,7 +44,8 @@ var _ = Describe("renders user namespaces", func() {
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).Within(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 
@@ -77,14 +78,14 @@ read
 		defer func() { osExit = oldExit }()
 		exit := 0
 		osExit = func(code int) { exit = code }
-		os.Args = append(os.Args[:1], "--noengines", "--foobar")
+		os.Args = append(os.Args[:1], "--foobar")
 		out := getstdout.Stdouterr(main)
 		Expect(exit).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("renders just the user tree without any CLI args", func() {
-		os.Args = append(os.Args[:1], "--noengines")
+		os.Args = os.Args[:1]
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -93,7 +94,7 @@ read
 	})
 
 	It("renders user tree with owned namespaces with CLI -d", func() {
-		os.Args = append(os.Args[:1], "--noengines", "-d")
+		os.Args = append(os.Args[:1], "-d")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -131,7 +132,7 @@ read
 		Eventually(tidch).Should(Receive(&tid))
 
 		By("discovering from processes and tasks")
-		os.Args = append(os.Args[:1], "--noengines", "-d")
+		os.Args = append(os.Args[:1], "-d")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -140,7 +141,7 @@ read
 			tid, os.Getpid())))
 
 		By("discovering from processes only")
-		os.Args = append(os.Args[:1], "--noengines", "-d", "--task=false")
+		os.Args = append(os.Args[:1], "-d", "--task=false")
 		out = getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -150,7 +151,7 @@ read
 	})
 
 	It("filters owned namespaces with CLI -f", func() {
-		os.Args = append(os.Args[:1], "--noengines", "-d", "-f=pid")
+		os.Args = append(os.Args[:1], "-d", "-f=pid")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
 			initusernsid.Ino)))
@@ -159,7 +160,7 @@ read
 [│ ]+⋄─ .*$`,
 			usernsid.Ino)))
 
-		os.Args = append(os.Args[:1], "--noengines", "-d", "-f=ipc,net,pid")
+		os.Args = append(os.Args[:1], "-d", "-f=ipc,net,pid")
 		out = getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[├└]─ user:\[%d\] process .*

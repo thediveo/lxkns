@@ -22,9 +22,9 @@ import (
 	asciitree "github.com/thediveo/go-asciitree"
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/engines"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
+	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
 	"github.com/thediveo/lxkns/discover"
 
 	_ "github.com/thediveo/lxkns/cmd/internal/pkg/debug"
@@ -43,10 +43,10 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			user, _ := cmd.PersistentFlags().GetBool("user")
 			// Run a standard namespace discovery (comprehensive, but without
 			// mount point discovery).
-			cizer, err := engines.Containerizer(context.Background(), cmd, true)
-			if err != nil {
-				return err
-			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			cizer := turtles.Containerizer(ctx, cmd)
+			defer cizer.Close()
 			allns := discover.Namespaces(
 				discover.WithStandardDiscovery(),
 				discover.WithContainerizer(cizer),
