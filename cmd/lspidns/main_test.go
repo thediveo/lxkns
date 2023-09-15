@@ -77,14 +77,14 @@ read
 		defer func() { osExit = oldExit }()
 		exit := 0
 		osExit = func(code int) { exit = code }
-		os.Args = append(os.Args[:1], "--noengines", "--foobar")
+		os.Args = append(os.Args[:1], "--foobar")
 		out := getstdout.Stdouterr(main)
 		Expect(exit).To(Equal(1))
 		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("CLI w/o args renders pid tree", func() {
-		os.Args = append(os.Args[:1], "--noengines")
+		os.Args = os.Args[:1]
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^pid:\[%d\] process .*$`,
 			initpidnsid.Ino)))
@@ -93,7 +93,7 @@ read
 	})
 
 	It("CLI w/o args renders pid tree", func() {
-		os.Args = append(os.Args[:1], "--noengines", "-u")
+		os.Args = append(os.Args[:1], "-u")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] process .*
 └─ pid:\[%d\] process .*$`,
