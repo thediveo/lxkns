@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -192,7 +193,10 @@ read # wait for test to proceed()
 		var beforeID, visitedID, afterID species.NamespaceID
 		done := make(chan struct{})
 		var locked bool
-		// Don't do the Visit on the main go routine, mate!
+		// Don't do the Visit on the main go routine, mate! And not on M0 either
+		// ;)
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
 		go func() {
 			defer close(done)
 
