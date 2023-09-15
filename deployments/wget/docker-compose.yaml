@@ -9,9 +9,6 @@ services:
         command:
             - "/lxkns"
             - "--debug"
-            - "--docker=unix:///proc/1/root/run/docker.sock"
-            - "--containerd=/proc/1/root/run/containerd/containerd.sock"
-            - "--engine-workers=8"
         ports:
             - "5010:5010"
         user: "65534"
