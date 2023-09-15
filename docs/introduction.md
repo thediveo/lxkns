@@ -41,7 +41,7 @@ instead of Debian's outdated docker.io ones).
 
 ```bash
 # I feel lucky!
-wget -q -O - \
+wget -q --no-cache -O - \
   https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
   | docker compose -f - up
 ```

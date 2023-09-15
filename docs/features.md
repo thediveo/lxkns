@@ -5,14 +5,20 @@
   arcane places](discovery), such as bind mounts and open file descriptors.
   Starting with v0.24.0+, tasks (that is, threads) are also scanned by default.
 
-- finally gives names to namespaces (sic!):
-  - derived from container names where possible,
+- finally gives _useful names_ to namespaces (sic!):
+  - derived from container names where possible ... even handling more complex
+    configurations where container engines are put into containers,
   - otherwise derived from process names or bindmount path names.
+
+- automatic container engine detection, thanks to the Siemens OSS
+  [turtlefinder](https://github.com/siemens/turtlefinder) (which leverages lxkns
+  in turn). This auto detection supports [Docker](https://docker.com) and
+  [containerd](https://containerd.io) out of the box, as well as
+  [CRI‑O](https://cri-o.io).
 
 - extensible plug-in infrastructure for container discovery and container
   information decoration (especially different types of container grouping).
-  - supports [Docker](https://docker.com) and
-    [containerd](https://containerd.io) out of the box.
+  - Docker, containerd, and CRI containers.
   - [composer](https://github.com/compose-spec/compose-spec) project-aware (such
     as [Docker compose](https://github.com/docker/compose) and
     [nerdctl](https://github.com/containerd/nerdctl)).
@@ -34,7 +40,7 @@
 - the Go API supports not only discovery, but also switching namespaces (OS
   thread switching).
 
-- tested with Go 1.18-1.19. Please note that as of v0.24.0+ Go Generics are used
+- tested with Go 1.20-1.21. Please note that as of v0.24.0+ Go Generics are used
   in some parts of the code base to reduce duplicated boilerplates.
 
 - namespace discovery can be integrated into other applications or run as a
