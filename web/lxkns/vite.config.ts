@@ -27,6 +27,11 @@ const textrTypoEnDashes = (input) => {
 
 export default defineConfig(() => {
     return {
+        server: {
+            proxy: {
+                '/api': 'http://localhost:5010',
+            },
+        },
         build: {
             outDir: 'build',
         },
