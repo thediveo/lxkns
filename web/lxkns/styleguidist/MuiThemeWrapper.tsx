@@ -12,9 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-//import { BrowserRouter as Router } from 'react-router-dom'
-import { MemoryRouter as Router } from 'react-router'
+import React, { ReactNode } from 'react'
 
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
@@ -44,7 +42,7 @@ const lightTheme = createTheme(
 )
 
 
-const MuiThemeWrapper = ({ children }) => (
+const MuiThemeWrapper = ({ children }: { children?: ReactNode }) => (
     <ThemeProvider theme={lightTheme}>
         <ScopedCssBaseline>
             {children}

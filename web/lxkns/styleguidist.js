@@ -1,8 +1,11 @@
 // Replaces the "npx styleguidist server" command in order to allow for
 // asynchronous evaluation of the styleguidist configuration.
 
-const styleguidist = require('react-styleguidist')
-const cfgfn = require('./styleguide.config.js');
+import styleguidist from 'react-styleguidist'
+import cfgfn from './styleguide.config.js'
+
+//const styleguidist = require('react-styleguidist')
+//const cfgfn = require('./styleguide.config.cjs');
 
 (async () => {
     const cfg = await cfgfn()
