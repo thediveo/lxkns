@@ -20,8 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 import Typography from '@mui/material/Typography'
-import TreeView from '@mui/lab/TreeView'
-import TreeItem from '@mui/lab/TreeItem'
+import { TreeView, TreeItem } from '@mui/x-tree-view'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
@@ -142,11 +141,11 @@ const NamespaceTreeItem = (
         .map(busybody => isProcess(busybody)
             ? controlledProcessTreeItem(busybody, namespace.type, showSystemProcesses)
             : <TreeItem
-            className="controlledtask"
-            key={busybody.tid}
-            nodeId={busybody.tid.toString()}
-            label={<TaskInfo task={busybody} />}
-        />
+                className="controlledtask"
+                key={busybody.tid}
+                nodeId={busybody.tid.toString()}
+                label={<TaskInfo task={busybody} />}
+            />
         )
         .flat()
 

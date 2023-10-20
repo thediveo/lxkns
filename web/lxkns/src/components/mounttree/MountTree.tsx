@@ -15,7 +15,7 @@
 import React from 'react'
 
 import clsx from 'clsx'
-import { TreeItem } from '@mui/lab'
+import { TreeItem } from '@mui/x-tree-view'
 import { NamespaceProcessTreeDetailComponentProps, NamespaceProcessTreeTreeDetails } from 'components/namespaceprocesstree'
 import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import { Namespace, NamespaceMap } from 'models/lxkns'

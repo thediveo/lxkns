@@ -18,7 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 import Typography from '@mui/material/Typography'
-import TreeView from '@mui/lab/TreeView'
+import { TreeView } from '@mui/x-tree-view'
 
 import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'
