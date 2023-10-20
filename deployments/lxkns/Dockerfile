@@ -15,9 +15,9 @@
 # repository's root directory.
 
 ARG ALPINE_VERSION=3.18
-ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.20.5
-ARG NODE_VERSION=16
+ARG ALPINE_PATCH=4
+ARG GO_VERSION=1.21.3
+ARG NODE_VERSION=21
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
@@ -122,10 +122,12 @@ ENV PATH /webapp/node_modules/.bin:$PATH
 # when dependencies don't change.
 COPY --from=webappsrc \
     package.json \
-    craco.config.js \
-    mdxplugins.js \
     yarn.lock \
+    .eslintrc \
     tsconfig.json \
+    tsconfig.node.json \
+    vite.config.ts \
+    index.html \
         ./
 # While not being a true production install in the original sense, this avoids
 # installing cypress and the react styleguidist which we all don't need in

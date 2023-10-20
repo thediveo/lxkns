@@ -5,6 +5,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@emotion/babel-plugin": "^11.11.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@fontsource/roboto": "^5.0.8",
@@ -12,6 +13,7 @@
     "@mdx-js/loader": "^2.2.1",
     "@mdx-js/mdx": "^2.2.1",
     "@mdx-js/react": "^2.2.1",
+    "@mdx-js/rollup": "^2.3.0",
     "@mui/icons-material": "^5.11.0",
     "@mui/lab": "^5.0.0-alpha.114",
     "@mui/material": "^5.11.3",
@@ -19,8 +21,11 @@
     "@types/mdx": "^2.0.3",
     "@types/react": "^18.2.30",
     "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^4.1.0",
     "color-rgba": "^2.4.0",
     "cypress-react-router": "^2.0.1",
+    "eslint": "^8.51.0",
+    "eslint-config-react-app": "^7.0.1",
     "jotai": "^1.12.1",
     "notistack": "^2.0.8",
     "react": "^18.2.0",
@@ -38,7 +43,11 @@
     "typographic-ellipses": "^1.0.11",
     "typographic-em-dashes": "^1.0.2",
     "typographic-en-dashes": "^1.0.1",
-    "typographic-quotes": "^2.0.1"
+    "typographic-quotes": "^2.0.1",
+    "vite": "^4.5.0",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-svgr": "^4.1.0",
+    "vite-tsconfig-paths": "^4.2.1"
   },
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite --port 3300",
@@ -64,20 +73,11 @@
     ]
   },
   "devDependencies": {
-    "@emotion/babel-plugin": "^11.11.0",
-    "@mdx-js/rollup": "^2.3.0",
     "@types/react-dom": "^18.2.14",
-    "@vitejs/plugin-react": "^4.1.0",
-    "eslint": "^8.51.0",
-    "eslint-config-react-app": "^7.0.1",
     "p-defer": "^4.0.0",
     "p-defer-es5": "^2.0.1",
     "react-docgen-typescript": "^2.2.2",
     "react-styleguidist": "^13.0.0",
-    "svgo": "^3.0.0",
-    "vite": "^4.5.0",
-    "vite-plugin-eslint": "^1.8.1",
-    "vite-plugin-svgr": "^4.1.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "svgo": "^3.0.0"
   }
 }
