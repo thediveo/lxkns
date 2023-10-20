@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist grype
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -118,3 +118,6 @@ scan: ## scans the repository for CVEs
 
 vuln: ## run go vulnerabilities check
 	@scripts/vuln.sh
+
+grype: ## run grype vul scan on sources
+	@scripts/grype.sh
