@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import flat from 'core-js/features/array/flat'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -26,19 +25,11 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
 
-// HACK: for reasons yet unknown to mankind, the usual direct import of
-// 'core-js/features/array/flat' doesn't correctly fix missing Array.flat() on
-// some browsers; however, a non-polluting import with explicit pollution then
-// works. 
-if (Array.flat === undefined) {
-	Array.flat = flat
-}
-
 // Allow development version to temporarily drop strict mode in order to see
 // performance without strict-mode double rendering.
-const container = document.getElementById('root');
+const container = document.getElementById('root')!;
 createRoot(container).render(
-	process.env.REACT_APP_UNSTRICT
+	import.meta.env.REACT_APP_UNSTRICT
 		? <App />
 		: <React.StrictMode><App /></React.StrictMode>
 );
