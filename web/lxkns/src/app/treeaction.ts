@@ -15,7 +15,7 @@ export interface Action {
 // previous action by mutation.
 const actionReducer = (prev: Action, action: Action): Action => ({
     action: action.action,
-    mutation: (prev.mutation + 1) & 0x0f // who'll ever need more than 4 bits?!
+    mutation: ((prev.mutation || 0) + 1) & 0x0f // who'll ever need more than 4 bits?!
 })
 
 export type ActionSetter = (newaction: string) => void

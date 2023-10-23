@@ -119,13 +119,13 @@ export const fromjson = (discoverydata: any): Discovery => {
 
         // Resolve the attached namespaces relationships...
         for (const [type, nsref] of Object.entries(proc.namespaces)) {
-            proc.namespaces[type] = discovery.namespaces[nsref]
+            proc.namespaces[type] = discovery.namespaces[nsref as unknown as keyof Namespace]
         }
         // ...and now for the namespaces the tasks of this process are attached
         // to.
         proc.tasks && proc.tasks.forEach(task => {
             for (const [type, nsref] of Object.entries(task.namespaces)) {
-                task.namespaces[type] = discovery.namespaces[nsref]
+                task.namespaces[type] = discovery.namespaces[nsref as unknown as keyof Namespace]
                 task.process = proc
             }
             // while we're at it, build the map of all tasks.
@@ -135,8 +135,8 @@ export const fromjson = (discoverydata: any): Discovery => {
 
     // Literally resolve the loose threads...
     Object.values(discovery.namespaces).forEach(ns => {
-        ns.loosethreads = ns['loose-threads']
-            ? ns['loose-threads'].map(tid => alltasks[(tid as unknown as Number).toString()])
+        ns.loosethreads = (ns as any)['loose-threads']
+            ? (ns as any)['loose-threads'].map((tid: number) => alltasks[(tid as unknown as Number).toString()])
             : []
     })
 
@@ -144,8 +144,8 @@ export const fromjson = (discoverydata: any): Discovery => {
     if (discovery.processes[1] && discovery.processes[2]) {
         // At least someone has put some effort into fooling us...
         Object.values(discovery.processes[1].namespaces).forEach(
-            (ns: Namespace) => {
-                if (ns.nsid in discovery.namespaces) {
+            (ns: Namespace | null) => {
+                if (ns && ns.nsid in discovery.namespaces) {
                     discovery.namespaces[ns.nsid].initial = true
                 }
             }

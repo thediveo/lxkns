@@ -133,7 +133,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
     const [refreshing, setRefreshing] = useAtom(discoveryRefreshingAtom)
 
     // Used for popping up the interval menu.
-    const [anchorEl, setAnchorEl] = useState(null)
+    const [anchorEl, setAnchorEl] = useState<EventTarget & HTMLElement>()
 
     // Create the final list of interval values and labels, based on what we
     // were given, or rather, no given.
@@ -144,19 +144,19 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         } as RefresherInterval))
 
     // User clicks on the auto-refresh button to pop up the associated menu.
-    const handleIntervalButtonClick = (event) => {
+    const handleIntervalButtonClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget)
     };
 
     // User selects an auto-refresh interval menu item.
     const handleIntervalMenuChange = (interval: RefresherInterval) => {
-        setAnchorEl(null)
+        setAnchorEl(undefined)
         console.log("setting auto-refresh to:", interval.label)
         setRefreshInterval(interval.interval)
     };
 
     // User clicks outside the popped up interval menu.
-    const handleIntervalMenuClose = () => setAnchorEl(null);
+    const handleIntervalMenuClose = () => setAnchorEl(undefined);
 
     const intervalTitle = refreshInterval !== null
         ? "auto-refresh interval " + intervalToLabel(refreshInterval)

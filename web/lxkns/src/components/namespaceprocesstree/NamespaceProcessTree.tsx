@@ -82,7 +82,7 @@ const findNamespaceProcesses = (namespace: Namespace) =>
  * @param nstype type of namespace confining the search for further
  * sub-processes still considered to be confined in the same namespace.
  */
-const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSystemProcesses: boolean) => {
+const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSystemProcesses: boolean): JSX.Element | JSX.Element[] => {
 
     const children = findSubProcesses(proc, nstype)
         .sort(compareProcessByNameId)
@@ -91,8 +91,8 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
 
     // Special case: this is the only leader process in the namespace and there
     // are no (further) sub-processes with different controllers.
-    const hideMe = proc.namespaces[nstype].leaders.length === 1 &&
-        proc === proc.namespaces[nstype].ealdorman
+    const hideMe = proc.namespaces[nstype]?.leaders.length === 1 &&
+        proc === proc.namespaces[nstype]?.ealdorman
 
     return (
         (!hideMe && showProcess(proc, showSystemProcesses) &&
@@ -151,7 +151,7 @@ const NamespaceTreeItem = (
 
     // In case of hierarchical namespaces also render the child namespaces.
     const childnamespaces = namespace.children ?
-        namespace.children.map(childns => NamespaceTreeItem(childns, processes, showSystemProcesses, null)) : []
+        namespace.children.map(childns => NamespaceTreeItem(childns, processes, showSystemProcesses, undefined)) : []
 
     return <TreeItem
         className="namespace"
@@ -178,12 +178,12 @@ export interface NamespaceProcessTreeDetailComponentProps {
  * Factory for returning components to render the details of a particular
  * namespace.
  */
-export type NamespaceProcessTreeDetailFactory = React.FunctionComponentFactory<NamespaceProcessTreeDetailComponentProps>
+export type NamespaceProcessTreeDetailFactory = (props: NamespaceProcessTreeDetailComponentProps) => JSX.Element
 
 export interface NamespaceProcessTreeTreeDetails {
     factory: NamespaceProcessTreeDetailFactory
-    collapseAll: (namespaces: NamespaceMap) => string[]
-    expandAll: (namespaces: NamespaceMap) => string[]
+    collapseAll?: (namespaces: NamespaceMap) => string[]
+    expandAll?: (namespaces: NamespaceMap) => string[]
 }
 
 export interface NamespaceProcessTreeProps {
@@ -223,8 +223,8 @@ export const NamespaceProcessTree = ({
     // Tree node expansion is a component-local state. We need to also use a
     // reference to the really current expansion state as for yet unknown
     // reasons setExpanded() will pass stale state information to its reducer.
-    const [expanded, setExpanded] = useState([])
-    const currExpanded = useRef([])
+    const [expanded, setExpanded] = useState([] as string[])
+    const currExpanded = useRef([] as string[])
 
     // Remember the current tree node expansion state in order to be able to
     // later determine how to correctly deal with discovery updates and node
@@ -248,7 +248,7 @@ export const NamespaceProcessTree = ({
                     .map(proc => proc.pid.toString())
                 setExpanded(allnsids.concat(
                     allprocids,
-                    details.expandAll ? details.expandAll(discovery.namespaces) : []))
+                    details?.expandAll ? details.expandAll(discovery.namespaces) : []))
                 break
             case COLLAPSEALL:
                 // collapse everything except for the root namespaces.
@@ -256,7 +256,7 @@ export const NamespaceProcessTree = ({
                     .filter(ns => ns.type === nstype && ns.parent == null)
                     .map(ns => ns.nsid.toString())
                 setExpanded(allrootnsids.concat(
-                    details.collapseAll ? details.collapseAll(discovery.namespaces) : []))
+                    details?.collapseAll ? details.collapseAll(discovery.namespaces) : []))
                 break
         }
     }, [action, nstype, discovery, details])
@@ -279,11 +279,11 @@ export const NamespaceProcessTree = ({
         // state lateron. First, we select a suitable filter depending on the
         // type of namespaces to be rendered and the setting for expanding
         // "top-level" namespace nodes.
-        const expansionCandidateFilter: (ns: Namespace) => boolean
-            = expandInitially
-                ? (ns: Namespace) => ns.type === nstype
+        const expansionCandidateFilter: (ns: Namespace) => boolean =
+            expandInitially
+                ? (ns: Namespace) => (ns.type === nstype)
                 : ((nstype === 'user' || nstype === 'pid')
-                    ? (ns: Namespace) => (ns.type === nstype && ns.initial)
+                    ? (ns: Namespace) => (ns.type === nstype && (ns.initial || false))
                     : (ns: Namespace) => (ns.type === nstype))
         const expandingNamespaces = Object.values(discovery.namespaces)
             .filter(expansionCandidateFilter)
@@ -300,7 +300,7 @@ export const NamespaceProcessTree = ({
     // update the tree's expand state accordingly. This allows us to explicitly
     // "take back control" (ha ... hah ... HAHAHAHA!!!) of the expansion state
     // of the tree.
-    const handleToggle = (event, nodeIds) => {
+    const handleToggle = (event: any, nodeIds: string[]) => {
         setExpanded(nodeIds)
     }
 
@@ -311,7 +311,7 @@ export const NamespaceProcessTree = ({
         Object.values(discovery.namespaces)
             .filter(ns => ns.type === nstype && ns.parent == null)
             .sort(compareNamespaceById)
-            .map(ns => NamespaceTreeItem(ns, discovery.processes, showSystemProcesses, details ? details.factory : null))
+            .map(ns => NamespaceTreeItem(ns, discovery.processes, showSystemProcesses, (details && details.factory) || undefined))
     ), [discovery, showSystemProcesses, nstype, details])
 
     return (

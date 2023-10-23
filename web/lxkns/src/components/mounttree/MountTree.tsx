@@ -105,7 +105,7 @@ const PropagationMode = styled(MountPointPath)(({ theme }) => ({
 
 // Reduce function returning the sum of all mount points in for this mount path
 // as well as for all its child mount paths.
-const countMounts = (sum: number, mp: MountPath) =>
+const countMounts = (sum: number, mp: MountPath): number =>
     mp.mounts.length + mp.children.reduce(countMounts, sum)
 
 // Calculate the sum of all mount points in all child mount paths of this mount
@@ -146,7 +146,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 
     const handleMore = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation()
-        setMountpoint(mountpoint)
+        if (!!setMountpoint) setMountpoint(mountpoint)
     }
 
     return (
@@ -266,13 +266,13 @@ export interface MountTreeProps extends NamespaceProcessTreeDetailComponentProps
  * Renders the tree of all mount paths with its mount points from the specified
  * mount namespace.
  */
-export const MountTree = ({ namespace }: MountTreeProps) => {
+export const MountTree = ({ namespace }: NamespaceProcessTreeDetailComponentProps) => {
     return namespace.mountpaths
         ? <MountPathTreeItem
             namespace={namespace}
             mountpath={namespace.mountpaths['/']}
             parentpath="" />
-        : null
+        : <></>
 }
 
 /**
@@ -300,5 +300,5 @@ const expandAll = (namespaces: NamespaceMap) => Object.values(namespaces)
 export const MountTreeDetailer: NamespaceProcessTreeTreeDetails = {
     factory: MountTree,
     expandAll: expandAll,
-    collapseAll: null,
+    collapseAll: undefined,
 }

@@ -91,6 +91,7 @@ export const isPassive = (ns: Namespace) =>
  * namespaces).
  */
 export interface NamespaceSet {
+    [key: string]: (Namespace | null)
     cgroup: Namespace
     ipc: Namespace
     mnt: Namespace
@@ -98,7 +99,7 @@ export interface NamespaceSet {
     pid: Namespace
     user: Namespace
     uts: Namespace
-    time: Namespace | null
+    time: (Namespace | null)
 }
 
 /** Map namespace IDs (inode numbers only) to Namespace objects. */
