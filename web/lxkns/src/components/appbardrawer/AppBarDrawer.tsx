@@ -55,7 +55,7 @@ const SwappyDrawer = styled(SwipeableDrawer)<SwipeableDrawerStyleProps>(({ theme
     },
 
     '& .MuiListSubheader-root': {
-        background: theme.palette.background.paper,
+        background: theme?.palette.background.paper,
     },
 }))
 

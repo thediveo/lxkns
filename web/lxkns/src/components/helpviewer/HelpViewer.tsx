@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { MouseEvent, ReactNode } from 'react'
+import React, { MouseEvent, ReactNode, useRef, useState } from 'react'
 import { useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
@@ -20,6 +20,7 @@ import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } fro
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
+import { MDXContent } from 'mdx/types';
 
 const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
@@ -210,16 +211,16 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
 
 
     // Anchor state for the ToC navigation popup menu.
-    const [tocOpen, setTocOpen] = React.useState(false)
-    const anchorEl = React.useRef()
+    const [tocOpen, setTocOpen] = useState(false)
+    const anchorEl = useRef<HTMLButtonElement>(null) // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/35572#issuecomment-498242139
 
     // Pop up the table of contents menu...
-    const handleIconClick = (event: MouseEvent) => {
+    const handleIconClick = (event: MouseEvent<HTMLElement>) => {
         setTocOpen(true)
     }
 
     // close popup menu, change route...
-    const handleMenuItemClick = (event: Event, index: number) => {
+    const handleMenuItemClick = (event: MouseEvent<HTMLElement>, index: number) => {
         navigate(`${baseroute || '/'}/${slugify(chapters[index])}`)
         setTocOpen(false)
     }
@@ -246,7 +247,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         </Tooltip>
         <Menu
             id="help-viewer-menu"
-            anchorEl={anchorEl}
+            anchorEl={anchorEl.current}
             keepMounted
             open={tocOpen}
             onClose={handleClose}
@@ -255,7 +256,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 <MenuItem
                     key={index}
                     selected={index === currentChapterIndex}
-                    onClick={(event) => handleMenuItemClick(event, index)}
+                    onClick={(event: MouseEvent<HTMLElement>) => handleMenuItemClick(event, index)}
                 >
                     {chapter.title}
                 </MenuItem>
@@ -264,7 +265,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         <Padding>
             <Markdowner
                 as={markdowner || MuiMarkdown}
-                mdx={chapters[currentChapterIndex].chapter}
+                mdx={chapters[currentChapterIndex].chapter as MDXContent}
                 fallback={
                     <Box sx={{ marginTop: '-24px' }} m={1}>
                         <ChapterSkeleton sx={{width: '15rem'}}/>

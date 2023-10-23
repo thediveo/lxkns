@@ -53,7 +53,7 @@ const Contents = styled(DialogContent)(({ theme }) => ({
 
 
 const MountpointInfoModalContext = React.createContext<
-    null | React.Dispatch<React.SetStateAction<MountPoint>>>(null)
+    undefined | React.Dispatch<React.SetStateAction<MountPoint|undefined>>>(undefined)
 
 
 export interface MountpointInfoModalProviderProps {
@@ -76,10 +76,10 @@ export const MountpointInfoModalProvider = ({
     children,
     namespaces
 }: MountpointInfoModalProviderProps) => {
-    const [mountpoint, setMountpoint] = useState(null as MountPoint)
+    const [mountpoint, setMountpoint] = useState<MountPoint>()
 
     const handleClose = () => {
-        setMountpoint(null)
+        setMountpoint(undefined)
     }
 
     return (
