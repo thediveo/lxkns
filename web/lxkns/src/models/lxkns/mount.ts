@@ -176,7 +176,7 @@ export const insertCommonChildPrefixMountPaths = (mountpath: MountPath) => {
                 path: base + starter,
                 children: childmountpaths,
                 mounts: [],
-            } as MountPath
+            } as unknown as MountPath
             childmountpaths.forEach(childmountpath => {
                 childmountpath.parent = newparent
                 const idx = mountpath.children.indexOf(childmountpath)

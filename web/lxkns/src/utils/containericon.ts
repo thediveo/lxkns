@@ -12,6 +12,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { SvgIconProps } from '@mui/material';
+
+
 import ContainerIcon from 'icons/containers/Container'
 import DockerIcon from 'icons/containers/Docker'
 import ContainerdIcon from 'icons/containers/Containerd'
@@ -25,7 +28,7 @@ import { Container } from 'models/lxkns'
 import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
 //import ComposerProjectIcon from 'icons/containers/ComposerProject'
 
-const ContainerTypeIcons = {
+const ContainerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'unknowntype': ContainerIcon,
     'docker.com': DockerIcon,
     'plugin.docker.com': DockerManagedPluginIcon,
@@ -46,7 +49,7 @@ const PodTypeIcons = {
  *
  * @param container container object.
  */
- export const ContainerTypeIcon = (container: Container) => {
+export const ContainerTypeIcon = (container: Container) => {
     // Now try to find a suitable container-flavor icon, or fall back to our
     // generic one.
     return ContainerTypeIcons[container.flavor] || ContainerIcon
