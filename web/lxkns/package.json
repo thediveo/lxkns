@@ -24,7 +24,7 @@
     "@vitejs/plugin-react": "^4.1.0",
     "color-rgba": "^2.4.0",
     "cypress-react-router": "^2.0.1",
-    "eslint": "^8.51.0",
+    "eslint": "^8.53.0",
     "eslint-config-react-app": "^7.0.1",
     "jotai": "^1.12.1",
     "notistack": "^2.0.8",
@@ -37,7 +37,6 @@
     "remark-gfm": "^3.0.1",
     "remark-images": "^3.1.0",
     "remark-textr": "^5.0.1",
-    "typescript": "^5.2.2",
     "typographic-apostrophes": "^1.1.1",
     "typographic-apostrophes-for-possessive-plurals": "^1.0.5",
     "typographic-ellipses": "^1.0.11",
@@ -73,18 +72,14 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/preset-env": "^7.23.2",
-    "@babel/preset-react": "^7.22.15",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/react-dom": "^18.2.14",
-    "babel-loader": "^9.1.3",
+    "@typescript-eslint/parser": "^6.10.0",
     "lodash": "^4.17.21",
     "p-defer": "^4.0.0",
     "p-defer-es5": "^2.0.1",
-    "react-docgen-typescript": "^2.2.2",
-    "react-styleguidist": "^13.0.0",
     "style-loader": "^3.3.3",
     "svgo": "^3.0.0",
-    "ts-loader": "^9.5.0"
+    "typescript": "^5.2.2"
   }
 }
