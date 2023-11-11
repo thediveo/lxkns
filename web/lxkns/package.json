@@ -51,13 +51,12 @@
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite --port 3300",
     "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite build",
-    "build:dev": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite build --profile",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION vite build",
     "icons": "node genicons",
     "cypress": "NODE_ENV=test cypress open",
     "cypress:run": "NODE_ENV=test cypress run",
-    "styleguide": "REACT_APP_GIT_VERSION=$(git describe) npx styleguidist server",
-    "styleguide:build": "REACT_APP_GIT_VERSION=$(git describe) npx styleguidist build"
+    "storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook dev -p 6006",
+    "build-storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook build"
   },
   "browserslist": {
     "production": [
@@ -73,13 +72,29 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@storybook/addon-essentials": "^7.5.3",
+    "@storybook/addon-interactions": "^7.5.3",
+    "@storybook/addon-links": "^7.5.3",
+    "@storybook/addon-onboarding": "^1.0.8",
+    "@storybook/blocks": "^7.5.3",
+    "@storybook/builder-vite": "^7.5.3",
+    "@storybook/react": "^7.5.3",
+    "@storybook/react-vite": "^7.5.3",
+    "@storybook/testing-library": "^0.2.2",
     "@types/react-dom": "^18.2.14",
     "@typescript-eslint/parser": "^6.10.0",
+    "eslint-plugin-storybook": "^0.6.15",
     "lodash": "^4.17.21",
     "p-defer": "^4.0.0",
     "p-defer-es5": "^2.0.1",
+    "storybook": "^7.5.3",
     "style-loader": "^3.3.3",
     "svgo": "^3.0.0",
     "typescript": "^5.2.2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "plugin:storybook/recommended"
+    ]
   }
 }

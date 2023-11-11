@@ -12,8 +12,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { ExtLink } from 'components/extlink'
 import React from 'react'
+
+import { ExtLink } from 'components/extlink'
 import { Link } from 'react-router-dom'
 
 

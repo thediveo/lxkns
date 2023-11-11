@@ -71,7 +71,9 @@ export default defineConfig(() => {
                     ],
                 },
             }),
-            eslint(),
+            eslint({
+                exclude: ['/virtual:/**', 'node_modules/**'],
+            }),
             viteTsconfigPaths(),
             svgr({
                 svgrOptions: {
