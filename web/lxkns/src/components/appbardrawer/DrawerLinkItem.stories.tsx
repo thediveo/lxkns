@@ -14,28 +14,40 @@
 
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { SmartA } from './SmartA'
+import HomeIcon from '@mui/icons-material/Home'
 
-const meta: Meta<typeof SmartA> = {
-    title: 'Universal/SmartA',
-    component: SmartA,
+import { DrawerLinkItem } from './DrawerLinkItem'
+
+const meta: Meta<typeof DrawerLinkItem> = {
+    title: 'Universal/DrawerLinkItem',
+    component: DrawerLinkItem,
     tags: ['autodocs'],
 }
 
 export default meta
 
-type Story = StoryObj<typeof SmartA>
+type Story = StoryObj<typeof DrawerLinkItem>
 
-export const External: Story = {
+export const Basic: Story = {
     args: {
-        href: 'https://github.com/thediveo/lxkns',
-        children: '@thediveo/lxkns',
+        label: 'Foo',
+        path: '/foo',
     },
 }
 
-export const Internal: Story = {
+export const Icon: Story = {
     args: {
-        href: '/internal',
-        children: 'an app-internal route',
+        label: 'Home',
+        icon: <HomeIcon/>,
+        path: '/home',
+    },
+}
+
+export const Avatar: Story = {
+    args: {
+        label: 'Home',
+        icon: <HomeIcon/>,
+        path: '/home',
+        avatar: true,
     },
 }

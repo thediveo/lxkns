@@ -14,28 +14,29 @@
 
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { SmartA } from './SmartA'
+import { ExtLink } from './ExtLink'
 
-const meta: Meta<typeof SmartA> = {
-    title: 'Universal/SmartA',
-    component: SmartA,
+const meta: Meta<typeof ExtLink> = {
+    title: 'Universal/ExtLink',
+    component: ExtLink,
     tags: ['autodocs'],
 }
 
 export default meta
 
-type Story = StoryObj<typeof SmartA>
+type Story = StoryObj<typeof ExtLink>
 
-export const External: Story = {
+export const Standard: Story = {
     args: {
         href: 'https://github.com/thediveo/lxkns',
         children: '@thediveo/lxkns',
     },
 }
 
-export const Internal: Story = {
+export const After: Story = {
     args: {
-        href: '/internal',
-        children: 'an app-internal route',
+        iconposition: 'after',
+        href: 'https://github.com/thediveo/lxkns',
+        children: '@thediveo/lxkns',
     },
 }

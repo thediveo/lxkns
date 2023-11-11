@@ -97,26 +97,30 @@ export interface AppBarDrawerProps {
 }
 
 /**
- * `AppBarDrawer` provides not only an application bar ("app bar") with title
- * and optional action buttons in the bar, but also a navigation drawer.
+ * `AppBarDrawer` provides an application bar ("app bar") with a navigation
+ * drawer. The app bar comes with title and optional action buttons.
  *
  * The navigation drawer can be opened by swiping from the left side or by
- * clicking/tapping on the drawer icon (☰) to the left of the app bar. It can
- * be closed either by swiping to the left or clicking on the close (<) button
- * in the drawer. The drawer close button is automatically added. The
- * navigation drawer takes arbitrary content, yet you typically will want to
- * fill it with [`DrawerLinkItem`](#DrawerLinkItem)s.
+ * clicking/tapping on the drawer icon (☰) to the left of the app bar. It can be
+ * closed either by swiping to the left or clicking on the close (<) button in
+ * the drawer. The drawer close button is automatically added. The navigation
+ * drawer takes arbitrary content, yet you typically will want to fill it with
+ * [`DrawerLinkItem`](#DrawerLinkItem)s.
  *
  * Please note that the `drawer=` property expects a function rendering the
  * drawer contents on request; it gets passed a `closeDrawer` handler argument
- * which should called as an event handler to close the drawer when clicking
- * on navigation buttons, et cetera. Please see the example for usage.
+ * which should called as an event handler to close the drawer when clicking on
+ * navigation buttons, et cetera. Please see the example for usage.
  *
  * When using
- * [IconButton](https://material-ui.com/api/icon-button/#iconbutton-api) as
- * app bar action buttons don't forget to set `color="inherit"` on the icon
- * button: the icons then will take on the appropriate appbar foreground color
- * (usually as opposed to the default primary color).
+ * [IconButton](https://material-ui.com/api/icon-button/#iconbutton-api) as app
+ * bar action buttons don't forget to set `color="inherit"` on the icon button:
+ * the icons then will take on the appropriate appbar foreground color (usually
+ * as opposed to the default primary color).
+ * 
+ * **IMPORTANT:** `AppBarDrawer` must be directly or indirectly enclosed inside
+ * a [`(Browser)Router`](https://reactrouter.com/web/api/BrowserRouter)
+ * component.
  *
  * This component is licensed under the [Apache License, Version
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).

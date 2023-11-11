@@ -23,13 +23,13 @@ import { ProcessName } from 'components/processinfo'
 import CgroupInfo from 'components/cgroupinfo'
 
 
-const piShort = "short-taskinfo"
+const tiShort = "short-taskinfo"
 
 const TaskInformation = styled('span')(({ theme }) => ({
     fontWeight: theme.typography.fontWeightLight,
     display: 'inline-block',
     whiteSpace: 'nowrap',
-    '& .MuiSvgIcon-root': {
+    '& > .MuiSvgIcon-root': {
         marginRight: '0.15em',
         verticalAlign: 'text-top',
         position: 'relative',
@@ -39,7 +39,7 @@ const TaskInformation = styled('span')(({ theme }) => ({
     '& .init1': {
         color: theme.palette.init1,
     },
-    [`&.${piShort} *`]: {
+    [`&.${tiShort},&.${tiShort} *`]: {
         color: theme.palette.text.disabled,
     }
 }))
@@ -69,7 +69,13 @@ const TaskName = styled('span')(({ theme }) => ({
 export interface TaskInfoProps {
     /** information about a discovered Linux task (thread). */
     task: Task
-    /** render only process name with PID and nothing else */
+    /** 
+     * render only task name with TID and process name with PID, but nothing
+     * else, and no cgroup and container information. The short format will also
+     * use muted gray instead of different colors that otherwise differentiate
+     * the individual information about the thread, its process, container, and
+     * cgroup.
+     */
     short?: boolean
     /** optional CSS class name(s). */
     className?: string
@@ -79,11 +85,10 @@ export interface TaskInfoProps {
  * The `TaskInfo` component renders only (almost) minimal information about a
  * single Linux task to make it easily identifyable:
  *
+ * - TID and thread name.
  * - if associated with a container: container information (name, group).
- * 
- * - name of the process, which is has been either set by the process itself, or
- *   has been derived from the process' command line.
- * - PID.
+ * - process name and PID, which is has been either set by the process itself,
+ *   or has been derived from the process' command line.
  * - cgroup path, if path is not empty.
  * - pause indication if process is freezing or has been frozen.
  *
@@ -96,7 +101,7 @@ export const TaskInfo = ({ task, short, className }: TaskInfoProps) => {
     const process = task && task.process
 
     return !!task && (
-        <TaskInformation className={clsx(className, short && piShort)}>
+        <TaskInformation className={clsx(className, short && tiShort)}>
             <ThreadIcon fontSize="inherit" />
             <Tooltip title="task"><>
                 <TaskName>{task.name}</TaskName>
