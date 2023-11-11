@@ -18,6 +18,7 @@ import { SmartA } from './SmartA'
 
 const meta: Meta<typeof SmartA> = {
     component: SmartA,
+    tags: ['autodocs'],
 }
 
 export default meta
@@ -33,7 +34,7 @@ export const External: Story = {
 
 export const Internal: Story = {
     args: {
-        href: '/otherroute',
-        children: 'another route',
+        href: '/internal',
+        children: 'an app-internal route',
     },
 }

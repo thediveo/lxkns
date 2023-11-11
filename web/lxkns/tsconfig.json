@@ -25,7 +25,8 @@
     ]
   },
   "include": [
-    "src",
+    "src/**/*",
+    ".storybook/*",
   ],
   "references": [
     {

@@ -14,7 +14,6 @@
 
 import React from 'react'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
-import { CypressHistorySupport } from 'cypress-react-router'
 
 import { SnackbarProvider } from 'notistack'
 
@@ -285,7 +284,6 @@ const ThemedApp = () => {
 const App = () => (
     <StateProvider>
         <Router basename={basename}>
-            <CypressHistorySupport />
             <ThemedApp />
         </Router>
     </StateProvider>
