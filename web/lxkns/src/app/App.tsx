@@ -279,8 +279,7 @@ const ThemedApp = () => {
 
 // Finally, the exported App component wraps the themed app component into a
 // Jotai state provider, to keep state provision and app theme switching
-// separated. And we also place the router high up here, so we can get the
-// history object in the ThemedApp for passing it to Cypress, if present.
+// separated. And we also place the router high up here.
 const App = () => (
     <StateProvider>
         <Router basename={basename}>

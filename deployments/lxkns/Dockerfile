@@ -130,8 +130,7 @@ COPY --from=webappsrc \
     index.html \
         ./
 # While not being a true production install in the original sense, this avoids
-# installing cypress and the react styleguidist which we all don't need in
-# creating the production build.
+# installing storybook which we all don't need in creating the production build.
 RUN yarn install --production --network-timeout 1000000000
 # Now build the production-optimized web app.
 COPY --from=webappsrc public/ ./public/

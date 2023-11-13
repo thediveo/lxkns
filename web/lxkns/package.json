@@ -23,7 +23,6 @@
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.1.0",
     "color-rgba": "^2.4.0",
-    "cypress-react-router": "^2.0.1",
     "eslint": "^8.53.0",
     "eslint-config-react-app": "^7.0.1",
     "jotai": "^1.12.1",
@@ -48,13 +47,14 @@
     "vite-plugin-svgr": "^4.1.0",
     "vite-tsconfig-paths": "^4.2.1"
   },
+  "resolutions": {
+    "jackspeak": "2.1.1"
+  },
   "scripts": {
     "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite --port 3300",
     "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite build",
     "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION vite build",
     "icons": "node genicons",
-    "cypress": "NODE_ENV=test cypress open",
-    "cypress:run": "NODE_ENV=test cypress run",
     "storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook dev -p 6006",
     "build-storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook build"
   },
@@ -75,7 +75,6 @@
     "@storybook/addon-essentials": "^7.5.3",
     "@storybook/addon-interactions": "^7.5.3",
     "@storybook/addon-links": "^7.5.3",
-    "@storybook/addon-onboarding": "^1.0.8",
     "@storybook/blocks": "^7.5.3",
     "@storybook/builder-vite": "^7.5.3",
     "@storybook/react": "^7.5.3",
