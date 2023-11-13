@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { atom } from 'jotai'
+import { atom, Getter, Setter } from 'jotai'
 
 
 /**
@@ -75,9 +75,9 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
 export const localStorageAtom = <T>(storageKey: string, defaultValue: T) => {
     const storageAtom = atom(
         initialAtomValue(storageKey, defaultValue),
-        (_get, set, update) => {
-            set(storageAtom, update)
-            localStorage.setItem(storageKey, JSON.stringify(update))
+        (_get: Getter, set: Setter, arg: T) => {
+            set(storageAtom, arg)
+            localStorage.setItem(storageKey, JSON.stringify(arg))
         }
     )
     return storageAtom

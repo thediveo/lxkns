@@ -118,6 +118,7 @@ RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
+RUN yarn set version berry
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
 COPY --from=webappsrc \

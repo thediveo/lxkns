@@ -20,7 +20,7 @@ const config: StorybookConfig = {
         options: {},
     },
     stories: [
-        '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+        '../src/**/*.stories.@(js|jsx|ts|tsx)',
         '../src/**/*.sb.mdx',
     ],
     addons: [
