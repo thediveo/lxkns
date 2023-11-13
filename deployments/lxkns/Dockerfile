@@ -15,9 +15,9 @@
 # repository's root directory.
 
 ARG ALPINE_VERSION=3.18
-ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.20.5
-ARG NODE_VERSION=16
+ARG ALPINE_PATCH=4
+ARG GO_VERSION=1.21.3
+ARG NODE_VERSION=21
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
@@ -118,24 +118,29 @@ RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
+RUN yarn set version berry
+RUN yarn config set nodeLinker node-modules
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
 COPY --from=webappsrc \
     package.json \
-    craco.config.js \
-    mdxplugins.js \
     yarn.lock \
+    .eslintrc \
     tsconfig.json \
+    tsconfig.node.json \
+    vite.config.ts \
+    index.html \
         ./
 # While not being a true production install in the original sense, this avoids
-# installing cypress and the react styleguidist which we all don't need in
-# creating the production build.
-RUN yarn install --production --network-timeout 1000000000
+# installing storybook which we all don't need in creating the production build.
+RUN yarn workspaces focus --production
+RUN yarn eslint --init
 # Now build the production-optimized web app.
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
+COPY --from=webappsrc .env ./
 ARG GIT_VERSION
-RUN yarn imagebuild
+RUN yarn build
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.

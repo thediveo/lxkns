@@ -18,12 +18,12 @@ import { Box } from '@mui/material'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { SmartA } from 'components/smarta'
 
-/* eslint import/no-webpack-loader-syntax: off */
 import AboutContent from "./About.mdx"
+import { MDXComponents } from 'mdx/types'
 
 
 export const About = () => (
     <Box m={2} flex={1} overflow="auto">
-        <MuiMarkdown mdx={AboutContent} shortcodes={{ a: SmartA }} />
+        <MuiMarkdown mdx={AboutContent} shortcodes={{ a: SmartA } as MDXComponents} />
     </Box>
 )

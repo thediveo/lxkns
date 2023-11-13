@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { memo } from 'react'
+import React from 'react'
 
 import {
     Divider,
@@ -26,108 +26,47 @@ import {
     styled,
 } from '@mui/material'
 import { ChapterSkeleton } from 'components/chapterskeleton'
-import { MDXContent } from 'mdx/types'
+import { MDXComponents, MDXContent } from 'mdx/types'
 
 
 // Defines how to map the components emitted by MDX onto Material-UI components,
 // and especially the Typography component. See also:
 // https://mdxjs.com/advanced/components
-const muiComponents = {
+const muiComponents: MDXComponents = {
     // Get us rid of that pesky "validateDOMNesting(...): <p> cannot appear as a
     // descendant of <p>" by using a <div> instead of Typography's default <p>.
-    p: (() => {
-        const P = (props: any) => <Typography {...props} component="div" />
-        return memo(P)
-    })(),
+    p: (props: any) => (<Typography {...props} component="div" />),
 
-    h1: (() => {
-        const H1 = (props: any) => <Typography {...props} variant="h4" />
-        return memo(H1)
-    })(),
-
-    h2: (() => {
-        const H2 = (props: any) => <Typography {...props} variant="h5" />
-        return memo(H2)
-    })(),
-
-    h3: (() => {
-        const H3 = (props: any) => <Typography {...props} variant="h6" />
-        return memo(H3)
-    })(),
-
-    h4: (() => {
-        const H4 = (props: any) => <Typography {...props} variant="subtitle1" />
-        return memo(H4)
-    })(),
-
-    h5: (() => {
-        const H5 = (props: any) => <Typography {...props} variant="subtitle2" />
-        return memo(H5)
-    })(),
-
-    h6: (() => {
-        const H6 = (props: any) => <Typography {...props} variant="subtitle2" />
-        return memo(H6)
-    })(),
+    h1: (props: any) => (<Typography {...props} variant="h4" />),
+    h2: (props: any) => (<Typography {...props} variant="h5" />),
+    h3: (props: any) => (<Typography {...props} variant="h6" />),
+    h4: (props: any) => (<Typography {...props} variant="subtitle1" />),
+    h5: (props: any) => (<Typography {...props} variant="subtitle2" />),
+    h6: (props: any) => (<Typography {...props} variant="subtitle2" />),
 
     // And once more: get us rid of that pesky "validateDOMNesting(...): <p>
     // cannot appear as a descendant of <p>" by using a <div> instead of
     // Typography's default <p>.
-    blockquote: (() => {
-        const Blockquote = (props: any) => <Typography {...props} component="div" variant="body2" />
-        return memo(Blockquote)
-    })(),
+    blockquote: (props: any) => (<Typography {...props} component="div" variant="body2" />),
 
-    ul: (() => {
-        const Ul = (props: any) => <Typography {...props} component="ul" />
-        return memo(Ul)
-    })(),
+    ul: (props: any) => (<Typography {...props} component="ul" />),
+    ol: (props: any) => (<Typography {...props} component="ol" />),
+    li: (props: any) => (<Typography {...props} component="li" />),
 
-    ol: (() => {
-        const Ol = (props: any) => <Typography {...props} component="ol" />
-        return memo(Ol)
-    })(),
+    table: (props: any) => (<Table {...props} />),
+    tr: (props: any) => (<TableRow {...props} />),
+    td: (props: any) => {
+        const { align, ...otherprops } = props
+        return <TableCell align={align || undefined} {...otherprops} />
+    },
+    tbody: (props: any) => (<TableBody {...props} />),
+    th: (props: any) => {
+        const { align, ...otherprops } = props
+        return <TableCell align={align || undefined} {...otherprops} />
+    },
+    thead: (props: any) => (<TableHead {...props} />),
 
-    li: (() => {
-        const Li = (props: any) => <Typography {...props} component="li" />
-        return memo(Li)
-    })(),
-
-    table: (() => {
-        const MuiTable = (props: any) => <Table {...props} />
-        return memo(MuiTable)
-    })(),
-
-    tr: (() => {
-        const Tr = (props: any) => <TableRow {...props} />
-        return memo(Tr)
-    })(),
-
-    td: (() => {
-        const Td = ({ align, ...props }) => (
-            <TableCell align={align || undefined} {...props} />
-        )
-        return memo(Td)
-    })(),
-
-    tbody: (() => {
-        const TBody = (props: any) => <TableBody {...props} />
-        return memo(TBody)
-    })(),
-
-    th: (() => {
-        const Th = ({ align, ...props }) => (
-            <TableCell align={align || undefined} {...props} />
-        )
-        return memo(Th)
-    })(),
-
-    thead: (() => {
-        const THead = (props: any) => <TableHead {...props} />
-        return memo(THead)
-    })(),
-
-    hr: Divider,
+    hr: () => (<Divider />),
 }
 
 
@@ -193,7 +132,7 @@ export interface MuiMarkdownProps {
     /** compiled MDX, which can also be lazy loaded. */
     mdx: MDXContent
     /** shortcodes, that is, available components. */
-    shortcodes?: { [key: string]: React.ComponentType<any> }
+    shortcodes?: MDXComponents // { [key: string]: React.ComponentType<any> }
     /** CSS class name(s). */
     className?: string
     /** fallback components to render when lazily loading the mdx. */

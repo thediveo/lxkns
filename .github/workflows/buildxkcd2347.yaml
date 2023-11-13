@@ -1,0 +1,31 @@
+name: build xkcd 2347
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    name: Build web UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
+
+      - name: test build
+        run: |
+          rm -f .yarnrc.yml
+          yarn set version berry
+          yarn config set nodeLinker node-modules
+          yarn workspaces focus --production
+          yarn eslint --init
+          yarn build
+        working-directory: web/lxkns

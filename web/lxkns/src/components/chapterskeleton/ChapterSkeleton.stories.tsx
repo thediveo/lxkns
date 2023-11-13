@@ -1,4 +1,4 @@
-// Copyright 2020 Harald Albrecht.
+// Copyright 2023 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,23 +12,22 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-import { mount } from '@cypress/react'
+import type { Meta, StoryObj } from '@storybook/react'
+
 import { ChapterSkeleton } from './ChapterSkeleton'
 
-describe('ChapterSkeleton', () => {
+const meta: Meta<typeof ChapterSkeleton> = {
+    title: 'Universal/ChapterSkeleton',
+    component: ChapterSkeleton,
+    tags: ['autodocs'],
+}
 
-    it('renders', () => {
-        mount(
-            <ChapterSkeleton sx={{width: '10rem'}} />
-        )
-        cy.waitForReact()
-        cy.get('.MuiTypography-h4')
-            .should('have.length', 1)
-            .find('.MuiSkeleton-root')
-        cy.get('.MuiTypography-body1')
-            .should('have.length', 3)
-            .find('.MuiSkeleton-root')
-    })
+export default meta
 
-})
+type Story = StoryObj<typeof ChapterSkeleton>
+
+export const Basic: Story = {
+    args: {
+        sx: { width: "20rem" },
+    },
+}

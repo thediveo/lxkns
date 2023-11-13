@@ -1,4 +1,4 @@
-// Copyright 2020 by Harald Albrecht.
+// Copyright 2023 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -13,6 +13,9 @@
 // under the License.
 
 import React, { ReactNode } from 'react'
+import { BrowserRouter } from 'react-router-dom'
+
+import type { Preview } from '@storybook/react'
 
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
@@ -20,9 +23,8 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
 
-
 import { lxknsLightTheme } from 'app/appstyles'
-import { createTheme, ScopedCssBaseline, ThemeProvider } from '@mui/material'
+import { createTheme, ScopedCssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material'
 
 
 const lightTheme = createTheme(
@@ -42,12 +44,20 @@ const lightTheme = createTheme(
 )
 
 
-const MuiThemeWrapper = ({ children }: { children?: ReactNode }) => (
-    <ThemeProvider theme={lightTheme}>
-        <ScopedCssBaseline>
-            {children}
-        </ScopedCssBaseline>
-    </ThemeProvider>
-)
+const preview: Preview = {
+    decorators: [
+        (Story, context) => (
+            <BrowserRouter basename=''>
+                <StyledEngineProvider injectFirst>
+                    <ThemeProvider theme={lightTheme} >
+                        <ScopedCssBaseline>
+                            <Story />
+                        </ScopedCssBaseline>
+                    </ThemeProvider>
+                </StyledEngineProvider>
+            </BrowserRouter>
+        ),
+    ],
+}
 
-export default MuiThemeWrapper
+export default preview

@@ -1,36 +1,36 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "downlevelIteration": true,
+    "baseUrl": "./src",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
     "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
+    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
     "noEmit": true,
-    "baseUrl": "src",
-    "noFallthroughCasesInSwitch": false,
+    "jsx": "react-jsx",
     "types": [
-      "cypress",
-      "cypress-react-selector",
-      "cypress-react-router",
-      "mdx"
-    ],
+      "./node_modules/vite/client"
+    ]
   },
   "include": [
-    "src/",
-    "styleguidist/",
-    "cypress.d.ts"
+    "src/**/*",
+    ".storybook/*",
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }

@@ -15,7 +15,7 @@
 import React from 'react'
 import { useAtom } from 'jotai'
 
-import TreeItem from '@mui/lab/TreeItem'
+import { TreeItem } from '@mui/x-tree-view'
 import { OwnerIcon } from 'icons/Owner'
 
 import { ProcessInfo } from 'components/processinfo'

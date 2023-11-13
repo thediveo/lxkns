@@ -47,7 +47,7 @@ const refreshIntervalKey = "lxkns.refresh.interval"
 
 const initialRefreshInterval = (() => {
     try {
-        const interval = JSON.parse(localStorage.getItem(refreshIntervalKey));
+        const interval = JSON.parse(localStorage.getItem(refreshIntervalKey) || "");
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
