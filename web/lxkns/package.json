@@ -1,6 +1,6 @@
 {
   "name": "lxkns",
-  "version": "0.24.0",
+  "version": "0.29.0",
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
@@ -22,6 +22,7 @@
     "@types/mdx": "^2.0.3",
     "@types/react": "^18.2.30",
     "@types/react-router-dom": "^5.3.3",
+    "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react": "^4.1.0",
     "clsx": "^2.0.0",
     "color-rgba": "^2.4.0",
@@ -38,6 +39,7 @@
     "remark-gfm": "^3.0.1",
     "remark-images": "^3.1.0",
     "remark-textr": "^5.0.1",
+    "typescript": "^5.2.2",
     "typographic-apostrophes": "^1.1.1",
     "typographic-apostrophes-for-possessive-plurals": "^1.0.5",
     "typographic-ellipses": "^1.0.11",
@@ -50,9 +52,9 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "scripts": {
-    "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite --port 3300",
-    "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:=$(git describe)} vite build",
-    "imagebuild": "REACT_APP_GIT_VERSION=$GIT_VERSION vite build",
+    "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite --port 3300",
+    "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite build",
+    "imagebuild": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite build",
     "icons": "node genicons",
     "storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook dev -p 6006",
     "build-storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook build"
@@ -80,15 +82,13 @@
     "@storybook/react-vite": "^7.5.3",
     "@storybook/testing-library": "^0.2.2",
     "@types/react-dom": "^18.2.14",
-    "@typescript-eslint/parser": "^6.10.0",
     "eslint-plugin-storybook": "^0.6.15",
     "lodash": "^4.17.21",
     "react-router": "^6.18.0",
     "rollup": "^4.4.0",
     "storybook": "^7.5.3",
     "style-loader": "^3.3.3",
-    "svgo": "^3.0.0",
-    "typescript": "^5.2.2"
+    "svgo": "^3.0.0"
   },
   "eslintConfig": {
     "extends": [

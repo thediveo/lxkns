@@ -119,6 +119,7 @@ FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS reactor
 WORKDIR /webapp
 ENV PATH /webapp/node_modules/.bin:$PATH
 RUN yarn set version berry
+RUN yarn config set nodeLinker node-modules
 # Cache the dependency hell, so we don't need to recreate it most of the time
 # when dependencies don't change.
 COPY --from=webappsrc \
@@ -132,12 +133,14 @@ COPY --from=webappsrc \
         ./
 # While not being a true production install in the original sense, this avoids
 # installing storybook which we all don't need in creating the production build.
-RUN yarn install --production --network-timeout 1000000000
+RUN yarn workspaces focus --production
+RUN yarn eslint --init
 # Now build the production-optimized web app.
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
+COPY --from=webappsrc .env ./
 ARG GIT_VERSION
-RUN yarn imagebuild
+RUN yarn build
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
