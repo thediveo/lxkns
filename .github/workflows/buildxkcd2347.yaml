@@ -25,5 +25,6 @@ jobs:
           cd web/lxkns
           yarn set version berry
           yarn config set nodeLinker node-modules
+          yarn workspaces focus --production
           yarn eslint --init
           yarn build
