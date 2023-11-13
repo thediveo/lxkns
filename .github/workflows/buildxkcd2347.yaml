@@ -1,0 +1,24 @@
+name: build xkcd 2347
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    name: Build web UI
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cd web/lxkns
+          yarn set version berry
+          yarn eslint --init
+          yarn build
