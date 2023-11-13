@@ -24,6 +24,6 @@ import colorRgba from 'color-rgba'
  * @param alpha alpha value in the range of [0..1].
  */
 export const rgba = (color: string, alpha: number) => {
-    const [r, g, b, a] = colorRgba(color)
+    const [r, g, b, a] = colorRgba(color) || [0, 0, 0, 0]
     return `rgba(${r},${g},${b},${a*alpha})`
 }

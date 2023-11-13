@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
+import React, { MouseEvent, ReactNode, useRef, useState } from 'react'
 import { useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
@@ -20,6 +20,7 @@ import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } fro
 import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
+import { MDXContent } from 'mdx/types';
 
 const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
@@ -95,7 +96,7 @@ export interface HelpViewerChapter {
     /** chapter title to show in ToC and bottom navigation. */
     title: string
     /** the help chapter contents. */
-    chapter: (props: any) => JSX.Element
+    chapter: (props: any) => ReactNode
     /** 
      * optional chapter slug, relative to base of help viewer path; if left
      * undefined, then defaults to the "slugified" chapter title, where the
@@ -191,7 +192,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
     // Renders a chapter button linking to a specific chapter, or nothing if the
     // chapter index is out of range. Changes the route when clicked (taking the
     // base into account).
-    const ChapterButton = ({ chapterIndex }) => {
+    const ChapterButton = ({ chapterIndex }: {chapterIndex: number}) => {
         if (chapterIndex < 0 || chapterIndex >= chapters.length) {
             return null
         }
@@ -210,22 +211,23 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
 
 
     // Anchor state for the ToC navigation popup menu.
-    const [anchorEl, setAnchorEl] = React.useState(null)
+    const [tocOpen, setTocOpen] = useState(false)
+    const anchorEl = useRef<HTMLButtonElement>(null) // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/35572#issuecomment-498242139
 
     // Pop up the table of contents menu...
-    const handleIconClick = (event) => {
-        setAnchorEl(event.currentTarget)
+    const handleIconClick = (event: MouseEvent<HTMLElement>) => {
+        setTocOpen(true)
     }
 
     // close popup menu, change route...
-    const handleMenuItemClick = (event, index) => {
+    const handleMenuItemClick = (event: MouseEvent<HTMLElement>, index: number) => {
         navigate(`${baseroute || '/'}/${slugify(chapters[index])}`)
-        setAnchorEl(null);
+        setTocOpen(false)
     }
 
     // just close that popup menu!
     const handleClose = () => {
-        setAnchorEl(null);
+        setTocOpen(false)
     }
 
     return <HelpCanvas style={style}>
@@ -236,6 +238,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         */}
         <Tooltip title="open table of contents">
             <NavigatorButton
+                ref={anchorEl}
                 size="small"
                 onClick={handleIconClick}
             >
@@ -244,16 +247,16 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         </Tooltip>
         <Menu
             id="help-viewer-menu"
-            anchorEl={anchorEl}
+            anchorEl={anchorEl.current}
             keepMounted
-            open={Boolean(anchorEl)}
+            open={tocOpen}
             onClose={handleClose}
         >
             {chapters.map((chapter, index) => (
                 <MenuItem
                     key={index}
                     selected={index === currentChapterIndex}
-                    onClick={(event) => handleMenuItemClick(event, index)}
+                    onClick={(event: MouseEvent<HTMLElement>) => handleMenuItemClick(event, index)}
                 >
                     {chapter.title}
                 </MenuItem>
@@ -262,7 +265,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         <Padding>
             <Markdowner
                 as={markdowner || MuiMarkdown}
-                mdx={chapters[currentChapterIndex].chapter}
+                mdx={chapters[currentChapterIndex].chapter as MDXContent}
                 fallback={
                     <Box sx={{ marginTop: '-24px' }} m={1}>
                         <ChapterSkeleton sx={{width: '15rem'}}/>

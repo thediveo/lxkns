@@ -12,13 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 
 import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
-import { Namespace } from 'models/lxkns'
+import { Namespace, NamespaceType } from 'models/lxkns'
 import { Box, styled } from '@mui/material'
 import { Card } from '@mui/material'
 import { Atom, Provider } from 'jotai'
@@ -92,11 +92,11 @@ const IconBox = styled('span')(({ theme }) => ({
 }))
 
 
-const BoxedIcons = ({ children }: { children: React.ReactNode }) => {
+const BoxedIcons = ({ children }: { children: ReactNode }) => {
     return <IconBox>{children}</IconBox>
 }
 
-const NamespaceExample = ({ type, initial, shared }) =>
+const NamespaceExample = ({ type, initial, shared }: {type: NamespaceType; initial: boolean; shared: boolean}) =>
     <NamespaceBadge namespace={{
         nsid: 4026531837,
         type: type,
@@ -104,7 +104,7 @@ const NamespaceExample = ({ type, initial, shared }) =>
         initial: initial,
         parent: null,
         children: [],
-    } as Namespace} shared={shared} />
+    } as any as Namespace} shared={shared} />
 
 export const Help = () => (
     <HelpViewer

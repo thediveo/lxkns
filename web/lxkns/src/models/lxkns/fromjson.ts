@@ -72,9 +72,9 @@ export const fromjson = (discoverydata: any): Discovery => {
         // there is a list of leader PIDs; otherwise, set an empty array.
         let leaders: Process[] = [];
         (ns as NamespaceJson).leaders
-            && (ns as NamespaceJson).leaders.forEach((leader: number) => {
-                if (leader in discovery.processes) {
-                    leaders.push(discovery.processes[leader])
+            && (ns as NamespaceJson).leaders.forEach((leader) => {
+                if ((leader as number) in discovery.processes) {
+                    leaders.push(discovery.processes[leader as number])
                 }
             });
         ns.leaders = leaders;
@@ -119,13 +119,13 @@ export const fromjson = (discoverydata: any): Discovery => {
 
         // Resolve the attached namespaces relationships...
         for (const [type, nsref] of Object.entries(proc.namespaces)) {
-            proc.namespaces[type] = discovery.namespaces[nsref]
+            proc.namespaces[type] = discovery.namespaces[nsref as unknown as keyof Namespace]
         }
         // ...and now for the namespaces the tasks of this process are attached
         // to.
         proc.tasks && proc.tasks.forEach(task => {
             for (const [type, nsref] of Object.entries(task.namespaces)) {
-                task.namespaces[type] = discovery.namespaces[nsref]
+                task.namespaces[type] = discovery.namespaces[nsref as unknown as keyof Namespace]
                 task.process = proc
             }
             // while we're at it, build the map of all tasks.
@@ -135,8 +135,8 @@ export const fromjson = (discoverydata: any): Discovery => {
 
     // Literally resolve the loose threads...
     Object.values(discovery.namespaces).forEach(ns => {
-        ns.loosethreads = ns['loose-threads']
-            ? ns['loose-threads'].map(tid => alltasks[(tid as unknown as Number).toString()])
+        ns.loosethreads = (ns as any)['loose-threads']
+            ? (ns as any)['loose-threads'].map((tid: number) => alltasks[(tid as unknown as Number).toString()])
             : []
     })
 
@@ -144,8 +144,8 @@ export const fromjson = (discoverydata: any): Discovery => {
     if (discovery.processes[1] && discovery.processes[2]) {
         // At least someone has put some effort into fooling us...
         Object.values(discovery.processes[1].namespaces).forEach(
-            (ns: Namespace) => {
-                if (ns.nsid in discovery.namespaces) {
+            (ns: Namespace | null) => {
+                if (ns && ns.nsid in discovery.namespaces) {
                     discovery.namespaces[ns.nsid].initial = true
                 }
             }
@@ -157,16 +157,16 @@ export const fromjson = (discoverydata: any): Discovery => {
     // containers, as we will rebuild them as port of transforming the
     // references in the containers from ids into proper object references.
     if (discovery.containers) {
-        discovery.engines = discovery['container-engines'] as EngineMap
-        discovery['container-engines'] = undefined
+        discovery.engines = (discovery as any)['container-engines'] as EngineMap
+        (discovery as any)['container-engines'] = undefined
         Object.entries(discovery.engines).forEach(([eid, engine]) => {
             engine.containers = []
         })
-        discovery.groups = discovery['container-groups'] as GroupMap
+        discovery.groups = (discovery as any)['container-groups'] as GroupMap;
+        (discovery as any)['container-groups'] = undefined
         Object.entries(discovery.groups).forEach(([gid, group]) => {
             group.containers = []
         })
-        discovery['container-groups'] = undefined
         Object.entries(discovery.containers).forEach(([pid, container]) => {
             // transform engine reference
             const engine = discovery.engines[(container as ContainerJson).engine as number]

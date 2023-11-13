@@ -33,7 +33,7 @@ export interface Container {
     process: Process
 }
 
-export const containerGroup = (container: Container, typeorflavor: string): Group => {
+export const containerGroup = (container: Container, typeorflavor: string): Group | undefined => {
     if (container) {
         return container.groups.find(
             group => (group.flavor === typeorflavor || group.type === typeorflavor))

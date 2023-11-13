@@ -48,7 +48,7 @@ export const TypedNamespaces = ({ discovery, action }: TypedNamespacesProps) => 
                 type={nstype}
                 discovery={discovery}
                 action={action}
-                details={nstype === 'mnt' && MountTreeDetailer}
+                details={(nstype === 'mnt' && MountTreeDetailer) || undefined}
             />
         </Box>
     )

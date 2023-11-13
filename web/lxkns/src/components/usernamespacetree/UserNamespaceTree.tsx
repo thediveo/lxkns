@@ -18,7 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 import Typography from '@mui/material/Typography'
-import TreeView from '@mui/lab/TreeView'
+import { TreeView } from '@mui/x-tree-view'
 
 import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'
@@ -53,8 +53,8 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
     // Tree node expansion is a component-local state. We need to also use a
     // reference to the really current expansion state as for yet unknown
     // reasons setExpanded() will pass stale state information to its reducer.  
-    const [expanded, setExpanded] = useState([])
-    const currExpanded = useRef([])
+    const [expanded, setExpanded] = useState<string[]>([])
+    const currExpanded = useRef<string[]>([])
 
     useEffect(() => { currExpanded.current = expanded }, [expanded])
 
@@ -70,7 +70,7 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
                     .map(ns => ns.nsid.toString())
                 const allealdormen = Object.values(discovery.namespaces)
                     .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
-                    .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman.pid.toString())
+                    .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
                 setExpanded(alluserns.concat(allealdormen))
                 break
             case COLLAPSEALL:
@@ -131,7 +131,7 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
     // update the tree's expand state accordingly. This allows us to
     // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
     // state of the tree.
-    const handleToggle = (event, nodeIds) => {
+    const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
         setExpanded(nodeIds)
     }
 

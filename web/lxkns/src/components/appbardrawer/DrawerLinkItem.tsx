@@ -15,7 +15,7 @@
 import React from 'react'
 import { useLocation, Link } from "react-router-dom"
 
-import { Avatar, ListItem, ListItemAvatar, ListItemIcon, Typography } from '@mui/material'
+import { Avatar, ListItemButton, ListItemAvatar, ListItemIcon, Typography } from '@mui/material'
 
 export interface DrawerLinkItemProps {
     /** 
@@ -46,8 +46,7 @@ export const DrawerLinkItem = ({ icon, avatar, label, path }: DrawerLinkItemProp
     const selected = location.pathname === path
 
     return (
-        <ListItem
-            button
+        <ListItemButton
             component={Link}
             to={path}
             selected={selected}
@@ -58,6 +57,6 @@ export const DrawerLinkItem = ({ icon, avatar, label, path }: DrawerLinkItemProp
                 icon && <ListItemIcon>{icon}</ListItemIcon>
             )}
             <Typography>{label}</Typography>
-        </ListItem>
+        </ListItemButton>
     )
 }

@@ -101,7 +101,7 @@ const PathsSeparator = styled(DoubleArrowIcon)(({ theme }) => ({
  *
  * @param path file system path
  */
-const ProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
+const ProcessNameOfProcPath = (path: string, processes?: ProcessMap) => {
     if (!processes || !path.startsWith('/proc/')) return
     const fields = path.split('/')
     if (fields.length < 3) return
@@ -112,7 +112,7 @@ const ProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
 
 // Returns the name of the process referenced by a procfs-based path, if
 // available. Otherwise, returns undefined. 
-const FancyProcessNameOfProcPath = (path: string, processes: ProcessMap) => {
+const FancyProcessNameOfProcPath = (path: string, processes?: ProcessMap) => {
     const processName = ProcessNameOfProcPath(path, processes)
     return processName ? ` [${processName}]` : undefined
 }

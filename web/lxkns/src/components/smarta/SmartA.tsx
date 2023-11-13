@@ -12,9 +12,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { ExtLink } from 'components/extlink'
 import React from 'react'
 import { Link } from 'react-router-dom'
+
+import { ExtLink } from 'components/extlink'
 
 
 export interface SmartAProps {
@@ -26,10 +27,10 @@ export interface SmartAProps {
 
 /**
  * Renders a hyperlink either as an external link (using the ExtLink component),
- * or a react router "internal" Link component, depending on the given href
- * property value. Using the Link component ensures proper app-internal route
- * handling without having to reload the application and thus destroying the any
- * discovery result.
+ * or a React (DOM) router "internal" Link component, depending on the given
+ * href property value. Using the Link component ensures proper app-internal
+ * route handling without having to reload the application and thus destroying
+ * the any discovery result.
  */
 export const SmartA = ({href, children, ...otherprops}: SmartAProps) => {
     try {

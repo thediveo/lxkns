@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist grype
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -75,29 +75,6 @@ install: ## installs lxkns commands
 test: ## runs all tests
 	go test -v -p=1 -count=1 -exec sudo ./... && go test -v -p=1 -count=1 ./...
 
-# builds a static webapp and the lxkns service, then runs the service and the
-# webapp unit and end-to-end tests, and finally stops the lxkns service after
-# the tests have run.
-citestapp: ## builds and tests lxkns with static web UI
-	@sudo /bin/true
-	@$(GOGEN)
-	@cd web/lxkns && yarn build:dev
-	@go build -v ./cmd/lxkns
-	@TMPPIDFILE=$$(mktemp -p /tmp lxkns.service.pid.XXXXXXXXXX) && \
-	sudo chown root $$TMPPIDFILE && \
-	sudo bash -c "./lxkns --debug --http localhost:5100 & echo \$$! > $$TMPPIDFILE" && \
-	sudo bash -c "chown \$$SUDO_USER $$TMPPIDFILE" && \
-	ls -l $$TMPPIDFILE && \
-	LXKNSPID=$$(cat $$TMPPIDFILE) && \
-	rm $$TMPPIDFILE && \
-	echo "lxkns background service PID:" $$LXKNSPID && \
-	(cd web/lxkns && yarn cypress:run --config baseUrl=http://localhost:5100,screenshotOnRunFailure=false); STATUS=$$? ; \
-	sleep 1s && \
-	echo "stopping lxkns background service and waiting for it to exit..." && \
-	sudo kill $$LXKNSPID && \
-	timeout 10s tail --pid=$$LXKNSPID -f /dev/null && \
-	exit $$STATUS
-
 report: ## runs goreportcard
 	@scripts/goreportcard.sh
 
@@ -118,3 +95,6 @@ scan: ## scans the repository for CVEs
 
 vuln: ## run go vulnerabilities check
 	@scripts/vuln.sh
+
+grype: ## run grype vul scan on sources
+	@scripts/grype.sh
