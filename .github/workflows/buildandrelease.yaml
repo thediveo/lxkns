@@ -8,6 +8,7 @@ on:
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
+  BUILDCONTEXTS: "" # ugly band-aid as per https://github.com/github/vscode-github-actions/issues/47#issuecomment-1488592302
 
 jobs:
   build-and-publish:
@@ -69,7 +70,9 @@ jobs:
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-          build-args: WSDISKPATHS=./lxkns
+          build-args: |
+            WSDISKPATHS=./lxkns
+            GIT_VERSION=${{ github.ref_name }}
           build-contexts: |
             webappsrc=./web/lxkns
             ${{ env.BUILDCONTEXTS }}
