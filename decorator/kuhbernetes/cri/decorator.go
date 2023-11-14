@@ -29,13 +29,16 @@ func init() {
 		Decorate, plugger.WithPlugin("cri"))
 }
 
-// Decorate decorates the discovered Docker containers with pod groups, where
+// Decorate decorates the discovered k8s (CRI) containers with pod groups, where
 // applicable.
 func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	total := 0
 	for _, engine := range engines {
 		// If it "ain't no" CRI, skip it, as we're looking specifically for
-		// CRI-supporting engines.
+		// CRI-supporting engines. Please note that we handle the deprecated
+		// Docker shim in a separate decorator. Finally, the containerd
+		// decorator won't touch the k8s.io and moby namespaces, so that we're
+		// really responsible here.
 		if engine.Type != cri.Type {
 			continue
 		}

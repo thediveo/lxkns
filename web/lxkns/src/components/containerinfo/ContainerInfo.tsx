@@ -98,14 +98,14 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
     var groupicon = null
     var groupname = ""
     const project = containerGroup(container, 'com.docker.compose.project')
-    if (project) {
+    if (!!project) {
         groupname = project.name
         groupicon = container.flavor === 'com.siemens.industrialedge.app'
             ? <IEAppIcon fontSize="inherit" />
             : <ComposerProjectIcon fontSize="inherit" />
     }
     const pod = containerGroup(container, 'io.kubernetes.pod')
-    if (pod) {
+    if (!!pod) {
         groupname = pod.name
         groupicon = <PodIcon fontSize="inherit" />
     }
