@@ -51,10 +51,20 @@ const process: Process = {
     container: container,
 } as Process
 
-
 export const Basic: Story = {
     args: {
         process: process,
+    },
+}
+
+export const PID1: Story = {
+    name: 'PID1 is King',
+    args: {
+        process: {
+            ...process,
+            pid: 1,
+            ppid: 0,
+        },
     },
 }
 

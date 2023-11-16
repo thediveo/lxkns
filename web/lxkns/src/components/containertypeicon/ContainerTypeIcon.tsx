@@ -50,11 +50,11 @@ export interface ContainerTypeIconProps extends SvgIconProps {
  *
  * @param container container object.
  */
-export const ContainerTypeIcon = ({container}: ContainerTypeIconProps): JSX.Element => {
+export const ContainerTypeIcon = ({container, ...props}: ContainerTypeIconProps): JSX.Element => {
     // Now try to find a suitable container-flavor icon, or fall back to our
     // generic one.
     const Icon = containerTypeIcons[container.flavor]
-    return (!!Icon && <Icon/>) || <ContainerIcon/>
+    return (!!Icon && <Icon {...props} />) || <ContainerIcon {...props} />
 }
 
 export default ContainerTypeIcon

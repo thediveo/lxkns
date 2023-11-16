@@ -15,7 +15,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
 import { ContainerInfo } from './ContainerInfo'
-import { Container, Engine, Process } from 'models/lxkns'
+import { Container, Engine, Group, Process } from 'models/lxkns'
 
 const meta: Meta<typeof ContainerInfo> = {
     title: 'Container/ContainerInfo',
@@ -46,7 +46,7 @@ const container: Container = {
     process: process,
 }    
 
-export const Standard: Story = {
+export const Running: Story = {
     args: {
         container: container,
     },
@@ -57,6 +57,30 @@ export const Paused: Story = {
         container: {
             ...container,
             paused: true,
+        },
+    },
+}
+
+export const Grouped: Story = {
+    args: {
+        container: {
+            ...container,
+            groups: [{
+                name: 'bleary_beathoven',
+                type: 'com.docker.compose.project',
+                flavor: 'com.docker.compose.project',
+            } as Group],
+        },
+    },
+}
+
+export const ContainerInContainer: Story = {
+    args: {
+        container: {
+            ...container,
+            labels: {
+                'turtlefinder/container/prefix': 'outer-container',
+            }
         },
     },
 }
