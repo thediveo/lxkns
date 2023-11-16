@@ -16,10 +16,10 @@ import { styled } from '@mui/material'
 import { Pause } from '@mui/icons-material'
 
 import { Container, containerGroup } from 'models/lxkns'
-import { ContainerTypeIcon } from 'utils/containericon'
+import { ContainerTypeIcon } from 'components/containertypeicon'
 
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
-import PodIcon from 'icons/containers/Pod'
+import PodIcon from 'icons/containers/K8sPod'
 import IEAppIcon from 'icons/containers/IEApp'
 
 // https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
@@ -93,19 +93,17 @@ export interface ContainerInfoProps {
  */
 export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
-    const ContainerIcon = ContainerTypeIcon(container)
-
     var groupicon = null
     var groupname = ""
     const project = containerGroup(container, 'com.docker.compose.project')
-    if (project) {
+    if (!!project) {
         groupname = project.name
         groupicon = container.flavor === 'com.siemens.industrialedge.app'
             ? <IEAppIcon fontSize="inherit" />
             : <ComposerProjectIcon fontSize="inherit" />
     }
     const pod = containerGroup(container, 'io.kubernetes.pod')
-    if (pod) {
+    if (!!pod) {
         groupname = pod.name
         groupicon = <PodIcon fontSize="inherit" />
     }
@@ -116,7 +114,7 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
     return !!container && (
         <ContainerInformation className={className}>
-            <ContainerIcon fontSize="inherit" />
+            <ContainerTypeIcon container={container} fontSize="inherit" />
             {paused}
             <ContainerName>{boxed}{container.name}</ContainerName>
             {groupicon && 

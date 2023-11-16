@@ -80,9 +80,10 @@ export interface ProcessInfoProps {
  * single Linux OS process to make it easily identifyable:
  *
  * - if associated with a container: container information (name, group).
- * 
+ *
  * - name of the process, which is has been either set by the process itself, or
- *   has been derived from the process' command line.
+ *   has been derived from the process' command line. Please note that this
+ *   component only renders the `name` field, so this has to be set.
  * - PID.
  * - cgroup path, if path is not empty.
  * - pause indication if process is freezing or has been frozen.
@@ -90,6 +91,9 @@ export interface ProcessInfoProps {
  * On purpose, this component doesn't render more comprehensive information
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
+ *
+ * Also in this spirit, this component doesn't render the cgroup-related
+ * information in case the process belongs to a container.
  */
 export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
     return !!process && (

@@ -27,7 +27,7 @@ testcontaineropts := \
 	--security-opt seccomp=unconfined \
 	-v /sys/fs/cgroup:/sys/fs/cgroup:rw
 
-.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist grype
+.PHONY: clean vuln coverage deploy undeploy help install test report manual pkgsite buildapp startapp scan dist grype yarnsetup
 
 help: ## list available targets
 	@# Shamelessly stolen from Gomega's Makefile
@@ -98,3 +98,13 @@ vuln: ## run go vulnerabilities check
 
 grype: ## run grype vul scan on sources
 	@scripts/grype.sh
+
+yarnsetup: ## set up yarn v4 correctly
+	cd web/lxkns && \
+	rm -f .yarnrc.yml && \
+	rm -rf .yarn/ && \
+	rm -rf node_modules && \
+	yarn set version berry && \
+	yarn config set nodeLinker node-modules && \
+	yarn install && \
+	yarn eslint --init

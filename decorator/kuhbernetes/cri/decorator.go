@@ -1,4 +1,4 @@
-// Copyright 2021 Harald Albrecht.
+// Copyright 2023 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package cricontainerd
+package cri
 
 import (
 	"github.com/thediveo/go-plugger/v3"
@@ -20,28 +20,26 @@ import (
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
+	"github.com/thediveo/whalewatcher/watcher/cri"
 )
-
-// containerKind specifies the kind of container at the engine level, in order
-// to differentiate between user containers and infrastructure “sandbox”
-// containers that haven't been specified by users (deployments).
-const containerKindLabel = "io.cri-containerd.kind"
 
 // Register this Decorator plugin.
 func init() {
 	plugger.Group[decorator.Decorate]().Register(
-		Decorate, plugger.WithPlugin("cri-containerd"))
+		Decorate, plugger.WithPlugin("cri"))
 }
 
-// Decorate decorates the discovered Docker containers with pod groups, where
+// Decorate decorates the discovered k8s (CRI) containers with pod groups, where
 // applicable.
 func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	total := 0
 	for _, engine := range engines {
-		// If it "ain't no" containerd, skip it, as we're looking specifically
-		// for containerd engines and their particular Kubernetes pod labelling.
-		if engine.Type != containerd.Type {
+		// If it "ain't no" CRI, skip it, as we're looking specifically for
+		// CRI-supporting engines. Please note that we handle the deprecated
+		// Docker shim in a separate decorator. Finally, the containerd
+		// decorator won't touch the k8s.io and moby namespaces, so that we're
+		// really responsible here.
+		if engine.Type != cri.Type {
 			continue
 		}
 		// Pods cannot span container engines ;)
@@ -66,13 +64,9 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 				total++
 			}
 			podgroup.AddContainer(container)
-			// Sandbox? Then tag (label) the container.
-			if container.Labels[containerKindLabel] == "sandbox" {
-				container.Labels[kuhbernetes.PodSandboxLabel] = ""
-			}
 		}
 	}
 	if total > 0 {
-		log.Infof("discovered %d containerd pods", total)
+		log.Infof("discovered %d CRI pods", total)
 	}
 }

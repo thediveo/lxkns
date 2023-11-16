@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package cricontainerd
+package cri
 
 import (
 	"testing"
@@ -26,5 +26,5 @@ var slowSpec = NodeTimeout(30 * time.Second)
 
 func TestK8sContainerdDecorator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "lxkns/decorator/kuhbernetes/cricontainerd package")
+	RunSpecs(t, "lxkns/decorator/kuhbernetes/cri package")
 }

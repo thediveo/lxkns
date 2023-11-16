@@ -20,6 +20,7 @@ import { useSnackbar } from 'notistack'
 
 import { Discovery as DiscoveryResult, fromjson } from 'models/lxkns'
 import useInterval from 'hooks/interval'
+import { localStorageAtom } from 'utils/persistentsettings'
 
 
 /** Internal discovery result state; can be used only via useDiscovery(). */
@@ -59,13 +60,7 @@ const initialRefreshInterval = (() => {
  * The discovery refresh interval state; null means refresh is disabled. This
  * state is automatically synced to the local storage.
  */
-export const discoveryRefreshIntervalAtom = atom<number, number>(
-    initialRefreshInterval,
-    (_get, set, interval) => {
-        set(discoveryRefreshIntervalAtom, interval)
-        localStorage.setItem(refreshIntervalKey, JSON.stringify(interval))
-    }
-)
+export const discoveryRefreshIntervalAtom = localStorageAtom(refreshIntervalKey, initialRefreshInterval)
 
 /** 
  * Discovery refresh status; setting the status to "true" triggers an ad-hoc

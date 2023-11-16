@@ -71,7 +71,7 @@ export const Settings = () => {
     const [expandInitially, setExpandInitially] = useAtom(expandInitiallyAtom)
 
     const handleThemeChange = (event: SelectChangeEvent<number>) => {
-        setTheme(event.target.value)
+        setTheme(event.target.value as number)
     }
 
     return (
