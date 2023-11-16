@@ -26,7 +26,7 @@ least in some container engine environments in order to correctly set up a pod's
 networking before starting any user containers. These infrastructure containers
 are labelled with:
 
-  - "lxkns/k8s/container/kind"
+  - "io.kubernetes.sandbox"
 
 Please note that this label is supported by different decorators and thus not
 limited to containerd CRI-based system configurations, but also applies to, for
