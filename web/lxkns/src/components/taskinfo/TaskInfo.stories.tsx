@@ -18,7 +18,7 @@ import { TaskInfo } from './TaskInfo'
 import { Container, Engine, NamespaceSet, Process, Task } from 'models/lxkns'
 
 const meta: Meta<typeof TaskInfo> = {
-    title: 'Universal/TaskInfo',
+    title: 'Process/TaskInfo',
     component: TaskInfo,
     tags: ['autodocs'],
 }

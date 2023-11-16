@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    enable-background="new 0 0 24 24"
    height="24"
    viewBox="0 0 24 24"
    width="24"
    version="1.1"
    id="svg8"
-   sodipodi:docname="PIDNamespace.svg"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+   sodipodi:docname="PID.svg"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <metadata
      id="metadata14">
     <rdf:RDF>
@@ -23,7 +23,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -38,26 +38,30 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1966"
-     inkscape:window-height="1254"
+     inkscape:window-width="1920"
+     inkscape:window-height="1161"
      id="namedview10"
      showgrid="true"
      inkscape:zoom="27.812867"
-     inkscape:cx="10.478636"
-     inkscape:cy="13.004349"
-     inkscape:window-x="103"
+     inkscape:cx="10.498738"
+     inkscape:cy="12.997581"
+     inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg8">
+     inkscape:current-layer="svg8"
+     inkscape:showpageshadow="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
     <inkscape:grid
        type="xygrid"
-       id="grid911" />
+       id="grid911"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px"
+       visible="true" />
   </sodipodi:namedview>
-  <path
-     style="fill:none"
-     inkscape:connector-curvature="0"
-     id="path2"
-     d="M 0,0 H 24 V 24 H 0 Z" />
   <path
      d="M 10.080078 2.4003906 C 9.8400781 2.4003906 9.649375 2.5705469 9.609375 2.8105469 L 9.25 5.3496094 C 8.66 5.5896094 8.1208594 5.9190625 7.6308594 6.2890625 L 5.2402344 5.3300781 C 5.0202344 5.2500781 4.7703906 5.3307813 4.6503906 5.5507812 L 2.7402344 8.8691406 C 2.6202344 9.0791406 2.659375 9.3404688 2.859375 9.4804688 L 4.890625 11.060547 C 4.840625 11.360547 4.8007812 11.69 4.8007812 12 C 4.8007812 12.31 4.8191406 12.639453 4.8691406 12.939453 L 2.8398438 14.519531 C 2.6598437 14.659531 2.6107031 14.930859 2.7207031 15.130859 L 4.640625 18.449219 C 4.760625 18.669219 5.0104688 18.739922 5.2304688 18.669922 L 7.6191406 17.710938 C 8.1191406 18.090937 8.6502344 18.410391 9.2402344 18.650391 L 9.5996094 21.189453 C 9.6496094 21.429453 9.8400781 21.599609 10.080078 21.599609 L 13.919922 21.599609 C 14.159922 21.599609 14.360625 21.429453 14.390625 21.189453 L 14.75 18.650391 C 15.34 18.410391 15.879141 18.090937 16.369141 17.710938 L 18.759766 18.669922 C 18.979766 18.749922 19.229609 18.669219 19.349609 18.449219 L 21.269531 15.130859 C 21.389531 14.910859 21.340391 14.659531 21.150391 14.519531 L 19.140625 12.939453 C 19.180625 12.639453 19.199219 12.33 19.199219 12 C 19.199219 11.68 19.180859 11.360547 19.130859 11.060547 L 21.160156 9.4804688 C 21.340156 9.3404687 21.389297 9.0691406 21.279297 8.8691406 L 19.359375 5.5507812 C 19.239375 5.3307813 18.989531 5.2600781 18.769531 5.3300781 L 16.380859 6.2890625 C 15.880859 5.9090625 15.349766 5.5896094 14.759766 5.3496094 L 14.400391 2.8105469 C 14.360391 2.5705469 14.159922 2.4003906 13.919922 2.4003906 L 10.080078 2.4003906 z M 10 8 L 16 12 L 10 16 L 10 8 z "
      id="path4" />

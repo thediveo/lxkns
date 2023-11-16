@@ -10,7 +10,6 @@
     "@emotion/styled": "^11.10.5",
     "@fontsource/roboto": "^5.0.8",
     "@fontsource/roboto-mono": "^5.0.14",
-    "@mdx-js/loader": "^2.2.1",
     "@mdx-js/mdx": "^2.2.1",
     "@mdx-js/react": "^2.2.1",
     "@mdx-js/rollup": "^2.3.0",
@@ -22,12 +21,15 @@
     "@types/mdx": "^2.0.3",
     "@types/react": "^18.2.30",
     "@types/react-router-dom": "^5.3.3",
-    "@typescript-eslint/parser": "^6.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "@typescript-eslint/scope-manager": "^6.11.0",
     "@vitejs/plugin-react": "^4.1.0",
     "clsx": "^2.0.0",
     "color-rgba": "^2.4.0",
     "eslint": "^8.53.0",
     "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-react": "^7.33.2",
     "jotai": "^2.5.1",
     "notistack": "^2.0.8",
     "react": "^18.2.0",
@@ -81,8 +83,10 @@
     "@storybook/react": "^7.5.3",
     "@storybook/react-vite": "^7.5.3",
     "@storybook/testing-library": "^0.2.2",
+    "@svgr/plugin-svgo": "^8.1.0",
     "@types/react-dom": "^18.2.14",
     "eslint-plugin-storybook": "^0.6.15",
+    "glob": "^10.3.10",
     "lodash": "^4.17.21",
     "react-router": "^6.18.0",
     "rollup": "^4.4.0",
@@ -95,5 +99,5 @@
       "plugin:storybook/recommended"
     ]
   },
-  "packageManager": "yarn@4.0.1"
+  "packageManager": "yarn@4.0.2"
 }

@@ -33,6 +33,7 @@ const config: StorybookConfig = {
     },
     core: {
         disableTelemetry: true,
+        disableWhatsNewNotifications: true,
     },
 }
 

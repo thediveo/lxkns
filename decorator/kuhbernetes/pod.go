@@ -14,22 +14,24 @@
 
 package kuhbernetes
 
+import "github.com/thediveo/whalewatcher/engineclient/cri"
+
 // PodGroupType identifies container groups representing Kubernetes pods.
 const PodGroupType = "io.kubernetes.pod"
 
 // PodSandboxLabel marks a container as a sandbox (or "pause") container; it is
 // present only on sandboxes and the label value is irrelevant.
-const PodSandboxLabel = "lxkns/k8s/container/kind"
+const PodSandboxLabel = cri.PodSandboxLabel
 
 // PodNameLabel specifies the pod name of a container.
-const PodNameLabel = "io.kubernetes.pod.name"
+const PodNameLabel = cri.PodNameLabel
 
 // PodNamespaceLabel specifies the namespace of the pod a container is part of.
-const PodNamespaceLabel = "io.kubernetes.pod.namespace"
+const PodNamespaceLabel = cri.PodNamespaceLabel
 
 // PodContainerNameLabel specifies the name of a container inside a pod from the
 // Kubernetes perspective.
-const PodContainerNameLabel = "io.kubernetes.container.name"
+const PodContainerNameLabel = cri.PodContainerNameLabel
 
 // PodUidLabel specifies the UID of a pod (=group).
-const PodUidLabel = "io.kubernetes.pod.uid"
+const PodUidLabel = cri.PodUidLabel

@@ -124,7 +124,7 @@ export interface Process {
     fridgecgroup: string
     fridgefrozen: boolean
     namespaces: NamespaceSet
-    container: Container
+    container: Container | null
 }
 
 export interface ProcessMap { [key: string]: Process }
