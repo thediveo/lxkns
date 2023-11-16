@@ -19,7 +19,7 @@ import { Container, containerGroup } from 'models/lxkns'
 import { ContainerTypeIcon } from 'components/containertypeicon'
 
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
-import PodIcon from 'icons/containers/Pod'
+import PodIcon from 'icons/containers/K8sPod'
 import IEAppIcon from 'icons/containers/IEApp'
 
 // https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
