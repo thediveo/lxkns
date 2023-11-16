@@ -14,18 +14,24 @@
 
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { TaskInfo } from './TaskInfo'
-import { Container, Engine, NamespaceSet, Process, Task } from 'models/lxkns'
+import { ContainerInfo } from './ContainerInfo'
+import { Container, Engine, Process } from 'models/lxkns'
 
-const meta: Meta<typeof TaskInfo> = {
-    title: 'Process/TaskInfo',
-    component: TaskInfo,
+const meta: Meta<typeof ContainerInfo> = {
+    title: 'Container/ContainerInfo',
+    component: ContainerInfo,
     tags: ['autodocs'],
 }
 
 export default meta
 
-type Story = StoryObj<typeof TaskInfo>
+type Story = StoryObj<typeof ContainerInfo>
+
+const process: Process = {
+    pid: 41,
+    ppid: 1,
+    name: 'foobar-process',
+} as Process
 
 const container: Container = {
     id: 'deadbeafco1dcafe',
@@ -37,47 +43,20 @@ const container: Container = {
     labels: {},
     groups: [],
     engine: {} as Engine,
-    process: {} as Process,
-}
-
-const process: Process = {
-    pid: 41,
-    ppid: 1,
-    name: 'foobar-process',
-} as Process
-
-const task: Task = {
-    tid: 42,
-    name: 'foobartask',
     process: process,
-    starttime: 123,
-    cpucgroup: "/fridge",
-    fridgecgroup: "/fridge",
-    fridgefrozen: true,
-    namespaces: {} as NamespaceSet,
-}
+}    
 
-export const Basic: Story = {
+export const Standard: Story = {
     args: {
-        task: task,
+        container: container,
     },
 }
 
-export const Short: Story = {
+export const Paused: Story = {
     args: {
-        task: task,
-        short: true,
-    },
-}
-
-export const InContainer: Story = {
-    args: {
-        task: {
-            ...task,
-            process: {
-                ...process,
-                container: container,
-            },
+        container: {
+            ...container,
+            paused: true,
         },
     },
 }

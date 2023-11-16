@@ -16,7 +16,7 @@ import { styled } from '@mui/material'
 import { Pause } from '@mui/icons-material'
 
 import { Container, containerGroup } from 'models/lxkns'
-import { ContainerTypeIcon } from 'utils/containericon'
+import { ContainerTypeIcon } from 'components/containertypeicon'
 
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/Pod'
@@ -93,8 +93,6 @@ export interface ContainerInfoProps {
  */
 export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
-    const ContainerIcon = ContainerTypeIcon(container)
-
     var groupicon = null
     var groupname = ""
     const project = containerGroup(container, 'com.docker.compose.project')
@@ -116,7 +114,7 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
     return !!container && (
         <ContainerInformation className={className}>
-            <ContainerIcon fontSize="inherit" />
+            <ContainerTypeIcon container={container} fontSize="inherit" />
             {paused}
             <ContainerName>{boxed}{container.name}</ContainerName>
             {groupicon && 

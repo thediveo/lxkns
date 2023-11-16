@@ -22,35 +22,39 @@ import ContainerdIcon from 'icons/containers/Containerd'
 import IERuntimeIcon from 'icons/containers/IERuntime'
 import IEAppIcon from 'icons/containers/IEApp'
 
-//import PodIcon from 'icons/containers/Pod'
-//import K8sPodIcon from 'icons/containers/K8sPod'
 import { Container } from 'models/lxkns'
 import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
-//import ComposerProjectIcon from 'icons/containers/ComposerProject'
+import CRIIcon from 'icons/containers/CRI';
 
-const ContainerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
-    'unknowntype': ContainerIcon,
+const containerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'docker.com': DockerIcon,
     'plugin.docker.com': DockerManagedPluginIcon,
     'containerd.io': ContainerdIcon,
     'com.siemens.industrialedge.runtime': IERuntimeIcon,
     'com.siemens.industrialedge.app': IEAppIcon,
+    'k8s.io/cri-api': CRIIcon,
 }
-
-/*
-const PodTypeIcons = {
-    'io.kubernetes.pod': K8sPodIcon,
-}
-*/
 
 /**
- * Returns a container type icon (constructor) based on the type and flavor of
- * the specified container.
+ * The `ContainerTypeIconProps` component expects only a single property: the
+ * container to render the corresponding icon.
+ */
+export interface ContainerTypeIconProps extends SvgIconProps {
+    /** information about a discovered container. */
+    container: Container
+}
+
+/**
+ * Returns a container type (SVG) icon based on the type and flavor of the
+ * specified container.
  *
  * @param container container object.
  */
-export const ContainerTypeIcon = (container: Container) => {
+export const ContainerTypeIcon = ({container}: ContainerTypeIconProps): JSX.Element => {
     // Now try to find a suitable container-flavor icon, or fall back to our
     // generic one.
-    return ContainerTypeIcons[container.flavor] || ContainerIcon
+    const Icon = containerTypeIcons[container.flavor]
+    return (!!Icon && <Icon/>) || <ContainerIcon/>
 }
+
+export default ContainerTypeIcon
