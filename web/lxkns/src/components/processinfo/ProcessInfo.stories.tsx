@@ -20,6 +20,9 @@ import { Container, Engine, Group, Process } from 'models/lxkns'
 const meta: Meta<typeof ProcessInfo> = {
     title: 'Process/ProcessInfo',
     component: ProcessInfo,
+    argTypes: {
+        process: { control: false },
+    },
     tags: ['autodocs'],
 }
 

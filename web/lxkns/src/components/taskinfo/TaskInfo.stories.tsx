@@ -20,6 +20,9 @@ import { Container, Engine, NamespaceSet, Process, Task } from 'models/lxkns'
 const meta: Meta<typeof TaskInfo> = {
     title: 'Process/TaskInfo',
     component: TaskInfo,
+    argTypes: {
+        task: { control: false },
+    },
     tags: ['autodocs'],
 }
 

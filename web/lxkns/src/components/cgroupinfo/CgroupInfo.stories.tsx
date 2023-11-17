@@ -20,6 +20,9 @@ import { Container, Process } from 'models/lxkns'
 const meta: Meta<typeof CgroupInfo> = {
     title: 'Process/CgroupInfo',
     component: CgroupInfo,
+    argTypes: {
+        busybody: { control: false },
+    },
     tags: ['autodocs'],
 }
 
