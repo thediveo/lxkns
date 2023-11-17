@@ -20,6 +20,9 @@ import { Container, Engine, Group, Process } from 'models/lxkns'
 const meta: Meta<typeof ContainerInfo> = {
     title: 'Container/ContainerInfo',
     component: ContainerInfo,
+    argTypes: {
+        container: { control: false },
+    },
     tags: ['autodocs'],
 }
 
@@ -44,7 +47,7 @@ const container: Container = {
     groups: [],
     engine: {} as Engine,
     process: process,
-}    
+}
 
 export const Running: Story = {
     args: {

@@ -22,6 +22,9 @@ const unknownCntr = {flavor: 'unknown'} as Container
 const meta: Meta<typeof ContainerTypeIcon> = {
     title: 'Container/ContainerTypeIcon',
     component: ContainerTypeIcon,
+    argTypes: {
+        container: { control: false },
+    },
     tags: ['autodocs'],
 }
 
