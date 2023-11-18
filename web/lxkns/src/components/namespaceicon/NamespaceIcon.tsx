@@ -16,9 +16,10 @@ import React from 'react'
 
 import { SvgIconProps } from '@mui/material'
 
-import { NamespaceType, } from "models/lxkns"
+import { NamespaceType, } from 'models/lxkns'
 import { namespaceTypeInfo } from './iconmap'
 
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark'
 
 // We extend Material UI's SVG icon properties with a namespace property, from
 // which we later can espy the required type of namespace information. 
@@ -31,7 +32,7 @@ export interface NamespaceIconProps extends SvgIconProps {
  * Renders a namespace icon based on the type of the given namespace. Namespace
  * icons are SVG icons.
  */
-export const NamespaceIcon = ({type, ...props}: NamespaceIconProps) =>
-    type && namespaceTypeInfo[type] ?
-        React.createElement(namespaceTypeInfo[type].icon, props)
-        : null
+export const NamespaceIcon = ({type, ...props}: NamespaceIconProps) => {
+    const Icon = namespaceTypeInfo[type]?.icon
+    return !!Icon ? <Icon {...props}/> : <QuestionMarkIcon {...props}/>
+}
