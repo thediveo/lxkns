@@ -24,7 +24,7 @@ import IEAppIcon from 'icons/containers/IEApp'
 
 import { Container } from 'models/lxkns'
 import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
-import CRIIcon from 'icons/containers/CRI';
+import CRIIcon from 'icons/containers/CRI'
 
 const containerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'docker.com': DockerIcon,
