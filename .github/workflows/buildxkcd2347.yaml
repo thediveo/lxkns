@@ -23,6 +23,7 @@ jobs:
       - name: test build
         run: |
           rm -f .yarnrc.yml
+          corepack enable
           yarn set version berry
           yarn config set nodeLinker node-modules
           yarn workspaces focus --production
