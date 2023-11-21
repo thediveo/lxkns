@@ -94,7 +94,7 @@ export interface MountPoint {
     /** ID of parent mount. */
     parentid: number
     /** parent mount point object, if any. (calculated in client) */
-    parent: MountPoint
+    parent?: MountPoint
     /** 
      * child mount points, including an optional in-place overmount.
      * (calculated in client) 
