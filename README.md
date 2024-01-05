@@ -12,10 +12,6 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-> **NEW:** lxkns now leverages [(Siemens OSS) Turtlefinder
-> technology](https://github.com/siemens/turtlefinder) to autodetect container
-> engines even in hierarchical configurations, such as Kubernetes-in-Docker and
-> Docker Desktop on WSL2.
 
 ## Quick Start
 
@@ -40,12 +36,19 @@ namespaces, as well as mount points with their hierarchies.
 ## Overview
 
 `lxkns` discovers...
-- Linux namespaces in almost every nook and cranny of your hosts (open file
-  descriptors, bind-mounts, processes, and now even tasks) – please see the table below,
+- Linux namespaces in almost every nook and cranny of your hosts (from open file
+  descriptors, bind-mounts, processes, and now even tasks and from open sockets)
+  – please see the table below,
 - the mount points inside mount namespaces (correctly representing
   "overmounts").
 - container workloads: these are then related to the underlying Linux
   namespaces.
+  - `lxkns` now leverages [(Siemens OSS) Turtlefinder
+    technology](https://github.com/siemens/turtlefinder) to autodetect container
+    engines even in hierarchical configurations, such as Kubernetes-in-Docker
+    and Docker Desktop on WSL2. Also, (socket-activated) podman detection has
+    finally landed in Turtlefinder, and in turn also in `lxkns`.
+
 
 | | Where? | `lsns` | `lxkns` |
 | --- | --- | :---: | :---: |
@@ -60,7 +63,8 @@ namespaces, as well as mount points with their hierarchies.
 The following container engine types are supported:
 - Docker,
 - plain containerd,
-- CRI Evented PLEG: containerd, CRI-O.
+- CRI Evented PLEG: containerd, CRI-O,
+- podman (via its Docker-compatible API only).
 
 The `lxkns` discovery engine can be operated as a stand-alone REST service with
 additional web UI. Alternatively, it can be embedded/integrated into other
