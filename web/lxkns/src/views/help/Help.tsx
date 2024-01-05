@@ -37,6 +37,7 @@ const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'All View', chapter: ch('Allview'), slug: 'allview' },
+    { title: 'Containers', chapter: ch('Containers'), slug: 'containers' },
     { title: 'Type-Specific Views', chapter: ch('Typedviews'), slug: 'typedviews' },
     { title: 'Mount Namespaces', chapter: ch('Mounts'), slug: 'mounts' },
     { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
