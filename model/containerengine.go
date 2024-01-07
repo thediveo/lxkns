@@ -32,6 +32,13 @@ type ContainerEngine struct {
 
 	// Containers discovered from this container engine.
 	Containers []*Container `json:"-"`
+
+	// Not for general use: engine process parent's PID to allow correctly
+	// translating container PIDs for newly socket-activated container engines –
+	// these would otherwise not be translatable as the newly socket-activated
+	// engine process information isn't (yet) part of the process tree scan
+	// before the engine activation.
+	PPIDHint PIDType `json:"-"`
 }
 
 // AddContainer adds a container to the list of discovered containers belonging

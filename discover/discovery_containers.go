@@ -60,6 +60,22 @@ func discoverContainers(result *Result) {
 		if !ok {
 			if engineProc, ok := result.Processes[container.Engine.PID]; ok {
 				enginePIDns = engineProc.Namespaces[model.PIDNS]
+			} else if container.Engine.PPIDHint != 0 {
+				// This is a newly socket-activated engine that isn't yet
+				// included in the process tree – that process tree that
+				// ironically lead to the detection of the socket activator and
+				// then activation of that container engine. As we cannot change
+				// the past discovery some kind soul – a turtle, perchance? –
+				// might have passed us a hint about the engine's parent process
+				// PID. This parent process's PID namespace should be the same
+				// as the container engine, so it should be good for container
+				// PID translation.
+				//
+				// This deserves a badge: [COMMENTOR] ... rhymes with
+				// "tormentor" *snicker*
+				if parentProc, ok := result.Processes[container.Engine.PPIDHint]; ok {
+					enginePIDns = parentProc.Namespaces[model.PIDNS]
+				}
 			}
 			// Cache even unsuckcessful engine PID namespace lookups.
 			enginesPIDns[container.Engine] = enginePIDns
