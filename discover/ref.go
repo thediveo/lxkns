@@ -37,7 +37,8 @@ func PIDfromPath(path string) model.PIDType {
 	if idx := strings.Index(path, "/"); idx >= 0 {
 		pidfield = path[:idx]
 	}
-	pid, err := strconv.ParseUint(pidfield, 10, 32)
+	// PIDs are unsigned, but passed as int32...
+	pid, err := strconv.ParseUint(pidfield, 10, 31)
 	if err != nil {
 		return 0
 	}

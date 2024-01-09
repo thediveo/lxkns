@@ -84,7 +84,7 @@ const TaskInformation = styled(TaskInfo)(({ theme }) => ({
 
 // Reduce function returning the (recursive) sum of children and grand-children
 // plus this namespace itself.
-const countNamespaceWithChildren = (sum: number, ns: Namespace) =>
+const countNamespaceWithChildren = (sum: number, ns: Namespace): number =>
     sum + ns.children.reduce(countNamespaceWithChildren, 1)
 
 

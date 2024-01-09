@@ -24,6 +24,10 @@ import { DrawerLinkItem } from './DrawerLinkItem'
 const meta: Meta<typeof AppBarDrawer> = {
     title: 'Universal/AppBarDrawer',
     component: AppBarDrawer,
+    argTypes: {
+        title: { control: false },
+        drawertitle: { control: false },
+    },
     tags: ['autodocs'],
 }
 

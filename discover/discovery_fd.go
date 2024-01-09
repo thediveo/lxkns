@@ -144,7 +144,8 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 // namespaceOfSocket returns the network namespace a particular socket fd (of
 // the specified process) is connected to.
 func namespaceOfSocket(pidfd int, fdname string) (species.NamespaceID, species.NamespaceType) {
-	fdno, err := strconv.ParseUint(fdname, 10, 32)
+	// PIDs are unsigned, but passed as int32...
+	fdno, err := strconv.ParseUint(fdname, 10, 31)
 	if err != nil {
 		return species.NoneID, species.NaNS
 	}

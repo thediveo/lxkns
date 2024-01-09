@@ -37,7 +37,9 @@ linear-gradient(${fg} 50%, ${bg} 0%) left/2px 5px repeat-y`
 // achieve a dashed border; for this reason we return an object with background
 // and backgroundColor instead of just a background CSS property value string.
 const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => {
-    const color = shared ? alpha(theme.palette.namespace[nstype], 0.15) : theme.palette.namespace[nstype]
+    const color = shared 
+        ? alpha(theme.palette.namespace[nstype as keyof typeof theme.palette.namespace], 0.15) 
+        : theme.palette.namespace[nstype as keyof typeof theme.palette.namespace]
     const change = shared ? 0.6 : 0.4
     return {
         background: dashedBorder(
@@ -50,9 +52,9 @@ const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => 
 const namespaceShared = "shared-namespace"
 const namespaceInitial = "initial-namespace"
 
-const styles = (nstype: string, theme: Theme, mixin?) => ({
+const styles = (nstype: string, theme: Theme, mixin?: any) => ({
     [`&.${nstype}`]: {
-        backgroundColor: theme.palette.namespace[nstype],
+        backgroundColor: theme.palette.namespace[nstype as keyof typeof theme.palette.namespace],
         ...mixin,
     },
     [`&.${nstype}.${namespaceInitial}`]: {

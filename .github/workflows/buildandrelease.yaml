@@ -18,7 +18,7 @@ jobs:
       packages: write
     steps:
       - name: Check out the repo
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # pin@v2
@@ -26,7 +26,7 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@6a58db7e0d21ca03e6c44877909e80e45217eed2 # pin@v2
+        uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55 # pin@v2
 
       - name: Log into the container registry
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # pin@v2
@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
-        uses: docker/metadata-action@2c0bd771b40637d97bf205cbccdd294a32112176 # pin@v4
+        uses: docker/metadata-action@818d4b7b91585d195f67373fd9cb0332e31a7175 # pin@v4
         id: metadata # later referenced as "steps.metadata."
         with:
           images: ghcr.io/${{ github.repository }}
@@ -62,7 +62,7 @@ jobs:
           echo "$EOF" >> $GITHUB_ENV
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # pin@v4
+        uses: docker/build-push-action@0a97817b6ade9f46837855d676c4cca3a2471fc9 # pin@v4
         with:
           context: .
           file: ./deployments/lxkns/Dockerfile
@@ -76,4 +76,5 @@ jobs:
           build-contexts: |
             webappsrc=./web/lxkns
             ${{ env.BUILDCONTEXTS }}
-          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux kernel namespaces discovery
+          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux
+            kernel namespaces discovery

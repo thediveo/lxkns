@@ -197,7 +197,8 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 			Starttime: starttime,
 		},
 	}
-	ppid, err := strconv.ParseUint(statFields[statlineFieldPPID], 10, 32)
+	// PIDs are unsigned, but passed as int32...
+	ppid, err := strconv.ParseUint(statFields[statlineFieldPPID], 10, 31)
 	if err != nil {
 		return nil
 	}

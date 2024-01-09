@@ -1,0 +1,37 @@
+import Container from 'icons/containers/Container.tsx';
+import CRI from 'icons/containers/CRI.tsx';
+import Docker from 'icons/containers/Docker.tsx';
+import DockerPlugin from 'icons/containers/DockerManagedPlugin.tsx';
+import IERuntime from 'icons/containers/IERuntime.tsx';
+import Podman from 'icons/containers/Podman.tsx';
+
+import ComposerProject from 'icons/containers/ComposerProject.tsx';
+import IEApp from 'icons/containers/IEApp.tsx';
+import K8sPod from 'icons/containers/K8sPod.tsx';
+
+
+# Containers
+
+As lxkns detects container engines and their container workloads automatically,
+it shows a container symbol next to processes belonging to containers. The exact
+symbol depends on the type of container the process belongs to.
+
+| Symbol | Type of Container |
+| --- | --- |
+| <Docker/> | [Docker](https://docker.com)/[Moby](https://https://mobyproject.org/) |
+| <DockerPlugin/> | Docker managed plugin |
+| <CRI/> | CRI (Kubernetes Container Runtime Interface) |
+| <Podman/> | [podman](https://podman.io) |
+| <IERuntime/> | Siemens Industrial Edge runtime |
+| <Container/> | unknown container type |
+
+# Container Groups
+
+In some situations, containers can be grouped; lxkns then shows different
+symbols depending on group type, as well as the group name.
+
+| Symbol | Type of Container Group |
+| --- | --- |
+| <ComposerProject/> | (Docker) [compose](https://compose-spec.io/) project |
+| <IEApp/> | Siemens Industrial Edge App |
+| <K8sPod/> | Kubernetes Pod |

@@ -24,7 +24,8 @@ import IEAppIcon from 'icons/containers/IEApp'
 
 import { Container } from 'models/lxkns'
 import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
-import CRIIcon from 'icons/containers/CRI';
+import CRIIcon from 'icons/containers/CRI'
+import PodmanIcon from 'icons/containers/Podman';
 
 const containerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'docker.com': DockerIcon,
@@ -33,6 +34,7 @@ const containerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element 
     'com.siemens.industrialedge.runtime': IERuntimeIcon,
     'com.siemens.industrialedge.app': IEAppIcon,
     'k8s.io/cri-api': CRIIcon,
+    'podman.io': PodmanIcon,
 }
 
 /**

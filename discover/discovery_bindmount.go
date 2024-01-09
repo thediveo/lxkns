@@ -163,7 +163,8 @@ func refString(mntns model.Namespace, r *Result) string {
 	for _, ref := range refs {
 		if strings.HasPrefix(ref, "/proc/") {
 			if f := strings.SplitN(ref, "/", 4); len(f) >= 3 {
-				if pid, err := strconv.ParseUint(f[2], 10, 32); err == nil {
+				// PIDs are unsigned, but passed as int32...
+				if pid, err := strconv.ParseUint(f[2], 10, 31); err == nil {
 					if proc := r.Processes[model.PIDType(pid)]; proc != nil {
 						s = append(s, fmt.Sprintf("%s[=%s]", ref, proc.Name))
 					}

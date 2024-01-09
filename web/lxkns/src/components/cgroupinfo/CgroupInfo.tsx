@@ -50,7 +50,7 @@ const CgroupPath = styled('span')(({ theme }) => ({
 
 
 export interface CgroupInfoProps {
-    /** process or task. */
+    /** process or task to take the cgroup controller information from. */
     busybody: Busybody
     /** optional CSS class name(s). */
     className?: string

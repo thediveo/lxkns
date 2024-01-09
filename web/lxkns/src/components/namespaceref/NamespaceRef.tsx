@@ -189,21 +189,21 @@ export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefPr
             <Tooltip title={`${namespace.type} namespace kept alive only by file descriptor`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="file descriptor">{ref}</span>
+                    <span className="file-descriptor">{ref}</span>
                 </NamespaceReference>
             </Tooltip>
         ) || (isInProcfs && !isProcfdPath &&
             <Tooltip title={`${namespace.type} namespace kept alive by process/task`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    <span className="process/task reference">{ref}</span>
+                    <span className="process-task-reference">{ref}</span>
                 </NamespaceReference>
             </Tooltip>
         ) || (
             <Tooltip title={`bind-mounted ${namespace.type} namespace`}>
                 <NamespaceReference className={className}>
                     <NamespaceIcon fontSize="inherit" />
-                    {ref}
+                    <span className="file-descriptor">{ref}</span>
                 </NamespaceReference>
             </Tooltip>
         )

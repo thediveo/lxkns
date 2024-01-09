@@ -1,3 +1,4 @@
+import { Namespace } from 'models/lxkns'
 import { MountPoint } from 'models/lxkns/mount'
 
 export const mountpoint: MountPoint = {
@@ -14,6 +15,10 @@ export const mountpoint: MountPoint = {
     superoptions: 'super,options',
     tags: {'shared': '123', 'master': '42'},
     children: [],
-    parent: null,
-    mountnamespace: null,
+    mountnamespace: {
+        nsid: 12345678,
+        "user-id": 12345,
+        "user-name": "foo1",
+
+    } as Namespace,
 }
