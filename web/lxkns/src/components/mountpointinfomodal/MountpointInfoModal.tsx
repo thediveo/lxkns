@@ -21,7 +21,7 @@ import { ReadonlyIcon } from 'icons/Readonly'
 import { NamespaceMap } from 'models/lxkns/model'
 
 
-const MountpointDialog = styled(Dialog)(({ theme }) => ({
+const MountpointDialog = styled(Dialog)(() => ({
     marginLeft: 0,
     marginRight: 0,
 }))

@@ -63,7 +63,7 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
     // in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         switch (action.action) {
-            case EXPANDALL:
+            case EXPANDALL: {
                 // expand all user namespaces and all included process nodes.
                 const alluserns = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === "user")
@@ -73,12 +73,14 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
                     .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
                 setExpanded(alluserns.concat(allealdormen))
                 break
-            case COLLAPSEALL:
+            }
+            case COLLAPSEALL: {
                 const topuserns = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === "user" && ns.parent === null)
                     .map(ns => ns.nsid.toString())
                 setExpanded(topuserns)
                 break
+            }
         }
     }, [action, discovery])
 

@@ -74,7 +74,7 @@ const intervalToLabel = (interval: number) => {
     return t.join(' ')
 }
 
-const Refreshee = styled('div')(({ theme }) => ({
+const Refreshee = styled('div')(() => ({
     display: 'inline-flex', // keep buttons in line; this is soo ugly
 }))
 
@@ -91,7 +91,7 @@ const Progress = styled(CircularProgress)(({ theme }) => ({
     zIndex: 1,
 }))
 
-const IntervalButton = styled(Button)(({ theme }) => ({
+const IntervalButton = styled(Button)(() => ({
     margin: '8px 0',
     borderRadius: '42em',
 }))

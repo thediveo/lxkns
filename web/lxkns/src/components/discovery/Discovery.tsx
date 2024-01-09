@@ -52,7 +52,7 @@ const initialRefreshInterval = (() => {
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    } catch (e) { }
+    } catch (e) { /* empty */ }
     return 5000;
 })()
 
@@ -137,14 +137,12 @@ const Discovery = () => {
             setDiscoveryRefreshing(true)
         }
         localStorage.setItem(refreshIntervalKey, JSON.stringify(interval))
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [interval])
 
     useEffect(
         () => { 
             discoveryError && enqueueSnackbar(discoveryError, { variant: 'error' }) 
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [discoveryError])
 
     // Do not render anything.

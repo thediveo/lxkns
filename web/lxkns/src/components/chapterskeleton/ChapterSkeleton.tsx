@@ -17,7 +17,7 @@ import React from 'react'
 import { Skeleton, styled, Theme, Typography } from '@mui/material'
 import { SxProps } from '@mui/system'
 
-const Bones = styled('div')(({ theme }) => ({
+const Bones = styled('div')(() => ({
     width: '100%',
     '& > h4:nth-of-type(1)': { width: '55%' },
     '& > p:nth-of-type(1)': { width: '90%' },

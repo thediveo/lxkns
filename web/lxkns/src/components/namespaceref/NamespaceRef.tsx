@@ -91,7 +91,7 @@ const Blinky = styled(NamespaceReference)(({ theme }) => ({
     },
 }))
 
-const PathsSeparator = styled(DoubleArrowIcon)(({ theme }) => ({
+const PathsSeparator = styled(DoubleArrowIcon)(() => ({
     paddingLeft: '0.2em',
 }))
 
@@ -172,7 +172,7 @@ export const NamespaceRef = ({ namespace, processes, className }: NamespaceRefPr
         ? namespace.reference.slice(1) : (namespace.reference || []))
         .map((refelement, idx) => [
             idx > 0 ? <PathsSeparator key={`pathssep-${idx}`} fontSize="inherit" /> : undefined,
-            <span key={idx} className="bindmount">"{refelement}"</span>,
+            <span key={idx} className="bindmount">&ldquo;{refelement}&rdquo;</span>,
             FancyProcessNameOfProcPath(refelement, processes),
         ]).flat()
 

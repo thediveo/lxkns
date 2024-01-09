@@ -49,12 +49,12 @@ interface ExampleProps {
     /** optional CSS maximum width for the example card element. */
     maxWidth?: string
     /** optional jōtai states. */
-    states?: [Atom<any>, unknown][]
+    states?: [Atom<unknown>, unknown][]
     /** the example rendering... */
     children: React.ReactNode
 }
 
-const initials: [Atom<any>, unknown][] = [
+const initials: [Atom<unknown>, unknown][] = [
     [showSystemProcessesAtom, false],
     [showSharedNamespacesAtom, true],
     [expandInitiallyAtom, true],
@@ -105,7 +105,7 @@ const NamespaceExample = ({ type, initial, shared }: {type: NamespaceType; initi
         initial: initial,
         parent: null,
         children: [],
-    } as any as Namespace} shared={shared} />
+    } as unknown as Namespace} shared={shared} />
 
 export const Help = () => (
     <HelpViewer

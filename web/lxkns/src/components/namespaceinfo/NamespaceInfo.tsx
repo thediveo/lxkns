@@ -41,11 +41,11 @@ const NamespaceInformation = styled('span')(({ theme }) => ({
     },
 }))
 
-const PathInformation = styled(NamespaceRef)(({ theme }) => ({
+const PathInformation = styled(NamespaceRef)(() => ({
     marginLeft: '0.5em',
 }))
 
-const UserChildrenInfo = styled('span')(({ theme }) => ({
+const UserChildrenInfo = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
     marginLeft: '0.5em',
@@ -73,11 +73,11 @@ const OwnerName = styled('span')(({ theme }) => ({
     '&::after': { content: '"»"' },
 }))
 
-const ProcessInformation = styled(ProcessInfo)(({ theme }) => ({
+const ProcessInformation = styled(ProcessInfo)(() => ({
     marginLeft: '0.5em',
 }))
 
-const TaskInformation = styled(TaskInfo)(({ theme }) => ({
+const TaskInformation = styled(TaskInfo)(() => ({
     marginLeft: '0.5em',
 }))
 

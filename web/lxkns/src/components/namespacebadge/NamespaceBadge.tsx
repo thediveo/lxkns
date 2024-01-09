@@ -52,9 +52,10 @@ const themedDashedBorder = (nstype: string, theme: Theme, shared?: 'shared') => 
 const namespaceShared = "shared-namespace"
 const namespaceInitial = "initial-namespace"
 
-const styles = (nstype: string, theme: Theme, mixin?: any) => ({
+const styles = (nstype: string, theme: Theme, mixin?: object) => ({
     [`&.${nstype}`]: {
         backgroundColor: theme.palette.namespace[nstype as keyof typeof theme.palette.namespace],
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         ...mixin,
     },
     [`&.${nstype}.${namespaceInitial}`]: {

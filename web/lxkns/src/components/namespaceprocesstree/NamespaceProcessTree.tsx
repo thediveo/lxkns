@@ -238,7 +238,7 @@ export const NamespaceProcessTree = ({
     // to the commands in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         switch (action.action) {
-            case EXPANDALL:
+            case EXPANDALL: {
                 // expand all namespaces as well as all confined processes.
                 const allns = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === nstype)
@@ -250,7 +250,8 @@ export const NamespaceProcessTree = ({
                     allprocids,
                     details?.expandAll ? details.expandAll(discovery.namespaces) : []))
                 break
-            case COLLAPSEALL:
+            }
+            case COLLAPSEALL: {
                 // collapse everything except for the root namespaces.
                 const allrootnsids = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === nstype && ns.parent == null)
@@ -258,6 +259,7 @@ export const NamespaceProcessTree = ({
                 setExpanded(allrootnsids.concat(
                     details?.collapseAll ? details.collapseAll(discovery.namespaces) : []))
                 break
+            }
         }
     }, [action, nstype, discovery, details])
 
@@ -300,7 +302,7 @@ export const NamespaceProcessTree = ({
     // update the tree's expand state accordingly. This allows us to explicitly
     // "take back control" (ha ... hah ... HAHAHAHA!!!) of the expansion state
     // of the tree.
-    const handleToggle = (event: any, nodeIds: string[]) => {
+    const handleToggle = (event: unknown, nodeIds: string[]) => {
         setExpanded(nodeIds)
     }
 
@@ -328,7 +330,7 @@ export const NamespaceProcessTree = ({
             </MountpointInfoModalProvider>
         ) || (Object.keys(discovery.namespaces).length &&
             <Typography variant="body1" color="textSecondary">
-                this Linux system doesn't have any "{nstype}" namespaces
+                this Linux system doesn&apos;t have any &ldquo;{nstype}&rdquo; namespaces
             </Typography>
         ) || (
             <Typography variant="body1" color="textSecondary">
