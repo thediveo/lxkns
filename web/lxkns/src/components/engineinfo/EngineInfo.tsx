@@ -14,21 +14,8 @@
 
 import React from 'react'
 
-import { Discovery } from 'models/lxkns'
-import { Action } from 'app/treeaction'
-import { Box } from '@mui/material'
-import ContainerTree from 'components/containertree'
+export const EngineInfo = () => {
 
-
-export interface ContainersProps {
-    /** lxkns discovery data */
-    discovery: Discovery
-    /** tree action */
-    action: Action
 }
 
-export const Containers = ({ discovery, action }: ContainersProps) => (
-    <Box pl={1}>
-        <ContainerTree discovery={discovery} action={action} />
-    </Box>
-)
+export default EngineInfo

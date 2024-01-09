@@ -12,11 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
+import React, { useMemo } from 'react'
 
 import { Action } from 'app/treeaction'
 import { Discovery } from 'models/lxkns'
 import { Typography } from '@mui/material'
+import { TreeItem, TreeView } from '@mui/x-tree-view'
 
 export interface ContainerTreeProps {
     /** lxkns discovery data */
@@ -26,12 +27,32 @@ export interface ContainerTreeProps {
 }
 
 export const ContainerTree = ({ discovery, /*action*/ }: ContainerTreeProps) => {
+    const engineItemsMemo = useMemo(() => (
+        Object.values(discovery.engines || {})
+            .map(engine => {
+                const keyid = engine.pid.toString() + engine.api
+                return <TreeItem
+                    key={keyid}
+                    nodeId={keyid}
+                    label={engine.type}
+                ></TreeItem>
+            })
+    ), [discovery])
+
+    console.log(discovery)
     return (
-        (discovery && "CONTAINERZ"
+        (engineItemsMemo.length &&
+            <TreeView
+                className="containertree"
+            >{engineItemsMemo}</TreeView>
+        ) || (Object.keys(discovery.engines).length &&
+            <Typography variant="body1" color="textSecondary">
+                this Linux system doesn&apos;t have any container engines with workloads
+            </Typography>
         ) || (
             <Typography variant="body1" color="textSecondary">
-            nothing discovered yet, please refresh
-        </Typography>
+                nothing discovered yet, please refresh
+            </Typography>
         )
     )
 }
