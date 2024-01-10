@@ -6890,22 +6890,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color-parse@npm:^1.4.2":
-  version: 1.4.3
-  resolution: "color-parse@npm:1.4.3"
+"color-parse@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "color-parse@npm:2.0.0"
   dependencies:
     color-name: "npm:^1.0.0"
-  checksum: 3473e7fb53d643dffc508c4f3161890f405ece9d78cc84277576212346b17ad037d1a0c6beb49e9b55bc11435a8c85b7ff9f94a6b898eb82647d4a46615d23da
+  checksum: f489deaea5bb323e05f41436d747e22bbb45928420fce8a989c209a4baa71c7ee90f8b43298d9565844af1d02580743d5d87b506519f755b4b218df6b72eb4a0
   languageName: node
   linkType: hard
 
-"color-rgba@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "color-rgba@npm:2.4.0"
+"color-rgba@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "color-rgba@npm:3.0.0"
   dependencies:
-    color-parse: "npm:^1.4.2"
+    color-parse: "npm:^2.0.0"
     color-space: "npm:^2.0.0"
-  checksum: b2d952a464a51ff446927b60528c94caee8987bcf1609dce7a18589a2d2febeab79d8c66c9eb1c4d9ef69ae4b5dfebc9f8fc858ad45d6cae7d2b013c562893ee
+  checksum: 8f3920cd1dcafde31c9240e54c2aba3c4fc43e350dc15cc00de3ea988800e1a533f85b38aa67867acfd51634a92bfd5e8aa9f06f1b42965c8fa538b5e16d9667
   languageName: node
   linkType: hard
 
@@ -9018,6 +9018,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"goober@npm:^2.0.33":
+  version: 2.1.13
+  resolution: "goober@npm:2.1.13"
+  peerDependencies:
+    csstype: ^3.0.10
+  checksum: a322ea3b688e1140e9e69014169563a1a73ea715d4a6edeaf61b59d40eb2c3b70f8269b09bb178d474764ee1772a0b1719c1d45db689e5c557698e468ce94702
+  languageName: node
+  linkType: hard
+
 "gopd@npm:^1.0.1":
   version: 1.0.1
   resolution: "gopd@npm:1.0.1"
@@ -9188,7 +9197,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hoist-non-react-statics@npm:^3.3.0, hoist-non-react-statics@npm:^3.3.1":
+"hoist-non-react-statics@npm:^3.3.1":
   version: 3.3.2
   resolution: "hoist-non-react-statics@npm:3.3.2"
   dependencies:
@@ -10352,7 +10361,7 @@ __metadata:
     "@typescript-eslint/scope-manager": "npm:^6.18.1"
     "@vitejs/plugin-react": "npm:^4.2.1"
     clsx: "npm:^2.1.0"
-    color-rgba: "npm:^2.4.0"
+    color-rgba: "npm:^3.0.0"
     eslint: "npm:^8.56.0"
     eslint-config-react-app: "npm:^7.0.1"
     eslint-plugin-react: "npm:^7.33.2"
@@ -10360,7 +10369,7 @@ __metadata:
     glob: "npm:^10.3.10"
     jotai: "npm:^2.6.1"
     lodash: "npm:^4.17.21"
-    notistack: "npm:^2.0.8"
+    notistack: "npm:^3.0.1"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-router: "npm:^6.21.1"
@@ -11606,24 +11615,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"notistack@npm:^2.0.8":
-  version: 2.0.8
-  resolution: "notistack@npm:2.0.8"
+"notistack@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "notistack@npm:3.0.1"
   dependencies:
     clsx: "npm:^1.1.0"
-    hoist-non-react-statics: "npm:^3.3.0"
+    goober: "npm:^2.0.33"
   peerDependencies:
-    "@emotion/react": ^11.4.1
-    "@emotion/styled": ^11.3.0
-    "@mui/material": ^5.0.0
     react: ^16.8.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
-  peerDependenciesMeta:
-    "@emotion/react":
-      optional: true
-    "@emotion/styled":
-      optional: true
-  checksum: 61684ff268d5f9779f9ed13761142022215edd89a2417bec92cbb804692f34abc393c2f4060a5775ba8e5ac0a1a43c3a16c96c2cfa1ff276068cdd9e3e1ef204
+  checksum: dd5bd492dbaf8d07a1f45a53ae195c5d481bc7136d73a756eb076534d315216a3cd2f4628263be55ad21d8bfed6ec546e5063584ffcc2798fb2aac56e5ccf0cf
   languageName: node
   linkType: hard
 
