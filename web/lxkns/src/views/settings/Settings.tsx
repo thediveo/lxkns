@@ -39,6 +39,7 @@ const themeKey = 'lxkns.theme'
 const showSystemProcessesKey = 'lxkns.showsystemprocesses'
 const showSharedNamespacesKey = 'lxkns.showsharedns'
 const expandInitiallyKey = 'lxkns.expandinitially'
+const expandWorkloadInitiallyKey = 'lxkns.expandwlinitially'
 
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
@@ -48,6 +49,7 @@ export const themeAtom = localStorageAtom(themeKey, THEME_USERPREF)
 export const showSystemProcessesAtom = localStorageAtom(showSystemProcessesKey, false)
 export const showSharedNamespacesAtom = localStorageAtom(showSharedNamespacesKey, true)
 export const expandInitiallyAtom = localStorageAtom(expandInitiallyKey, true)
+export const expandWorkloadInitiallyAtom = localStorageAtom(expandWorkloadInitiallyKey, false)
 
 
 const SettingsGrid = styled(Grid)(({ theme }) => ({
@@ -69,6 +71,7 @@ export const Settings = () => {
     const [showSystemProcesses, setShowSystemProcesses] = useAtom(showSystemProcessesAtom)
     const [showSharedNamespaces, setShowSharedNamespaces] = useAtom(showSharedNamespacesAtom)
     const [expandInitially, setExpandInitially] = useAtom(expandInitiallyAtom)
+    const [expandWLInitially, setExpandWLInitially] = useAtom(expandWorkloadInitiallyAtom)
 
     const handleThemeChange = (event: SelectChangeEvent<number>) => {
         setTheme(event.target.value as number)
@@ -142,6 +145,22 @@ export const Settings = () => {
                                     <Toggle
                                         checked={expandInitially}
                                         onChange={() => setExpandInitially(!expandInitially)}
+                                        color="primary"
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            <Divider />
+                            <ListItem>
+                                <ListItemText
+                                    primary="Expand newly discovered containers"
+                                    secondary={expandWLInitially
+                                        ? 'expand newly discovered containers'
+                                        : 'don\'t expand newly discovered containers'}
+                                />
+                                <ListItemSecondaryAction>
+                                    <Toggle
+                                        checked={expandWLInitially}
+                                        onChange={() => setExpandWLInitially(!expandWLInitially)}
                                         color="primary"
                                     />
                                 </ListItemSecondaryAction>

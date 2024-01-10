@@ -115,15 +115,17 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
                 label={<ProcessInfo process={busybody} />}
             >
                 {Object.values(busybody.namespaces)
+                    .filter((procns): procns is Namespace => !!procns)
                     // either (a) show all non-user namespaces to which a
                     // process is attached, or (b) show only those non-user
                     // namespaces that are specific to this process and not
                     // "shared" with other leaders in the same user namespace. 
                     .filter(showSharedNamespaces
-                        ? (procns: Namespace) => (procns.type !== NamespaceType.user || procns !== usernamespace)
-                        : (procns: Namespace) => procns.owner === usernamespace && procns.ealdorman === busybody)
+                        ? (procns) => (procns.type !== NamespaceType.user || procns !== usernamespace)
+                        : (procns) => procns.owner === usernamespace && procns.ealdorman === busybody
+                    )
                     .sort((procns1, procns2) => procns1.type.localeCompare(procns2.type))
-                    .map((procns: Namespace) => <TreeItem
+                    .map((procns) => <TreeItem
                         className="tenant"
                         key={procns.nsid}
                         nodeId={`${usernamespace.nsid}-${busybody.pid}-${procns.nsid}`}
@@ -156,11 +158,12 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
                 label={<TaskInfo task={busybody} />}
             >
                 {Object.values(busybody.namespaces)
+                    .filter((procns): procns is Namespace => !!procns)
                     .filter(showSharedNamespaces
-                        ? (taskns: Namespace) => (taskns.type !== NamespaceType.user || taskns !== usernamespace)
-                        : (taskns: Namespace) => taskns.owner === usernamespace /* FIXME:??? */)
+                        ? (taskns) => (taskns.type !== NamespaceType.user || taskns !== usernamespace)
+                        : (taskns) => taskns.owner === usernamespace)
                     .sort((taskns1, taskns2) => taskns1.type.localeCompare(taskns2.type))
-                    .map((taskns: Namespace) => {
+                    .map((taskns) => {
                         const selftask = taskns.loosethreads.includes(busybody)
                         return <TreeItem
                             className="tenant"

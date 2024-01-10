@@ -51,7 +51,7 @@ interface ContainerJson extends Omit<Container,
  * being made by fromjson(). If necessary, the caller is responsible for a deep
  * clone!
  */
-export const fromjson = (discoverydata: any): Discovery => {
+export const fromjson = (discoverydata: unknown): Discovery => {
     const discovery = discoverydata as Discovery
     // Process all (hierarchical) namespaces in a first round to initialize
     // their hierarchical references to empty array references.
@@ -70,7 +70,7 @@ export const fromjson = (discoverydata: any): Discovery => {
     Object.values(discovery.namespaces).forEach(ns => {
         // Replace leader PIDs with leader process object references ... if
         // there is a list of leader PIDs; otherwise, set an empty array.
-        let leaders: Process[] = [];
+        const leaders: Process[] = [];
         (ns as NamespaceJson).leaders
             && (ns as NamespaceJson).leaders.forEach((leader) => {
                 if ((leader as number) in discovery.processes) {
@@ -135,8 +135,9 @@ export const fromjson = (discoverydata: any): Discovery => {
 
     // Literally resolve the loose threads...
     Object.values(discovery.namespaces).forEach(ns => {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         ns.loosethreads = (ns as any)['loose-threads']
-            ? (ns as any)['loose-threads'].map((tid: number) => alltasks[(tid as unknown as Number).toString()])
+            ? (ns as any)['loose-threads'].map((tid: number) => alltasks[(tid as unknown as number).toString()])
             : []
     })
 
@@ -159,12 +160,12 @@ export const fromjson = (discoverydata: any): Discovery => {
     if (discovery.containers) {
         discovery.engines = (discovery as any)['container-engines'] as EngineMap
         (discovery as any)['container-engines'] = undefined
-        Object.entries(discovery.engines).forEach(([eid, engine]) => {
+        Object.entries(discovery.engines).forEach(([, engine]) => {
             engine.containers = []
         })
         discovery.groups = (discovery as any)['container-groups'] as GroupMap;
         (discovery as any)['container-groups'] = undefined
-        Object.entries(discovery.groups).forEach(([gid, group]) => {
+        Object.entries(discovery.groups).forEach(([, group]) => {
             group.containers = []
         })
         Object.entries(discovery.containers).forEach(([pid, container]) => {
@@ -242,7 +243,7 @@ export const fromjson = (discoverydata: any): Discovery => {
                 // group membership.
                 const peergroupid = mountpoint.tags['shared']
                 if (peergroupid) {
-                    var peergroup = mountgroups[peergroupid]
+                    let peergroup = mountgroups[peergroupid]
                     if (!peergroup) {
                         peergroup = { id: parseInt(peergroupid), members: [] }
                         mountgroups[peergroupid] = peergroup
@@ -256,7 +257,7 @@ export const fromjson = (discoverydata: any): Discovery => {
                 // (which are peers to themselves) as well as their slaves.
                 const mastergroupid = mountpoint.tags['master']
                 if (mastergroupid) {
-                    var mastergroup = mountgroups[mastergroupid]
+                    let mastergroup = mountgroups[mastergroupid]
                     if (!mastergroup) {
                         mastergroup = { id: parseInt(mastergroupid), members: [] }
                         mountgroups[mastergroupid] = mastergroup

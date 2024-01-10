@@ -61,6 +61,8 @@ import { TypedNamespaces } from 'views/typednamespaces'
 import Logo from 'app/lxkns.svg'
 
 import { basename } from 'utils/basename'
+import ContainerIcon from 'icons/containers/Container'
+import { Containers } from 'views/containers'
 
 
 /**
@@ -81,6 +83,7 @@ interface viewItem {
 const views: viewItem[][] = [
     [
         { icon: <HomeIcon />, label: "all namespaces", path: "/" },
+        { icon: <ContainerIcon />, label: "all containers", path: "containers" },
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
@@ -219,6 +222,7 @@ const LxknsApp = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/help/*" element={<Help />} />
+                    <Route path="/containers" element={<Containers discovery={discovery} action={treeaction} />} />
                     {views.map(group => group.filter(viewitem => !!viewitem.type))
                         .flat().map(viewitem =>
                             <Route

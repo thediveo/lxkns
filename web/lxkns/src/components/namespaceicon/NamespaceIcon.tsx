@@ -34,5 +34,5 @@ export interface NamespaceIconProps extends SvgIconProps {
  */
 export const NamespaceIcon = ({type, ...props}: NamespaceIconProps) => {
     const Icon = namespaceTypeInfo[type]?.icon
-    return !!Icon ? <Icon {...props}/> : <QuestionMarkIcon {...props}/>
+    return Icon ? <Icon {...props}/> : <QuestionMarkIcon {...props}/>
 }

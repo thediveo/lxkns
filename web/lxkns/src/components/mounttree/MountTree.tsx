@@ -48,7 +48,7 @@ const Label = styled('span')(({ theme }) => ({
     },
 }))
 
-const Count = styled('span')(({ theme }) => ({
+const Count = styled('span')(() => ({
     marginRight: '0.5em',
 }))
 
@@ -61,7 +61,7 @@ const FsType = styled('span')(({ theme }) => ({
     color: theme.palette.fstype,
 }))
 
-const MoreButton = styled(Button)(({ theme }) => ({
+const MoreButton = styled(Button)(() => ({
     marginLeft: '0.5em',
     paddingTop: 0,
     paddingBottom: 0,
@@ -88,7 +88,7 @@ const MountPointPath = styled('span')(({ theme }) => ({
     },
 }))
 
-const NotAMountpoint = styled(MountPointPath)(({ theme }) => ({
+const NotAMountpoint = styled(MountPointPath)(() => ({
     fontStyle: 'italic',
     marginLeft: '0.2em',
     marginRight: '0.7em',
@@ -146,7 +146,7 @@ const MountPointLabel = ({ mountpoint, tail, childmountcount }: MountPointLabelP
 
     const handleMore = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation()
-        if (!!setMountpoint) setMountpoint(mountpoint)
+        if (setMountpoint) setMountpoint(mountpoint)
     }
 
     return (

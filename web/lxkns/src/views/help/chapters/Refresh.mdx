@@ -14,6 +14,15 @@ available, the display will update automatically. A circling throbber will
 appear around the &#32;<RefreshIcon className="icon"/> refresh button whenever
 discovery takes more time, in order to notify you of an ongoing discovery.
 
+> **Note:** in case of podman, the first discovery can take a few seconds to
+> fully complete. The reason is that the default podman system setup is to run
+> podman – both as a system service, as well as user-specific services – only on
+> demand. The initial discovery thus first needs to start
+> (["socket-activate"](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md))
+> all found podman instances and then synchronize to their container workloads.
+> This is considerably slower than synchronizing with an already warmed-up
+> Docker or Kubernetes CRI-supporting engines. 
+
 ## Automatic Refresh Interval
 
 Alternatively, if you hate clicking refresh buttons, you can also set an

@@ -32,9 +32,9 @@ import { atom, Getter, Setter } from 'jotai'
  */
 const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
     try {
-        let json = localStorage.getItem(storageKey)
+        const json = localStorage.getItem(storageKey)
         if (json !== null) {
-            var value
+            let value
             try {
                 value = JSON.parse(json)
             } catch (e) {
@@ -58,7 +58,7 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
             // the default value.
             return typeof(value) === typeof(defaultValue) ? value : defaultValue
         }
-    } catch (e) { }
+    } catch (e) { /* empty */ }
     return defaultValue
 }
 

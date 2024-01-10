@@ -26,7 +26,7 @@ const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
 const navigatorFooterSpacing = 3 // spacing(x)
 
-const HelpCanvas = styled('div')(({ theme }) => ({
+const HelpCanvas = styled('div')(() => ({
     overflow: 'auto', // let there be shcrollbarrs!
 }))
 
@@ -65,7 +65,7 @@ const NavigatorButton = styled(IconButton)(({ theme }) => ({
     },
 }))
 
-const Markdowner = styled(MuiMarkdown)(({ theme }) => ({
+const Markdowner = styled(MuiMarkdown)(() => ({
     // Compensate for the height of the sticky toc navigator button.
     marginTop: '-24px',
 }))
@@ -96,7 +96,7 @@ export interface HelpViewerChapter {
     /** chapter title to show in ToC and bottom navigation. */
     title: string
     /** the help chapter contents. */
-    chapter: (props: any) => ReactNode
+    chapter: (props: unknown) => ReactNode
     /** 
      * optional chapter slug, relative to base of help viewer path; if left
      * undefined, then defaults to the "slugified" chapter title, where the
@@ -149,7 +149,7 @@ export interface HelpViewerProps {
      */
     markdowner?: (props: MuiMarkdownProps) => JSX.Element
     /** shortcodes, that is, available components. */
-    shortcodes?: { [key: string]: React.ComponentType<any> }
+    shortcodes?: { [key: string]: React.ComponentType<unknown> }
     /** inline styles. */
     style?: React.CSSProperties
 }
@@ -215,7 +215,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
     const anchorEl = useRef<HTMLButtonElement>(null) // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/35572#issuecomment-498242139
 
     // Pop up the table of contents menu...
-    const handleIconClick = (event: MouseEvent<HTMLElement>) => {
+    const handleIconClick = () => {
         setTocOpen(true)
     }
 

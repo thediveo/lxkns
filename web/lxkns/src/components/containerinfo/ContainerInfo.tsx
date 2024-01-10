@@ -12,6 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import React from 'react'
+
 import { styled } from '@mui/material'
 import { Pause } from '@mui/icons-material'
 
@@ -58,7 +60,7 @@ const ContainerName = styled('span')(({ theme }) => ({
     },
 }))
 
-const GroupInfo = styled('span')(({ theme }) => ({
+const GroupInfo = styled('span')(() => ({
     paddingLeft: '0.4em',
 }))
 
@@ -93,17 +95,17 @@ export interface ContainerInfoProps {
  */
 export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
-    var groupicon = null
-    var groupname = ""
+    let groupicon = null
+    let groupname = ""
     const project = containerGroup(container, 'com.docker.compose.project')
-    if (!!project) {
+    if (project) {
         groupname = project.name
         groupicon = container.flavor === 'com.siemens.industrialedge.app'
             ? <IEAppIcon fontSize="inherit" />
             : <ComposerProjectIcon fontSize="inherit" />
     }
     const pod = containerGroup(container, 'io.kubernetes.pod')
-    if (!!pod) {
+    if (pod) {
         groupname = pod.name
         groupicon = <PodIcon fontSize="inherit" />
     }

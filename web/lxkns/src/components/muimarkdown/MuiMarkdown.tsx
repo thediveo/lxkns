@@ -35,36 +35,36 @@ import { MDXComponents, MDXContent } from 'mdx/types'
 const muiComponents: MDXComponents = {
     // Get us rid of that pesky "validateDOMNesting(...): <p> cannot appear as a
     // descendant of <p>" by using a <div> instead of Typography's default <p>.
-    p: (props: any) => (<Typography {...props} component="div" />),
+    p: (props: object) => (<Typography {...props} component="div" />),
 
-    h1: (props: any) => (<Typography {...props} variant="h4" />),
-    h2: (props: any) => (<Typography {...props} variant="h5" />),
-    h3: (props: any) => (<Typography {...props} variant="h6" />),
-    h4: (props: any) => (<Typography {...props} variant="subtitle1" />),
-    h5: (props: any) => (<Typography {...props} variant="subtitle2" />),
-    h6: (props: any) => (<Typography {...props} variant="subtitle2" />),
+    h1: (props: object) => (<Typography {...props} variant="h4" />),
+    h2: (props: object) => (<Typography {...props} variant="h5" />),
+    h3: (props: object) => (<Typography {...props} variant="h6" />),
+    h4: (props: object) => (<Typography {...props} variant="subtitle1" />),
+    h5: (props: object) => (<Typography {...props} variant="subtitle2" />),
+    h6: (props: object) => (<Typography {...props} variant="subtitle2" />),
 
     // And once more: get us rid of that pesky "validateDOMNesting(...): <p>
     // cannot appear as a descendant of <p>" by using a <div> instead of
     // Typography's default <p>.
-    blockquote: (props: any) => (<Typography {...props} component="div" variant="body2" />),
+    blockquote: (props: object) => (<Typography {...props} component="div" variant="body2" />),
 
-    ul: (props: any) => (<Typography {...props} component="ul" />),
-    ol: (props: any) => (<Typography {...props} component="ol" />),
-    li: (props: any) => (<Typography {...props} component="li" />),
+    ul: (props: object) => (<Typography {...props} component="ul" />),
+    ol: (props: object) => (<Typography {...props} component="ol" />),
+    li: (props: object) => (<Typography {...props} component="li" />),
 
-    table: (props: any) => (<Table {...props} />),
-    tr: (props: any) => (<TableRow {...props} />),
-    td: (props: any) => {
-        const { align, ...otherprops } = props
+    table: (props: object) => (<Table {...props} />),
+    tr: (props: object) => (<TableRow {...props} />),
+    td: (props: object) => {
+        const { align, ...otherprops }: { align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' } = props
         return <TableCell align={align || undefined} {...otherprops} />
     },
-    tbody: (props: any) => (<TableBody {...props} />),
-    th: (props: any) => {
-        const { align, ...otherprops } = props
+    tbody: (props: object) => (<TableBody {...props} />),
+    th: (props: object) => {
+        const { align, ...otherprops }: { align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' } = props
         return <TableCell align={align || undefined} {...otherprops} />
     },
-    thead: (props: any) => (<TableHead {...props} />),
+    thead: (props: object) => (<TableHead {...props} />),
 
     hr: () => (<Divider />),
 }

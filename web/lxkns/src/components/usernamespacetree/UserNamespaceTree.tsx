@@ -58,12 +58,12 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
 
     useEffect(() => { currExpanded.current = expanded }, [expanded])
 
-    // Trigger an action when the action "state" changes; we are ignoing any
+    // Trigger an action when the action "state" changes; we are ignoring any
     // stuff appended to the commands, as we need to add noise to the commands
     // in order to make state changes trigger. Oh, well, bummer.
     useEffect(() => {
         switch (action.action) {
-            case EXPANDALL:
+            case EXPANDALL: {
                 // expand all user namespaces and all included process nodes.
                 const alluserns = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === "user")
@@ -73,16 +73,18 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
                     .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
                 setExpanded(alluserns.concat(allealdormen))
                 break
-            case COLLAPSEALL:
+            }
+            case COLLAPSEALL: {
                 const topuserns = Object.values(discovery.namespaces)
                     .filter(ns => ns.type === "user" && ns.parent === null)
                     .map(ns => ns.nsid.toString())
                 setExpanded(topuserns)
                 break
+            }
         }
     }, [action, discovery])
 
-    // After updaing the discovery information, check if there are any new user
+    // After updating the discovery information, check if there are any new user
     // namespaces (including their sub items grouping non-user namespaces by
     // processes) which we want to automatically expand in the tree view. We
     // won't touch the expansion state of existing user namespace tree nodes.

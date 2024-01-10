@@ -12,6 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import React from 'react'
+
 import { Pause, PlayArrow } from '@mui/icons-material'
 import { styled, Tooltip } from '@mui/material'
 import { Busybody } from 'models/lxkns'

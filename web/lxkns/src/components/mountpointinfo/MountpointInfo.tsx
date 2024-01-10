@@ -38,7 +38,7 @@ const MountProperties = styled('div')(({ theme }) => ({
     rowGap: theme.spacing(0.5),
 }))
 
-const ExternalDocumentation = styled('span')(({ theme }) => ({
+const ExternalDocumentation = styled('span')(() => ({
     position: 'relative',
     width: 0,
     height: 0,
