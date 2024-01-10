@@ -151,7 +151,6 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
     // User selects an auto-refresh interval menu item.
     const handleIntervalMenuChange = (interval: RefresherInterval) => {
         setAnchorEl(undefined)
-        console.log("setting auto-refresh to:", interval.label)
         setRefreshInterval(interval.interval)
     };
 

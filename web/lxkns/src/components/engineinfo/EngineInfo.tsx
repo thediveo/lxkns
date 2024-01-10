@@ -14,8 +14,59 @@
 
 import React from 'react'
 
-export const EngineInfo = () => {
+import clsx from 'clsx'
+import { styled } from '@mui/material'
 
+import { Container, Engine } from 'models/lxkns'
+import { engineTypeName } from 'utils/engine'
+import { ContainerTypeIcon } from 'components/containertypeicon'
+
+const EngineInformation = styled('span')(() => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    '& .MuiSvgIcon-root': {
+        marginRight: '0.15em',
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.2ex',
+    },
+}))
+
+const EngineID = styled('span')(() => ({
+    fontVariantNumeric: 'tabular-nums',
+    fontFamily: 'Roboto Mono',
+    '&:before': {
+        content: '"«"',
+        fontStyle: 'normal',
+    },
+    '&:after': {
+        content: '"»"',
+        fontStyle: 'normal',
+    },
+}))
+
+export interface EngineInfo {
+    /** information about a container engine (with workload) */
+    engine: Engine
+    /** optional CSS class name(s). */
+    className?: string
+}
+
+export const EngineInfo = ({ engine, className }: EngineInfo) => {
+    const typename = engineTypeName(engine.type)
+
+    return !!engine && (
+        <EngineInformation className={clsx(className)}>
+            <ContainerTypeIcon container={{
+                type: engine.type,
+                flavor: engine.type,
+            } as Container}
+                fontSize="inherit"
+            />
+            {typename} engine ({engine.pid})
+            ID: <EngineID>{engine.id}</EngineID>
+        </EngineInformation>
+    )
 }
 
 export default EngineInfo
