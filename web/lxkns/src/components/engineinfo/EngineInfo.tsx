@@ -53,6 +53,7 @@ export interface EngineInfo {
 }
 
 export const EngineInfo = ({ engine, className }: EngineInfo) => {
+
     const typename = engineTypeName(engine.type)
 
     return !!engine && (
