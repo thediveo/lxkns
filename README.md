@@ -19,7 +19,7 @@ Discover how containers are using Linux kernel namespaces...
 ...or the mounts inside your containers, and how _over-mounts_ make other mounts
 _invisible_.
 
-[![container mounts](docs/_images/container-mounts-thumbnail.png)](docs/_images/container-mounts-containers.png)
+[![container mounts](docs/_images/container-mounts-thumbnail.png)](docs/_images/container-mounts.png)
 
 ## Quick Start
 
