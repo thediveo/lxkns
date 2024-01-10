@@ -4,6 +4,7 @@ import Docker from 'icons/containers/Docker.tsx';
 import DockerPlugin from 'icons/containers/DockerManagedPlugin.tsx';
 import IERuntime from 'icons/containers/IERuntime.tsx';
 import Podman from 'icons/containers/Podman.tsx';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import ComposerProject from 'icons/containers/ComposerProject.tsx';
 import IEApp from 'icons/containers/IEApp.tsx';
@@ -11,6 +12,14 @@ import K8sPod from 'icons/containers/K8sPod.tsx';
 
 
 # Containers
+
+## Containers View
+
+lxkns features a dedicated "all containers" view, accessible from the
+[application bar drawer](/help/appbar), either by sliding from the left border or
+clicking/tapping the <MenuIcon className="icon"/> button in the top-left corner.
+
+## Container (Engine) Types
 
 As lxkns detects container engines and their container workloads automatically,
 it shows a container symbol next to processes belonging to containers. The exact
@@ -25,13 +34,19 @@ symbol depends on the type of container the process belongs to.
 | <IERuntime/> | Siemens Industrial Edge runtime |
 | <Container/> | unknown container type |
 
-# Container Groups
+## Container Groups
 
-In some situations, containers can be grouped; lxkns then shows different
-symbols depending on group type, as well as the group name.
+Some containers may be "grouped"; lxkns then shows different symbols depending
+on the type of container group, together with the group name.
 
 | Symbol | Type of Container Group |
 | --- | --- |
 | <ComposerProject/> | (Docker) [compose](https://compose-spec.io/) project |
 | <IEApp/> | Siemens Industrial Edge App |
 | <K8sPod/> | Kubernetes Pod |
+
+> **Note:** lxkns supports only the Docker-compatible functionality of podman.
+> Podman pods are neither discovered nor shown. We will not support the
+> podman-specific API, because of the negative experience gained in the
+> now-archived [sealwatcher](https://github.com/thediveo/sealwatcher) podman
+> watcher project.
