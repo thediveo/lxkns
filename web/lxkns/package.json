@@ -48,7 +48,7 @@
     "typographic-em-dashes": "^1.0.2",
     "typographic-en-dashes": "^1.0.1",
     "typographic-quotes": "^2.0.1",
-    "vite": "^4.5.1",
+    "vite": "^5.0.11",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.2.3"
