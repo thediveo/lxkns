@@ -24,7 +24,7 @@ import ProcessInfo from 'components/processinfo'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { NamespaceInfo } from 'components/namespaceinfo'
-import { expandInitiallyAtom } from 'views/settings'
+import { expandWorkloadInitiallyAtom } from 'views/settings'
 import { useAtom } from 'jotai'
 
 const coll = new Intl.Collator(undefined, {
@@ -42,7 +42,7 @@ export interface ContainerTreeProps {
 
 export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
 
-    const [expandInitially] = useAtom(expandInitiallyAtom)
+    const [expandWLInitially] = useAtom(expandWorkloadInitiallyAtom)
 
     // Previous discovery information, if any.
     const previousDiscovery = useRef({ namespaces: {}, processes: {}, engines: {} } as Discovery)
@@ -98,11 +98,11 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
             .map(engine => engine.containers)
             .flat()
             .map(cntr => cntr.process.pid.toString())
-            .filter(id => expandInitially && !previousWorkloadIds.includes(id))
+            .filter(id => expandWLInitially && !previousWorkloadIds.includes(id))
 
         setExpanded(currExpanded.current.concat(expandEngineIds, expandWorkloadsIds))
         previousDiscovery.current = discovery;
-    }, [discovery, expandInitially])
+    }, [discovery, expandWLInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
