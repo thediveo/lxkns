@@ -125,11 +125,12 @@ RUN yarn config set nodeLinker node-modules
 COPY --from=webappsrc \
     package.json \
     yarn.lock \
-    .eslintrc \
+    .eslintrc.cjs \
     tsconfig.json \
     tsconfig.node.json \
     vite.config.ts \
     index.html \
+    lxkns-logo.svg \
         ./
 # While not being a true production install in the original sense, this avoids
 # installing storybook which we all don't need in creating the production build.
