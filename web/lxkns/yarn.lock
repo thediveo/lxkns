@@ -10408,6 +10408,7 @@ __metadata:
     "@storybook/react": "npm:^7.6.7"
     "@storybook/react-vite": "npm:^7.6.7"
     "@storybook/testing-library": "npm:^0.2.2"
+    "@svgr/plugin-jsx": "npm:^8.1.0"
     "@svgr/plugin-svgo": "npm:^8.1.0"
     "@types/color-rgba": "npm:^2.1.2"
     "@types/mdx": "npm:^2.0.10"
