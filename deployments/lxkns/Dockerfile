@@ -140,7 +140,8 @@ RUN yarn eslint --init
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
 COPY --from=webappsrc .env ./
-ARG GIT_VERSION
+ARG REACT_APP_GIT_VERSION
+RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${REACT_APP_GIT_VERSION}/" .env
 RUN yarn build
 
 # 3rd and final stage: create the final image containing only the lxkns binary
