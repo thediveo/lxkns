@@ -52,7 +52,7 @@ dist: ## build multi-arch image (amd64, arm64) and push to local running registr
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	scripts/multiarch-builder.sh \
-		--build-arg GIT_VERSION=$(GIT_VERSION) \
+		--build-arg REACT_APP_GIT_VERSION=$(GIT_VERSION) \
 		--build-context webappsrc=./web/lxkns
 
 deploy: ## deploys lxkns service on host port 5010
@@ -60,7 +60,7 @@ deploy: ## deploys lxkns service on host port 5010
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	scripts/docker-build.sh deployments/lxkns/Dockerfile \
 		-t lxkns \
-		--build-arg GIT_VERSION=$(GIT_VERSION) \
+		--build-arg REACT_APP_GIT_VERSION=$(GIT_VERSION) \
 		--build-context webappsrc=./web/lxkns
 	docker compose -p lxkns -f deployments/lxkns/docker-compose.yaml up
 
@@ -82,13 +82,13 @@ buildapp: ## builds web UI app
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	@echo "building version" $(GIT_VERSION)
-	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn build
+	@cd web/lxkns && sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=$$GIT_VERSION/" .env && yarn build
 
 startapp: ## starts web UI app for development
 	$(GOGEN)
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	@echo "starting version" $(GIT_VERSION)
-	@cd web/lxkns && GIT_VERSION=$(GIT_VERSION) yarn start
+	@cd web/lxkns && sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=$$GIT_VERSION/" .env && yarn build
 
 scan: ## scans the repository for CVEs
 	@scripts/scan.sh
