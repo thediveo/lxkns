@@ -30,7 +30,8 @@ First, ensure that you have the Docker compose v2 plugin installed.
 > features completely – which absolutely makes sense in a fast moving container
 > world ... _NOT_.
 
-Then on either an amd64 or arm64 architecture issue the following CLI command:
+Make sure you have a Linux kernel of at least version 4.11 installed, however we
+highly recommend at least kernel version 5.6 or later.
 
 ```bash
 wget -q --no-cache -O - \
@@ -58,15 +59,15 @@ namespaces, as well as mount points with their hierarchies.
     finally landed in turtlefinder, and in turn also in `lxkns`.
 
 
-| | Where? | `lsns` | `lxkns` |
-| --- | --- | :---: | :---: |
-| ①  | `/proc/*/ns/*` | ✓ | ✓ |
-| ②  | `/proc/*/task/*/ns/*` | ✗ | ✓ |
-| ③  | bind mounts | ✗ | ✓ |
-| ➃a | `/proc/*/fd/*` namespace fds | ✗ | ✓ |
-| ➃b | `/proc/*/fd/*` socket fds | ✗ | ✓ |
-| ➄  | namespace hierarchy | ✗ | ✓ |
-| ➅  | owning user namespaces | ✗ | ✓ |
+| | Where? | `lsns` | `lxkns` | Kernel |
+| --- | --- | :---: | :---: | --- |
+| ➀  | `/proc/*/ns/*` | ✓ | ✓ | 4.11 |
+| ➁  | `/proc/*/task/*/ns/*` | ✗ | ✓ | 4.11 |
+| ➂  | bind mounts | ✗ | ✓ | 4.11 |
+| ➃a | `/proc/*/fd/*` namespace fds | ✗ | ✓ | 4.11 |
+| ➃b | `/proc/*/fd/*` socket fds | ✗ | ✓ | 5.6 |
+| ➄  | namespace hierarchy | ✗ | ✓ | 4.11 |
+| ➅  | owning user namespaces | ✗ | ✓ | 4.11 |
 
 For mount namespaces, lxkns finds mount points even in process-less mount
 namespaces (for instance, as utilized in ["snap"
