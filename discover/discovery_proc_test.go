@@ -42,49 +42,58 @@ var _ = Describe("Discover from processes", Ordered, func() {
 	})
 
 	It("finds at least the namespaces lsns finds", func() {
-		allns := Namespaces(FromProcs())
+		// hear, hear ... lsns finally upped its game :D
+		allns := Namespaces(FromProcs(), FromBindmounts())
 		alllsns := lsns()
 		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash|runc) (.+ )?/tmp/`)
-		for _, ns := range alllsns {
-			nsidx := model.TypeIndex(species.NameToType(ns.Type))
-			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(ns.NS)]
+		for _, lsns := range alllsns {
+			nsidx := model.TypeIndex(species.NameToType(lsns.Type))
+			discons := allns.Namespaces[nsidx][species.NamespaceIDfromInode(lsns.NS)]
 			// Try to squash false positives, which are resulting from our own
 			// test scripts...
 			if discons == nil {
-				if ignoreme.MatchString(ns.Command) {
+				if ignoreme.MatchString(lsns.Command) {
 					fmt.Fprintf(os.Stderr,
 						"NOTE: skipping false positive: %s:[%d] %q\n",
-						ns.Type, ns.NS, ns.Command)
+						lsns.Type, lsns.NS, lsns.Command)
 					continue
 				}
 			}
 			// And now for the real assertion!
 			Expect(discons).NotTo(BeNil(), func() string {
 				// Dump details of what lsns has seen, versus what lxkns has
-				// discovered. This should help diagnosing problems ... such
-				// as the spurious false positives due to test basher scripts
-				// spinning up and down with some delay, so lsns and lxkns
+				// discovered. This should help diagnosing problems ... such as
+				// the spurious false positives due to test basher scripts
+				// spinning up and down with some delay, so lsnslist and lxkns
 				// might see different system states.
-				lsns := ""
+				lsnslist := ""
 				for _, entry := range alllsns {
-					lsns += fmt.Sprintf("\t%v\n", entry)
+					lsnslist += fmt.Sprintf("\t%v\n", entry)
 				}
-				lxns := ""
+				lxnslist := ""
 				for nstype := model.NamespaceTypeIndex(0); nstype < model.NamespaceTypesCount; nstype++ {
 					for _, ns := range allns.Namespaces[nstype] {
-						lxns += fmt.Sprintf("\t%s\n", ns.String())
+						lxnslist += fmt.Sprintf("\t%s\n", ns.String())
 					}
 				}
-				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", ns.Type, ns.NS, lsns, lxns)
+				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", lsns.Type, lsns.NS, lsnslist, lxnslist)
 			})
+			// As of lsns util-linux 2.39.1 we now get bind-mounted namespaces
+			// as well, so we need to cover this case especially.
+			if lsns.PID == 0 {
+				tidx, ok := model.NamespaceTypeIndexByName(lsns.Type)
+				Expect(ok).To(BeTrue(), "unknown namespace type %s", lsns.Type)
+				Expect(allns.Namespaces[tidx]).To(HaveKey(species.NamespaceIDfromInode(lsns.NS)))
+				continue
+			}
 			// rats ... lsns seems to take the numerically lowest PID number
 			// instead of the topmost PID in a namespace. This makes
 			// Expect(dns.LeaderPIDs()).To(ContainElement(PIDType(ns.PID))) to
 			// give false negatives, so we need to check the processes along
 			// the hierarchy which are still in the same namespace to be
 			// tested for.
-			p, ok := allns.Processes[ns.PID]
-			Expect(ok).To(BeTrue(), "unknown PID %d", ns.PID)
+			p, ok := allns.Processes[lsns.PID]
+			Expect(ok).To(BeTrue(), "unknown PID %d", lsns.PID)
 			leaders := discons.LeaderPIDs()
 			func() {
 				pids := []model.PIDType{}

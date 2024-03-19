@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.21', '1.20' ]
+        go: [ 'stable', 'oldstable' ]
     steps:
       - run: |
           sudo docker version

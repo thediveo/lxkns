@@ -18,13 +18,21 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"time"
 
+	cd "github.com/containerd/containerd"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/build"
+	"github.com/thediveo/morbyd/exec"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
+	"github.com/thediveo/morbyd/timestamper"
 	cdengine "github.com/thediveo/whalewatcher/engineclient/containerd"
+	"github.com/thediveo/whalewatcher/engineclient/cri/test/img"
 	mobyengine "github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/test"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/containerd"
 	"github.com/thediveo/whalewatcher/watcher/moby"
@@ -33,28 +41,26 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
-const cindName = "containerd-in-docker" // name of Docker container with containerd
+const (
+	imgName  = "thediveo/kindisch-lxkns-containerd"
+	cindName = "lxkns-cind" // name of Docker container with containerd
+)
 
 var _ = Describe("Discovering containers in containers", Serial, func() {
 
-	// Ensure to run the goroutine leak test *last* after all (defered)
+	var sess *morbyd.Session
+	var providerCntr *morbyd.Container
+
+	// Ensure to run the goroutine leak test *last* after all (deferred)
 	// clean-ups.
-	BeforeEach(slowSpec, func(_ context.Context) {
+	BeforeEach(slowSpec, func(ctx context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 			return
 		}
-
-		By("setting things up, hopefully not upsetting them")
-		out, err := exec.Command("./test/cind/setup.sh").CombinedOutput()
-		Expect(err).NotTo(HaveOccurred(), "with output:", out)
-		DeferCleanup(slowSpec, func(_ context.Context) {
-			By("tearing things down")
-			out, err := exec.Command("./test/cind/teardown.sh").CombinedOutput()
-			Expect(err).NotTo(HaveOccurred(), "with output:", out)
-		})
 
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
@@ -62,6 +68,72 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 				ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		By("creating a new Docker session for testing")
+		sess = Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=discover")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
+		// For details, please see:
+		// https://github.com/thediveo/whalewatcher/blob/cca7f5676b3f63b0e2d6311a60ca3da2fd07ead7/engineclient/containerd/containerd_test.go#L115
+		By("spinning up a Docker container with stand-alone containerd, courtesy of the KinD k8s sig")
+		Expect(sess.BuildImage(ctx, "./test/_kindisch",
+			build.WithTag(imgName),
+			build.WithBuildArg("KINDEST_BASE_TAG="+test.KindestBaseImageTag),
+			build.WithOutput(timestamper.New(GinkgoWriter)))).
+			Error().NotTo(HaveOccurred())
+		providerCntr = Successful(sess.Run(ctx, img.Name,
+			run.WithName(cindName),
+			run.WithAutoRemove(),
+			run.WithPrivileged(),
+			run.WithSecurityOpt("label=disable"),
+			run.WithCgroupnsMode("private"),
+			run.WithVolume("/var"),
+			run.WithVolume("/dev/mapper:/dev/mapper"),
+			run.WithVolume("/lib/modules:/lib/modules:ro"),
+			run.WithTmpfs("/tmp"),
+			run.WithTmpfs("/run"),
+			run.WithDevice("/dev/fuse"),
+			run.WithCombinedOutput(timestamper.New(GinkgoWriter))))
+		DeferCleanup(func(ctx context.Context) {
+			By("removing the test container")
+			providerCntr.Kill(ctx)
+		})
+
+		By("waiting for containerized containerd to become responsive")
+		pid := Successful(providerCntr.PID(ctx))
+		// apipath must not include absolute symbolic links, but already be
+		// properly resolved.
+		endpointPath := fmt.Sprintf("/proc/%d/root%s",
+			pid, "/run/containerd/containerd.sock")
+		var cdclient *cd.Client
+		Eventually(func() error {
+			var err error
+			cdclient, err = cd.New(endpointPath,
+				cd.WithTimeout(5*time.Second))
+			return err
+		}).Within(30*time.Second).ProbeEvery(1*time.Second).
+			Should(Succeed(), "containerd API never became responsive")
+		cdclient.Close() // not needed anymore, will create fresh ones over and over again
+
+		By("creating a dummy containerd workload that runs detached")
+		cmd := Successful(providerCntr.Exec(ctx,
+			exec.Command("ctr",
+				"image", "pull",
+				"docker.io/library/busybox:latest"),
+			exec.WithCombinedOutput(timestamper.New(GinkgoWriter))))
+		Expect(cmd.Wait(ctx)).To(BeZero())
+		cmd = Successful(providerCntr.Exec(ctx,
+			exec.Command("ctr",
+				"run",
+				"--detach",
+				"--label", "name=sleepy",
+				"docker.io/library/busybox:latest",
+				"sleepy",
+				"/bin/sh", "-c", "while true; do sleep 1; echo -n .; done"),
+			exec.WithCombinedOutput(timestamper.New(GinkgoWriter))))
+		Expect(cmd.Wait(ctx)).To(BeZero())
 	})
 
 	It("translates container-in-container PIDs", slowSpec, func(ctx context.Context) {
@@ -89,7 +161,9 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		Expect(enginepid).NotTo(BeZero(), "missing/invalid container %q with zero PID", cind.Name)
 		cancel()
 
-		By("watching both the Docker daemon and containerd")
+		By("watching the Dockerized containerd")
+		// we're lazy here and just use the Docker container's PID instead of
+		// the Dockerized containerd's PID, but that's close enough here.
 		mw, err = moby.New("", nil, mobyengine.WithPID(int(mobypid)))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -114,7 +188,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).To(Or(
 			BeNil(),
-			Not(HaveField("Cmdline", ConsistOf("sleep", ContainSubstring("1000"))))))
+			Not(HaveField("Cmdline", ConsistOf("sleep", ContainSubstring("1"))))))
 
 		By("looking for the sleepy container, now with a PID mapper")
 		allns = Namespaces(WithStandardDiscovery(), WithContainerizer(cizer), WithPIDMapper())
@@ -124,7 +198,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		sleepy = containerds[0]
 		Expect(sleepy.Labels).To(HaveKeyWithValue("name", "sleepy"))
 		Expect(sleepy.Process).NotTo(BeNil())
-		Expect(sleepy.Process.Cmdline).To(ConsistOf("/bin/sh", "-c", ContainSubstring("sleep 1000")))
+		Expect(sleepy.Process.Cmdline).To(ConsistOf("/bin/sh", "-c", ContainSubstring("sleep 1")))
 		Expect(sleepy.PID).To(Equal(sleepy.Process.PID))
 	})
 

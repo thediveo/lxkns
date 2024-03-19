@@ -40,8 +40,9 @@ type lsnsdata struct {
 	Namespaces []lsnsentry `json:"namespaces"`
 }
 
-// UnmarshalJSON does custom JSON unmarshalling in order to hide the
-// differences between the lsns v1 and v2 JSON schemas.
+// UnmarshalJSON does custom JSON unmarshalling in order to hide the differences
+// between the lsns v1, v2, v3 JSON schemas. lsns seems to be kind of a moving
+// target anyway.
 func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	var fields map[string]*json.RawMessage
 	if err = json.Unmarshal(b, &fields); err != nil {
@@ -78,9 +79,16 @@ func tostr(r *json.RawMessage, v *string) (err error) {
 	return
 }
 
-// touint64 unmarshalles either a JSON number or string into a Golang int.
+// touint64 unmarshals either a JSON number or string into a Golang uint64. It
+// silently accepts "null" JSON values, return a zero value in this case. As of
+// util-linux 2.39.1, lsns discovers bind-mounted namespaces and in this case
+// sets the PID and command fields to JSON "null" values.
 func touint64(r *json.RawMessage, v *uint64) (err error) {
 	var s string
+	if r == nil || *r == nil {
+		*v = 0
+		return
+	}
 	if err = json.Unmarshal(*r, &s); err == nil {
 		*v, err = strconv.ParseUint(s, 10, 64)
 		return err

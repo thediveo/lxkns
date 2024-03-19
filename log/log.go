@@ -14,7 +14,10 @@
 
 package log
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Level defines the representation of a single logging level for the purposes
 // of logging in the lxkns module.
@@ -49,11 +52,14 @@ func SetLogger(logger Logger) {
 // loggeradapter points to a logging adapter, if any, for interfacing with an
 // lxkns-external logging module.
 var loggeradapter Logger
+var mu sync.RWMutex
 
 // SetLevel sets the logging level for lxkns-internal module logging. Depending
 // on the external logger adapter, the level setting might also be propagated to
 // this external logger.
 func SetLevel(level Level) {
+	mu.Lock()
+	defer mu.Unlock()
 	loglevel = level
 	if loggeradapter != nil {
 		loggeradapter.SetLevel(level)
@@ -108,6 +114,8 @@ func Tracefn(fn func() string) {
 // closures and allows optimizing hot paths further at the expense of slightly
 // more elaborate logging calling sites.
 func LevelEnabled(level Level) bool {
+	mu.RLock()
+	defer mu.RUnlock()
 	return level <= loglevel && loggeradapter != nil
 }
 

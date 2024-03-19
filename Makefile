@@ -5,9 +5,11 @@ GOGEN = go generate .
 
 GET_SEMVERSION = awk '{match($$0,/const\s+SemVersion\s+=\s+"(.*)"/,m);if (m[1]!="") print m[1]}' defs_version.go
 
+export GOTOOLCHAIN=local
+
 # Go version to use when building the test containers; see README.md for
 # supported versions strategy.
-goversion = 1.21 1.20
+goversion = 1.22 1.21
 
 tools := dumpns lsallns lspidns lsuns nscaps pidtree lxkns
 

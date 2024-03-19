@@ -63,13 +63,18 @@ namespaces, as well as mount points with their hierarchies.
 | --- | --- | :---: | :---: | --- |
 | ➀  | `/proc/*/ns/*` | ✓ | ✓ | 4.11 |
 | ➁  | `/proc/*/task/*/ns/*` | ✗ | ✓ | 4.11 |
-| ➂  | bind mounts | ✗ | ✓ | 4.11 |
+| ➂  | bind mounts | ✓<sup>A</sup> | ✓ | 4.11 |
 | ➃a | `/proc/*/fd/*` namespace fds | ✗ | ✓ | 4.11 |
 | ➃b | `/proc/*/fd/*` socket fds | ✗ | ✓ | 5.6 |
 | ➄  | namespace hierarchy | ✗ | ✓ | 4.11 |
 | ➅  | owning user namespaces | ✗ | ✓ | 4.11 |
 
-For mount namespaces, lxkns finds mount points even in process-less mount
+- <sup>A</sup> very recent versions of `lsns` have improved and are now
+  reporting bind-mounted namespaces as of "util-linux 2.39.1". Maybe `lxkns`
+  managed to put some pressure to innovate on `lsns`, maybe not; we would like
+  to hear from people who are acquainted with the rationale.
+
+`lxkns` finds mount points even in process-less mount
 namespaces (for instance, as utilized in ["snap"
 technology](https://snapcraft.io/docs)). Our discovery engine even determines
 the visibility of mount points, taking different forms of "overmounting" into

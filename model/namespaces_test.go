@@ -18,6 +18,7 @@ import (
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2/dsl/core"
+	. "github.com/onsi/ginkgo/v2/dsl/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -27,5 +28,22 @@ var _ = Describe("model", func() {
 		Expect(TypeIndex(species.CLONE_NEWCGROUP | species.CLONE_NEWNET)).To(
 			Equal(NamespaceTypeIndex(-1)))
 	})
+
+	DescribeTable("returns type indices for namespace type names",
+		func(name string, expected NamespaceTypeIndex, expectedok bool) {
+			idx, ok := NamespaceTypeIndexByName(name)
+			Expect(ok).To(Equal(expectedok))
+			Expect(idx).To(Equal(idx))
+		},
+		Entry(nil, "foo", NamespaceTypeIndex(0), false),
+		Entry(nil, "mnt", MountNS, true),
+		Entry(nil, "cgroup", CgroupNS, true),
+		Entry(nil, "uts", UTSNS, true),
+		Entry(nil, "ipc", IPCNS, true),
+		Entry(nil, "user", UserNS, true),
+		Entry(nil, "pid", PIDNS, true),
+		Entry(nil, "net", NetNS, true),
+		Entry(nil, "time", TimeNS, true),
+	)
 
 })
