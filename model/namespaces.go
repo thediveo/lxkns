@@ -51,6 +51,26 @@ const (
 	NamespaceTypesCount // number of namespace types
 )
 
+// typenameIndices maps the namespace type names (in their abbreviated form) to
+// type indices as used in our lxkns model in various places.
+var typenameIndices = map[string]NamespaceTypeIndex{
+	"mnt":    MountNS,
+	"cgroup": CgroupNS,
+	"uts":    UTSNS,
+	"ipc":    IPCNS,
+	"user":   UserNS,
+	"pid":    PIDNS,
+	"net":    NetNS,
+	"time":   TimeNS,
+}
+
+// NamespaceTypeIndexByName maps the specified namespace type name (in
+// abbreviated form, such as “mnt” and “net”) to its namespace type index.
+func NamespaceTypeIndexByName(name string) (NamespaceTypeIndex, bool) {
+	idx, ok := typenameIndices[name]
+	return idx, ok
+}
+
 // typeIndices maps Linux' kernel namespace clone() syscall constants to
 // their corresponding [model.AllNamespaces] array indices.
 var typeIndices = map[species.NamespaceType]NamespaceTypeIndex{
