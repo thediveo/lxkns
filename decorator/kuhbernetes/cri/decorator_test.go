@@ -17,18 +17,20 @@ package cri
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/test/matcher"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/build"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
+	"github.com/thediveo/morbyd/timestamper"
 	criengine "github.com/thediveo/whalewatcher/engineclient/cri"
 	"github.com/thediveo/whalewatcher/engineclient/cri/test/img"
 	"github.com/thediveo/whalewatcher/test"
@@ -62,7 +64,8 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 		})
 	})
 
-	var providerCntr *dockertest.Resource
+	var sess *morbyd.Session
+	var providerCntr *morbyd.Container
 	var cricl *criengine.Client
 
 	// We build and use the same Docker container for testing our CRI event API
@@ -74,9 +77,13 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 			Skip("needs root")
 		}
 
+		By("creating a new Docker session for testing")
+		sess = Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=cri")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
 		By("spinning up a Docker container with CRI API providers, courtesy of the KinD k8s sig")
-		pool := Successful(dockertest.NewPool("unix:///var/run/docker.sock"))
-		_ = pool.RemoveContainerByName(kindischName)
 		// The necessary container start arguments come from KinD's Docker node
 		// provisioner, see:
 		// https://github.com/kubernetes-sigs/kind/blob/3610f606516ccaa88aa098465d8c13af70937050/pkg/cluster/internal/providers/docker/provision.go#L133
@@ -97,46 +104,35 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 		//   --volume /var
 		//   --volume /lib/modules:/lib/modules:ro
 		//	 kindisch-...
-		Expect(pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:       img.Name,
-			ContextDir: "./test/_kindisch", // sorry, couldn't resist the pun.
-			Dockerfile: "Dockerfile",
-			BuildArgs: []docker.BuildArg{
-				{Name: "KINDEST_BASE_TAG", Value: test.KindestBaseImageTag},
-			},
-			OutputStream: io.Discard,
-		})).To(Succeed())
-		providerCntr = Successful(pool.RunWithOptions(
-			&dockertest.RunOptions{
-				Name:       kindischName,
-				Repository: img.Name,
-				Privileged: true,
-				Mounts: []string{
-					"/var",
-					"/dev/mapper:/dev/mapper",
-					"/lib/modules:/lib/modules:ro",
-				},
-			}, func(hc *docker.HostConfig) {
-				hc.Init = false
-				hc.Tmpfs = map[string]string{
-					"/tmp": "",
-					"/run": "",
-				}
-				hc.Devices = []docker.Device{
-					{PathOnHost: "/dev/fuse"},
-				}
-			}))
-		DeferCleanup(func() {
-			By("removing the CRI API providers Docker container")
-			Expect(pool.Purge(providerCntr)).To(Succeed())
+		Expect(sess.BuildImage(ctx, "./test/_kindisch",
+			build.WithTag(img.Name),
+			build.WithBuildArg("KINDEST_BASE_TAG="+test.KindestBaseImageTag),
+			build.WithOutput(timestamper.New(GinkgoWriter)))).
+			Error().NotTo(HaveOccurred())
+		providerCntr = Successful(sess.Run(ctx, img.Name,
+			run.WithName(kindischName),
+			run.WithAutoRemove(),
+			run.WithPrivileged(),
+			run.WithSecurityOpt("label=disable"),
+			run.WithCgroupnsMode("private"),
+			run.WithVolume("/var"),
+			run.WithVolume("/dev/mapper:/dev/mapper"),
+			run.WithVolume("/lib/modules:/lib/modules:ro"),
+			run.WithTmpfs("/tmp"),
+			run.WithTmpfs("/run"),
+			run.WithDevice("/dev/fuse"),
+			run.WithCombinedOutput(timestamper.New(GinkgoWriter))))
+		DeferCleanup(func(ctx context.Context) {
+			By("removing the test container")
+			providerCntr.Kill(ctx)
 		})
 
 		By("waiting for the CRI API provider to become responsive")
-		Expect(providerCntr.Container.State.Pid).NotTo(BeZero())
+		pid := Successful(providerCntr.PID(ctx))
 		// apipath must not include absolute symbolic links, but already be
 		// properly resolved.
 		endpoint := fmt.Sprintf("/proc/%d/root%s",
-			providerCntr.Container.State.Pid, "/run/containerd/containerd.sock")
+			pid, "/run/containerd/containerd.sock")
 		Eventually(func() error {
 			var err error
 			cricl, err = criengine.New(endpoint, criengine.WithTimeout(1*time.Second))
@@ -154,7 +150,7 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 		defer cancel()
 		criw := watcher.New(criengine.NewCRIWatcher(
 			Successful(criengine.New(strings.TrimPrefix(cricl.Address(), "unix://"))),
-			criengine.WithPID(providerCntr.Container.State.Pid)), nil)
+			criengine.WithPID(Successful(providerCntr.PID(ctx)))), nil)
 		cizer := whalefriend.New(ctx, []watcher.Watcher{criw})
 		defer cizer.Close()
 		Eventually(criw.Ready()).Within(5 * time.Second).Should(BeClosed())
