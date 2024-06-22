@@ -32,15 +32,16 @@ type DiscoverOpts struct {
 	// If zero, defaults to discovering all namespaces.
 	NamespaceTypes species.NamespaceType `json:"-"`
 
-	ScanProcs            bool              `json:"from-procs"`      // Scan processes for attached namespaces.
-	ScanTasks            bool              `json:"from-tasks"`      // Scan all tasks for attached namespaces.
-	ScanFds              bool              `json:"from-fds"`        // Scan open file descriptors for namespaces.
-	ScanBindmounts       bool              `json:"from-bindmounts"` // Scan bind-mounts for namespaces.
-	DiscoverHierarchy    bool              `json:"with-hierarchy"`  // Discover the hierarchy of PID and user namespaces.
-	DiscoverOwnership    bool              `json:"with-ownership"`  // Discover the ownership of non-user namespaces.
-	DiscoverFreezerState bool              `json:"with-freezer"`    // Discover the cgroup freezer state of processes.
-	DiscoverMounts       bool              `json:"with-mounts"`     // Discover mount point hierarchy with mount paths and visibility.
-	Labels               map[string]string `json:"labels"`          // Pass options (in form of labels) to decorators
+	ScanProcs               bool              `json:"from-procs"`            // Scan processes for attached namespaces.
+	ScanTasks               bool              `json:"from-tasks"`            // Scan all tasks for attached namespaces.
+	ScanFds                 bool              `json:"from-fds"`              // Scan open file descriptors for namespaces.
+	ScanBindmounts          bool              `json:"from-bindmounts"`       // Scan bind-mounts for namespaces.
+	DiscoverHierarchy       bool              `json:"with-hierarchy"`        // Discover the hierarchy of PID and user namespaces.
+	DiscoverOwnership       bool              `json:"with-ownership"`        // Discover the ownership of non-user namespaces.
+	DiscoverFreezerState    bool              `json:"with-freezer"`          // Discover the cgroup freezer state of processes.
+	DiscoverMounts          bool              `json:"with-mounts"`           // Discover mount point hierarchy with mount paths and visibility.
+	DiscoverSocketProcesses bool              `json:"with-socket-processes"` // Discover the processes related to specific socket inode numbers.
+	Labels                  map[string]string `json:"labels"`                // Pass options (in form of labels) to decorators
 
 	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
 
@@ -184,6 +185,18 @@ func WithMounts() DiscoveryOption {
 // visibility.
 func WithoutMounts() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.DiscoverMounts = false }
+}
+
+// WithSocketProcesses opts to find the relationship between socket inode
+// numbers and process PIDs.
+func WithSocketProcesses() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.DiscoverSocketProcesses = true }
+}
+
+// WithoutSocketProcesses opts out of finding the relationship between socket
+// inode numbers and process PIDs.
+func WithoutSocketProcesses() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.DiscoverSocketProcesses = false }
 }
 
 // WithLabel adds a key-value pair to the discovery options.

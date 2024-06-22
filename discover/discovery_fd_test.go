@@ -16,6 +16,7 @@ package discover
 
 import (
 	"os"
+	"sync"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -29,7 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
-	. "github.com/thediveo/once"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("Discover from fds", func() {
@@ -105,8 +106,8 @@ read # wait for test to proceed()
 
 		By("creating a transient new network namespace we only keep a socket connected to")
 		netnsFd := netns.NewTransient()
-		closeOnceNetnsFd := Once(func() { unix.Close(netnsFd) })
-		defer closeOnceNetnsFd.Do()
+		closeNetnsFd := sync.OnceFunc(func() { unix.Close(netnsFd) })
+		defer closeNetnsFd()
 
 		netnsino := netns.Ino(netnsFd)
 
@@ -114,11 +115,32 @@ read # wait for test to proceed()
 		defer nlh.Close()
 
 		By("keeping only a socket as the last reference to the transient network namespace")
-		closeOnceNetnsFd.Do()
+		closeNetnsFd()
 
 		By("discovering the transient network namespace from the RTNETLINK socket")
 		allns := Namespaces(FromFds())
-		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(species.NamespaceIDfromInode(netnsino)))
+		Expect(allns.Namespaces[model.NetNS]).To(
+			HaveKey(species.NamespaceIDfromInode(netnsino)))
+	})
+
+	It("discovers the socket-to-process mapping", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
+		sockfd := Successful(unix.Socket(unix.AF_INET, unix.SOCK_DGRAM, 0))
+		defer unix.Close(sockfd)
+		var sockstat unix.Stat_t
+		Expect(unix.Fstat(sockfd, &sockstat)).To(Succeed())
+
+		By("requesting scanning fds for socket network namespaces")
+		allns := Namespaces(FromFds())
+		Expect(allns.SocketProcessMap).To(HaveKeyWithValue(
+			sockstat.Ino, ConsistOf(model.PIDType(os.Getpid()))))
+
+		allns = Namespaces(WithSocketProcesses())
+		Expect(allns.SocketProcessMap).To(HaveKeyWithValue(
+			sockstat.Ino, ConsistOf(model.PIDType(os.Getpid()))))
 	})
 
 })

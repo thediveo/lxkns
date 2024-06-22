@@ -93,11 +93,11 @@ read
 			pidnsid.Ino)))
 	})
 
-	It("CLI w/o args renders pid tree", func() {
+	It("CLI -u renders user/pid tree", func() {
 		os.Args = append(os.Args[:1], "-u")
 		out := getstdout.Stdouterr(main)
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] process .*
-└─ pid:\[%d\] process .*$`,
+[├└]─ pid:\[%d\] process .*$`,
 			initusernsid.Ino, initpidnsid.Ino)))
 		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^   [├└]─ user:\[%d\] process .*
    [│ ]  [├└]─ pid:\[%d\] process .*$`,

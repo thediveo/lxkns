@@ -14,9 +14,9 @@
 # done executing "make deploy" with the current working directory set to this
 # repository's root directory.
 
-ARG ALPINE_VERSION=3.19
-ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.21.6
+ARG ALPINE_VERSION=3.20
+ARG ALPINE_PATCH=1
+ARG GO_VERSION=1.22.4
 ARG NODE_VERSION=21
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
