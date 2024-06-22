@@ -25,6 +25,7 @@ _invisible_.
 
 First, ensure that you have the Docker compose v2 plugin installed.
 
+> [!NOTE]
 > Debian users typically need to install docker-ce instead of docker.io
 > packages, as Debian only backports random "security fixes" and freezes
 > features completely – which absolutely makes sense in a fast moving container
@@ -83,6 +84,7 @@ consideration.
 Take a look at the comprehensive [user (and developer)
 manual](https://thediveo.github.io/lxkns).
 
+> [!NOTE]
 > Please check [Important Changes](https://thediveo.github.io/lxkns#/changelog),
 > especially if you have been used the API in the past, and not only the
 > service.
@@ -134,10 +136,11 @@ This project comes with comprehensive unit tests, also covering leak checks:
 * file descriptor leak checking courtesy of the
   [@thediveo/fdooze](https://github.com/thediveo/fdooze) module.
 
+> [!CAUTION]
 > **Note:** do **not run parallel tests** for multiple packages. `make test`
-ensures to run all package tests always sequentially, but in case you run `go
-test` yourself, please don't forget `-p 1` when testing multiple packages in
-one, _erm_, go.
+> ensures to run all package tests always sequentially, but in case you run `go
+> test` yourself, please don't forget `-p 1` when testing multiple packages in
+> one, _erm_, go.
 
 ## Contributing
 
@@ -145,5 +148,5 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Copyright and License
 
-`lxkns` is Copyright 2020‒23 Harald Albrecht, and licensed under the Apache
+`lxkns` is Copyright 2020‒24 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.
