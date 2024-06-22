@@ -42,7 +42,18 @@ type Result struct {
 	PIDMap            model.PIDMapper        `json:"-"` // optional PID translator.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
 	Containers        model.Containers       // all alive containers found
+	SocketProcessMap  SocketProcesses        // optional socket inode number to process(es) mapping
 }
+
+// SocketProcesses maps socket inode numbers to processes that have open file
+// descriptors for specific sockets.
+//
+// As it turned out over time, there are multiple lxkns API users that otherwise
+// repeatedly scan the open file descriptors of processes for sockets in order
+// to gather their inode numbers, so in the sense of DRY we offer this
+// information with a single scan we need to do anyway in case discovering
+// network namespaces from sockets.
+type SocketProcesses map[uint64][]model.PIDType
 
 // SortNamespaces returns a sorted copy of a list of namespaces. The
 // namespaces are sorted by their namespace ids in ascending order.

@@ -17,9 +17,10 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/thediveo/lxkns/model"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/model"
 	. "github.com/thediveo/lxkns/nstest/gmodel"
 )
 
@@ -38,6 +39,7 @@ var _ = Describe("discovery result JSON", func() {
 			"with-ownership": true,
 			"with-freezer": true,
 			"with-mounts": true,
+			"with-socket-processes": false,
 			"labels": {},
 			"scanned-namespace-types": [
 			  "time",

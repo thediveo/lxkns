@@ -47,6 +47,7 @@ var elements = [...]element{
 	{"mount point", "mount points"},
 	{"pod", "pods"},
 	{"process", "processes"},
+	{"socket", "sockets"},
 }
 
 func init() {

@@ -35,22 +35,40 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// discoverFromFd discovers namespaces from process file descriptors referencing
-// them either directly or via socket fds. Since file descriptors are per
-// process only, but not per task/thread, it sufficies to only iterate the
-// process fd entries, leaving out the copies in the task fd entries.
+// discoverFromFd discovers (1) namespaces from open file descriptors
+// referencing them either directly or sockets that are attached to them, as
+// well as (2) the socket-to-processes mapping in a single run. This way we
+// avoid DRY of repeated open fd socket scanning.
+//
+// Please note that scanning file descriptors for namespaces and sockets
+// automatically opts into discovering the socket-to-processes mapping, as this
+// is a byproduct anyway.
+//
+// Since file descriptors are per process only, but not per task/thread, it
+// sufficies to only iterate the process fd entries, leaving out the copies in
+// the task fd entries.
 func discoverFromFd(t species.NamespaceType, procfs string, result *Result) {
-	if !result.Options.ScanFds {
-		log.Infof("skipping discovery of fd-referenced namespaces")
+	if !result.Options.ScanFds && !result.Options.DiscoverSocketProcesses {
+		log.Infof("skipping discovery of fd-referenced namespaces and socket processes")
 		return
 	}
-	log.Debugf("discovering fd-referenced namespaces...")
+	switch {
+	case result.Options.ScanFds:
+		log.Debugf("discovering fd-referenced namespaces and socket processes...")
+	default:
+		log.Debugf("discovering socket processes...")
+	}
 	scanFd(t, procfs, false, result)
 }
+
+const socketPrefix = "socket:["
+const socketPrefixLen = len(socketPrefix)
 
 // namespaceFromFd is discoverFromFd with special test harness handling enabled
 // or disabled.
 func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Result) {
+	result.SocketProcessMap = SocketProcesses{}
+	scanFds := result.Options.ScanFds
 	// Iterate over all known processes, and then over all of their open file
 	// descriptors. The /proc filesystem will give us the required
 	// information.
@@ -98,9 +116,27 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			}
 			var nsid species.NamespaceID
 			var nstype species.NamespaceType
-			if strings.HasPrefix(fdtarget, "socket:[") {
-				// It's a socket ... and we want to query it using an ioctl for
-				// the network namespace it is connected to.
+			if strings.HasPrefix(fdtarget, socketPrefix) {
+				// It's a socket so we note down the relationship between the
+				// socket's inode number and this process in any case, as this
+				// is a byproduct of trying to find the socket's network
+				// namespace.
+				l := len(fdtarget)
+				if l <= socketPrefixLen {
+					continue
+				}
+				ino, err := strconv.ParseUint(fdtarget[8:l-1], 10, 64)
+				if err != nil {
+					continue
+				}
+				result.SocketProcessMap[ino] = append(result.SocketProcessMap[ino], pid)
+				if !scanFds {
+					continue
+				}
+				// So the calling explorer really wants to discover network
+				// namespaces from sockets. If we haven't done yet for this
+				// process, get a PID fd so we can later duplicate the
+				// processes's fd into our process for further inspection.
 				if pidfd <= 0 {
 					pidfd, err = unix.PidfdOpen(int(pid), 0)
 					if err != nil {
@@ -108,6 +144,8 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 					}
 				}
 				nsid, nstype = namespaceOfSocket(pidfd, fdentry.Name())
+			} else if !scanFds {
+				continue
 			} else {
 				nsid, nstype = namespaceFromLink(procfdpath, fdtarget, fakeprocfs)
 			}
@@ -138,7 +176,10 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			pidfd = 0
 		}
 	}
-	log.Infof("discovered %s", plural.Elements(total, "fd-referenced namespaces"))
+	if result.Options.ScanFds {
+		log.Infof("discovered %s", plural.Elements(total, "fd-referenced namespaces"))
+	}
+	log.Infof("discovered %s", plural.Elements(len(result.SocketProcessMap), "sockets"))
 }
 
 // namespaceOfSocket returns the network namespace a particular socket fd (of
