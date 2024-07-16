@@ -226,8 +226,12 @@ func Namespaces(options ...DiscoveryOption) *Result {
 		result.PIDMap = NewPIDMap(result)
 	}
 
-	// Optionally discover alive containers and relate the.
+	// Optionally discover alive containers and relate the containers to
+	// processes and vice versa.
 	discoverContainers(result)
+
+	// Pick up leader process CPU affinity and scheduling setup.
+	discoverAffinityScheduling(result)
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)
