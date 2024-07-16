@@ -125,6 +125,10 @@ export interface Process {
     fridgefrozen: boolean
     namespaces: NamespaceSet
     container: Container | null
+    affinity: number[][] | null
+    policy: number | null
+    priority: number | null
+    nice: number | null
 }
 
 export interface ProcessMap { [key: string]: Process }
@@ -149,7 +153,7 @@ export interface TaskMap { [key: string]: Task }
 
 export type Busybody = (Process | Task)
 
-export const isTask = (bb: Busybody): bb is Task => bb && (bb as Task).tid !== undefined 
+export const isTask = (bb: Busybody): bb is Task => bb && (bb as Task).tid !== undefined
 export const isProcess = (bb: Busybody): bb is Process => bb && (bb as Process).pid !== undefined
 
 export interface ContainerMap { [id: string]: Container }

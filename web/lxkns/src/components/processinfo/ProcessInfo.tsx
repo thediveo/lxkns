@@ -23,7 +23,7 @@ import Init1Icon from 'icons/Init1'
 import { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
 import CgroupInfo from 'components/cgroupinfo/CgroupInfo'
-
+import AffinityScheduleInfo from 'components/affinityschedinfo/AffinityScheduleInfo'
 
 const piShort = "short-processinfo"
 
@@ -106,6 +106,7 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>
+            {!short && <AffinityScheduleInfo process={process}/>}
             {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container 
                 && <CgroupInfo busybody={process} />}
         </ProcessInformation>
