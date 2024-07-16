@@ -121,7 +121,7 @@ var _ = Describe("cgrouping", func() {
 
 		sleepyproc := func() *Process {
 			p := NewProcessTable(true)
-			proc, _ := p[sleepypid]
+			proc := p[sleepypid]
 			return proc
 		}
 		sleepytask := func() *Task {

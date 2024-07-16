@@ -174,36 +174,34 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 	scanner := bufio.NewScanner(cgroup)
 	unifiedroot := "" // (if detected) the cgroups v2 unified hierarchy root
 	for scanner.Scan() {
-		if err == nil {
-			// See https://man7.org/linux/man-pages/man7/cgroups.7.html, section
-			// "NOTES", subsection "/proc files". For cgroups v1 controllers,
-			// the second field specifies the comma-separated list of the
-			// controllers bound to the hierarchy: here, we look for, say, the
-			// "cpu" controller. The third field specifies the path in the
-			// cgroups hierarchy; it is relative to the mount point of the
-			// hierarchy -- which in turn depends on the mount namespace of this
-			// process :)
-			//
-			// For the unified cgroups v2 hierarchy the second field will be
-			// empty, which otherwise would specify the particular cgroup v1
-			// hierarchy/-ies.
-			if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
-				if fields[1] != "" {
-					// cgroups v1 hierarchies
-					controllers := strings.Split(fields[1], ",")
-					for _, ctrl := range controllers {
-						for idx, controllertype := range controllertypes {
-							if ctrl == controllertype {
-								paths[idx] = fields[2]
-							}
+		// See https://man7.org/linux/man-pages/man7/cgroups.7.html, section
+		// "NOTES", subsection "/proc files". For cgroups v1 controllers,
+		// the second field specifies the comma-separated list of the
+		// controllers bound to the hierarchy: here, we look for, say, the
+		// "cpu" controller. The third field specifies the path in the
+		// cgroups hierarchy; it is relative to the mount point of the
+		// hierarchy -- which in turn depends on the mount namespace of this
+		// process :)
+		//
+		// For the unified cgroups v2 hierarchy the second field will be
+		// empty, which otherwise would specify the particular cgroup v1
+		// hierarchy/-ies.
+		if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
+			if fields[1] != "" {
+				// cgroups v1 hierarchies
+				controllers := strings.Split(fields[1], ",")
+				for _, ctrl := range controllers {
+					for idx, controllertype := range controllertypes {
+						if ctrl == controllertype {
+							paths[idx] = fields[2]
 						}
 					}
-				} else {
-					// when we come across a single unified cgroups v2 hierarchy
-					// root, remember it so we can later fix any missing
-					// controller paths.
-					unifiedroot = fields[2]
 				}
+			} else {
+				// when we come across a single unified cgroups v2 hierarchy
+				// root, remember it so we can later fix any missing
+				// controller paths.
+				unifiedroot = fields[2]
 			}
 		}
 	}
