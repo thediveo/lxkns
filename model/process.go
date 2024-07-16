@@ -29,6 +29,7 @@ import (
 
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/plural"
+	"golang.org/x/sys/unix"
 )
 
 // PIDType expresses things more clearly.
@@ -51,6 +52,24 @@ type ProTaskCommon struct {
 	// always be the same as for CpuCgroup.
 	FridgeCgroup string `json:"fridgecgroup"`
 	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
+	// CPU ranges affinity list, need explicit request via
+	// ProTaskCommon.GetAffinity.
+	Affinity CPUList `json:"affinity,omitempty"`
+	Policy   int     `json:"policy,omitempty"`
+	// priority value is considered by the following schedulers:
+	//   - SCHED_FIFO: prio 1..99.
+	//   - SCHED_RR: prio 1..99.
+	//   - SCHED_NORMAL (=SCHED_OTHER): not used/prio is 0.
+	//   - SCHED_IDLE: not used/prio is 0.
+	//   - SCHED_BATCH: not used/prio is 0.
+	//   - SCHED_DEADLINE: doesn't use prio.
+	Priority int `json:"priority,omitempty"`
+	// nice value in the range +19..-20 (very nice ... less nice) is considered
+	// by the following schedulers:
+	//   - SCHED_NORMAL (=SCHED_OTHER): nice is taken into account.
+	//   - SCHED_BATCH: nice is taken into account.
+	//   - SCHED_IDLE: nice is ignored (basically below a nic of +19).
+	Nice int `json:"nice,omitempty"`
 }
 
 // Task represents our very, very limited view and interest in a particular
@@ -402,4 +421,34 @@ func newTaskFromStatline(procstat string, proc *Process) (task *Task) {
 // MainTask returns true if the given Task is the process main task.
 func (t *Task) MainTask() bool {
 	return t.TID == t.Process.PID
+}
+
+func (c *ProTaskCommon) retrieveAffinityScheduling(pid PIDType) error {
+	var err error
+	c.Affinity, err = GetCPUList(pid)
+	if err != nil {
+		return err
+	}
+	schedattr, err := unix.SchedGetAttr(int(pid), 0)
+	if err != nil {
+		return err
+	}
+	c.Policy = int(schedattr.Policy)
+	c.Nice = int(schedattr.Nice)
+	c.Priority = int(schedattr.Priority)
+	return nil
+}
+
+// RetrieveAffinity updates this Process object's Affinity CPU range list and
+// scheduling information (policy, priority, ...), returning nil when
+// successful. Otherweise, it returns an error.
+func (p *Process) RetrieveAffinityScheduling() error {
+	return p.retrieveAffinityScheduling(p.PID)
+}
+
+// RetrieveAffinity updates this Task object's Affinity CPU range list and
+// scheduling information (policy, priority, ...), returning nil when
+// successful. Otherweise, it returns an error.
+func (t *Task) RetrieveAffinityScheduling() error {
+	return t.retrieveAffinityScheduling(t.TID)
 }

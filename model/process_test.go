@@ -28,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("processes and tasks", func() {
@@ -230,6 +231,62 @@ var _ = Describe("process lists", func() {
 			Expect(pl[0].PID).To(Equal(PIDType(1)))
 			Expect(pl[1].PID).To(Equal(PIDType(42)))
 		}
+	})
+
+})
+
+var _ = Describe("cpu affinity", func() {
+
+	It("retrieves cpu affinities of processes and tasks", func() {
+		proc := NewProcess(PIDType(os.Getpid()), true)
+		Expect(proc).NotTo(BeNil())
+		Expect(proc.RetrieveAffinityScheduling()).To(Succeed())
+		Expect(proc.Affinity).NotTo(BeEmpty())
+		Expect(proc.Nice).To(Equal(0))
+		Expect(proc.Priority).To(Equal(0))
+
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+		var task *Task
+		Expect(proc.Tasks).To(ContainElement(HaveField("TID", PIDType(unix.Gettid())), &task))
+		Expect(task.RetrieveAffinityScheduling()).To(Succeed())
+		Expect(task.Affinity).NotTo(BeEmpty())
+		Expect(task.Affinity).To(Equal(proc.Affinity))
+		Expect(proc.Nice).To(Equal(0))
+		Expect(proc.Priority).To(Equal(0))
+	})
+
+	It("has no fun without scheduling risk", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
+		runtime.LockOSThread()
+
+		tid := unix.Gettid()
+		proc := NewProcess(PIDType(os.Getpid()), true)
+		var task *Task
+		Expect(proc.Tasks).To(ContainElement(HaveField("TID", PIDType(tid)), &task))
+
+		fun := func() {
+			oldschedattr := Successful(unix.SchedGetAttr(0, 0))
+			Expect(oldschedattr.Size).NotTo(BeZero())
+			defer func() {
+				Expect(unix.SchedSetAttr(0, oldschedattr, 0)).To(Succeed())
+			}()
+			newschedattr := *oldschedattr
+			newschedattr.Flags = unix.SCHED_FLAG_RESET_ON_FORK
+			newschedattr.Policy = unix.SCHED_BATCH
+			newschedattr.Nice = -20
+			Expect(unix.SchedSetAttr(0, &newschedattr, 0)).To(Succeed())
+			Expect(task.RetrieveAffinityScheduling()).To(Succeed())
+		}
+		fun()
+
+		runtime.UnlockOSThread()
+
+		Expect(task.Policy).To(Equal(unix.SCHED_BATCH))
+		Expect(task.Nice).To(Equal(-20))
 	})
 
 })
