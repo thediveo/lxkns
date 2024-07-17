@@ -41,22 +41,32 @@ func init() {
 	setsize.Store(1)
 }
 
-// GetCPUList returns the affinity CPUList (list of CPU ranges) of the process
-// with the passed PID. Otherwise, it returns an error.
+// NewAffinityCPUList returns the affinity CPUList (list of CPU ranges) of the
+// process with the passed PID. Otherwise, it returns an error. If pid is zero,
+// then the affinity CPU list of the calling thread is returned (make sure to
+// have the OS-level thread locked to the calling go routine in this case).
 //
-// Nota bene: retrieving the affinity CPU mask and then speed-running it to
-// generate the range list is roughly two orders of magnitude faster than fetching
-// “/proc/$PID/status” and looking for the “Cpus_allowed_list”, because generating
-// the broad status procfs file is expensive.
-func GetCPUList(pid PIDType) (CPUList, error) {
+// Notes:
+//   - we don't use [unix.SchedGetaffinity] as this is tied to the fixed size
+//     [unix.CPUSet] type; instead, we dynamically figure out the size needed
+//     and cache the size internally.
+//   - retrieving the affinity CPU mask and then speed-running it to
+//     generate the range list is roughly two orders of magnitude faster than
+//     fetching “/proc/$PID/status” and looking for the “Cpus_allowed_list”,
+//     because generating the broad status procfs file is expensive.
+func NewAffinityCPUList(pid PIDType) (CPUList, error) {
 	var set CPUSet
 
 	setlenStart := setsize.Load()
 	setlen := setlenStart
 	for {
 		set = make([]uint64, setlen)
-		// see also: https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
-		_, _, e := unix.Syscall(unix.SYS_SCHED_GETAFFINITY,
+		// see also:
+		// https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html; we
+		// use RawSyscall here instead of Syscall as we know that
+		// SYS_SCHED_GETAFFINITY does not block, following Go's stdlib
+		// implementation.
+		_, _, e := unix.RawSyscall(unix.SYS_SCHED_GETAFFINITY,
 			uintptr(pid), uintptr(setlen*wordbytesize), uintptr(unsafe.Pointer(&set[0])))
 		if e != 0 {
 			if e == unix.EINVAL {
@@ -80,17 +90,17 @@ func GetCPUList(pid PIDType) (CPUList, error) {
 		}
 		break
 	}
-	return cpuListFromSet(set), nil
+	return set.NewCPUList(), nil
 }
 
-// cpuListFromSet converts a bitmap CPUSet into a list of CPU ranges.
+// NewCPUList returns a list of CPU ranges for the given bitmap CPUSet.
 //
 // This is an optimized implementation that does not use any division and modulo
 // operations; instead, it only uses increment and (single bit position) shift
 // operations. Additionally, this implementation fast-forwards through all-0s
 // and all-1s CPUSet words (uint64's).
-func cpuListFromSet(set CPUSet) CPUList {
-	setlen := uint64(len(set))
+func (s CPUSet) NewCPUList() CPUList {
+	setlen := uint64(len(s))
 	cpulist := CPUList{}
 	cpuno := uint(0)
 	cpuwordidx := uint64(0)
@@ -103,7 +113,7 @@ findNextCPUInWord:
 		// mask word.
 		if cpuwordmask != 1 {
 			for {
-				if set[cpuwordidx]&cpuwordmask != 0 {
+				if s[cpuwordidx]&cpuwordmask != 0 {
 					break
 				}
 				cpuno++
@@ -118,7 +128,7 @@ findNextCPUInWord:
 		}
 		// Try to fast-forward through completely unset cpu mask words, where
 		// possible.
-		for cpuwordidx < setlen && set[cpuwordidx] == 0 {
+		for cpuwordidx < setlen && s[cpuwordidx] == 0 {
 			cpuno += 64
 			cpuwordidx++
 		}
@@ -128,7 +138,7 @@ findNextCPUInWord:
 		// We arrived at a non-zero cpu mask word, so let's now find the first
 		// cpu in it.
 		for {
-			if set[cpuwordidx]&cpuwordmask != 0 {
+			if s[cpuwordidx]&cpuwordmask != 0 {
 				break
 			}
 			cpuno++
@@ -149,7 +159,7 @@ findNextCPUInWord:
 		// current cpu mask word.
 		if cpuwordmask != 1 {
 			for {
-				if set[cpuwordidx]&cpuwordmask == 0 {
+				if s[cpuwordidx]&cpuwordmask == 0 {
 					cpulist = append(cpulist, [2]uint{cpufrom, cpuno - 1})
 					continue findNextCPUInWord
 				}
@@ -164,7 +174,7 @@ findNextCPUInWord:
 		}
 		// Try to fast-forward through completely set cpu mask words, where
 		// applicable.
-		for cpuwordidx < setlen && set[cpuwordidx] == ^uint64(0) {
+		for cpuwordidx < setlen && s[cpuwordidx] == ^uint64(0) {
 			cpuno += 64
 			cpuwordidx++
 		}
@@ -178,7 +188,7 @@ findNextCPUInWord:
 		// cpu in it that is unset. Add the CPU span, and then rinse and repeat
 		// from the beginning: find the next set CPU or fall off the disc.
 		for {
-			if set[cpuwordidx]&cpuwordmask == 0 {
+			if s[cpuwordidx]&cpuwordmask == 0 {
 				cpulist = append(cpulist, [2]uint{cpufrom, cpuno - 1})
 				break
 			}

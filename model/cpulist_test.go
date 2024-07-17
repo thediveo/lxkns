@@ -27,7 +27,7 @@ var _ = Describe("cpu affinity sets", func() {
 
 	DescribeTable("parsing cpu sets",
 		func(set CPUSet, expected CPUList) {
-			Expect(cpuListFromSet(set)).To(Equal(expected))
+			Expect(set.NewCPUList()).To(Equal(expected))
 		},
 		Entry("nil set", nil, CPUList{}),
 		Entry("all-zeros set", CPUSet{0}, CPUList{}),
@@ -64,7 +64,7 @@ var _ = Describe("cpu affinity sets", func() {
 
 	It("gets this process'es CPU affinity mask", func() {
 		Expect(wordbytesize).To(Equal(uint64(64 /* bits in uint64 */ / 8 /* bits/byte*/)))
-		cpulist := Successful(GetCPUList(PIDType(os.Getpid())))
+		cpulist := Successful(NewAffinityCPUList(PIDType(os.Getpid())))
 		Expect(cpulist).NotTo(BeEmpty())
 		Expect(setsize.Load()).NotTo(BeZero())
 	})

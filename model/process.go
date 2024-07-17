@@ -425,7 +425,7 @@ func (t *Task) MainTask() bool {
 
 func (c *ProTaskCommon) retrieveAffinityScheduling(pid PIDType) error {
 	var err error
-	c.Affinity, err = GetCPUList(pid)
+	c.Affinity, err = NewAffinityCPUList(pid)
 	if err != nil {
 		return err
 	}
