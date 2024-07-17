@@ -80,7 +80,7 @@ export const AffinityScheduleInfo = ({ process }: AffinityScheduleInfoProps) => 
     const prio = process.priority || 0
     return !!process.affinity && (
         <CPUAffSchedInformation className="affschedinformation">
-            <CPUList process={process} showIcon tooltip="CPU affinity list" />
+            <CPUList cpus={process.affinity} showIcon noWrap tooltip="CPU affinity list" />
             {!!process.policy && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
             {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
                 hasNice(process) && !!process.nice &&
