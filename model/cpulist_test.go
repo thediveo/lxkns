@@ -62,6 +62,15 @@ var _ = Describe("cpu affinity sets", func() {
 		Entry("art", CPUSet{0x5a0}, CPUList{{5, 5}, {7, 8}, {10, 10}}),
 	)
 
+	DescribeTable("stringifying cpu lists",
+		func(l CPUList, expected string) {
+			Expect(l.String()).To(Equal(expected))
+		},
+		Entry(nil, CPUList{{1, 1}, {2, 42}, {666, 666}}, "1,2-42,666"),
+		Entry(nil, CPUList{{2, 42}}, "2-42"),
+		Entry(nil, CPUList{{2, 42}, {777, 778}}, "2-42,777-778"),
+	)
+
 	It("gets this process'es CPU affinity mask", func() {
 		Expect(wordbytesize).To(Equal(uint64(64 /* bits in uint64 */ / 8 /* bits/byte*/)))
 		cpulist := Successful(NewAffinityCPUList(PIDType(os.Getpid())))

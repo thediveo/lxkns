@@ -15,6 +15,8 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"sync/atomic"
 	"unsafe"
 
@@ -196,4 +198,21 @@ findNextCPUInWord:
 			cpuwordmask <<= 1
 		}
 	}
+}
+
+// String returns the CPU list in textual format, with the individual ranges
+// separated by “,” and single CPU ranges properly collapsed.
+func (l CPUList) String() string {
+	var b strings.Builder
+	for idx, cpurange := range l {
+		if idx > 0 {
+			b.WriteString(",")
+		}
+		if cpurange[0] == cpurange[1] {
+			b.WriteString(fmt.Sprintf("%d", cpurange[0]))
+			continue
+		}
+		b.WriteString(fmt.Sprintf("%d-%d", cpurange[0], cpurange[1]))
+	}
+	return b.String()
 }
