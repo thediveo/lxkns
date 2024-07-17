@@ -18,7 +18,7 @@ package main
 
 import (
 	"reflect"
-	"sort"
+	"slices"
 
 	"github.com/thediveo/lxkns/cmd/internal/tool"
 	"github.com/thediveo/lxkns/model"
@@ -74,8 +74,8 @@ func (v *TreeVisitor) Get(node reflect.Value) (
 	clist := []interface{}{}
 	if proc, ok := node.Interface().(*model.Process); ok {
 		pidns := proc.Namespaces[model.PIDNS]
-		childprocesses := model.ProcessListByPID(proc.Children)
-		sort.Sort(childprocesses)
+		childprocesses := slices.Clone(proc.Children)
+		slices.SortFunc(childprocesses, model.SortProcessByPID)
 		childpidns := map[species.NamespaceID]bool{}
 		for _, childproc := range childprocesses {
 			if childproc.Namespaces[model.PIDNS] == pidns {
@@ -104,8 +104,8 @@ func (v *TreeVisitor) Get(node reflect.Value) (
 	} else {
 		// The child nodes of a PID namespace tree node will be the "leader"
 		// (or "topmost") processes inside the PID namespace.
-		leaders := model.ProcessListByPID(node.Interface().(model.Namespace).Leaders())
-		sort.Sort(leaders)
+		leaders := slices.Clone(node.Interface().(model.Namespace).Leaders())
+		slices.SortFunc(leaders, model.SortProcessByPID)
 		for _, proc := range leaders {
 			clist = append(clist, proc)
 		}

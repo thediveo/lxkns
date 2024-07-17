@@ -381,16 +381,6 @@ func (t ProcessTable) ProcessesByPIDs(pid ...PIDType) []*Process {
 	return procs
 }
 
-// ProcessListByPID is a type alias for sorting slices of *[model.Process] by
-// their PIDs in numerically ascending order.
-type ProcessListByPID []*Process
-
-func (l ProcessListByPID) Len() int      { return len(l) }
-func (l ProcessListByPID) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
-func (l ProcessListByPID) Less(i, j int) bool {
-	return l[i].PID < l[j].PID
-}
-
 // newTaskFromStatline parses a task (process) status line (as read from
 // /proc/[PID]/task/[TID]/status) into a Task object.
 func newTaskFromStatline(procstat string, proc *Process) (task *Task) {

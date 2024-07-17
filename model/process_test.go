@@ -17,7 +17,7 @@ package model
 import (
 	"os"
 	"runtime"
-	"sort"
+	"slices"
 	"strconv"
 	"time"
 
@@ -226,7 +226,7 @@ var _ = Describe("process lists", func() {
 			{p42, p1},
 		}
 		for _, pl := range pls {
-			sort.Sort(ProcessListByPID(pl))
+			slices.SortFunc(pl, SortProcessByPID)
 			Expect(pl[0].PID).To(Equal(PIDType(1)))
 			Expect(pl[1].PID).To(Equal(PIDType(42)))
 		}
