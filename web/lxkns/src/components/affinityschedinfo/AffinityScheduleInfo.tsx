@@ -14,30 +14,41 @@
 
 import React from 'react'
 
-//import clsx from 'clsx'
+import clsx from 'clsx'
 
 import { styled } from '@mui/material'
 
-import CPUIcon from '@mui/icons-material/Memory'
 import { Process } from 'models/lxkns/model'
+import CPUList from 'components/cpulist/CPUList'
 
 const CPUAffSchedInformation = styled('span')(({ theme }) => ({
     marginLeft: '0.5em',
-    color: theme.palette.cgroup, // FIXME:
+    color: theme.palette.cpulist,
     '&.affschedinformation > .MuiSvgIcon-root': {
         verticalAlign: 'text-top',
         position: 'relative',
         top: '0.1ex',
         marginRight: 0,
-        color: theme.palette.cgroup, // FIXME:
+        color: theme.palette.cpulist,
     },
-
-}))
-
-const CPUAffinityIcon = styled(CPUIcon)(({ theme }) => ({
-    '&.MuiSvgIcon-root': {
-        color: theme.palette.cgroup, // FIXME:
-    }
+    '& .policy': {
+        fontSize: '80%',
+    },
+    '& .normal,& .batch,& .idle': {
+        color: theme.palette.relaxedsched,
+    },
+    '& .fifo,& .rr': {
+        color: theme.palette.stressedsched,
+    },
+    '& .nice': {
+        color: theme.palette.nice,
+    },
+    '& .notnice': {
+        color: theme.palette.notnice,
+    },
+    '& .prio': {
+        color: theme.palette.prio,
+    },
 }))
 
 const schedulerPolicies: { [key: string]: string } = {
@@ -65,20 +76,15 @@ export interface AffinityScheduleInfoProps {
 }
 
 export const AffinityScheduleInfo = ({ process }: AffinityScheduleInfoProps) => {
+    const schedpol = schedulerPolicies[process.policy || 0]
+    const prio = process.priority || 0
     return !!process.affinity && (
-        <CPUAffSchedInformation className='affschedinformation'>
-            <CPUAffinityIcon fontSize="inherit" />&nbsp;
-            {
-                process.affinity.map((cpurange, index) => {
-                    if (cpurange[0] === cpurange[1]) {
-                        return <>{"," && index > 0}{cpurange[0]}</>
-                    }
-                    return <>{"," && index > 0}{cpurange[0]}‒{cpurange[1]}</>
-                })
-            }
-            {!!process.policy && <>&nbsp;{schedulerPolicies[process.policy]}</>}
-            {hasPriority(process) && <>&nbsp;priority {process.priority || 0}</>}{
-            hasNice(process) && !!process.nice && <>&nbsp;nice {process.nice}</>}
+        <CPUAffSchedInformation className="affschedinformation">
+            <CPUList process={process} showIcon tooltip="CPU affinity list" />
+            {!!process.policy && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
+            {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
+                hasNice(process) && !!process.nice &&
+                <span className={process.nice >= 0 ? 'nice' : 'notnice'}>&nbsp;nice {process.nice}</span>}
         </CPUAffSchedInformation>
     )
 }

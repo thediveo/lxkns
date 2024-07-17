@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow } from '@mui/material/colors'
+import { amber, lightBlue, blue, blueGrey, brown, green, grey, indigo, lime, pink, purple, red, teal, yellow, lightGreen, orange } from '@mui/material/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
 // We augment the existing Material-UI theme with new elements for uniform color
@@ -49,6 +49,12 @@ declare module '@mui/material/styles' {
             run: string // color for run icon.
             frozen: string // color for pause icon.
         }
+        cpulist: string // CPU (affinity) list color
+        nice: string // nice nice value color
+        notnice: string // not-nice value color
+        prio: string // non-0/non-1 prio value color
+        relaxedsched: string // scheduler NORMAL/BATCH/IDLE color
+        stressedsched: string // scheduler FIFO/RR/DEADLINE color
     }
     // allow configuration using `createTheme`
     interface PaletteOptions {
@@ -75,6 +81,12 @@ declare module '@mui/material/styles' {
             run?: string,
             frozen?: string,
         },
+        cpulist?: string
+        nice?: string
+        notnice?: string
+        prio?: string
+        relaxedsched?: string
+        stressedsched?: string
     }
 }
 
@@ -132,6 +144,12 @@ export const lxknsLightTheme = {
             run: green[500],
             froozen: red[900],
         },
+        cpulist: grey[600],
+        nice: lightGreen[700],
+        notnice: orange[900],
+        prio: red[400],
+        relaxedsched: lightGreen[400],
+        stressedsched: red[400],
     },
 }
 
@@ -181,6 +199,9 @@ export const lxknsDarkTheme = mergeDeep(
                 run: green[500],
                 froozen: red[700],
             },
+            cpulist: grey[500],
+            nice: lightGreen[500],
+            notnice: orange[500],
         },
     }
 )
