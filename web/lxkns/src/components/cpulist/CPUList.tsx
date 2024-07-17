@@ -16,7 +16,7 @@ import React from 'react'
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
-import CPUIcon from '@mui/icons-material/Memory'
+import CPUIcon from 'icons/CPUAffinity'
 
 
 const CPURangeList = styled('span')(({ theme }) => ({
