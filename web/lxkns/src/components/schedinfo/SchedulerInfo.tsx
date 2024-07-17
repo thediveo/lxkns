@@ -13,24 +13,15 @@
 // under the License.
 
 import React from 'react'
-
 import clsx from 'clsx'
 
-import { styled } from '@mui/material'
+import { styled, Tooltip } from '@mui/material'
 
 import { Process } from 'models/lxkns/model'
-import CPUList from 'components/cpulist/CPUList'
 
-const CPUAffSchedInformation = styled('span')(({ theme }) => ({
-    marginLeft: '0.5em',
+
+const SchedInformation = styled('span')(({ theme }) => ({
     color: theme.palette.cpulist,
-    '&.affschedinformation > .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
-        marginRight: 0,
-        color: theme.palette.cpulist,
-    },
     '& .policy': {
         fontSize: '80%',
     },
@@ -70,23 +61,22 @@ const hasNice = (process: Process) => {
     return policy === 0 || policy === 3
 }
 
-export interface AffinityScheduleInfoProps {
+export interface SchedulerInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
 }
 
-export const AffinityScheduleInfo = ({ process }: AffinityScheduleInfoProps) => {
+export const SchedulerInfo = ({ process }: SchedulerInfoProps) => {
     const schedpol = schedulerPolicies[process.policy || 0]
     const prio = process.priority || 0
-    return !!process.affinity && (
-        <CPUAffSchedInformation className="affschedinformation">
-            <CPUList cpus={process.affinity} showIcon noWrap tooltip="CPU affinity list" />
-            {!!process.policy && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
-            {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
-                hasNice(process) && !!process.nice &&
-                <span className={process.nice >= 0 ? 'nice' : 'notnice'}>&nbsp;nice {process.nice}</span>}
-        </CPUAffSchedInformation>
-    )
+    return <SchedInformation className="schedinfo">
+        {!!process.policy && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
+        {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
+            hasNice(process) && !!process.nice &&
+            <Tooltip title={process.nice >= 0 ? 'nice!' : 'not nice'}>
+                <span className={process.nice >= 0 ? 'nice' : 'notnice'}>&nbsp;nice {process.nice}</span>
+            </Tooltip>}
+    </SchedInformation>
 }
 
-export default AffinityScheduleInfo
+export default SchedulerInfo

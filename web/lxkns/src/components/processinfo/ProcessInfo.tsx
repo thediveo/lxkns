@@ -23,7 +23,8 @@ import Init1Icon from 'icons/Init1'
 import { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
 import CgroupInfo from 'components/cgroupinfo/CgroupInfo'
-import AffinityScheduleInfo from 'components/affinityschedinfo/AffinityScheduleInfo'
+import CPUList from 'components/cpulist/CPUList'
+import SchedulerInfo from 'components/schedinfo/SchedulerInfo'
 
 const piShort = "short-processinfo"
 
@@ -43,6 +44,9 @@ const ProcessInformation = styled('span')(({ theme }) => ({
     },
     [`&.${piShort} *`]: {
         color: theme.palette.text.disabled,
+    },
+    '& .cpulist': {
+        marginLeft: '0.4em',
     }
 }))
 
@@ -106,8 +110,11 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>
-            {!short && <AffinityScheduleInfo process={process}/>}
-            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container 
+            {!short && <>
+                <CPUList cpus={process.affinity} noWrap showIcon tooltip="CPU affinity list" />
+                <SchedulerInfo process={process} />
+            </>}
+            {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container
                 && <CgroupInfo busybody={process} />}
         </ProcessInformation>
     )
