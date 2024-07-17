@@ -34,6 +34,7 @@ func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 			discover.WithFullDiscovery(),
 			discover.WithContainerizer(cizer),
 			discover.WithPIDMapper(), // recommended when using WithContainerizer.
+			discover.WithAffinityAndScheduling(),
 		)
 		// Note bene: set header before writing the header with the status code;
 		// actually makes sense, innit?
@@ -50,7 +51,11 @@ func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 // GetProcessesHandler returns the process table (including tasks) with
 // namespace references, as JSON.
 func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
-	disco := discover.Namespaces(discover.FromProcs(), discover.FromTasks())
+	disco := discover.Namespaces(
+		discover.FromProcs(),
+		discover.FromTasks(),
+		discover.WithAffinityAndScheduling(),
+	)
 
 	w.Header().Set("Content-Type", "application/json")
 
