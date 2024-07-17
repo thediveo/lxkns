@@ -115,6 +115,13 @@ export const lxknsLightTheme = {
                 },
             },
         },
+        MuiTreeItem: {
+            styleOverrides: {
+                content: {
+                    padding: '0',
+                },
+            },
+        },
     },
     palette: {
         background: {

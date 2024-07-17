@@ -56,9 +56,9 @@ export const CPUList = ({ cpus, showIcon, noWrap, tooltip, className }: CPUListP
                 {
                     cpus.map((cpurange, index) => {
                         if (cpurange[0] === cpurange[1]) {
-                            return <>{index > 0 && sep}{cpurange[0]}</>
+                            return <span key={index}>{index > 0 && sep}{cpurange[0]}</span>
                         }
-                        return <>{index > 0 && sep}{cpurange[0]}–{cpurange[1]}</>
+                        return <span key={index}>{index > 0 && sep}{cpurange[0]}–{cpurange[1]}</span>
                     })
                 }
             </CPURangeList>

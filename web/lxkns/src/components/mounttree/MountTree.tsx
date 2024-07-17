@@ -239,7 +239,7 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         return (
             <TreeItem
                 key={`${namespace.nsid}-${path}`}
-                nodeId={`${namespace.nsid}-${path}`}
+                itemId={`${namespace.nsid}-${path}`}
                 label={<MountPathLabel tail={tail} childmountcount={childmountcount} />}
             >
                 {childitems}
@@ -251,7 +251,7 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
         .map((mountpoint, idx) =>
             <TreeItem
                 key={mountpoint.mountid}
-                nodeId={`${namespace.nsid}-${path}-${mountpoint.mountid}`}
+                itemId={`${namespace.nsid}-${path}-${mountpoint.mountid}`}
                 label={<MountPointLabel mountpoint={mountpoint} tail={tail} childmountcount={childmountcount} />}
             >
                 {idx === mountpath.mounts.length - 1 && childitems}

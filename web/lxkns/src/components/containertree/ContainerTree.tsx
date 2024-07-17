@@ -17,12 +17,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Action, COLLAPSEALL, EXPANDALL } from 'app/treeaction'
 import { Discovery, Engine, Namespace } from 'models/lxkns'
 import { Typography } from '@mui/material'
-import { TreeItem, TreeView } from '@mui/x-tree-view'
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view'
 import { EngineInfo } from 'components/engineinfo'
 import { compareEngines } from 'utils/engine'
 import ProcessInfo from 'components/processinfo'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { expandWorkloadInitiallyAtom } from 'views/settings'
 import { useAtom } from 'jotai'
@@ -126,7 +124,7 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
                         return <TreeItem
                             className="containerprocess"
                             key={prockeyid}
-                            nodeId={prockeyid}
+                            itemId={prockeyid}
                             label={<ProcessInfo process={proc} />}
                         >
                             {Object.entries(proc.namespaces)
@@ -138,7 +136,7 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
                                 .map(([nstype, procns]) => <TreeItem
                                     className="tenant"
                                     key={procns.nsid}
-                                    nodeId={`${proc.pid}-${procns.nsid}`}
+                                    itemId={`${proc.pid}-${procns.nsid}`}
                                     label={
                                         <NamespaceInfo
                                             shared={procns === proc.parent?.namespaces[nstype]}
@@ -153,7 +151,7 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
                 return <TreeItem
                     className="engine"
                     key={keyid}
-                    nodeId={keyid}
+                    itemId={keyid}
                     label={<EngineInfo engine={engine} />}
                 >{cntrs}</TreeItem>
             })
@@ -161,13 +159,11 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
 
     return (
         (engineItemsMemo.length &&
-            <TreeView
+            <SimpleTreeView
                 className="containertree"
-                onNodeToggle={handleToggle}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                expanded={expanded}
-            >{engineItemsMemo}</TreeView>
+                onExpandedItemsChange={handleToggle}
+                expandedItems={expanded}
+            >{engineItemsMemo}</SimpleTreeView>
         ) || (discovery.namespaces.length && (!discovery.containers || !Object.keys(discovery.containers).length) &&
             <Typography variant="body1" color="textSecondary">
                 this Linux system doesn&apos;t have any container workloads

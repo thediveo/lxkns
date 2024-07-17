@@ -16,11 +16,8 @@ import React, { useEffect, useMemo, useState, useRef } from 'react'
 
 import { useAtom } from 'jotai'
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-
 import Typography from '@mui/material/Typography'
-import { TreeView, TreeItem } from '@mui/x-tree-view'
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
@@ -99,7 +96,7 @@ const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSys
             <TreeItem
                 className="controlledprocess"
                 key={proc.pid}
-                nodeId={proc.pid.toString()}
+                itemId={proc.pid.toString()}
                 label={<ProcessInfo process={proc} />}
             >{children}</TreeItem>
         ) || children || null
@@ -143,7 +140,7 @@ const NamespaceTreeItem = (
             : <TreeItem
                 className="controlledtask"
                 key={busybody.tid}
-                nodeId={busybody.tid.toString()}
+                itemId={busybody.tid.toString()}
                 label={<TaskInfo task={busybody} />}
             />
         )
@@ -156,7 +153,7 @@ const NamespaceTreeItem = (
     return <TreeItem
         className="namespace"
         key={namespace.nsid}
-        nodeId={namespace.nsid.toString()}
+        itemId={namespace.nsid.toString()}
         label={<NamespaceInfo namespace={namespace} processes={processes} />}
     >{[
         ...busybodies,
@@ -319,14 +316,12 @@ export const NamespaceProcessTree = ({
     return (
         (treeItemsMemo.length &&
             <MountpointInfoModalProvider namespaces={discovery.namespaces}>
-                <TreeView
+                <SimpleTreeView
                     className="namespacetree"
                     disableSelection={true}
-                    onNodeToggle={handleToggle}
-                    defaultCollapseIcon={<ExpandMoreIcon />}
-                    defaultExpandIcon={<ChevronRightIcon />}
-                    expanded={expanded}
-                >{treeItemsMemo}</TreeView>
+                    onExpandedItemsChange={handleToggle}
+                    expandedItems={expanded}
+                >{treeItemsMemo}</SimpleTreeView>
             </MountpointInfoModalProvider>
         ) || (Object.keys(discovery.namespaces).length &&
             <Typography variant="body1" color="textSecondary">

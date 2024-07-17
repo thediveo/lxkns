@@ -14,11 +14,8 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-
 import Typography from '@mui/material/Typography'
-import { TreeView } from '@mui/x-tree-view'
+import { SimpleTreeView } from '@mui/x-tree-view'
 
 import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'
@@ -158,13 +155,11 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
 
     return (
         (treeItemsMemo.length &&
-            <TreeView
+            <SimpleTreeView
                 className="namespacetree"
-                onNodeToggle={handleToggle}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                expanded={expanded}
-            >{treeItemsMemo}</TreeView>
+                onExpandedItemsChange={handleToggle}
+                expandedItems={expanded}
+            >{treeItemsMemo}</SimpleTreeView>
         ) || (
             <Typography variant="body1" color="textSecondary">
                 nothing discovered yet, please refresh

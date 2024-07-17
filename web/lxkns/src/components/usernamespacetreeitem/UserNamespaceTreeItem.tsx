@@ -91,7 +91,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
         .map(tenant => <TreeItem
             className="tenant"
             key={tenant.nsid}
-            nodeId={tenant.nsid.toString()}
+            itemId={tenant.nsid.toString()}
             label={<NamespaceInfo namespace={tenant} processes={processes} />}
         />);
 
@@ -111,7 +111,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
             ? <TreeItem
                 className="controlledprocess"
                 key={busybody.pid}
-                nodeId={`${usernamespace.nsid}-${busybody.pid}`}
+                itemId={`${usernamespace.nsid}-${busybody.pid}`}
                 label={<ProcessInfo process={busybody} />}
             >
                 {Object.values(busybody.namespaces)
@@ -128,7 +128,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
                     .map((procns) => <TreeItem
                         className="tenant"
                         key={procns.nsid}
-                        nodeId={`${usernamespace.nsid}-${busybody.pid}-${procns.nsid}`}
+                        itemId={`${usernamespace.nsid}-${busybody.pid}-${procns.nsid}`}
                         label={<>
                             <NamespaceInfo
                                 shared={procns.owner !== usernamespace || procns.ealdorman !== busybody}
@@ -154,7 +154,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
             : <TreeItem
                 className="controlledtask"
                 key={busybody.tid}
-                nodeId={`${usernamespace.nsid}-${busybody.tid}`}
+                itemId={`${usernamespace.nsid}-${busybody.tid}`}
                 label={<TaskInfo task={busybody} />}
             >
                 {Object.values(busybody.namespaces)
@@ -168,7 +168,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
                         return <TreeItem
                             className="tenant"
                             key={taskns.nsid}
-                            nodeId={`${usernamespace.nsid}-${busybody.tid}-${taskns.nsid}`}
+                            itemId={`${usernamespace.nsid}-${busybody.tid}-${taskns.nsid}`}
                             label={<>
                                 <NamespaceInfo
                                     shared={taskns.owner !== usernamespace || !selftask}
@@ -201,7 +201,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
         <TreeItem
             className="namespace"
             key={usernamespace.nsid}
-            nodeId={`${usernamespace.nsid}`}
+            itemId={`${usernamespace.nsid}`}
             label={<NamespaceInfo namespace={usernamespace} processes={processes} />}
         >
             {[...busybodies, ...passives, ...children]}
