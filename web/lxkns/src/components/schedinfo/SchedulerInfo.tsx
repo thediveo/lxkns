@@ -64,13 +64,15 @@ const hasNice = (process: Process) => {
 export interface SchedulerInfoProps {
     /** information about a discovered Linux OS process. */
     process: Process
+    /** also schow (SCHED_) NORMAL? */
+    showNormal?: boolean
 }
 
-export const SchedulerInfo = ({ process }: SchedulerInfoProps) => {
+export const SchedulerInfo = ({ process, showNormal }: SchedulerInfoProps) => {
     const schedpol = schedulerPolicies[process.policy || 0]
     const prio = process.priority || 0
     return <SchedInformation className="schedinfo">
-        {!!process.policy && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
+        {(showNormal || !!process.policy) && <span className={clsx('policy', schedpol.toLowerCase())}>&nbsp;{schedpol}</span>}
         {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
             hasNice(process) && !!process.nice &&
             <Tooltip title={process.nice >= 0 ? 'nice!' : 'not nice'}>
