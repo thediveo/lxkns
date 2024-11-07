@@ -1,6 +1,6 @@
 module github.com/thediveo/lxkns
 
-go 1.21
+go 1.22
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
