@@ -19,18 +19,25 @@ package discover
 import "github.com/thediveo/lxkns/model"
 
 // discoverAffinityScheduling discovers the CPU affinity lists and scheduler
-// settings for the leader processes of all discovered namespaces.
+// settings for either the leader processes of all discovered namespaces, or for
+// all tasks, if requested.
 func discoverAffinityScheduling(result *Result) {
-	if !result.Options.DiscoverAffinityScheduling {
-		return
-	}
-	for nstype := model.MountNS; nstype < model.NamespaceTypesCount; nstype++ {
-		for _, ns := range result.Namespaces[nstype] {
-			for _, leader := range ns.Leaders() {
-				if leader.Affinity != nil {
-					continue
+	switch {
+	case result.Options.DiscoverTaskAffinityScheduling:
+		for _, proc := range result.Processes {
+			for _, task := range proc.Tasks {
+				_ = task.RetrieveAffinityScheduling()
+			}
+		}
+	case result.Options.DiscoverAffinityScheduling:
+		for nstype := model.MountNS; nstype < model.NamespaceTypesCount; nstype++ {
+			for _, ns := range result.Namespaces[nstype] {
+				for _, leader := range ns.Leaders() {
+					if leader.Affinity != nil {
+						continue
+					}
+					_ = leader.RetrieveAffinityScheduling()
 				}
-				_ = leader.RetrieveAffinityScheduling()
 			}
 		}
 	}
