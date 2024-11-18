@@ -32,17 +32,18 @@ type DiscoverOpts struct {
 	// If zero, defaults to discovering all namespaces.
 	NamespaceTypes species.NamespaceType `json:"-"`
 
-	ScanProcs                  bool              `json:"from-procs"`               // Scan processes for attached namespaces.
-	ScanTasks                  bool              `json:"from-tasks"`               // Scan all tasks for attached namespaces.
-	ScanFds                    bool              `json:"from-fds"`                 // Scan open file descriptors for namespaces.
-	ScanBindmounts             bool              `json:"from-bindmounts"`          // Scan bind-mounts for namespaces.
-	DiscoverHierarchy          bool              `json:"with-hierarchy"`           // Discover the hierarchy of PID and user namespaces.
-	DiscoverOwnership          bool              `json:"with-ownership"`           // Discover the ownership of non-user namespaces.
-	DiscoverFreezerState       bool              `json:"with-freezer"`             // Discover the cgroup freezer state of processes.
-	DiscoverMounts             bool              `json:"with-mounts"`              // Discover mount point hierarchy with mount paths and visibility.
-	DiscoverSocketProcesses    bool              `json:"with-socket-processes"`    // Discover the processes related to specific socket inode numbers.
-	DiscoverAffinityScheduling bool              `json:"with-affinity-scheduling"` // Disover CPU affinity and scheduling of leader processes.
-	Labels                     map[string]string `json:"labels"`                   // Pass options (in form of labels) to decorators
+	ScanProcs                      bool              `json:"from-procs"`                    // Scan processes for attached namespaces.
+	ScanTasks                      bool              `json:"from-tasks"`                    // Scan all tasks for attached namespaces.
+	ScanFds                        bool              `json:"from-fds"`                      // Scan open file descriptors for namespaces.
+	ScanBindmounts                 bool              `json:"from-bindmounts"`               // Scan bind-mounts for namespaces.
+	DiscoverHierarchy              bool              `json:"with-hierarchy"`                // Discover the hierarchy of PID and user namespaces.
+	DiscoverOwnership              bool              `json:"with-ownership"`                // Discover the ownership of non-user namespaces.
+	DiscoverFreezerState           bool              `json:"with-freezer"`                  // Discover the cgroup freezer state of processes.
+	DiscoverMounts                 bool              `json:"with-mounts"`                   // Discover mount point hierarchy with mount paths and visibility.
+	DiscoverSocketProcesses        bool              `json:"with-socket-processes"`         // Discover the processes related to specific socket inode numbers.
+	DiscoverAffinityScheduling     bool              `json:"with-affinity-scheduling"`      // Disover CPU affinity and scheduling of leader processes.
+	DiscoverTaskAffinityScheduling bool              `json:"with-task-affinity-scheduling"` // Discovery CPU affinity and scheduling of all tasks.
+	Labels                         map[string]string `json:"labels"`                        // Pass options (in form of labels) to decorators
 
 	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
 
@@ -123,7 +124,6 @@ func NotFromProcs() DiscoveryOption {
 func FromTasks() DiscoveryOption {
 	return func(o *DiscoverOpts) {
 		o.ScanTasks = true
-		o.ScanTasks = true
 	}
 }
 
@@ -139,6 +139,14 @@ func WithAffinityAndScheduling() DiscoveryOption {
 
 func WithoutAffinityAndScheduling() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.DiscoverAffinityScheduling = false }
+}
+
+func WithTaskAffinityAndScheduling() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.DiscoverTaskAffinityScheduling = true }
+}
+
+func WithoutTaskAffinityAndScheduling() DiscoveryOption {
+	return func(o *DiscoverOpts) { o.DiscoverTaskAffinityScheduling = false }
 }
 
 // FromFds opts to find namespaces from the open file descriptors of processes.
