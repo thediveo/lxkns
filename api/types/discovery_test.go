@@ -41,6 +41,7 @@ var _ = Describe("discovery result JSON", func() {
 			"with-mounts": true,
 			"with-socket-processes": false,
 			"with-affinity-scheduling": false,
+			"with-task-affinity-scheduling": false,
 			"labels": {},
 			"scanned-namespace-types": [
 			  "time",
