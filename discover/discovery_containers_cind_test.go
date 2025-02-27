@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"syscall"
 	"time"
 
 	cd "github.com/containerd/containerd"
@@ -137,10 +138,21 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 	})
 
 	It("translates container-in-container PIDs", slowSpec, func(ctx context.Context) {
-		By("finding the Docker daemon PID")
-		mobyproc := model.NewProcessTable(false).ByName("dockerd")
-		Expect(mobyproc).To(HaveLen(1))
-		mobypid := mobyproc[0].PID
+		By("finding the right Docker daemon PID (too many mobys these days *scnr*)")
+		// use /run/docker.sock for consistency, avoid symlinks later!
+		dockerSockIno := Successful(
+			os.Stat("/run/docker.sock")).Sys().(*syscall.Stat_t).Ino
+
+		mobyprocs := model.NewProcessTable(false).ByName("dockerd")
+		var mobyproc *model.Process
+		Expect(mobyprocs).To(ContainElement(
+			WithTransform(func(proc *model.Process) uint64 {
+				return Successful(
+					os.Stat(fmt.Sprintf("/proc/%d/root/run/docker.sock", proc.PID))).
+					Sys().(*syscall.Stat_t).Ino
+			},
+				Equal(dockerSockIno)), &mobyproc))
+		mobypid := mobyproc.PID
 		Expect(mobypid).NotTo(BeZero())
 
 		By("watching the Docker daemon with a known PID")
