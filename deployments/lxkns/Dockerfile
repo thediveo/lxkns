@@ -14,9 +14,9 @@
 # done executing "make deploy" with the current working directory set to this
 # repository's root directory.
 
-ARG ALPINE_VERSION=3.20
-ARG ALPINE_PATCH=1
-ARG GO_VERSION=1.22.4
+ARG ALPINE_VERSION=3.21
+ARG ALPINE_PATCH=3
+ARG GO_VERSION=1.23.6
 ARG NODE_VERSION=21
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
@@ -146,7 +146,7 @@ RUN yarn build
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.
-FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} as final
+FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} AS final
 COPY --from=builder /lxkns /mntnssandbox /
 COPY --from=reactor /webapp/build/ /web/lxkns/build/
 ENV PATH /
