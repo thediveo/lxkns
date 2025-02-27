@@ -17,14 +17,15 @@ package dockershim
 import (
 	"context"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 
@@ -33,11 +34,10 @@ import (
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
-
-	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
 	var names = map[string]bool{
 		"k8s_foo_foopod_foons_123uid_1": true,
@@ -49,8 +49,7 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 		"k8s_abc_def_ghi-_123_1":        false,
 	}
 
-	var pool *dockertest.Pool
-	var sleepies []*dockertest.Resource
+	var sleepies []*morbyd.Container
 	var docksock string
 
 	BeforeAll(slowSpec, func(ctx context.Context) {
@@ -61,56 +60,24 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
 
-		var err error
-		pool, err = dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=decorator.kuhbernetes")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
 
 		By("creating fake pod containers")
 		for name := range names {
-			_ = pool.RemoveContainerByName(name)
-			Eventually(func() error {
-				_, err := pool.Client.InspectContainer(name)
-				return err
-			}).WithContext(ctx).Within(5 * time.Second).ProbeEvery(100 * time.Millisecond).
-				Should(HaveOccurred())
-			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
-				Repository: "busybox",
-				Tag:        "latest",
-				Name:       name,
-				Cmd:        []string{"/bin/sleep", "120s"},
-				Labels:     map[string]string{},
-			})
-			// Skip test in case Docker is not accessible.
-			if err != nil && nodockerre.MatchString(err.Error()) {
-				Skip("Docker not available")
-			}
-			Expect(err).NotTo(HaveOccurred())
+			sleepy := Successful(sess.Run(ctx, "busybox:latest",
+				run.WithName(name),
+				run.WithCommand("/bin/sleep", "120s"),
+				run.WithAutoRemove()))
+			// Make sure that the newly created container is in running state before we
+			// run unit tests which depend on the correct list of alive(!)=running
+			// containers.
+			Expect(sleepy.PID(ctx)).NotTo(BeZero())
 			sleepies = append(sleepies, sleepy)
 		}
-
-		By("waiting for all fake containers to be running")
-		// Make sure that all newly created containers are in running state
-		// before we run unit tests which depend on the correct list of
-		// alive(!)=running containers.
-		for _, sleepy := range sleepies {
-			Eventually(func() bool {
-				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-				return c.State.Running
-			}).WithContext(ctx).Within(5*time.Second).ProbeEvery(100*time.Millisecond).
-				Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-		}
-
-		DeferCleanup(func() {
-			for _, sleepy := range sleepies {
-				Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-			}
-		})
-
-		// Settle down things before proceeding with the real unit test.
-		pool.Client.HTTPClient.CloseIdleConnections()
-		Eventually(Goroutines).WithContext(ctx).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
-			ShouldNot(HaveLeaked())
 	})
 
 	// Ensure to run the goroutine leak test *last* after all (defered)

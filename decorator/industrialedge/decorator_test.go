@@ -17,22 +17,25 @@ package industrialedge
 import (
 	"context"
 	"os"
-	"regexp"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	"github.com/thediveo/lxkns/test/matcher"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
-	"github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("Decorates composer projects", Ordered, func() {
@@ -40,9 +43,11 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
+		goodgos := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
@@ -55,13 +60,10 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 		edgeRuntimeContainerName: {},
 	}
 
-	var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
-
-	var pool *dockertest.Pool
-	var sleepies []*dockertest.Resource
+	var sleepies []*morbyd.Container
 	var docksock string
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -69,49 +71,31 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
 
-		var err error
-		pool, err = dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=decorator.industrialedge")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
+		By("creating canary workloads")
 		for name, config := range names {
-			_ = pool.RemoveContainerByName(name)
-			var labels map[string]string
+			var labels []string
 			if config.projectname != "" {
-				labels = map[string]string{
-					composer.ComposerProjectLabel:    config.projectname,
-					edgeAppConfigLabelPrefix + "foo": "bar",
-				}
+				labels = append(labels,
+					composer.ComposerProjectLabel+"="+config.projectname,
+					edgeAppConfigLabelPrefix+"foo=bar")
 			}
-			sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
-				Repository: "busybox",
-				Tag:        "latest",
-				Name:       name,
-				Cmd:        []string{"/bin/sleep", "120s"},
-				Labels:     labels,
-			})
-			// Skip test in case Docker is not accessible.
-			if err != nil && nodockerre.MatchString(err.Error()) {
-				Skip("Docker not available")
-			}
-			Expect(err).NotTo(HaveOccurred(), "container %q", name)
+			sleepy := Successful(sess.Run(ctx, "busybox:latest",
+				run.WithName(name),
+				run.WithCommand("/bin/sleep", "120s"),
+				run.WithAutoRemove(),
+				run.WithLabels(labels...)))
+			// Make sure that the newly created container is in running state before we
+			// run unit tests which depend on the correct list of alive(!)=running
+			// containers.
+			Expect(sleepy.PID(ctx)).NotTo(BeZero())
 			sleepies = append(sleepies, sleepy)
 		}
-		// Make sure that all newly created containers are in running state
-		// before we run unit tests which depend on the correct list of
-		// alive(!)=running containers.
-		for _, sleepy := range sleepies {
-			Eventually(func() bool {
-				c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-				Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-				return c.State.Running
-			}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-		}
-
-		DeferCleanup(func() {
-			for _, sleepy := range sleepies {
-				Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-			}
-			pool.Client.HTTPClient.CloseIdleConnections()
-		})
 	})
 
 	It("decorates IE apps and IED runtime", func() {

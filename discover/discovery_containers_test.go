@@ -23,9 +23,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator/composer"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 
@@ -33,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)
@@ -51,11 +54,10 @@ var _ = Describe("Discover containers", func() {
 		})
 	})
 
-	var pool *dockertest.Pool
-	var sleepy *dockertest.Resource
+	var sleepy *morbyd.Container
 	var docksock string
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx context.Context) {
 		// We cannot discover the initial container process running as root when
 		// we're not root too.
 		if os.Geteuid() != 0 {
@@ -63,33 +65,30 @@ var _ = Describe("Discover containers", func() {
 		}
 		docksock = "unix:///proc/1/root/run/docker.sock"
 
-		var err error
-		pool, err = dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
-		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "120s"},
-			Labels: map[string]string{
-				composer.ComposerProjectLabel: "lxkns-project",
-			},
-		})
-		// Skip test in case Docker is not accessible.
-		if err != nil && noDockerRE.MatchString(err.Error()) {
-			Skip("Docker not available")
-		}
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(func() bool {
-			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-			return c.State.Running
-		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-
+		goodgos := Goroutines()
+		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-			pool.Client.HTTPClient.CloseIdleConnections()
+			Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=discover.containers")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
+		By("creating canary workloads")
+		sleepy = Successful(sess.Run(ctx, "busybox:latest",
+			run.WithName(sleepyname),
+			run.WithCommand("/bin/sleep", "120s"),
+			run.WithAutoRemove(),
+			run.WithLabel(composer.ComposerProjectLabel+"=lxkns-project")))
+		// Make sure that the newly created container is in running state before we
+		// run unit tests which depend on the correct list of alive(!)=running
+		// containers.
+		Expect(sleepy.PID(ctx)).NotTo(BeZero())
 	})
 
 	It("finds containers and relates them with their initial processes", func() {

@@ -19,11 +19,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 
@@ -31,6 +33,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 const testlabelname = "decorator-discovery-label-test"
@@ -54,20 +57,21 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
+		goodgos := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
 	const name = "decorator-test-container"
 
-	var pool *dockertest.Pool
-	var sleepy *dockertest.Resource
+	var sleepy *morbyd.Container
 	var docksock string
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -75,36 +79,21 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
 
-		var err error
-		pool, err = dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
-		_ = pool.RemoveContainerByName(name)
-		Eventually(func() error {
-			_, err := pool.Client.InspectContainer(name)
-			return err
-		}, "5s", "100ms").Should(HaveOccurred())
-		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       name,
-			Cmd:        []string{"/bin/sleep", "120s"},
-			Labels:     map[string]string{},
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=discover.labels")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
 		})
-		// Skip test in case Docker is not accessible.
-		if err != nil && noDockerRE.MatchString(err.Error()) {
-			Skip("Docker not available")
-		}
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(func() bool {
-			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-			return c.State.Running
-		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
 
-		DeferCleanup(func() {
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-			pool.Client.HTTPClient.CloseIdleConnections()
-		})
+		By("creating canary workloads")
+		sleepy = Successful(sess.Run(ctx, "busybox:latest",
+			run.WithName(name),
+			run.WithCommand("/bin/sleep", "120s"),
+			run.WithAutoRemove()))
+		// Make sure that the newly created container is in running state before we
+		// run unit tests which depend on the correct list of alive(!)=running
+		// containers.
+		Expect(sleepy.PID(ctx)).NotTo(BeZero())
 	})
 
 	It("passes discovery labels to decorators", func() {

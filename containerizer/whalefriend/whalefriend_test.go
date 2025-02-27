@@ -17,11 +17,12 @@ package whalefriend
 import (
 	"context"
 	"os"
-	"regexp"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 
@@ -30,29 +31,29 @@ import (
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/lxkns/test/matcher"
+	. "github.com/thediveo/success"
 )
 
 const sleepyname = "pompous_pm"
-
-var nodockerre = regexp.MustCompile(`connect: no such file or directory`)
 
 var _ = Describe("ContainerEngine", func() {
 
 	// Ensure to run the goroutine leak test *last* after all (defered)
 	// clean-ups.
 	BeforeEach(func() {
+		goodgos := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
-	var pool *dockertest.Pool
-	var sleepy *dockertest.Resource
+	var sleepy *morbyd.Container
 	var docksock string
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx context.Context) {
 		// In case we're run as root we use a procfs wormhole so we can access
 		// the Docker socket even from a test container without mounting it
 		// explicitly into the test container.
@@ -60,33 +61,27 @@ var _ = Describe("ContainerEngine", func() {
 			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
 
-		var err error
-		pool, err = dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
-		_ = pool.RemoveContainerByName(sleepyname)
-		sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "120s"},
-			Labels:     map[string]string{"foo": "bar"},
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=containerizer.whalefriend")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
 		})
-		// Skip test in case Docker is not accessible.
-		if err != nil && nodockerre.MatchString(err.Error()) {
-			Skip("Docker not available")
-		}
-		Expect(err).NotTo(HaveOccurred(), "container %q", sleepyname)
-		Eventually(func() bool {
-			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-			return c.State.Running
-		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
-		Expect(pool.Client.PauseContainer(sleepyname)).NotTo(HaveOccurred())
 
-		DeferCleanup(func() {
-			Expect(pool.Client.UnpauseContainer(sleepyname)).NotTo(HaveOccurred())
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-			pool.Client.HTTPClient.CloseIdleConnections()
+		By("creating a canary workload")
+		sleepy = Successful(sess.Run(ctx, "busybox:latest",
+			run.WithName(sleepyname),
+			run.WithCommand("/bin/sleep", "120s"),
+			run.WithAutoRemove(),
+			run.WithLabel("foo=bar")))
+		// Make sure that the newly created container is in running state before we
+		// run unit tests which depend on the correct list of alive(!)=running
+		// containers.
+		Expect(sleepy.PID(ctx)).NotTo(BeZero())
+
+		Expect(sess.Client().ContainerPause(ctx, sleepyname)).To(Succeed())
+
+		DeferCleanup(func(ctx context.Context) {
+			Expect(sess.Client().ContainerUnpause(ctx, sleepyname)).NotTo(HaveOccurred())
 		})
 	})
 
@@ -113,14 +108,10 @@ var _ = Describe("ContainerEngine", func() {
 		var c *model.Container
 		Expect(cntrs).To(ContainElement(WithName(sleepyname), &c))
 
-		// dockertest's resource does not properly reflect container state
-		// changes after creation, sigh. So we need to inspect to get the
-		// correct information.
-		csleepy, err := pool.Client.InspectContainer(sleepy.Container.ID)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(c.ID).To(Equal(csleepy.ID))
-		Expect(c.PID).To(Equal(model.PIDType(csleepy.State.Pid)))
-		Expect(c.Paused).To(Equal(csleepy.State.Paused))
+		Expect(sleepy.Refresh(ctx)).To(Succeed())
+		Expect(c.ID).To(Equal(sleepy.ID))
+		Expect(c.PID).To(Equal(model.PIDType(sleepy.Details.State.Pid)))
+		Expect(c.Paused).To(Equal(sleepy.Details.State.Paused))
 		Expect(c.Labels).To(HaveKeyWithValue("foo", "bar"))
 		Expect(c.Type).To(Equal(moby.Type))
 
