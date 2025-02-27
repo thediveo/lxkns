@@ -22,14 +22,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-
-	. "github.com/thediveo/lxkns/nstest/gmodel"
-
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/discover"
@@ -38,9 +32,19 @@ import (
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/testbasher"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+	. "github.com/thediveo/success"
+
+	. "github.com/thediveo/lxkns/nstest/gmodel"
 )
 
 var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)
@@ -52,51 +56,44 @@ var (
 	userns     model.Namespace
 	usernames  discover.UidUsernameMap
 
-	cizer       containerizer.Containerizer
-	cizercancel context.CancelFunc
-	pool        *dockertest.Pool
-	sleepy      *dockertest.Resource
+	cizer containerizer.Containerizer
 )
 
-var _ = BeforeSuite(func() {
+var _ = BeforeSuite(func(ctx context.Context) {
 	// Spin up a Docker engine watcher and wait for it to become ready...
 	docksock := ""
 	if os.Getegid() == 0 {
 		docksock = "unix:///proc/1/root/run/docker.sock"
 	}
 
-	var err error
-	pool, err = dockertest.NewPool(docksock)
-	Expect(err).NotTo(HaveOccurred())
-	_ = pool.RemoveContainerByName(sleepyname)
-	Eventually(func() error {
-		_, err := pool.Client.InspectContainer(sleepyname)
-		return err
-	}, "5s").Should(HaveOccurred())
-	sleepy, err = pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "busybox",
-		Tag:        "latest",
-		Name:       sleepyname,
-		Cmd:        []string{"/bin/sleep", "120s"},
-		Labels:     map[string]string{"foo": "bar"},
+	DeferCleanup(func() { scripts.Done() })
+
+	By("creating a new Docker session for testing")
+	sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=api.types.namespaces")))
+	DeferCleanup(func(ctx context.Context) {
+		sess.Close(ctx)
 	})
-	Expect(err).NotTo(HaveOccurred())
+
+	By("creating a canary workload")
+	sleepy := Successful(sess.Run(ctx, "busybox:latest",
+		run.WithName(sleepyname),
+		run.WithCommand("/bin/sleep", "120s"),
+		run.WithAutoRemove(),
+		run.WithLabel("foo=bar")))
 	// Make sure that the newly created container is in running state before we
 	// run unit tests which depend on the correct list of alive(!)=running
 	// containers.
-	Eventually(func() bool {
-		c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-		Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-		return c.State.Running
-	}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
+	Expect(sleepy.PID(ctx)).NotTo(BeZero())
 
 	mobywatcher, err := moby.New(docksock, nil)
 	Expect(err).NotTo(HaveOccurred())
-	var ctx context.Context
-	ctx, cizercancel = context.WithCancel(context.Background())
-	cizer = whalefriend.New(ctx, []watcher.Watcher{mobywatcher})
+
+	cizerctx, cizercancel := context.WithCancel(context.Background())
+	DeferCleanup(func() { cizercancel() })
+	cizer = whalefriend.New(cizerctx, []watcher.Watcher{mobywatcher})
 	Expect(cizer).NotTo(BeNil())
-	<-mobywatcher.Ready()
+	Eventually(mobywatcher.Ready()).
+		Within(5 * time.Second).ProbeEvery(250 * time.Millisecond).Should(BeClosed())
 
 	// Add some controlled namespaces for discovery...
 	scripts.Common(nstest.NamespaceUtilsScript)
@@ -108,6 +105,7 @@ process_namespaceid user # prints the user namespace ID of "the" process.
 read # wait for test to proceed()
 `)
 	scriptscmd = scripts.Start("main")
+	DeferCleanup(func() { scriptscmd.Close() })
 	usernsid := nstest.CmdDecodeNSId(scriptscmd)
 
 	// "nearly-all-ns" and ... containerz!
@@ -131,19 +129,6 @@ read # wait for test to proceed()
 	// tested in its own defining module and thus use its results as-is for
 	// simplicity.
 	usernames = discover.DiscoverUserNames(allns.Namespaces)
-})
-
-var _ = AfterSuite(func() {
-	if cizercancel != nil {
-		cizercancel() // shut down the moby watcher
-	}
-	if sleepy != nil {
-		Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-	}
-	if scriptscmd != nil {
-		scriptscmd.Close()
-	}
-	scripts.Done()
 })
 
 func pidlist(pids []model.PIDType) string {

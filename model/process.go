@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/thediveo/cpus"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/plural"
 	"golang.org/x/sys/unix"
@@ -54,8 +55,8 @@ type ProTaskCommon struct {
 	FridgeFrozen bool   `json:"fridgefrozen"` // effective freezer state.
 	// CPU ranges affinity list, need explicit request via
 	// ProTaskCommon.GetAffinity.
-	Affinity CPUList `json:"affinity,omitempty"`
-	Policy   int     `json:"policy,omitempty"`
+	Affinity cpus.List `json:"affinity,omitempty"`
+	Policy   int       `json:"policy,omitempty"`
 	// priority value is considered by the following schedulers:
 	//   - SCHED_FIFO: prio 1..99.
 	//   - SCHED_RR: prio 1..99.
@@ -424,11 +425,11 @@ func (t *Task) MainTask() bool {
 }
 
 func (c *ProTaskCommon) retrieveAffinityScheduling(pid PIDType) error {
-	var err error
-	c.Affinity, err = NewAffinityCPUList(pid)
+	affset, err := cpus.Affinity(int(pid))
 	if err != nil {
 		return err
 	}
+	c.Affinity = affset.List()
 	schedattr, err := unix.SchedGetAttr(int(pid), 0)
 	if err != nil {
 		return err

@@ -90,9 +90,6 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 		//
 		// Please note that --privileged already implies switching off AppArmor.
 		//
-		// Please note further, that currently some Docker client CLI flags
-		// don't translate into dockertest-supported options.
-		//
 		// docker run -it --rm --name kindisch-...
 		//   --privileged
 		//   --cgroupns=private

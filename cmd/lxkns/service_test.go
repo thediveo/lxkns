@@ -22,11 +22,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd"
+	"github.com/thediveo/morbyd/run"
+	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
 
@@ -35,6 +37,7 @@ import (
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 // workload test container "random" name
@@ -45,43 +48,36 @@ var baseurl string
 
 var _ = Describe("serves API endpoints", Ordered, func() {
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
 		docksock := ""
 		if os.Geteuid() == 0 {
 			docksock = "unix:///proc/1/root/run/docker.sock"
 		}
 
 		// "hardcore" check after all has been said and done
+		goodgos := Goroutines()
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithTimeout(7 * time.Second).WithPolling(250 * time.Millisecond).
-				ShouldNot(HaveLeaked())
+				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 
-		By("creating a test workload")
-		pool, err := dockertest.NewPool(docksock)
-		Expect(err).NotTo(HaveOccurred())
-		_ = pool.RemoveContainerByName(sleepyname)
-		Eventually(func() error {
-			_, err := pool.Client.InspectContainer(sleepyname)
-			return err
-		}, "5s").Should(HaveOccurred())
-		sleepy, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       sleepyname,
-			Cmd:        []string{"/bin/sleep", "120s"},
+		By("creating a new Docker session for testing")
+		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=cmd.lxkns")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
 		})
-		Expect(err).NotTo(HaveOccurred(), "container %s", sleepyname)
-		DeferCleanup(func() {
-			Expect(pool.Purge(sleepy)).NotTo(HaveOccurred())
-		})
-		Eventually(func() bool {
-			c, err := pool.Client.InspectContainer(sleepy.Container.ID)
-			Expect(err).NotTo(HaveOccurred(), "container %s", sleepy.Container.Name[1:])
-			return c.State.Running
-		}, "5s", "100ms").Should(BeTrue(), "container %s", sleepy.Container.Name[1:])
+
+		By("creating a canary workload")
+		sleepy := Successful(sess.Run(ctx, "busybox:latest",
+			run.WithName(sleepyname),
+			run.WithCommand("/bin/sleep", "120s"),
+			run.WithAutoRemove()))
+		// Make sure that the newly created container is in running state before we
+		// run unit tests which depend on the correct list of alive(!)=running
+		// containers.
+		Expect(sleepy.PID(ctx)).NotTo(BeZero())
 
 		By("starting a workload watcher")
 		moby, err := moby.New(docksock, nil)
