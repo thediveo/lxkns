@@ -20,12 +20,14 @@ import (
 	"time"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("portable reference", func() {
@@ -65,6 +67,7 @@ var _ = Describe("portable reference", func() {
 	})
 
 	It("does not Open() wrong namespace ID", func() {
+		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		portref := PortableReference{
 			Path: "/proc/self/ns/net",
 			ID:   species.NamespaceIDfromInode(666),
@@ -90,6 +93,7 @@ var _ = Describe("portable reference", func() {
 	})
 
 	It("Open()s with only the namespace ID given", func() {
+		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		portref := PortableReference{ID: mynetnsid}
 		ref, closer, err := portref.Open()
 		Expect(err).To(Succeed())

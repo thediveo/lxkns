@@ -17,12 +17,14 @@ package portable
 import (
 	"time"
 
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("locating namespaces", func() {
@@ -36,18 +38,21 @@ var _ = Describe("locating namespaces", func() {
 	})
 
 	It("locates a namespace by ID only", func() {
+		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, 0)
 		Expect(netns).NotTo(BeNil())
 		Expect(netns.ID()).To(Equal(mynetnsid))
 	})
 
 	It("locates a namespace by ID and type", func() {
+		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, species.CLONE_NEWNET)
 		Expect(netns).NotTo(BeNil())
 		Expect(netns.ID()).To(Equal(mynetnsid))
 	})
 
 	It("fails to locate a namespace with wrong type", func() {
+		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, species.CLONE_NEWUSER)
 		Expect(netns).To(BeNil())
 	})
