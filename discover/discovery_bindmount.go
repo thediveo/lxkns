@@ -211,7 +211,7 @@ func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 		} else {
 			// log an error, but otherwise ignore the missing ownership in order
 			// to create an albeit incomplete namespace entry.
-			log.Errorf(err.Error())
+			log.Errorf("%s", err.Error())
 		}
 		ownedbindmounts = append(ownedbindmounts, BindmountedNamespaceInfo{
 			Type:      nstype,

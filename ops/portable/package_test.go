@@ -19,19 +19,9 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/species"
 )
 
 func TestRelations(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lxkns/ops/portable package")
 }
-
-var mynetnsid species.NamespaceID
-
-var _ = BeforeSuite(func() {
-	var err error
-	mynetnsid, err = ops.NamespacePath("/proc/self/ns/net").ID()
-	Expect(err).To(Succeed())
-})
