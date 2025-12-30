@@ -16,11 +16,11 @@ package discover
 
 import (
 	"bufio"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
@@ -44,7 +44,7 @@ func DiscoverUserNames(namespaces model.AllNamespaces) UidUsernameMap {
 	// our current mount namespace.
 	mntnsid, err := ops.NamespacePath("/proc/1/ns/mnt").ID()
 	if err != nil {
-		log.Infof("cannot access initial mount namespace, falling back to own mount namespace")
+		slog.Info("cannot access initial mount namespace, falling back to own mount namespace")
 		return userNamesFromPasswd(etcpasswd)
 	}
 	mymntnsid, err := ops.NamespacePath("/proc/self/ns/mnt").ID()
@@ -55,18 +55,18 @@ func DiscoverUserNames(namespaces model.AllNamespaces) UidUsernameMap {
 	// process PID 1, then there's something rotten and we go for an empty
 	// mapping instead.
 	if namespaces[model.MountNS][mntnsid] == nil {
-		log.Warnf("missing information about PID 1 mount namespace")
+		slog.Warn("missing information about PID 1 mount namespace")
 		return UidUsernameMap{}
 	}
 	mnteer, err := mountineer.NewWithMountNamespace(namespaces[model.MountNS][mntnsid], namespaces[model.UserNS])
 	if err != nil {
-		log.Errorf("cannot open mount namespace for VFS operations: %s", err.Error())
+		slog.Error("cannot open mount namespace for VFS operations", slog.String("err", err.Error()))
 		return UidUsernameMap{}
 	}
 	defer mnteer.Close()
 	etcpasswd, err := mnteer.Resolve(etcpasswd)
 	if err != nil {
-		log.Errorf("cannot translate path /etc/passwd in target mount namespace: %s", err.Error())
+		slog.Error("cannot translate path /etc/passwd in target mount namespace", slog.String("err", err.Error()))
 		return UidUsernameMap{}
 	}
 	return userNamesFromPasswd(etcpasswd)

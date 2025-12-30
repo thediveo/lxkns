@@ -1,0 +1,72 @@
+{
+    "name": "lxkns (fully privileged, Docker-in-Docker)",
+    "portsAttributes": {
+        "6060": {
+            "label": "lxkns Go package documentation",
+            "onAutoForward": "silent",
+            "protocol": "http"
+        }
+    },
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "moby": false // go for the upstream Docker-CE
+        },        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
+            "port": "3400",
+            "livereload-port": "3401"
+        },
+        "ghcr.io/thediveo/devcontainer-features/local-pkgsite:0": {},
+        "ghcr.io/thediveo/devcontainer-features/goreportcard:0": {},
+        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:0": {},
+        "ghcr.io/thediveo/devcontainer-features/gocover:0": {
+            "root": true,           // test both as ordinary user and root
+            "num-programs": "1",    // do never run package-level tests in parallel
+            "race": true,           // enable race detector
+            "verbose": true,
+            "html": true            // generate coverage.html
+        },
+        "ghcr.io/thediveo/devcontainer-features/pin-github-action:0": {},
+        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {}
+    },
+    "runArgs": [
+        "--pid=host",
+        "--cgroupns=host"
+    ],
+    "securityOpt": [
+        "apparmor=unconfined"
+    ],
+    "mounts": [
+        // the netdevsim module, when available, usually is not loaded at system
+        // start, so want to automatically load it during tests that are either
+        // about netdevsim or make use of netdevsim.
+        "type=bind,source=/lib/modules,target=/lib/modules,ro"
+    ],
+    "remoteEnv": {
+        "GOPATH": "/home/vscode/go",
+        "PATH": "/home/vscode/go/bin:/go/bin:/usr/local/go/bin:${localEnv:PATH}"
+    },
+    "postCreateCommand": {
+        "use-project-lxknsrc": "ln -sf ${containerWorkspaceFolder}/.lxknsrc.yaml ${HOME}/.lxknsrc.yaml", 
+        "node-for-all": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
+        "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
+        // considering the enormous noise made by the user namespace proponents
+        // it breaks any existing and future irony meter that the same
+        // distributions pushing user namespaces down our throats are now doing
+        // whacky disabling "fixes" because of ... "security". It is only
+        // natural that the people involved don't want to own the mess they've
+        // made and even double down with more broken band-aids.
+        "crapparmor": "echo 0 | sudo tee -a /proc/sys/kernel/apparmor_restrict_unprivileged_userns",
+        "cargo-culture": "echo 1 | sudo tee -a /proc/sys/kernel/unprivileged_userns_clone"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "stkb.rewrap",
+                "brunnerh.insert-unicode",
+                "mhutchie.git-graph",
+                "ms-vscode.live-server"
+            ]
+        }
+    }
+}

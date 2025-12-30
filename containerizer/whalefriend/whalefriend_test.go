@@ -16,7 +16,6 @@ package whalefriend
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -51,16 +50,8 @@ var _ = Describe("ContainerEngine", func() {
 	})
 
 	var sleepy *morbyd.Container
-	var docksock string
 
 	BeforeEach(func(ctx context.Context) {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
-		}
-
 		By("creating a new Docker session for testing")
 		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=containerizer.whalefriend")))
 		DeferCleanup(func(ctx context.Context) {
@@ -81,12 +72,12 @@ var _ = Describe("ContainerEngine", func() {
 		Expect(sess.Client().ContainerPause(ctx, sleepyname)).To(Succeed())
 
 		DeferCleanup(func(ctx context.Context) {
-			Expect(sess.Client().ContainerUnpause(ctx, sleepyname)).NotTo(HaveOccurred())
+			Expect(sess.Client().ContainerUnpause(ctx, sleepyname)).To(Succeed())
 		})
 	})
 
 	It("discovers container", func() {
-		dockerw, err := moby.New(docksock, nil)
+		dockerw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

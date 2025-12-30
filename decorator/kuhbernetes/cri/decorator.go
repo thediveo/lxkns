@@ -15,10 +15,11 @@
 package cri
 
 import (
+	"log/slog"
+
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher/cri"
 )
@@ -67,6 +68,6 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		}
 	}
 	if total > 0 {
-		log.Infof("discovered %d CRI pods", total)
+		slog.Info("discovered CRI pods", slog.Int("count", total))
 	}
 }

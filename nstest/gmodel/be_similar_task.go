@@ -32,19 +32,18 @@ type beSimilarTaskMatcher struct {
 	expected any
 }
 
-var taskT = reflect.TypeOf(model.Task{})
+var taskT = reflect.TypeFor[model.Task]()
 
-func (matcher *beSimilarTaskMatcher) Match(actual interface{}) (bool, error) {
+func (matcher *beSimilarTaskMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
+		//nolint ST1005 communicate useful messages, not Go platitudes.
 		return false, errors.New(
-			// revive:disable-next-line:error-strings Gomega matchers
-			// communicate useful messages, not Go platitudes.
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}
 	// "unpack" the Tasks
 	actval := reflect.Indirect(reflect.ValueOf(actual))
 	expval := reflect.Indirect(reflect.ValueOf(matcher.expected))
-	if !(actval.IsValid() && expval.IsValid()) {
+	if !actval.IsValid() || !expval.IsValid() {
 		return actval.IsValid() == expval.IsValid(), nil
 	}
 	if actval.Type() != taskT {
@@ -63,13 +62,13 @@ func (matcher *beSimilarTaskMatcher) Match(actual interface{}) (bool, error) {
 	return similarNamespacesSets(acttask.Namespaces, exptask.Namespaces), nil
 }
 
-func (matcher *beSimilarTaskMatcher) FailureMessage(actual interface{}) string {
+func (matcher *beSimilarTaskMatcher) FailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected task\n\t%+v\nto match actual task\n\t%+v",
 		actual, matcher.expected)
 }
 
-func (matcher *beSimilarTaskMatcher) NegatedFailureMessage(actual interface{}) string {
+func (matcher *beSimilarTaskMatcher) NegatedFailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected task\n\t%+v\nto not match task process\n\t%+v",
 		actual, matcher.expected)

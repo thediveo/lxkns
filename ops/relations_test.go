@@ -48,8 +48,9 @@ var _ = Describe("Namespaces", func() {
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
-			Eventually(Filedescriptors).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeakedFds(goodfds))
+			Eventually(Goroutines).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked())
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
 
@@ -65,13 +66,13 @@ var _ = Describe("Namespaces", func() {
 		Expect(err).To(HaveOccurred())
 		assertInvNSError(err)
 		Expect(err).To(MatchError(MatchRegexp(`^lxkns: invalid namespace: open /foobar: no such file.+$`)))
-		Expect(errors.Unwrap(err)).NotTo(BeNil())
+		Expect(errors.Unwrap(err)).To(HaveOccurred())
 		Expect(f).To(BeNil())
 
 		fnull := null()
-		defer fnull.Close()
+		defer func() { _ = fnull.Close() }()
 		f, err = NewNamespaceFile(fnull, nil)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Fd()).To(Equal(fnull.Fd()))
 
 		_, err = namespaceFileFromFd(f, ^uint(0), nil)
@@ -88,19 +89,19 @@ var _ = Describe("Namespaces", func() {
 
 		Expect(NamespaceFd(-1).Type()).Error().To(HaveOccurred())
 		ref, err := NewTypedNamespaceFd(-1, species.CLONE_NEWNET)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(ref.Type()).To(Equal(species.CLONE_NEWNET))
 
 		f, err := NewNamespaceFile(os.Open("relations_test.go"))
-		Expect(err).To(Succeed())
-		defer f.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func(f *NamespaceFile) { Expect(f.Close()).To(Succeed()) }(f)
 		Expect(f.Type()).Error().To(HaveOccurred())
 
 		Expect(NamespacePath("/proc/self/ns/user").Type()).To(Equal(species.CLONE_NEWUSER))
 
 		f, err = NewNamespaceFile(os.Open("/proc/self/ns/ipc"))
 		Expect(err).ToNot(HaveOccurred())
-		defer f.Close()
+		defer func(f *NamespaceFile) { Expect(f.Close()).To(Succeed()) }(f)
 		Expect(NamespaceFd(f.Fd()).Type()).To(Equal(species.CLONE_NEWIPC))
 
 		Expect(f.Type()).To(Equal(species.CLONE_NEWIPC))
@@ -113,7 +114,7 @@ var _ = Describe("Namespaces", func() {
 		Expect(NamespaceFd(-1).ID()).Error().To(HaveOccurred())
 		nsf, err := NewNamespaceFile(os.Open("/proc/self/ns/net"))
 		Expect(err).ToNot(HaveOccurred())
-		nsf.Close() // sic! make Fstat fail, that's why it is called "F"stat...
+		_ = nsf.Close() // sic! make Fstat fail, that's why it is called "F"stat...
 		Expect(nsf.ID()).Error().To(HaveOccurred())
 
 		var stat unix.Stat_t
@@ -124,7 +125,7 @@ var _ = Describe("Namespaces", func() {
 
 		f, err := NewNamespaceFile(os.Open("/proc/self/ns/cgroup"))
 		Expect(err).ToNot(HaveOccurred())
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		Expect(NamespaceFd(f.Fd()).ID()).To(Equal(nsid))
 		Expect(f.ID()).To(Equal(nsid))
 	})
@@ -203,7 +204,7 @@ var _ = Describe("Namespaces", func() {
 
 		nsf, err := os.Open("/proc/self/ns/net")
 		Expect(err).ToNot(HaveOccurred())
-		defer nsf.Close()
+		defer func() { _ = nsf.Close() }()
 
 		fd, closer, err := (&NamespaceFile{*nsf}).NsFd()
 		Expect(err).ToNot(HaveOccurred())
@@ -375,8 +376,8 @@ read # wait for test to proceed()
 		Expect(uid).To(Equal(os.Getuid()))
 
 		f, err := os.Open(string(userpath))
-		Expect(err).To(Succeed())
-		defer f.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = f.Close() }()
 		Expect(NamespaceFile{*f}.OwnerUID()).To(Equal(os.Getuid()))
 
 		Expect(NamespaceFd(f.Fd()).OwnerUID()).To(Equal(os.Getuid()))
@@ -388,7 +389,7 @@ read # wait for test to proceed()
 	It("tests helpers", func() {
 		Expect(NewTypedNamespaceFd(0, 0)).Error().To(HaveOccurred())
 		ref, err := NewTypedNamespaceFd(42, species.CLONE_NEWNET)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(ref.String()).To(MatchRegexp("fd 42.+type net"))
 
 		Expect(typedNamespaceFileFromFd(ref, "", 0, 0, errors.New("foobar"))).Error().To(

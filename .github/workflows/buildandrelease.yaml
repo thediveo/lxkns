@@ -18,7 +18,7 @@ jobs:
       packages: write
     steps:
       - name: Check out the repo
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Get all git tags
         run: |
@@ -28,15 +28,15 @@ jobs:
         run: go generate .
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # pin@v2
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
         with:
           platforms: ${{ env.PLATFORMS }}
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55 # pin@v2
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Log into the container registry
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # pin@v2
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         if: github.ref_type == 'tag'
         with:
           registry: ghcr.io
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
-        uses: docker/metadata-action@818d4b7b91585d195f67373fd9cb0332e31a7175 # pin@v4
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         id: metadata # later referenced as "steps.metadata."
         with:
           images: ghcr.io/${{ github.repository }}
@@ -69,7 +69,7 @@ jobs:
           echo "$EOF" >> $GITHUB_ENV
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@0a97817b6ade9f46837855d676c4cca3a2471fc9 # pin@v4
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           context: .
           file: ./deployments/lxkns/Dockerfile

@@ -12,16 +12,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 
-import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
+import { HelpViewer, type HelpViewerChapter } from 'components/helpviewer'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { NamespaceBadge } from 'components/namespacebadge'
 import { SmartA } from 'components/smarta'
-import { Namespace, NamespaceType } from 'models/lxkns'
+import { type Namespace, NamespaceType } from 'models/lxkns'
 import { Box, styled } from '@mui/material'
 import { Card } from '@mui/material'
-import { Atom, Provider } from 'jotai'
+import { type Atom, Provider, type WritableAtom } from 'jotai'
+import { useHydrateAtoms } from 'jotai/utils'
 import { expandInitiallyAtom, showSharedNamespacesAtom, showSystemProcessesAtom } from 'views/settings'
 
 
@@ -60,22 +61,37 @@ const initials: [Atom<unknown>, unknown][] = [
     [expandInitiallyAtom, true],
 ]
 
+interface AtomsHydratorProps {
+    atomvals: Iterable<readonly [WritableAtom<unknown, [unknown], unknown>, unknown]>
+    children: ReactNode
+}
+
+const AtomsHydrator = ({ atomvals, children}: AtomsHydratorProps) => {
+    useHydrateAtoms(new Map(atomvals))
+    return children
+}
+
 // Ensure consist example rendering by providing a dedicated, erm, state
 // provider which we prime to a known state, independent of any user
 // preferences.
-const Example = ({ children, maxWidth, states }: ExampleProps) => (
-    // Luckily, the jōtai provider initializes in order, so later settings
-    // override earlier ones, if necessary.
-    <Provider initialValues={[...initials, ...(states ? states : [])]}>
-        <Box m={2}>
-            <Card style={{ maxWidth: maxWidth || '100%' }}>
-                <Box m={1} style={{ overflowX: 'auto' }}>
-                    {children}
+const Example = ({ children, maxWidth, states }: ExampleProps) => {
+    const atomvals = [...initials, ...(states ? states : [])] as
+        Iterable<readonly [WritableAtom<unknown, [unknown], unknown>, unknown]>
+
+    return (
+        <Provider>
+            <AtomsHydrator atomvals={atomvals}>
+                <Box m={2}>
+                    <Card style={{ maxWidth: maxWidth || '100%' }}>
+                        <Box m={1} style={{ overflowX: 'auto' }}>
+                            {children}
+                        </Box>
+                    </Card>
                 </Box>
-            </Card>
-        </Box>
-    </Provider>
-)
+            </AtomsHydrator>
+        </Provider>
+    )
+}
 
 
 const IconBox = styled('span')(({ theme }) => ({
@@ -112,7 +128,13 @@ export const Help = () => (
         chapters={chapters}
         baseroute="/help"
         markdowner={MuiMarkdown}
-        shortcodes={{ a: SmartA, BoxedIcons, Example, NamespaceBadge, NamespaceExample }}
+        shortcodes={{ 
+            a: SmartA, 
+            BoxedIcons, 
+            Example, 
+            NamespaceBadge, 
+            NamespaceExample 
+        }}
         style={{overflow: 'visible'}}
     />
 )

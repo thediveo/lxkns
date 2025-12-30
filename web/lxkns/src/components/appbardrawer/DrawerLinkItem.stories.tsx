@@ -12,42 +12,42 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import HomeIcon from '@mui/icons-material/Home'
+import HomeIcon from "@mui/icons-material/Home";
 
-import { DrawerLinkItem } from './DrawerLinkItem'
+import { DrawerLinkItem } from "./DrawerLinkItem";
 
 const meta: Meta<typeof DrawerLinkItem> = {
-    title: 'Universal/DrawerLinkItem',
-    component: DrawerLinkItem,
-    tags: ['autodocs'],
-}
+  title: "Universal/DrawerLinkItem",
+  component: DrawerLinkItem,
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof DrawerLinkItem>
+type Story = StoryObj<typeof DrawerLinkItem>;
 
-export const Basic: Story = {
-    args: {
-        label: 'Foo',
-        path: '/foo',
-    },
-}
+export const Plain: Story = {
+  args: {
+    label: "An Item",
+    path: "/foo",
+  },
+};
 
-export const Icon: Story = {
-    args: {
-        label: 'Home',
-        icon: <HomeIcon/>,
-        path: '/home',
-    },
-}
+export const WithIcon: Story = {
+  args: {
+    label: "Home",
+    icon: <HomeIcon />,
+    path: "/home",
+  },
+};
 
-export const Avatar: Story = {
-    args: {
-        label: 'Home',
-        icon: <HomeIcon/>,
-        path: '/home',
-        avatar: true,
-    },
-}
+export const WithAvatar: Story = {
+  args: {
+    label: "Home",
+    icon: <HomeIcon />,
+    path: "/home",
+    avatar: true,
+  },
+};

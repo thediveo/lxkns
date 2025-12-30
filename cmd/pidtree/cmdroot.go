@@ -22,12 +22,15 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	asciitree "github.com/thediveo/go-asciitree"
+	"github.com/thediveo/clippy"
+	asciitree "github.com/thediveo/go-asciitree/v2"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
+	"github.com/thediveo/lxkns/cmd/cli/cgrp"
+	"github.com/thediveo/lxkns/cmd/cli/icon"
+	"github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/style"
+	"github.com/thediveo/lxkns/cmd/cli/task"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
@@ -51,10 +54,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	shows only the PID namespace hierarchy and processes on the branch
 	leading to process PID 1 in PID namespace 4026531836.`,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return cli.BeforeCommand(cmd)
+			return clippy.BeforeCommand(cmd)
 		},
 		RunE: runPidtree,
 	}
+	silent.PreferSilence(rootCmd)
 	// Sets up the flags.
 	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
 		"PID of process to show PID namespace tree and parent PIDs for")
@@ -62,7 +66,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		"PID namespace of PID, if not the initial PID namespace;\n"+
 			"either an unsigned int64 value, such as \"4026531836\", or a\n"+
 			"PID namespace textual representation like \"pid:[4026531836]\"")
-	cli.AddFlags(rootCmd)
+	clippy.AddFlags(rootCmd)
 	return
 }
 
@@ -103,7 +107,7 @@ func runPidtree(cmd *cobra.Command, _ []string) error {
 // down to a particular process, with all intermediate PID namespaces and
 // processes along the route.
 type SingleBranch struct {
-	Branch []interface{}
+	Branch []any
 }
 
 // Renders only the PID namespaces hierarchy and PID branch leading up to a
@@ -120,7 +124,7 @@ func renderPIDBranch(
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
-		task.FromTasks(cmd),
+		task.DiscoveryOption(cmd),
 	)
 	pidmap := allns.PIDMap
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
@@ -144,10 +148,10 @@ func renderPIDBranch(
 	if !ok {
 		return fmt.Errorf("unknown process PID %d", pid)
 	}
-	branch := SingleBranch{Branch: []interface{}{}}
+	branch := SingleBranch{Branch: []any{}}
 	for proc != nil {
 		// Prepend the current process to the branch.
-		branch.Branch = append([]interface{}{proc}, branch.Branch...)
+		branch.Branch = append([]any{proc}, branch.Branch...)
 		// Now if there is a change in PID namespaces just at the current
 		// process, prepend our "current" PID namespace also. The difficult
 		// part here is that we need to deal with the situation where we have
@@ -160,23 +164,25 @@ func renderPIDBranch(
 			pproc.Namespaces[model.PIDNS] != proc.Namespaces[model.PIDNS]) &&
 			proc.Namespaces[model.PIDNS] != nil {
 			branch.Branch = append(
-				[]interface{}{proc.Namespaces[model.PIDNS]},
+				[]any{proc.Namespaces[model.PIDNS]},
 				branch.Branch...)
 		}
 		// Climb up towards the root/stem.
 		proc = pproc
 	}
 	// Now render the whole branch...
-	fmt.Fprint(out,
+	_, err := fmt.Fprint(out,
 		asciitree.Render(
 			[]SingleBranch{branch},
 			&BranchVisitor{
-				Details:   true,
-				PIDMap:    pidmap,
-				RootPIDNS: rootpidns,
+				Details:           true,
+				PIDMap:            pidmap,
+				RootPIDNS:         rootpidns,
+				NamespaceIcon:     icon.NamespaceIcon(cmd),
+				CgroupDisplayName: cgrp.CgroupDisplayName(cmd),
 			},
 			style.NamespaceStyler))
-	return nil
+	return err
 }
 
 // Renders a full PID tree including PID namespaces.
@@ -186,7 +192,7 @@ func renderPIDTreeWithNamespaces(cmd *cobra.Command, out io.Writer, cizer contai
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
-		task.FromTasks(cmd),
+		task.DiscoveryOption(cmd),
 	)
 	pidmap := allns.PIDMap
 	// You may wonder why lxkns returns a slice of "root" PID and user
@@ -211,14 +217,16 @@ func renderPIDTreeWithNamespaces(cmd *cobra.Command, out io.Writer, cizer contai
 	// important part here is the PIDVisitor, which encapsulated the knowledge
 	// of traversing the information in the correct way in order to achieve
 	// the desired process tree with PID namespaces.
-	fmt.Fprint(out,
+	_, err := fmt.Fprint(out,
 		asciitree.Render(
 			[]model.Namespace{rootpidns}, // note to self: expects a slice of roots
 			&TreeVisitor{
-				Details:   true,
-				PIDMap:    pidmap,
-				RootPIDNS: rootpidns,
+				Details:           true,
+				PIDMap:            pidmap,
+				RootPIDNS:         rootpidns,
+				NamespaceIcon:     icon.NamespaceIcon(cmd),
+				CgroupDisplayName: cgrp.CgroupDisplayName(cmd),
 			},
 			style.NamespaceStyler))
-	return nil
+	return err
 }

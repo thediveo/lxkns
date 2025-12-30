@@ -139,14 +139,15 @@ func Go(f func(), nsrefs ...relations.Relation) error {
 }
 
 // Execute a function synchronously while switched into the specified
-// namespaces, then returns the interface{} outcome of calling the specified
-// function. If switching fails, Execute returns an error instead.
-func Execute(f func() interface{}, nsrefs ...relations.Relation) (interface{}, error) {
-	result := make(chan interface{})
+// namespaces, then return the result value of calling the specified function.
+// If switching fails, Execute returns an error instead.
+func Execute[R any](f func() R, nsrefs ...relations.Relation) (R, error) {
+	result := make(chan R)
 	if err := Go(func() {
 		result <- f()
 	}, nsrefs...); err != nil {
-		return nil, err
+		var zero R
+		return zero, err
 	}
 	return <-result, nil
 }

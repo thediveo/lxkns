@@ -12,51 +12,50 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { CgroupInfo } from './CgroupInfo'
-import { Container, Process } from 'models/lxkns'
+import { CgroupInfo } from "./CgroupInfo";
+import type { Container, Process } from "models/lxkns";
 
 const meta: Meta<typeof CgroupInfo> = {
-    title: 'Process/CgroupInfo',
-    component: CgroupInfo,
-    argTypes: {
-        busybody: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Process/CgroupInfo",
+  component: CgroupInfo,
+  argTypes: {
+    busybody: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof CgroupInfo>
+type Story = StoryObj<typeof CgroupInfo>;
 
-export const Running: Story = {
-    name: 'Running/Thawed',
-    args: {
-        busybody: {
-            pid: 41,
-            ppid: 1,
-            name: 'foobar-process',
-            starttime: 123,
-            cpucgroup: "/fridge",
-            fridgecgroup: "/fridge",
-            fridgefrozen: false,
-            container: {} as Container,
-        } as Process,
-    },
-}
+export const RunningThawed: Story = {
+  args: {
+    busybody: {
+      pid: 41,
+      ppid: 1,
+      name: "foobar-process",
+      starttime: 123,
+      cpucgroup: "/fridge",
+      fridgecgroup: "/fridge",
+      fridgefrozen: false,
+      container: {} as Container,
+    } as Process,
+  },
+};
 
 export const Frozen: Story = {
-    args: {
-        busybody: {
-            pid: 41,
-            ppid: 1,
-            name: 'foobar-process',
-            starttime: 123,
-            cpucgroup: "/fridge",
-            fridgecgroup: "/fridge",
-            fridgefrozen: true,
-            container: {} as Container,
-        } as Process,
-    },
-}
+  args: {
+    busybody: {
+      pid: 41,
+      ppid: 1,
+      name: "foobar-process",
+      starttime: 123,
+      cpucgroup: "/fridge",
+      fridgecgroup: "/fridge",
+      fridgefrozen: true,
+      container: {} as Container,
+    } as Process,
+  },
+};

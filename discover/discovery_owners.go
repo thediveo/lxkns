@@ -20,8 +20,10 @@
 package discover
 
 import (
+	"context"
+	"log/slog"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -33,11 +35,14 @@ import (
 func resolveOwnership(nstype species.NamespaceType, _ string, result *Result) {
 	if !result.Options.DiscoverOwnership || nstype == species.CLONE_NEWUSER {
 		if !result.Options.DiscoverOwnership {
-			log.Infof("skipping discovery of %s namespace ownerships", nstype.Name())
+			slog.Info("skipping discovery of namespace ownerships",
+				slog.String("type", nstype.Name()))
 		}
 		return
 	}
-	log.Debugf("running discovery of %s namespaces ownership", nstype.Name())
+	slog.Debug("discovering namespace ownerships", slog.String("type", nstype.Name()))
+
+	debugEnabled := slog.Default().Enabled(context.Background(), slog.LevelDebug)
 	// The namespace type discovery sequence guarantees us that by the
 	// time we got here, the user namespaces already have been fully
 	// discovered, so we have a complete map of them.
@@ -46,10 +51,11 @@ func resolveOwnership(nstype species.NamespaceType, _ string, result *Result) {
 	nsmap := result.Namespaces[nstypeidx]
 	for _, ns := range nsmap {
 		ns.(namespaces.NamespaceConfigurer).ResolveOwner(usernsmap)
-		if log.LevelEnabled(log.DebugLevel) {
+		if debugEnabled {
 			if owner := ns.Owner(); owner != nil {
-				log.Debugf("%s:[%d] owned by user:[%d]",
-					ns.Type().Name(), ns.ID().Ino, owner.(model.Namespace).ID().Ino)
+				slog.Debug("namespace ownership",
+					slog.String("namespace", ns.(model.NamespaceStringer).TypeIDString()),
+					slog.String("owner_namespace", owner.(model.NamespaceStringer).TypeIDString()))
 			}
 		}
 	}

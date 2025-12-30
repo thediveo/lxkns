@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"os"
 	"sync"
 	"time"
@@ -22,7 +23,8 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/notwork/netns"
+	nonetns "github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
 
@@ -36,11 +38,17 @@ import (
 var _ = Describe("Discover from fds", func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("finds fd-referenced namespaces", func() {
@@ -106,12 +114,12 @@ read # wait for test to proceed()
 
 		By("creating a transient new network namespace we only keep a socket connected to")
 		netnsFd := netns.NewTransient()
-		closeNetnsFd := sync.OnceFunc(func() { unix.Close(netnsFd) })
+		closeNetnsFd := sync.OnceFunc(func() { _ = unix.Close(netnsFd) })
 		defer closeNetnsFd()
 
 		netnsino := netns.Ino(netnsFd)
 
-		nlh := netns.NewNetlinkHandle(netnsFd)
+		nlh := nonetns.NewNetlinkHandle(netnsFd)
 		defer nlh.Close()
 
 		By("keeping only a socket as the last reference to the transient network namespace")
@@ -129,7 +137,7 @@ read # wait for test to proceed()
 		}
 
 		sockfd := Successful(unix.Socket(unix.AF_INET, unix.SOCK_DGRAM, 0))
-		defer unix.Close(sockfd)
+		defer func() { _ = unix.Close(sockfd) }()
 		var sockstat unix.Stat_t
 		Expect(unix.Fstat(sockfd, &sockstat)).To(Succeed())
 

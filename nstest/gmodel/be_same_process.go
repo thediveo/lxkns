@@ -31,7 +31,7 @@ import (
 // the joined Namespaces for their IDs and types. But this matcher doesn't check
 // the related Parent and Children Process objects; use BeSameTreeProcess
 // instead.
-func BeSameProcess(expectedprocess interface{}) types.GomegaMatcher {
+func BeSameProcess(expectedprocess any) types.GomegaMatcher {
 	return &beSameProcessMatcher{expected: expectedprocess, intree: false}
 }
 
@@ -42,28 +42,27 @@ func BeSameProcess(expectedprocess interface{}) types.GomegaMatcher {
 // Process(es) are compared only for their PIDs (but not grandchildren, and so
 // on). And the (joined) Namespaces are also only compared for their ID and
 // type, but not anything beyond those two main properties.
-func BeSameTreeProcess(expectedprocess interface{}) types.GomegaMatcher {
+func BeSameTreeProcess(expectedprocess any) types.GomegaMatcher {
 	return &beSameProcessMatcher{expected: expectedprocess, intree: true}
 }
 
 type beSameProcessMatcher struct {
-	expected interface{}
+	expected any
 	intree   bool // check Parent and Children?
 }
 
-var processT = reflect.TypeOf(model.Process{})
+var processT = reflect.TypeFor[model.Process]()
 
-func (matcher *beSameProcessMatcher) Match(actual interface{}) (bool, error) {
+func (matcher *beSameProcessMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
+		//nolint ST1005 communicate useful messages, not Go platitudes.
 		return false, errors.New(
-			// revive:disable-next-line:error-strings Gomega matchers
-			// communicate useful messages, not Go platitudes.
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}
 	// "unpack" the Process-es
 	actval := reflect.Indirect(reflect.ValueOf(actual))
 	expval := reflect.Indirect(reflect.ValueOf(matcher.expected))
-	if !(actval.IsValid() && expval.IsValid()) {
+	if !actval.IsValid() || !expval.IsValid() {
 		return actval.IsValid() == expval.IsValid(), nil
 	}
 	if actval.Type() != processT {
@@ -103,13 +102,13 @@ func (matcher *beSameProcessMatcher) Match(actual interface{}) (bool, error) {
 	return similarNamespacesSets(actproc.Namespaces, expproc.Namespaces), nil
 }
 
-func (matcher *beSameProcessMatcher) FailureMessage(actual interface{}) string {
+func (matcher *beSameProcessMatcher) FailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected process\n\t%+v\nto match actual process\n\t%+v",
 		actual, matcher.expected)
 }
 
-func (matcher *beSameProcessMatcher) NegatedFailureMessage(actual interface{}) string {
+func (matcher *beSameProcessMatcher) NegatedFailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected process\n\t%+v\nto not match actual process\n\t%+v",
 		actual, matcher.expected)

@@ -17,7 +17,7 @@ import React, { useState } from 'react'
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, Theme, Toolbar, useTheme } from '@mui/material'
+import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, type Theme, Toolbar, useTheme } from '@mui/material'
 
 
 // Width of drawer.
@@ -119,8 +119,8 @@ export interface AppBarDrawerProps {
  * as opposed to the default primary color).
  * 
  * **IMPORTANT:** `AppBarDrawer` must be directly or indirectly enclosed inside
- * a [`(Browser)Router`](https://reactrouter.com/web/api/BrowserRouter)
- * component.
+ * a [`Router`](https://reactrouter.com/web/api/Router) or
+ * [`BrowserRouter`](https://reactrouter.com/web/api/BrowserRouter) component.
  *
  * This component is licensed under the [Apache License, Version
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
@@ -153,7 +153,6 @@ const AppBarDrawer = ({
                     <ToolbarActionButton
                         edge="start"
                         color="inherit"
-                        aria-label="menu"
                         onClick={toggleDrawer}
                         size="large">
                         <MenuIcon />

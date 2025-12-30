@@ -13,7 +13,7 @@ mkdir -p ${EMPTYCONTEXT}
 trap 'rm -rf -- "${EMPTYCONTEXT}"' EXIT
 
 contexts=()
-workspace_details=$(go work edit --json)
+workspace_details=$(go work edit --json >/dev/null 2>&1)
 if [[ ${workspace_details} ]]; then
     goworkdir=$(dirname $(go env GOWORK))
     echo "found workspace" ${goworkdir}
@@ -29,6 +29,7 @@ if [[ ${workspace_details} ]]; then
         fi
     done <<< ${diskpaths}
 else
+    echo "no workspace present"
     diskpaths="${MAINUSE}"
 fi
 
@@ -46,7 +47,7 @@ done
 echo "args:" ${buildctxargs[*]} ${buildargs[*]}
 echo "build inside:" ${CWD}
 
-docker buildx build \
+docker build \
     -f ${dockerfile} \
     ${buildargs[@]} \
     ${buildctxargs[@]} \

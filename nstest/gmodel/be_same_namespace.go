@@ -16,6 +16,7 @@ package gmodel
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/onsi/gomega/types"
 	"github.com/thediveo/lxkns/model"
@@ -26,15 +27,15 @@ import (
 // namespace to an expected namespace. A namespace is anything supporting at
 // least the [model.Namespace] interface, as well as optionally (and depending
 // on the type of namespace) [model.Hierarchy] and [model.Ownership].
-func BeSameNamespace(expectedns interface{}) types.GomegaMatcher {
+func BeSameNamespace(expectedns any) types.GomegaMatcher {
 	return &beSameNamespaceMatcher{expected: expectedns}
 }
 
 type beSameNamespaceMatcher struct {
-	expected interface{}
+	expected any
 }
 
-func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
+func (matcher *beSameNamespaceMatcher) Match(actual any) (bool, error) {
 	if actual == matcher.expected {
 		return true, nil
 	}
@@ -68,13 +69,13 @@ func (matcher *beSameNamespaceMatcher) Match(actual interface{}) (bool, error) {
 	return match, nil
 }
 
-func (matcher *beSameNamespaceMatcher) FailureMessage(actual interface{}) string {
+func (matcher *beSameNamespaceMatcher) FailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected namespace\n\t%s\nto match actual namespace\n\t%s",
 		actual.(model.NamespaceStringer).String(), matcher.expected.(model.NamespaceStringer).String())
 }
 
-func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual interface{}) string {
+func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected namespace\n\t%s\nto not match actual namespace\n\t%s",
 		actual, matcher.expected)
@@ -82,7 +83,7 @@ func (matcher *beSameNamespaceMatcher) NegatedFailureMessage(actual interface{})
 
 // sameIDType returns true if both namespaces have the same ID and type, or if
 // both are nil or referencing the same object.
-func sameIDType(ns1, ns2 interface{}) bool {
+func sameIDType(ns1, ns2 any) bool {
 	return ns1 == ns2 ||
 		(ns1 != nil && ns2 != nil &&
 			ns1.(model.Namespace).ID().Ino == ns2.(model.Namespace).ID().Ino &&
@@ -90,7 +91,7 @@ func sameIDType(ns1, ns2 interface{}) bool {
 }
 
 func similarNamespacesSets(nsset1, nsset2 model.NamespacesSet) bool {
-	for idx := model.NamespaceTypeIndex(0); idx < model.NamespaceTypesCount; idx++ {
+	for idx := range model.NamespaceTypesCount {
 		if !sameIDType(nsset1[idx], nsset2[idx]) {
 			return false
 		}
@@ -104,14 +105,7 @@ func sameLeaders(l1, l2 []model.PIDType) bool {
 		return false
 	}
 	for _, pid1 := range l1 {
-		found := false
-		for _, pid2 := range l2 {
-			if pid1 == pid2 {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(l2, pid1) {
 			return false
 		}
 	}

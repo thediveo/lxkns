@@ -19,124 +19,140 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"os/user"
-	"reflect"
+	"slices"
+	"strings"
 
-	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
-	"github.com/thediveo/lxkns/cmd/internal/tool"
+	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/exp/maps"
 )
 
 // PIDNSVisitor is an asciitree.Visitor which starts from a list (slice) of root
 // PID namespaces and then recursively dives into the PID namespace hierarchy,
 // optionally showing the intermediate user namespaces owing PID namespaces.
 type PIDNSVisitor struct {
-	ShowUserNS bool
+	// if true, show the (owning) user namespaces intertwined with the PID
+	// namespaces; otherwise, don't show any owning user namespaces for the PID
+	// namespaces.
+	ShowUserNamespaces bool
+	// render function for namespace icons, where its exact behavior depends on
+	// CLI flags.
+	NamespaceIcon func(model.Namespace) string
+	// render function for namespace references in form of either process names
+	// (as well as additional process properties) or file system references.
+	NamespaceReferenceLabel func(model.Namespace) string
 }
+
+var _ asciitree.Visitor = (*PIDNSVisitor)(nil)
 
 // Roots returns the given topmost hierarchical PID namespaces sorted. Well, to
 // be honest, it returns the owning user namespaces instead in case user
 // namespaces should be shown too.
-func (v *PIDNSVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	if !v.ShowUserNS {
-		// When only showing PID namespaces, then sort all PID "root" namespaces
-		// numerically and then visit them, descending down the hierarchy.
-		children = tool.SortRootNamespaces(roots)
-		return
+func (v *PIDNSVisitor) Roots(roots any) []any {
+	if v.ShowUserNamespaces {
+		// When showing the owning user namespaces in the tree, find the
+		// (unique) user namespaces for all PID "root" namespaces and start with
+		// these user namespaces instead of the root PID namespaces.
+		uniqueUserNamespaces := map[species.NamespaceID]model.Namespace{}
+		for _, pidns := range roots.([]model.Namespace) {
+			userns := pidns.Owner().(model.Namespace)
+			// we don't buffer with checking if we've already seen this owning
+			// user namespace, just put it into the map, overwriting itself in
+			// case.
+			uniqueUserNamespaces[userns.ID()] = userns
+		}
+		return xslices.Any(discover.SortNamespaces(
+			slices.Collect(maps.Values(uniqueUserNamespaces))))
 	}
-	// When showing the owning user namespaces in the tree, find the (unique)
-	// user namespaces for all PID "root" namespaces, so we start with the user
-	// namespaces.
-	uniqueuserns := map[species.NamespaceID]model.Namespace{}
-	for _, pidns := range roots.Interface().([]model.Namespace) {
-		userns := pidns.Owner().(model.Namespace)
-		uniqueuserns[userns.ID()] = userns
-	}
-	children = tool.ReflectValuesSlice(discover.SortNamespaces(maps.Values(uniqueuserns)))
-	return
+	// We are asked for the conventional way of only showing PID namespaces: for
+	// this, we sort all PID "root" namespaces numerically by their IDs and then
+	// visit them, descending down the hierarchy. Usually, there should be only
+	// a single PID root namespace found though.
+	rootNamespaces, _ := roots.([]model.Namespace)
+	discover.SortNamespaces(rootNamespaces)
+	return xslices.Any(rootNamespaces)
 }
 
 // Label returns the text label for a namespace node. Everything else will have
 // no label.
-func (v *PIDNSVisitor) Label(node reflect.Value) (label string) {
-	if ns, ok := node.Interface().(model.Namespace); ok {
+func (v *PIDNSVisitor) Label(node any) (label string) {
+	var b strings.Builder
+	if ns, ok := node.(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = fmt.Sprintf("%s%s %s",
-			output.NamespaceIcon(ns),
-			style.V(ns.(model.NamespaceStringer).TypeIDString()),
-			output.NamespaceReferenceLabel(ns))
+		b.WriteString(v.NamespaceIcon(ns))
+		b.WriteString(style.V(ns.(model.NamespaceStringer).TypeIDString()).String())
+		b.WriteRune(' ')
+		b.WriteString(v.NamespaceReferenceLabel(ns))
 	}
-	if uns, ok := node.Interface().(model.Ownership); ok {
-		username := ""
+	if uns, ok := node.(model.Ownership); ok {
+		b.WriteString(" created by UID ")
+		b.WriteString(style.OwnerStyle.V(uns.UID()).String())
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
-			username = fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
+			b.WriteRune(' ')
+			b.WriteRune('(')
+			b.WriteString(style.OwnerStyle.V(user.Username).String())
+			b.WriteRune(')')
 		}
-		label += fmt.Sprintf(" created by UID %d%s",
-			style.OwnerStyle.V(uns.UID()),
-			username)
 	}
-	return
+	return b.String()
 }
 
 // Get returns the user namespace text label for the current node (which is
 // always an user namespace), as well as the list of properties (owned
 // non-user namespaces) and the list of child user namespace nodes.
-func (v *PIDNSVisitor) Get(node reflect.Value) (
-	label string, properties []string, children reflect.Value) {
-	// Label for this PID (or user) namespace; this is the easy part ;)
-	label = v.Label(node)
+func (v *PIDNSVisitor) Get(node any) (label string, properties []string, children []any) {
 	// For a user namespace, its children are the owned PID namespaces ... but
 	// ... we must only take the topmost owned PID namespaces, otherwise the
 	// result isn't exactly correct and we would all subtrees mirrored to the
 	// topmost level. Now, a "topmost" owned PID namespace is one that either
 	// has no parent PID namespace, or the parent PID namespace has a different
 	// owner. That's all that's to it.
-	if uns, ok := node.Interface().(model.Ownership); ok {
-		clist := []model.Namespace{}
-		for _, ns := range uns.Ownings()[model.PIDNS] {
-			pidns := ns.(model.Hierarchy)
-			ppidns := pidns.Parent()
-			if ppidns == nil || ppidns.(model.Namespace).Owner() != uns {
-				clist = append(clist, ns)
+	if userNamespace, ok := node.(model.Ownership); ok {
+		children := []model.Namespace{}
+		for _, namespace := range userNamespace.Ownings()[model.PIDNS] {
+			pidNamespace := namespace.(model.Hierarchy)
+			parentPIDNamespace := pidNamespace.Parent()
+			if parentPIDNamespace == nil || parentPIDNamespace.(model.Namespace).Owner() != userNamespace {
+				children = append(children, namespace)
 			}
 		}
-		children = reflect.ValueOf(discover.SortNamespaces(clist))
-		return
+		return v.Label(node), nil, xslices.Any(discover.SortNamespaces(children))
 	}
 	// For a PID namespace, the children are either PID namespaces, or user
 	// namespaces in case a child PID namespace lives in a different user
 	// namespace.
-	clist := []interface{}{}
-	if hns, ok := node.Interface().(model.Hierarchy); ok {
-		if !v.ShowUserNS {
-			// Show only the PID namespace hierarchy: this is easy, as we all we
-			// need to do is to take all child PID namespaces and return them.
-			// That's it.
-			for _, cpidns := range discover.SortChildNamespaces(hns.Children()) {
-				clist = append(clist, cpidns)
-			}
-		} else {
-			// Insert user namespaces into the PID namespace hierarchy, whenever
-			// there is a change of user namespaces in the PID hierarchy.
-			userns := node.Interface().(model.Namespace).Owner()
-			for _, cpidns := range discover.SortChildNamespaces(hns.Children()) {
-				if ownerns := cpidns.(model.Namespace).Owner(); ownerns == userns {
-					// The child PID namespace is still in the same user namespace,
-					// so we take it as a direct child.
-					clist = append(clist, cpidns)
-				} else {
-					// The child PID namespace is in a different user namespace, so
-					// we take the child's user namespace instead and will visit the
-					// child PID namespace only later via the user namespace.
-					clist = append(clist, ownerns)
-				}
-			}
-		}
+	hierarchicalNamespace, ok := node.(model.Hierarchy)
+	if !ok {
+		// something strange going on here, we have a namespace node that is a
+		// flat namespace ... and this should not be the case! Gracefully exit
+		// stage left/right.
+		return v.Label(node), nil, nil
 	}
-	children = reflect.ValueOf(clist)
-	return
+	if v.ShowUserNamespaces {
+		// Insert user namespaces into the PID namespace hierarchy, whenever
+		// there is a change of user namespaces in the PID hierarchy.
+		userNamespace := node.(model.Namespace).Owner()
+		for _, childPIDNamespace := range discover.SortChildNamespaces(hierarchicalNamespace.Children()) {
+			if ownerns := childPIDNamespace.(model.Namespace).Owner(); ownerns != userNamespace {
+				// The child PID namespace is in a different user namespace, so
+				// we take the child's user namespace instead and will visit the
+				// child PID namespace only later via the user namespace.
+				children = append(children, ownerns)
+				continue
+			}
+			// The child PID namespace is still in the same user namespace, so
+			// we take it as a direct child.
+			children = append(children, childPIDNamespace)
+		}
+		return v.Label(node), nil, children
+	}
+	// Show only the PID namespace hierarchy: this is easy, as we all we need to
+	// do is to take all child PID namespaces and return them. That's it. Done.
+	return v.Label(node), nil, xslices.Any(
+		discover.SortChildNamespaces(hierarchicalNamespace.Children()))
 }

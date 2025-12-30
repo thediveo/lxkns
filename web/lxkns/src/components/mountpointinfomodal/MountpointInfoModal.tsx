@@ -12,14 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+import { useState } from 'react'
+
 import { Dialog, DialogContent, DialogTitle, IconButton, styled } from '@mui/material'
 import MountpointInfo from 'components/mountpointinfo/MountpointInfo'
-import { MountPoint } from 'models/lxkns/mount'
-import React, { useContext, useState } from 'react'
+import type { MountPoint } from 'models/lxkns/mount'
 import CloseIcon from '@mui/icons-material/Close'
 import { ReadonlyIcon } from 'icons/Readonly'
-import { NamespaceMap } from 'models/lxkns/model'
 
+import type { MountpointInfoModalProviderProps } from './types'
+import MountpointInfoModalContext from './hooks'
 
 const MountpointDialog = styled(Dialog)(() => ({
     marginLeft: 0,
@@ -51,20 +53,6 @@ const Contents = styled(DialogContent)(({ theme }) => ({
     fontSize: theme.typography.body1.fontSize,
 }))
 
-
-const MountpointInfoModalContext = React.createContext<
-    undefined | React.Dispatch<React.SetStateAction<MountPoint|undefined>>>(undefined)
-
-
-export interface MountpointInfoModalProviderProps {
-    /** children to render. */
-    children: React.ReactNode
-    /** 
-     * map of all discovered namespaces for mountpoint namespace root path
-     * lookups.
-     */
-    namespaces: NamespaceMap
-}
 
 /**
  * Provider for a MountPoint details modal dialog. Use the setter returned by
@@ -98,7 +86,6 @@ export const MountpointInfoModalProvider = ({
                         {mountpoint.hidden && 'Hidden '}
                         Mount Point
                         <CloseButton
-                            aria-label="close"
                             onClick={handleClose}
                             size="large">
                             <CloseIcon />
@@ -114,11 +101,3 @@ export const MountpointInfoModalProvider = ({
 }
 
 export default MountpointInfoModalProvider
-
-/**
- * Returns a setter to specify the MountPoint to show information about in a
- * modal dialog.
- */
-export const useMountpointInfoModal = () => {
-    return useContext(MountpointInfoModalContext)
-}

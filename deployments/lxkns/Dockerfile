@@ -1,7 +1,3 @@
-# ⚠️ Requires Docker Buildx in order to correctly produce the final image with
-# the extended file attributes for capabilities still intact. The Buildx plugin
-# is automatically installed on recent .deb and .rpm based distributions.
-#
 # This multi-stage build uses multiple build contexts. (1) the lxkns Go-based
 # service is build from the main build context in combinationwith several
 # dynamically configured build contexts for optionally workspace-used
@@ -17,7 +13,7 @@
 ARG ALPINE_VERSION=3.23
 ARG ALPINE_PATCH=0
 ARG GO_VERSION=1.25.5
-ARG NODE_VERSION=21
+ARG NODE_VERSION=22
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
@@ -85,12 +81,10 @@ COPY containerizer/ ./containerizer/
 COPY decorator/ ./decorator/
 COPY discover/ ./discover/
 COPY internal/ ./internal/
-COPY log/ ./log/
 COPY model/ ./model/
 COPY mounts/ ./mounts/
 COPY nsioctl/ ./nsioctl/
 COPY ops/ ./ops/
-COPY plural/ ./plural/
 COPY species/ ./species/
 COPY *.go ./
 
@@ -125,24 +119,26 @@ RUN yarn config set nodeLinker node-modules
 COPY --from=webappsrc \
     package.json \
     yarn.lock \
-    .eslintrc.cjs \
+    .eslintignore \
+    eslint.config.js \
     tsconfig.json \
+    tsconfig.app.json \
     tsconfig.node.json \
     vite.config.ts \
+    yarn.lock \
     index.html \
     lxkns-logo.svg \
         ./
 # While not being a true production install in the original sense, this avoids
 # installing storybook which we all don't need in creating the production build.
-RUN yarn workspaces focus --production
-RUN yarn eslint --init
+RUN yarn
 # Now build the production-optimized web app.
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
 COPY --from=webappsrc .env ./
 ARG REACT_APP_GIT_VERSION
 RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${REACT_APP_GIT_VERSION}/" .env
-RUN yarn build
+RUN yarn run build
 
 # 3rd and final stage: create the final image containing only the lxkns binary
 # and its required shared libraries, as well as the lxkns web app.

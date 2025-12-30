@@ -16,6 +16,7 @@ package portable
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -38,6 +39,9 @@ var _ = Describe("portable reference", func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("does not Open() a zero portable reference", func() {
@@ -96,7 +100,7 @@ var _ = Describe("portable reference", func() {
 		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		portref := PortableReference{ID: mynetnsid}
 		ref, closer, err := portref.Open()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		closer()
 		Expect(ref).NotTo(BeNil())
@@ -111,7 +115,7 @@ var _ = Describe("portable reference", func() {
 			Starttime: proc.Starttime,
 		}
 		ref, closer, err := portref.Open()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(closer).NotTo(BeNil())
 		closer()
 		Expect(ref).NotTo(BeNil())

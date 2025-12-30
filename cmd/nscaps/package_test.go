@@ -15,94 +15,78 @@
 package main
 
 import (
+	"context"
+	"log/slog"
+	"os"
 	"testing"
 
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/spacetest"
+	"github.com/thediveo/spacetest/spacer"
+	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 )
 
-var initusernsid species.NamespaceID
-
-var procscripts = testbasher.Basher{}
-var proccmd *testbasher.TestCommand
-var procpid model.PIDType
-var procusernsid species.NamespaceID
-
-var targetscripts = testbasher.Basher{}
-var targetcmd *testbasher.TestCommand
-var tpid model.PIDType
-var tuserid, tnsid species.NamespaceID
+var (
+	initialUsernsID               species.NamespaceID
+	someProcPID                   model.PIDType
+	someProcUsernsID              species.NamespaceID
+	targetPID                     model.PIDType
+	targetUsernsID, targetNetnsID species.NamespaceID
+)
 
 var allns *discover.Result
 
 var _ = BeforeSuite(func() {
-	procscripts.Common(nstest.NamespaceUtilsScript)
-	procscripts.Script("main", `
-process_namespaceid user
-unshare -Ufr $stage2
-`)
-	procscripts.Script("stage2", `
-echo $$
-process_namespaceid user
-read
-`)
-	proccmd = procscripts.Start("main")
-	initusernsid = nstest.CmdDecodeNSId(proccmd)
-	proccmd.Decode(&procpid)
-	procusernsid = nstest.CmdDecodeNSId(proccmd)
+	initialUsernsID = species.NamespaceIDfromInode(spacetest.CurrentIno(unix.CLONE_NEWUSER))
 
-	targetscripts.Common(nstest.NamespaceUtilsScript)
-	targetscripts.Script("main", `
-unshare -Unfr $stage2
-`)
-	targetscripts.Script("stage2", `
-echo $$
-process_namespaceid user
-process_namespaceid net
-read
-`)
-	targetcmd = targetscripts.Start("main")
-	targetcmd.Decode(&tpid)
-	tuserid = nstest.CmdDecodeNSId(targetcmd)
-	tnsid = nstest.CmdDecodeNSId(targetcmd)
+	defer func(l *slog.Logger) { slog.SetDefault(l) }(slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+	By("spinning up a local spacer service")
+	ctx, cancel := context.WithCancel(context.Background())
+	spacerClient := spacer.New(ctx, spacer.WithErr(GinkgoWriter))
+	DeferCleanup(func() {
+		cancel()
+		spacerClient.Close()
+	})
+
+	By("creating a child user namespace")
+	subspaceClient, subspc := spacerClient.Subspace(true, false)
+	DeferCleanup(func() {
+		subspaceClient.Close()
+	})
+	someProcPID = model.PIDType(subspaceClient.PID())
+	Expect(someProcPID).NotTo(Equal(model.PIDType(os.Getpid())))
+	someProcUsernsID = species.NamespaceIDfromInode(spacetest.Ino(subspc.User, unix.CLONE_NEWUSER))
+
+	By("creating another child user namespace and a network namespace")
+	targetspaceClient, targetsubspc := spacerClient.Subspace(true, false)
+	DeferCleanup(func() {
+		targetspaceClient.Close()
+	})
+	targetPID = model.PIDType(targetspaceClient.PID())
+	Expect(targetPID).NotTo(Equal(model.PIDType(os.Getpid())))
+	Expect(targetPID).NotTo(Equal(someProcPID))
+	targetUsernsID = species.NamespaceIDfromInode(spacetest.Ino(targetsubspc.User, unix.CLONE_NEWUSER))
+
+	tnetns := targetspaceClient.NewTransient(unix.CLONE_NEWNET)
+	targetNetnsID = species.NamespaceIDfromInode(spacetest.Ino(tnetns, unix.CLONE_NEWNET))
 
 	allns = discover.Namespaces(discover.WithStandardDiscovery())
 })
 
-var _ = AfterSuite(func() {
-	if proccmd != nil {
-		proccmd.Close()
-	}
-	procscripts.Done()
-
-	if targetcmd != nil {
-		targetcmd.Close()
-	}
-	targetscripts.Done()
-})
-
-var oldexit func(int)
-var exitcode int
-
-var _ = BeforeEach(func() {
-	oldexit = osExit
-	exitcode = 0
-	osExit = func(code int) { exitcode = code }
-})
-
-var _ = AfterEach(func() {
-	osExit = oldexit
-})
-
 func TestNscapsCmd(t *testing.T) {
 	style.PrepareForTest()
+
+	format.MaxDepth = 4
+	format.MaxLength = 10_000
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "nscaps command")
 }

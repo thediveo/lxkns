@@ -12,24 +12,26 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Container, Engine, Group } from "./container";
-import { MountPathMap, NamespacedMountPathMaps } from "./mount";
+import type { Container, Engine, Group } from "./container";
+import type { MountPathMap, NamespacedMountPathMaps } from "./mount";
 
 /**
  * Namespace type identifier strings: these are de-facto definitions from the
  * Linux kernel and used, for instance, when reading namespace links or (bind)
  * mount information related to namespaces.
  */
-export enum NamespaceType {
-    cgroup = 'cgroup',
-    ipc = 'ipc',
-    mnt = 'mnt',
-    net = 'net',
-    pid = 'pid',
-    user = 'user',
-    uts = 'uts',
-    time = 'time'
-}
+export const NamespaceType = {
+    cgroup: 'cgroup',
+    ipc: 'ipc',
+    mnt: 'mnt',
+    net: 'net',
+    pid: 'pid',
+    user: 'user',
+    uts: 'uts',
+    time: 'time'
+} as const;
+
+export type NamespaceType = typeof NamespaceType[keyof typeof NamespaceType];
 
 /**
  * Information about a Linux-kernel namespace, with its relationship to other
@@ -82,7 +84,7 @@ export interface Namespace {
  * neither an ealdorman process nor any loose threads attached to it.
  */
 export const isPassive = (ns: Namespace) =>
-    !!ns && ns.ealdorman === null && ns.loosethreads.length === 0
+    !!ns && ns.ealdorman === null && ns.loosethreads?.length === 0
 
 /**
  * Each OS-level process is attached to namespaces, exactly one of each type.

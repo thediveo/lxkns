@@ -12,8 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
+import MuiLink from '@mui/material/Link'
 
 import { ExtLink } from 'components/extlink'
 
@@ -26,19 +26,25 @@ export interface SmartAProps {
 }
 
 /**
- * Renders a hyperlink either as an external link (using the ExtLink component),
- * or a React (DOM) router "internal" Link component, depending on the given
- * href property value. Using the Link component ensures proper app-internal
- * route handling without having to reload the application and thus destroying
- * the any discovery result.
+ * `SmartA` renders a hyperlink either as an **external link** (using the
+ * [ExtLink](?path=/docs/universal-extlink--docs) component), or a React (DOM)
+ * router "SPA-internal" [Link](https://reactrouter.com/api/components/Link)
+ * component, depending on the given href property value. Using the Link
+ * component ensures proper app-internal route handling without having to reload
+ * the application and thus destroying the any discovery result.
+ * 
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const SmartA = ({href, children, ...otherprops}: SmartAProps) => {
+    let isURL = false
     try {
-        new URL(href)
-        return <ExtLink href={href} {...otherprops}>{children}</ExtLink>
-    } catch {
-        return <Link to={href} {...otherprops}>{children}</Link>
-    }
+        new URL(href);
+        isURL = true
+    } catch { /* go lint yourselves */ }
+    return isURL
+        ? <ExtLink href={href} {...otherprops}>{children}</ExtLink>
+        : <MuiLink to={href} component={RouterLink} {...otherprops}>{children}</MuiLink>
 }
 
 export default SmartA

@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -30,11 +31,17 @@ import (
 var _ = Describe("PID maps", func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("doesn't translates non-existing PID/namespace", func() {

@@ -29,7 +29,7 @@ var _ = Describe("discovery result JSON", func() {
 	It("marshals discovery options", func() {
 		doh := (*DiscoveryOptions)(&allns.Options)
 		j, err := json.Marshal(doh)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(`{
 			"from-procs": true,
 			"from-tasks": false,
@@ -67,7 +67,7 @@ var _ = Describe("discovery result JSON", func() {
 
 		doh := (*DiscoveryOptions)(&allns.Options)
 		j, err := json.Marshal(doh)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		opts = &DiscoveryOptions{}
 		Expect(json.Unmarshal(j, opts)).To(Succeed())
@@ -82,7 +82,7 @@ var _ = Describe("discovery result JSON", func() {
 
 	It("marshals the discovery options, the namespaces map and process table", func() {
 		j, err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		toplevel := map[string]json.RawMessage{}
 		Expect(json.Unmarshal(j, &toplevel)).To(Succeed())
@@ -123,19 +123,19 @@ var _ = Describe("discovery result JSON", func() {
 
 	It("marshals and unmarshals a discovery result without hiccup", func() {
 		j, err := json.Marshal(NewDiscoveryResult(WithResult(allns)))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		dr := NewDiscoveryResult()
 		Expect(json.Unmarshal(j, dr)).To(Succeed())
 		namespaces := dr.Result().Namespaces
-		for idx := model.NamespaceTypeIndex(0); idx < model.NamespaceTypesCount; idx++ {
+		for idx := range model.NamespaceTypesCount {
 			Expect(namespaces[idx]).To(HaveLen(len(allns.Namespaces[idx])))
 		}
 		Expect(dr.Processes()).To(BeSameProcessTable(allns.Processes))
 
-		Expect(len(dr.Mounts())).To(Equal(len(allns.Mounts)))
+		Expect(dr.Mounts()).To(HaveLen(len(allns.Mounts)))
 		for mntnsid, m := range dr.Mounts() {
-			Expect(len(m)).To(Equal(len(allns.Mounts[mntnsid])))
+			Expect(m).To(HaveLen(len(allns.Mounts[mntnsid])))
 		}
 
 		// Slightly convoluted test for correct options sans the non-marshalled

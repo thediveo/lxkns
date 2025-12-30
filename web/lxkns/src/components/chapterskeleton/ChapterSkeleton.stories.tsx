@@ -12,22 +12,22 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { ChapterSkeleton } from './ChapterSkeleton'
+import { ChapterSkeleton } from "./ChapterSkeleton";
 
 const meta: Meta<typeof ChapterSkeleton> = {
-    title: 'Universal/ChapterSkeleton',
-    component: ChapterSkeleton,
-    tags: ['autodocs'],
-}
+  title: "Universal/ChapterSkeleton",
+  component: ChapterSkeleton,
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ChapterSkeleton>
+type Story = StoryObj<typeof ChapterSkeleton>;
 
 export const Basic: Story = {
-    args: {
-        sx: { width: "20rem" },
-    },
-}
+  args: {
+    sx: { width: "20rem" },
+  },
+};

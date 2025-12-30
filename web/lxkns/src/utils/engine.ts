@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Engine } from "models/lxkns"
+import type { Engine } from "models/lxkns"
 
 const coll = new Intl.Collator(undefined, {
     numeric: true,

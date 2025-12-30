@@ -20,13 +20,12 @@ package main
 import (
 	"fmt"
 	"os/user"
-	"reflect"
 
-	"github.com/thediveo/lxkns/cmd/internal/pkg/filter"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
-	"github.com/thediveo/lxkns/cmd/internal/tool"
+	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/internal/xslices"
+	"github.com/thediveo/lxkns/internal/xstrings"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -34,29 +33,42 @@ import (
 // root user namespaces and then recursively dives into the user namespace
 // hierarchy.
 type UserNSVisitor struct {
-	Details bool // when true, also show all owned non-user namespaces.
+	// when true, also show all owned non-user namespaces.
+	Details bool
+	// configured namespace filter function.
+	Filter func(model.Namespace) bool
+	// render function for namespace icons, where its exact behavior depends on
+	// CLI flags.
+	NamespaceIcon func(model.Namespace) string
+	// render function for namespace references in form of either process names
+	// (as well as additional process properties) or file system references.
+	NamespaceReferenceLabel func(model.Namespace) string
 }
 
+var _ asciitree.Visitor = (*UserNSVisitor)(nil)
+
 // Roots returns the given topmost hierarchical user namespaces sorted.
-func (v *UserNSVisitor) Roots(roots reflect.Value) []reflect.Value {
-	return tool.SortRootNamespaces(roots)
+func (v *UserNSVisitor) Roots(roots any) []any {
+	rootNamespaces, _ := roots.([]model.Namespace)
+	discover.SortNamespaces(rootNamespaces)
+	return xslices.Any(rootNamespaces)
 }
 
 // Label returns the text label for a namespace node. Everything else will have
 // no label.
-func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
-	if ns, ok := node.Interface().(model.Namespace); ok {
+func (v *UserNSVisitor) Label(node any) (label string) {
+	if ns, ok := node.(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = tool.Space(
-			output.NamespaceIcon(ns)+
+		label = xstrings.Join(
+			v.NamespaceIcon(ns)+
 				style.V(ns.(model.NamespaceStringer).TypeIDString()).String(),
-			output.NamespaceReferenceLabel(ns))
+			v.NamespaceReferenceLabel(ns))
 	}
 	// If it is a user namespace we render information about the user that
 	// created this particular user namespace: the user ID and, if available,
 	// the user name.
-	if uns, ok := node.Interface().(model.Ownership); ok {
-		label = tool.Space(label, fmt.Sprintf("created by UID %d",
+	if uns, ok := node.(model.Ownership); ok {
+		label = xstrings.Join(label, fmt.Sprintf("created by UID %d",
 			style.OwnerStyle.V(uns.UID())))
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
 			label += fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))
@@ -68,22 +80,18 @@ func (v *UserNSVisitor) Label(node reflect.Value) (label string) {
 // Get returns the user namespace text label for the current node (which is
 // always a user namespace), as well as the list of properties (owned
 // non-user namespaces) and the list of child user namespace nodes.
-func (v *UserNSVisitor) Get(node reflect.Value) (
-	label string,
-	properties []string,
-	children reflect.Value,
-) {
+func (v *UserNSVisitor) Get(node any) (label string, properties []string, children []any) {
 	// Determine the label text for this user namespace.
 	label = v.Label(node)
 	// Determine the children of this user namespace, which are in turn user
 	// namespaces.
-	if hierns, ok := node.Interface().(model.Hierarchy); ok {
-		children = reflect.ValueOf(discover.SortChildNamespaces(hierns.Children()))
+	if hierns, ok := node.(model.Hierarchy); ok {
+		children = xslices.Any(discover.SortChildNamespaces(hierns.Children()))
 	}
 	// In case a detailed tree has been requested, determine the owned non-user
 	// namespaces.
 	if v.Details {
-		if userns, ok := node.Interface().(model.Ownership); ok {
+		if userns, ok := node.(model.Ownership); ok {
 			ownedns := userns.Ownings()
 			for _, nstype := range model.TypeIndexLexicalOrder {
 				if nstype == model.UserNS {
@@ -96,14 +104,14 @@ func (v *UserNSVisitor) Get(node reflect.Value) (
 				}
 				nslist := discover.SortedNamespaces(ownedns[nstype])
 				for _, ns := range nslist {
-					if !filter.Filter(ns) {
+					if !v.Filter(ns) {
 						continue
 					}
 					style := style.Styles[ns.Type().Name()]
 					s := fmt.Sprintf("%s%s %s",
-						output.NamespaceIcon(ns),
+						v.NamespaceIcon(ns),
 						style.V(ns.(model.NamespaceStringer).TypeIDString()),
-						output.NamespaceReferenceLabel(ns))
+						v.NamespaceReferenceLabel(ns))
 					properties = append(properties, s)
 				}
 			}

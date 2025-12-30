@@ -12,13 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
 
 import ThreadIcon from 'icons/Thread'
-import { Task } from 'models/lxkns'
+import type { Task } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo'
 import { ProcessName } from 'components/processinfo'
 import CgroupInfo from 'components/cgroupinfo'
@@ -83,19 +82,30 @@ export interface TaskInfoProps {
 }
 
 /** 
- * The `TaskInfo` component renders only (almost) minimal information about a
- * single Linux task to make it easily identifyable:
+ * `TaskInfo` renders only certain information about a single Linux task to make
+ * it easily identifyable:
  *
- * - TID and thread name.
- * - if associated with a container: container information (name, group).
- * - process name and PID, which is has been either set by the process itself,
- *   or has been derived from the process' command line.
- * - cgroup path, if path is not empty.
- * - pause indication if process is freezing or has been frozen.
+ * - **TID** (in square brackets instead of the usual round brackets for process
+ *   PIDs) and **task/thread name**.
+ * 
+ * - when associated with a container: the **container name** and "**group**";
+ *   this group can be a Compose project, a Kubernetes namespace, ... This
+ *   information is hidden when `short=true`.
+ * 
+ * - the **PID and name of the process** to which the task belongs to.
+ * 
+ * - the **cgroup path** unless the path empty (which means "we don't known").
+ *   This information is hidden when `short=true`.
+ * 
+ * - a **pause indication** when process is freezing or has been frozen. This
+ *   information is hidden when `short=true`.
  *
  * On purpose, this component doesn't render more comprehensive information
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
+ * 
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const TaskInfo = ({ task, short, className }: TaskInfoProps) => {
 

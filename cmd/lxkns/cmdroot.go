@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -26,13 +27,14 @@ import (
 	"unsafe"
 
 	"github.com/spf13/cobra"
+	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/log"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/caps"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
+	_ "github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
+	"github.com/thediveo/lxkns/cmd/internal/caps"
 	"github.com/thediveo/lxkns/decorator"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
@@ -52,11 +54,11 @@ func reexec() {
 	initialcgroupnsid, ierr := initialcgroupns.ID()
 	currentcgroupnsid, cerr := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 	if ierr != nil || cerr != nil {
-		log.Errorf("cannot determine initial and own cgroup namespaces, not switching cgroup namespace")
+		slog.Error("cannot determine initial and own cgroup namespaces, not switching cgroup namespace")
 		return
 	}
-	log.Debugf("current cgroup namespace %d, initial cgroup namespace: %d",
-		currentcgroupnsid.Ino, initialcgroupnsid.Ino)
+	slog.Debug("cgroup namespaces",
+		slog.Uint64("current", currentcgroupnsid.Ino), slog.Uint64("initial", initialcgroupnsid.Ino))
 	if currentcgroupnsid != initialcgroupnsid {
 		// In order to safely switch the cgroup namespace in a Golang app
 		// with potentially several OS threads bouncing around by now we can
@@ -68,10 +70,10 @@ func reexec() {
 		// just use the few and simple primitives, namely
 		// runtime.LockOSThread() and ops.Execute(). Everything else is
 		// debug logging and error handling.
-		log.Infof("switching from current cgroup:[%d] into initial cgroup:[%d] and re-executing...",
-			currentcgroupnsid.Ino, initialcgroupnsid.Ino)
+		slog.Info("switching from current cgroup into initial cgroup and re-executing...",
+			slog.Uint64("current", currentcgroupnsid.Ino), slog.Uint64("initial", initialcgroupnsid.Ino))
 		runtime.LockOSThread()
-		if res, err := ops.Execute(func() interface{} {
+		if res, err := ops.Execute(func() error {
 			// tee hee, while the process might still be in its original,
 			// but not initial, cgroup namespace, this particular OS-level
 			// task/thread should now be in the initial cgroup namespace. So
@@ -87,16 +89,17 @@ func reexec() {
 			if currentcgroupnsid == initialcgroupnsid {
 				success = "successfully "
 			}
-			log.Debugf("(parent) current OS thread %sswitched to cgroup:[%d]", success, currentcgroupnsid.Ino)
+			slog.Debug(fmt.Sprintf("(parent) current OS thread %sswitched to cgroup", success),
+				slog.Uint64("current", currentcgroupnsid.Ino))
 			return unix.Exec(
 				"/proc/self/exe",
 				append([]string{os.Args[0], "--cgroupswitched"}, os.Args[1:]...),
 				os.Environ(),
 			)
 		}, initialcgroupns); err != nil {
-			log.Errorf("failed to switch to initial cgroup, err: %s", err.Error())
+			slog.Error("failed to switch to initial cgroup", slog.String("err", err.Error()))
 		} else {
-			log.Errorf("failed to re-execute, err: %s", res)
+			slog.Error("failed to re-execute", slog.String("err", res.Error()))
 			os.Exit(1)
 		}
 	}
@@ -109,11 +112,9 @@ func reexec() {
 func reexeced() {
 	initialcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/1/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 	currentcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
-	isInitial := ""
-	if currentcgroupnsid == initialcgroupnsid {
-		isInitial = "initial "
-	}
-	log.Infof("re-executed in %scgroup:[%d]", isInitial, currentcgroupnsid.Ino)
+	slog.Info("re-executed",
+		slog.Bool("initial", currentcgroupnsid == initialcgroupnsid),
+		slog.Int64("cgroup", int64(currentcgroupnsid.Ino)))
 	// Unfortunately, we end up here with /proc/self/stat stating our
 	// process name as "exe", because we executed our own executable. This
 	// is not terribly useful and user/admin friendly, so we try to set our
@@ -127,9 +128,11 @@ func reexeced() {
 	// https://man7.org/linux/man-pages/man2/prctl.2.html
 	if _, _, errno := syscall.RawSyscall6(
 		syscall.SYS_PRCTL, syscall.PR_SET_NAME, uintptr(ptr), 0, 0, 0, 0); errno != 0 {
-		log.Errorf("cannot fix process name: %s", syscall.Errno(errno).Error())
+		slog.Error("cannot fix process name",
+			slog.String("err", syscall.Errno(errno).Error()))
 	} else {
-		log.Debugf("fixed re-executed process name to %q", proc.Basename())
+		slog.Debug("fixed re-executed process name",
+			slog.String("name", proc.Basename()))
 	}
 	runtime.UnlockOSThread()
 }
@@ -137,13 +140,6 @@ func reexeced() {
 // lxknsservice is the "root command" to be run after successfully parsing the
 // CLI flags. We then here kick off the lxkns service itself.
 func lxknsservice(cmd *cobra.Command, _ []string) error {
-	if silent, _ := cmd.PersistentFlags().GetBool("silent"); silent {
-		log.SetLevel(log.ErrorLevel)
-	}
-	if debug, _ := cmd.PersistentFlags().GetBool("debug"); debug {
-		log.SetLevel(log.DebugLevel)
-		log.Debugf("lxkns service debug logging enabled")
-	}
 	// initial cgroup hack around docker-compose not allowing for setting
 	// "cgroupns: host" during deployment.
 	switchedCgroup, _ := cmd.PersistentFlags().GetBool("cgroupswitched")
@@ -155,24 +151,25 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	}
 
 	// And now for the real meat.
-	log.Infof("This is the lxkns Linux-kernel namespaces discovery service and web app, version %s",
-		lxkns.SemVersion)
-	log.Infof("Copyright (c) Harald Albrecht, 2020, 2022, ...; see: https://github.com/thediveo/lxkns")
-	log.Infof("This software is licensed under the Apache License, version 2.0, see: https://www.apache.org/licenses/LICENSE-2.0")
+	slog.Info("This is the lxkns Linux-kernel namespaces discovery service and web app",
+		slog.String("version", lxkns.SemVersion))
+	slog.Info("Copyright (c) Harald Albrecht, 2020, 2025, ...; see: https://github.com/thediveo/lxkns")
+	slog.Info("This software is licensed under the Apache License, version 2.0, see: https://www.apache.org/licenses/LICENSE-2.0")
 
 	if pausebin := mountineer.StandaloneSandboxBinary(); pausebin != "" {
-		log.Infof("using optimized pandora's sandbox binary %s", pausebin)
+		slog.Info("using optimized pandora's sandbox binary", slog.String("path", pausebin))
 	}
 
-	log.Infof("running as user ID %d", os.Geteuid())
+	slog.Info("running as", slog.Int("userid", os.Geteuid()))
 	mycaps := strings.Join(caps.ProcessCapabilities(model.PIDType(os.Getpid())), ", ")
 	if mycaps == "" {
 		mycaps = "<none>"
 	}
-	log.Infof("with effective capabilities: %s", mycaps)
+	slog.Info("with effective capabilities", slog.String("effcaps", mycaps))
 
-	log.Infof("available decorator plugins: %s",
-		strings.Join(plugger.Group[decorator.Decorate]().Plugins(), ", "))
+	slog.Info("available decorator plugins",
+		slog.String("decorators",
+			strings.Join(plugger.Group[decorator.Decorate]().Plugins(), ",")))
 
 	// Create the containerizer for the specified container engines...
 	ctx, cancel := context.WithCancel(context.Background())
@@ -183,7 +180,7 @@ func lxknsservice(cmd *cobra.Command, _ []string) error {
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
 	if _, err := startServer(addr, cizer); err != nil {
-		log.Errorf("cannot start service, error: %s", err.Error())
+		slog.Error("cannot start service", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 	stopit := make(chan os.Signal, 1)
@@ -203,14 +200,12 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return cli.BeforeCommand(cmd)
+			return clippy.BeforeCommand(cmd)
 		},
 		RunE: lxknsservice,
 	}
 	// Sets up the flags.
 	pf := rootCmd.PersistentFlags()
-	pf.Bool("debug", false, "enables debugging output")
-	pf.Bool("silent", false, "silences everything below the error level")
 	pf.String("http", "[::]:5010", "HTTP service address")
 	pf.Duration("shutdown", 15*time.Second, "graceful shutdown duration limit")
 	// Work around docker-compose currently having no means to set "cgroupns:
@@ -221,6 +216,6 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	pf.Bool("cgroupswitched", false, "")
 	_ = pf.MarkHidden("cgroupswitched")
 
-	cli.AddFlags(rootCmd)
+	clippy.AddFlags(rootCmd)
 	return
 }

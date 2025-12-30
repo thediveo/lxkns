@@ -18,8 +18,8 @@ package discover
 
 import (
 	"context"
+	"log/slog"
 	"os"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -40,8 +40,6 @@ import (
 
 var sleepyname = "dumb_doormat" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
-var noDockerRE = regexp.MustCompile(`connect: no such file or directory`)
-
 var _ = Describe("Discover containers", func() {
 
 	// Ensure to run the goroutine leak test *last* after all (defered)
@@ -55,15 +53,10 @@ var _ = Describe("Discover containers", func() {
 	})
 
 	var sleepy *morbyd.Container
-	var docksock string
 
 	BeforeEach(func(ctx context.Context) {
-		// We cannot discover the initial container process running as root when
-		// we're not root too.
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-		docksock = "unix:///proc/1/root/run/docker.sock"
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 
 		goodgos := Goroutines()
 		goodfds := Filedescriptors()
@@ -92,8 +85,12 @@ var _ = Describe("Discover containers", func() {
 	})
 
 	It("finds containers and relates them with their initial processes", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
 		By("spinning up a Docker watcher")
-		mw, err := moby.New(docksock, nil)
+		mw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

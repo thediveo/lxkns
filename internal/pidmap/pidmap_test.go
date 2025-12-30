@@ -16,6 +16,7 @@ package pidmap
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -40,6 +41,9 @@ var _ = Describe("maps PIDs", func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("returns empty PID slice for non-existing PID 0", func() {
@@ -55,7 +59,7 @@ var _ = Describe("maps PIDs", func() {
 	It("ignores invalid NSpid entries", func() {
 		p := model.NewProcessInProcfs(model.PIDType(669), false, "test/proc")
 		Expect(p).NotTo(BeNil())
-		Expect(nspid(p.PID, "test/proc")).To(HaveLen(0))
+		Expect(nspid(p.PID, "test/proc")).To(BeEmpty())
 	})
 
 	It("reads namespaced PIDs of process", func() {

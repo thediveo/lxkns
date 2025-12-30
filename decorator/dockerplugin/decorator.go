@@ -17,12 +17,12 @@ package dockerplugin
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/whalewatcher/watcher/containerd"
@@ -61,7 +61,7 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 			if !strings.HasPrefix(cntr.Name, DockerPluginNamespace) {
 				continue
 			}
-			log.Debugf("found managed Docker plugin container %s", cntr.Name)
+			slog.Debug("found managed Docker plugin container", slog.String("container", cntr.Name))
 			cntr.Flavor = DockerPluginFlavor
 			bundlePath := cntr.Labels[enginebundlepathLabel]
 			total++
@@ -84,8 +84,8 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 				}
 				mntee, mnterr = mountineer.New(model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/mnt", enginePID)}, nil)
 				if mnterr != nil {
-					log.Errorf("dockerplugin decorator: cannot access mount namespace of engine with API %s, reason: %s",
-						engine.API, mnterr.Error())
+					slog.Error("dockerplugin decorator: cannot access mount namespace of engine",
+						slog.String("api", engine.API), slog.String("err", mnterr.Error()))
 					continue
 				}
 				defer mntee.Close()
@@ -104,7 +104,8 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 					continue
 				}
 				pluginname := strings.TrimSuffix(item.Name(), ".sock")
-				log.Debugf("managed Docker plugin %s is now known as %s", cntr.Name, pluginname)
+				slog.Debug("managed Docker plugin",
+					slog.String("container", cntr.Name), slog.String("name", pluginname))
 				if pluginname == "" {
 					break
 				}
@@ -115,6 +116,6 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		}
 	}
 	if total > 0 {
-		log.Infof("discovered %d managed Docker plugins", total)
+		slog.Info("discovered managed Docker plugins", slog.Int("count", total))
 	}
 }

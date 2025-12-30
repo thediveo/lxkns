@@ -1,5 +1,5 @@
-import { Namespace } from 'models/lxkns'
-import { MountPoint } from 'models/lxkns/mount'
+import { NamespaceType, type Namespace } from 'models/lxkns'
+import type { MountPoint } from 'models/lxkns/mount'
 
 export const mountpoint: MountPoint = {
     fstype: 'ext2000',
@@ -16,7 +16,8 @@ export const mountpoint: MountPoint = {
     tags: {'shared': '123', 'master': '42'},
     children: [],
     mountnamespace: {
-        nsid: 12345678,
+        type: NamespaceType.mnt,
+        nsid: 4026532623,
         "user-id": 12345,
         "user-name": "foo1",
 

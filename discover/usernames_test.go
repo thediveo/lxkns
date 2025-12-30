@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"os"
 	"os/user"
 	"strconv"
@@ -33,6 +34,9 @@ import (
 var _ = Describe("maps UIDs", func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
@@ -43,12 +47,12 @@ var _ = Describe("maps UIDs", func() {
 	It("returns same information as library queries", func() {
 		myuid := os.Getuid()
 		u, err := user.LookupId(strconv.FormatUint(uint64(myuid), 10))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(u).NotTo(BeNil())
 		myusername := u.Username
 
 		u, err = user.LookupId("0")
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(u).NotTo(BeNil())
 		rootname := u.Username
 
@@ -107,7 +111,7 @@ read
 		scripts.Done()
 
 		usernames := DiscoverUserNames(allns.Namespaces)
-		Expect(len(usernames)).To(Equal(len(useruidmap) - 1))
+		Expect(usernames).To(HaveLen(len(useruidmap) - 1))
 		for uid, username := range hostuidusermap {
 			Expect(usernames[uid]).To(Equal(username), "missing uid %d: %q", uid, username)
 		}

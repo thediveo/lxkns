@@ -17,6 +17,8 @@
 package discover
 
 import (
+	"maps"
+
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/species"
 )
@@ -227,9 +229,7 @@ func WithLabel(key, value string) DiscoveryOption {
 // WithLabels adds a map of key-value pair to the discovery options.
 func WithLabels(labels map[string]string) DiscoveryOption {
 	return func(o *DiscoverOpts) {
-		for key, value := range labels {
-			o.Labels[key] = value
-		}
+		maps.Copy(o.Labels, labels)
 	}
 }
 

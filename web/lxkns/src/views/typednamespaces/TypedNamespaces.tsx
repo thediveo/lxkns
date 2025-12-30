@@ -12,24 +12,23 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { Discovery, NamespaceType } from 'models/lxkns'
-import { Action } from 'app/treeaction'
+import { type Discovery, NamespaceType } from 'models/lxkns'
 import { NamespaceProcessTree } from 'components/namespaceprocesstree'
 import { MountTreeDetailer } from 'components/mounttree'
 import { Box } from '@mui/material'
+import type { TreeAPI } from 'app/treeapi'
 
 
 export interface TypedNamespacesProps {
+    /** tree API for expansion, collapsing */
+    apiRef?: React.Ref<TreeAPI>
     /** lxkns discovery data */
     discovery: Discovery
-    /** tree action */
-    action: Action
 }
 
-export const TypedNamespaces = ({ discovery, action }: TypedNamespacesProps) => {
+export const TypedNamespaces = ({ apiRef, discovery }: TypedNamespacesProps) => {
 
     const loc = useLocation()
 
@@ -47,7 +46,7 @@ export const TypedNamespaces = ({ discovery, action }: TypedNamespacesProps) => 
                 key={nstype}
                 type={nstype}
                 discovery={discovery}
-                action={action}
+                apiRef={apiRef}
                 details={(nstype === 'mnt' && MountTreeDetailer) || undefined}
             />
         </Box>

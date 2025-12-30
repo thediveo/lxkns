@@ -15,11 +15,11 @@
 package composer
 
 import (
+	"log/slog"
+
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/plural"
 )
 
 // ComposerProjectLabel specifies the label (name) that identifies the project
@@ -67,6 +67,6 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		}
 	}
 	if total > 0 {
-		log.Infof("discovered %s", plural.Elements(total, "composer projects"))
+		slog.Info("discovered composer projects", slog.Int("count", total))
 	}
 }

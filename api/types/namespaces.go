@@ -53,7 +53,7 @@ func NewNamespacesDict(discoveryresults *discover.Result) *NamespacesDict {
 		}
 	}
 	d.TaskTable = TaskTable{}
-	d.ProcessTable.Namespaces = d
+	d.Namespaces = d
 	return d
 }
 

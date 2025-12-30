@@ -12,79 +12,79 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { NamespaceIcon } from './NamespaceIcon'
-import { NamespaceType } from 'models/lxkns'
+import { NamespaceIcon } from "./NamespaceIcon";
+import { NamespaceType } from "models/lxkns";
 
 const meta: Meta<typeof NamespaceIcon> = {
-    title: 'Namespace/NamespaceIcon',
-    component: NamespaceIcon,
-    tags: ['autodocs'],
-}
+  title: "Namespace/NamespaceIcon",
+  component: NamespaceIcon,
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof NamespaceIcon>
+type Story = StoryObj<typeof NamespaceIcon>;
 
 export const Cgroup: Story = {
-    name: 'cgroup',
-    args: {
-        type: NamespaceType.cgroup,
-    },
-}
+  name: "cgroup",
+  args: {
+    type: NamespaceType.cgroup,
+  },
+};
 
 export const IPC: Story = {
-    name: 'ipc',
-    args: {
-        type: NamespaceType.ipc,
-    },
-}
+  name: "ipc",
+  args: {
+    type: NamespaceType.ipc,
+  },
+};
 
 export const MNT: Story = {
-    name: 'mnt',
-    args: {
-        type: NamespaceType.mnt,
-    },
-}
+  name: "mnt",
+  args: {
+    type: NamespaceType.mnt,
+  },
+};
 
 export const NET: Story = {
-    name: 'net',
-    args: {
-        type: NamespaceType.net,
-    },
-}
+  name: "net",
+  args: {
+    type: NamespaceType.net,
+  },
+};
 
 export const PID: Story = {
-    name: 'pid',
-    args: {
-        type: NamespaceType.pid,
-    },
-}
+  name: "pid",
+  args: {
+    type: NamespaceType.pid,
+  },
+};
 
 export const User: Story = {
-    name: 'user',
-    args: {
-        type: NamespaceType.user,
-    },
-}
+  name: "user",
+  args: {
+    type: NamespaceType.user,
+  },
+};
 
 export const UTS: Story = {
-    name: 'uts',
-    args: {
-        type: NamespaceType.uts,
-    },
-}
+  name: "uts",
+  args: {
+    type: NamespaceType.uts,
+  },
+};
 
 export const Time: Story = {
-    name: 'time',
-    args: {
-        type: NamespaceType.time,
-    },
-}
+  name: "time",
+  args: {
+    type: NamespaceType.time,
+  },
+};
 
 export const Invalid: Story = {
-    args: {
-        type: 'foobar' as NamespaceType,
-    },
-}
+  args: {
+    type: "foobar" as NamespaceType,
+  },
+};

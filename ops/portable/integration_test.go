@@ -16,6 +16,7 @@ package portable
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"runtime"
@@ -42,6 +43,9 @@ var _ = Describe("portable reference integration", func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("opens portable (network) namespace reference and runs a sub-process in it", func() {
@@ -72,10 +76,10 @@ read # wait for test to proceed()
 		// test script, then try to enter it and run a separate process attached
 		// to the new network namespace.
 		lockednetns, netnsunlocker, err := PortableReference{ID: netnsid, Type: species.CLONE_NEWNET}.Open()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		defer netnsunlocker()
 		res, err := ops.Execute(
-			func() interface{} {
+			func() any {
 				cmd := exec.Command("ls", "-l", "/proc/self/ns/net")
 				out, err := cmd.CombinedOutput()
 				if err != nil {
@@ -84,7 +88,7 @@ read # wait for test to proceed()
 				return out
 			},
 			lockednetns)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(res).To(BeAssignableToTypeOf([]byte{}))
 		b, _ := res.([]byte)
 		Expect(string(b)).To(MatchRegexp(fmt.Sprintf(`net:\[%d\]`, netnsid.Ino)))
@@ -113,7 +117,7 @@ read # wait for test to proceed()
 		// otherwise garbage collecting it will prematurely close the wrapped
 		// *os.File ... and we don't want THAT.
 		lockednetns, netnsunlocker, err := PortableReference{ID: netnsid, Type: species.CLONE_NEWNET}.Open()
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		defer netnsunlocker()
 		// Finish the test script so that there are no more processes left
 		// attached to the newly created network namespace.

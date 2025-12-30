@@ -6,8 +6,8 @@
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 
-![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-81.1%25-brightgreen)
+![build and test](https://github.com/thediveo/lxkns/actions/workflows/buildandtest.yaml/badge.svg?branch=master)
+![Coverage](https://img.shields.io/badge/Coverage-87.7%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
@@ -117,30 +117,23 @@ additional web UI. Alternatively, it can be embedded/integrated into other
 system diagnosis tools. A prominent example of embedding `lxkns` is
 [@siemens/ghostwire](https://github.com/siemens/ghostwire).
 
-## Notes
+## DevContainer
 
-### Supported Go Versions
+> [!CAUTION]
+>
+> Do **not** use VSCode's "~~Dev Containers: Clone Repository in Container
+> Volume~~" command, as it is utterly broken by design, ignoring
+> `.devcontainer/devcontainer.json`.
+
+1. `git clone https://github.com/thediveo/lxkns`
+2. in VSCode: Ctrl+Shift+P, "Dev Containers: Open Workspace in Container..."
+3. select `lxkns.code-workspace` and off you go...
+
+## Supported Go Versions
 
 `lxkns` supports versions of Go that are noted by the [Go release
 policy](https://golang.org/doc/devel/release.html#policy), that is, major
 versions _N_ and _N_-1 (where _N_ is the current major version).
-
-## Hacking It
-
-This project comes with comprehensive unit tests, also covering leak checks:
-
-* goroutine leak checking courtesy of Gomega's
-  [`gleak`](https://onsi.github.io/gomega/#codegleakcode-finding-leaked-goroutines)
-  package.
-
-* file descriptor leak checking courtesy of the
-  [@thediveo/fdooze](https://github.com/thediveo/fdooze) module.
-
-> [!CAUTION]
-> **Note:** do **not run parallel tests** for multiple packages. `make test`
-> ensures to run all package tests always sequentially, but in case you run `go
-> test` yourself, please don't forget `-p 1` when testing multiple packages in
-> one, _erm_, go.
 
 ## Contributing
 
@@ -148,5 +141,5 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Copyright and License
 
-`lxkns` is Copyright 2020‒24 Harald Albrecht, and licensed under the Apache
+`lxkns` is Copyright 2020‒26 Harald Albrecht, and licensed under the Apache
 License, Version 2.0.

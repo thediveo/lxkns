@@ -162,7 +162,7 @@ var _ = Describe("process JSON", func() {
 
 	It("marshals NamespacesSetReferences", func() {
 		j, err := json.Marshal((*NamespacesSetReferences)(&namespaceset))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(namespacesJSON))
 	})
 
@@ -218,7 +218,7 @@ var _ = Describe("process JSON", func() {
 
 		// First establish that serialization works as expected...
 		j, err := json.Marshal((*Process)(proc1))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(proc1JSON))
 		// Next, deserialize the correct JSON textural serialization again...
 		allns := NewNamespacesDict(nil)
@@ -229,14 +229,14 @@ var _ = Describe("process JSON", func() {
 		// Or check by serializing the deserialized Process object again,
 		// seeing if we end up with the same JSON textual representation.
 		j2, err := json.Marshal(p)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j2).To(MatchJSON(j))
 	})
 
 	It("marshals ProcessTable", func() {
 		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2}))
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(`{"1":` + proc1JSON + `,"666":` + proc2JSON + `}`))
 	})
 
@@ -249,7 +249,7 @@ var _ = Describe("process JSON", func() {
 		// To unmarshal ... we need to ... marshal first!
 		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc1.PID: proc1, proc2.PID: proc2}))
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		// Set up an empty process table with a suitable namespace dictionary,
 		// and then try to unmarshal the JSON we've just marshalled before.
@@ -260,7 +260,7 @@ var _ = Describe("process JSON", func() {
 		// that processes with the same namespaces share the same namespace
 		// objects.
 		Expect(pt2.Namespaces.AllNamespaces[model.MountNS]).To(HaveLen(1))
-		Expect(pt2.Namespaces.AllNamespaces[model.TimeNS]).To(HaveLen(0))
+		Expect(pt2.Namespaces.AllNamespaces[model.TimeNS]).To(BeEmpty())
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).NotTo(BeNil())
 		Expect(pt2.ProcessTable[proc1.PID].Namespaces[model.CgroupNS]).To(
 			BeIdenticalTo(pt2.ProcessTable[proc2.PID].Namespaces[model.CgroupNS]))
@@ -287,7 +287,7 @@ var _ = Describe("process JSON", func() {
 	It("does a full round trip without any hiccup", func() {
 		pt := NewProcessTable()
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		jpt := NewProcessTable()
 		Expect(json.Unmarshal(j, &jpt)).To(Succeed())
@@ -298,7 +298,7 @@ var _ = Describe("process JSON", func() {
 		proc := &model.Process{PID: 12345, PPID: -1, ProTaskCommon: model.ProTaskCommon{Name: "foobar"}}
 		pt := NewProcessTable(WithProcessTable(model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		jpt := NewProcessTable()
 		Expect(json.Unmarshal(j, &jpt)).To(HaveOccurred())

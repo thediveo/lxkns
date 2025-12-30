@@ -16,7 +16,7 @@ package dockershim
 
 import (
 	"context"
-	"os"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -50,16 +50,8 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 	}
 
 	var sleepies []*morbyd.Container
-	var docksock string
 
 	BeforeAll(slowSpec, func(ctx context.Context) {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
-		}
-
 		By("creating a new Docker session for testing")
 		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=decorator.kuhbernetes")))
 		DeferCleanup(func(ctx context.Context) {
@@ -93,7 +85,10 @@ var _ = Describe("Decorates k8s docker shim containers", Ordered, func() {
 	})
 
 	It("decorates k8s pods", slowSpec, func(ctx context.Context) {
-		mw, err := moby.New(docksock, nil)
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+		mw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(ctx)

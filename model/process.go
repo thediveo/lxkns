@@ -23,14 +23,13 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/thediveo/cpus"
-	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/lxkns/plural"
-	"golang.org/x/sys/unix"
+	"github.com/thediveo/faf"
 )
 
 // PIDType expresses things more clearly.
@@ -103,10 +102,15 @@ type ProcessTable map[PIDType]*Process
 // zero-based indices. See also
 // https://man7.org/linux/man-pages/man5/proc.5.html.
 const (
-	statlineFieldPID       = 1 - 1 //nolint:staticcheck // SA4000 stupid, stupid lill' linter.
+	statlineFieldPID       = 1 - 1 //nolint SA4000 while proc(5) documents fields, we need indices
 	statlineFieldComm      = 2 - 1
 	statlineFieldPPID      = 4 - 1
 	statlineFieldStarttime = 22 - 1
+	statlineFieldNice      = 19 - 1
+	statlineFieldRTPrio    = 40 - 1
+	statlineFieldPolicy    = 41 - 1
+
+	lastRequiredStatlineField = statlineFieldPolicy
 )
 
 // Basename returns the process executable name with the directory stripped off,
@@ -178,19 +182,15 @@ func NewProcessInProcfs(PID PIDType, withtasks bool, procroot string) (proc *Pro
 // filesystem pointed to by procbase.
 func (p *Process) discoverTasks(procbase string) {
 	procbase += "/task"
-	taskentries, err := os.ReadDir(procbase)
-	if err != nil {
-		return
-	}
-	for _, taskentry := range taskentries {
+	for taskentry := range faf.ReadDir(procbase) {
 		// Get the task TID as a number and then read its
 		// /proc/[PID]/task/[TASK]/stat procfs entry in order to get some
 		// details about the task.
-		tid, err := strconv.ParseInt(taskentry.Name(), 10, 32)
+		tid, err := strconv.ParseInt(string(taskentry.Name), 10, 32)
 		if err != nil || tid <= 0 {
 			continue
 		}
-		line, err := os.ReadFile(procbase + "/" + taskentry.Name() + "/stat") // #nosec G304
+		line, err := os.ReadFile(procbase + "/" + string(taskentry.Name) + "/stat") // #nosec G304
 		if err != nil {
 			continue
 		}
@@ -206,7 +206,7 @@ func (p *Process) discoverTasks(procbase string) {
 // into a Process object. Factoring out the parsing functionality allows unit
 // testing it separately from the live process tree.
 func newProcessFromStatline(procstat string) (proc *Process) {
-	pid, starttime, statFields := commonFromStatline(procstat)
+	pid, starttime, policy, nice, prio, statFields := commonFromStatline(procstat)
 	if statFields == nil {
 		return nil
 	}
@@ -215,6 +215,9 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 		ProTaskCommon: ProTaskCommon{
 			Name:      statFields[statlineFieldComm],
 			Starttime: starttime,
+			Policy:    policy,
+			Nice:      nice,
+			Priority:  prio,
 		},
 	}
 	// PIDs are unsigned, but passed as int32...
@@ -228,20 +231,32 @@ func newProcessFromStatline(procstat string) (proc *Process) {
 
 // commonFromStatline returns the PID, starttime and finally all stat line
 // fields, or nil for the fields if the stat line turns out to be invalid.
-func commonFromStatline(statline string) (PIDType, uint64, []string) {
-	statFields := splitStatline(statline)
-	if statFields == nil {
-		return 0, 0, nil
+func commonFromStatline(statline string) (pid PIDType, starttime uint64, policy int, nice int, priority int, statfields []string) {
+	fields := splitStatline(statline)
+	if len(fields) <= lastRequiredStatlineField {
+		return
 	}
-	pid, err := strconv.ParseInt(statFields[statlineFieldPID], 10, 32)
-	if err != nil || pid <= 0 {
-		return 0, 0, nil
+	pidval, err := strconv.ParseInt(fields[statlineFieldPID], 10, 32)
+	if err != nil || pidval <= 0 {
+		return
 	}
-	starttime, err := strconv.ParseInt(statFields[statlineFieldStarttime], 10, 64)
-	if err != nil || starttime < 0 {
-		return 0, 0, nil
+	starttimeval, err := strconv.ParseInt(fields[statlineFieldStarttime], 10, 64)
+	if err != nil || starttimeval < 0 {
+		return
 	}
-	return PIDType(pid), uint64(starttime), statFields
+	policyval, err := strconv.ParseUint(fields[statlineFieldPolicy], 10, 16)
+	if err != nil {
+		return
+	}
+	niceval, err := strconv.ParseInt(fields[statlineFieldNice], 10, 8)
+	if err != nil || niceval < -20 || niceval > 19 {
+		return
+	}
+	priorityval, err := strconv.ParseUint(fields[statlineFieldRTPrio], 10, 8)
+	if err != nil || priorityval > 99 {
+		return
+	}
+	return PIDType(pidval), uint64(starttimeval), int(policyval), int(niceval), int(priorityval), fields
 }
 
 // splitStatline returns the individual fields of a /proc/$PID/stat line,
@@ -277,7 +292,7 @@ func splitStatline(statline string) []string {
 		return nil
 	}
 	fields := strings.Split(nameAndMore[nameEnd+2:], " ")
-	if len(fields) < 22-2 {
+	if len(fields) < lastRequiredStatlineField-2 {
 		return nil
 	}
 	statfields := []string{
@@ -312,7 +327,7 @@ func (p *Process) String() string {
 // caller must explicitly request this additional discovery.
 func NewProcessTable(freezer bool) (pt ProcessTable) {
 	pt = NewProcessTableFromProcfs(freezer, false, "/proc")
-	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
+	slog.Info("discovered processes", slog.Int("count", len(pt)))
 	return
 }
 
@@ -320,25 +335,21 @@ func NewProcessTable(freezer bool) (pt ProcessTable) {
 // optionally also the tasks/threads.
 func NewProcessTableWithTasks(freezer bool) (pt ProcessTable) {
 	pt = NewProcessTableFromProcfs(freezer, true, "/proc")
-	log.Infof("discovered %s", plural.Elements(len(pt), "processes"))
+	slog.Info("discovered processes", slog.Int("count", len(pt)))
 	return
 }
 
 // NewProcessTableFromProcfs implements [model.NewProcessTable] and allows for
 // testing on fake /proc "filesystems".
 func NewProcessTableFromProcfs(freezer bool, withtasks bool, procroot string) (pt ProcessTable) {
-	procentries, err := os.ReadDir(procroot)
-	if err != nil {
-		return nil
-	}
 	// Phase I: discover all processes, together with some of their
 	// properties, such as name and PPID.
 	pt = map[PIDType]*Process{}
-	for _, procentry := range procentries {
+	for procentry := range faf.ReadDir(procroot) {
 		// Get the process PID as a number and then read its /proc/[PID]/stat
 		// procfs entry in order to get some details about the process. Skip
 		// entries that do not represent PIDs.
-		pid, err := strconv.ParseInt(procentry.Name(), 10, 32)
+		pid, err := strconv.ParseInt(string(procentry.Name), 10, 32)
 		if err != nil || pid <= 0 {
 			continue
 		}
@@ -347,6 +358,9 @@ func NewProcessTableFromProcfs(freezer bool, withtasks bool, procroot string) (p
 			continue
 		}
 		pt[proc.PID] = proc
+	}
+	if len(pt) == 0 {
+		return nil
 	}
 	// Phase II: form a process object tree to speed up repeated traversals,
 	// which we'll need to run during namespace discovery. This is a simple
@@ -404,7 +418,7 @@ func (t ProcessTable) ProcessesByPIDs(pid ...PIDType) []*Process {
 // newTaskFromStatline parses a task (process) status line (as read from
 // /proc/[PID]/task/[TID]/status) into a Task object.
 func newTaskFromStatline(procstat string, proc *Process) (task *Task) {
-	tid, starttime, statFields := commonFromStatline(procstat)
+	tid, starttime, policy, nice, prio, statFields := commonFromStatline(procstat)
 	if statFields == nil {
 		return nil
 	}
@@ -414,6 +428,9 @@ func newTaskFromStatline(procstat string, proc *Process) (task *Task) {
 		ProTaskCommon: ProTaskCommon{
 			Name:      statFields[statlineFieldComm],
 			Starttime: starttime,
+			Policy:    policy,
+			Nice:      nice,
+			Priority:  prio,
 		},
 	}
 	return
@@ -424,32 +441,47 @@ func (t *Task) MainTask() bool {
 	return t.TID == t.Process.PID
 }
 
-func (c *ProTaskCommon) retrieveAffinityScheduling(pid PIDType) error {
+func (c *ProTaskCommon) retrieveAffinity(pid PIDType) error {
 	affset, err := cpus.Affinity(int(pid))
 	if err != nil {
 		return err
 	}
 	c.Affinity = affset.List()
-	schedattr, err := unix.SchedGetAttr(int(pid), 0)
-	if err != nil {
-		return err
-	}
-	c.Policy = int(schedattr.Policy)
-	c.Nice = int(schedattr.Nice)
-	c.Priority = int(schedattr.Priority)
 	return nil
 }
 
-// RetrieveAffinity updates this Process object's Affinity CPU range list and
-// scheduling information (policy, priority, ...), returning nil when
+// RetrieveAffinity updates this Process object's Affinity CPU range
+// list and scheduling information (policy, priority, ...), returning nil when
 // successful. Otherweise, it returns an error.
-func (p *Process) RetrieveAffinityScheduling() error {
-	return p.retrieveAffinityScheduling(p.PID)
+func (p *Process) RetrieveAffinity() error {
+	return p.retrieveAffinity(p.PID)
 }
 
-// RetrieveAffinity updates this Task object's Affinity CPU range list and
-// scheduling information (policy, priority, ...), returning nil when
+// RetrieveAffinity updates this Task object's Affinity CPU range list
+// and scheduling information (policy, priority, ...), returning nil when
 // successful. Otherweise, it returns an error.
+func (t *Task) RetrieveAffinity() error {
+	return t.retrieveAffinity(t.TID)
+}
+
+// RetrieveAffinityScheduling updates this Process object's Affinity CPU range
+// list and scheduling information (policy, priority, ...), returning nil when
+// successful. Otherweise, it returns an error.
+//
+// Deprecated: use [Process.RetrieveAffinity] instead if necessary; the
+// scheduling policy and priority/niceness are automatically fetched now as part
+// of the discovery in any case.
+func (p *Process) RetrieveAffinityScheduling() error {
+	return p.retrieveAffinity(p.PID)
+}
+
+// RetrieveAffinityScheduling updates this Task object's Affinity CPU range list
+// and scheduling information (policy, priority, ...), returning nil when
+// successful. Otherweise, it returns an error.
+//
+// Deprecated: use [Task.RetrieveAffinity] instead; the scheduling policy and
+// priority/niceness are automatically fetched now as part of the discovery in
+// any case.
 func (t *Task) RetrieveAffinityScheduling() error {
-	return t.retrieveAffinityScheduling(t.TID)
+	return t.retrieveAffinity(t.TID)
 }

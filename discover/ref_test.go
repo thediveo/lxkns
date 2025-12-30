@@ -18,6 +18,7 @@ package discover
 
 import (
 	"fmt"
+	"log/slog"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,6 +26,14 @@ import (
 )
 
 var _ = Describe("procfs references", func() {
+
+	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+	})
 
 	DescribeTable("parsing PIDs in procfs paths",
 		func(path string, expectedpid int) {

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Namespace } from "./model"
+import type { Namespace } from "./model"
 
 /**
  * Map of mount namespace identifiers (inode numbers only) mapping to the
@@ -232,7 +232,7 @@ export const starterDir = (path: string) => {
  */
 export const unescapeMountPath = (path: string) =>
     path.replace(/\\([0-1][0-7][0-7])/g,
-        (match, octal) => String.fromCharCode(parseInt(octal, 8)))
+        (_match, octal) => String.fromCharCode(parseInt(octal, 8)))
 
 /**
  * Returns a number indicating whether a first mount path comes before a second

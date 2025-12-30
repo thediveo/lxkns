@@ -12,13 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import clsx from 'clsx'
 import { TreeItem } from '@mui/x-tree-view'
-import { NamespaceProcessTreeDetailComponentProps, NamespaceProcessTreeTreeDetails } from 'components/namespaceprocesstree'
-import { compareMountPaths, compareMounts, MountPath, MountPoint, unescapeMountPath } from 'models/lxkns/mount'
-import { Namespace, NamespaceMap } from 'models/lxkns'
+import type { NamespaceProcessTreeDetailComponentProps } from 'components/namespaceprocesstree'
+import { compareMountPaths, compareMounts, type MountPath, type MountPoint, unescapeMountPath } from 'models/lxkns/mount'
+import type { Namespace } from 'models/lxkns'
 import { Button, lighten, styled, Tooltip } from '@mui/material'
 
 import ChildrenIcon from 'icons/Children'
@@ -260,8 +258,6 @@ const MountPathTreeItem = ({ namespace, mountpath, parentpath }: MountPathTreeIt
 }
 
 
-export interface MountTreeProps extends NamespaceProcessTreeDetailComponentProps { }
-
 /**
  * Renders the tree of all mount paths with its mount points from the specified
  * mount namespace.
@@ -273,32 +269,4 @@ export const MountTree = ({ namespace }: NamespaceProcessTreeDetailComponentProp
             mountpath={namespace.mountpaths['/']}
             parentpath="" />
         : <></>
-}
-
-/**
- * Returns the list of all tree node ids to be expanded. However, mount points
- * which cross a certain threshold of child mount points won't be expanded
- * though. 
- */
-const expandAll = (namespaces: NamespaceMap) => Object.values(namespaces)
-    .map(ns => ns.mountpaths
-        ? Object.values(ns.mountpaths)
-            .map(mountpath => mountpath.mounts
-                .filter(mountpoint => mountpoint.children.length > 0 && mountpoint.children.length <= 50)
-                .map(mountpoint => `${ns.nsid}-${mountpoint.mountpoint}-${mountpoint.mountid}`)
-            ).flat()
-        : [])
-    .flat()
-
-/**
- * This detailer:
- * - provides a factory to render the mount point details of mount namespaces,
- * - supports expanding all detail nodes (well, at least if they don't contain
- *   more than a certain maximum of child mount points).
- * - supports collapsing all detail nodes.
- */
-export const MountTreeDetailer: NamespaceProcessTreeTreeDetails = {
-    factory: MountTree,
-    expandAll: expandAll,
-    collapseAll: undefined,
 }

@@ -16,7 +16,7 @@ package industrialedge
 
 import (
 	"context"
-	"os"
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
@@ -27,8 +27,6 @@ import (
 	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
-
-	"github.com/thediveo/lxkns/test/matcher"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -61,16 +59,8 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	}
 
 	var sleepies []*morbyd.Container
-	var docksock string
 
 	BeforeAll(func(ctx context.Context) {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
-		}
-
 		By("creating a new Docker session for testing")
 		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=decorator.industrialedge")))
 		DeferCleanup(func(ctx context.Context) {
@@ -99,8 +89,11 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	})
 
 	It("decorates IE apps and IED runtime", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		By("watcher whales")
-		mw, err := moby.New(docksock, nil)
+		mw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -115,7 +108,7 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 		Expect(allcontainers).NotTo(BeEmpty())
 
 		var canaries []*model.Container
-		Expect(allcontainers).To(ContainElement(matcher.WithType(moby.Type), &canaries))
+		Expect(allcontainers).To(ContainElement(WithType(moby.Type), &canaries))
 
 		composer.Decorate([]*model.ContainerEngine{canaries[0].Engine}, nil)
 		Decorate([]*model.ContainerEngine{canaries[0].Engine}, nil)

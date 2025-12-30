@@ -12,14 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import clsx from 'clsx'
 import { styled } from '@mui/material'
 
-import { Container, Engine } from 'models/lxkns'
+import type { Container } from 'models/lxkns'
 import { engineTypeName } from 'utils/engine'
 import { ContainerTypeIcon } from 'components/containertypeicon'
+import type { EngineInfoProps } from './types'
 
 const EngineInformation = styled('span')(() => ({
     display: 'inline-block',
@@ -45,14 +44,7 @@ const EngineID = styled('span')(() => ({
     },
 }))
 
-export interface EngineInfo {
-    /** information about a container engine (with workload) */
-    engine: Engine
-    /** optional CSS class name(s). */
-    className?: string
-}
-
-export const EngineInfo = ({ engine, className }: EngineInfo) => {
+export const EngineInfo = ({ engine, className }: EngineInfoProps) => {
 
     const typename = engineTypeName(engine.type)
 

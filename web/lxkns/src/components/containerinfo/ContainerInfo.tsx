@@ -12,20 +12,20 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import { styled } from '@mui/material'
 import { Pause } from '@mui/icons-material'
 
-import { Container, containerGroup } from 'models/lxkns'
+import { type Container, containerGroup } from 'models/lxkns'
 import { ContainerTypeIcon } from 'components/containertypeicon'
 
 import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/K8sPod'
 import IEAppIcon from 'icons/containers/IEApp'
+import DevContainerIcon from 'icons/containers/DevContainer'
+import { devContainerFolder } from 'models/lxkns/devcontainer'
 
 // https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
-const TurtlefinderContainerPrefixLabelName = "turtlefinder/container/prefix"
+const TurtlefinderContainerPrefixLabelName = 'turtlefinder/container/prefix'
 
 const ContainerInformation = styled('span')(({ theme }) => ({
     fontWeight: theme.typography.fontWeightLight,
@@ -77,6 +77,20 @@ const GroupName = styled('span')(({ theme }) => ({
     },
 }))
 
+const DevContainerName = styled('span')(({ theme }) => ({
+    fontStyle: 'italic',
+    color: theme.palette.container,
+    '&::before': {
+        content: '"«"',
+        fontStyle: 'normal',
+    },
+    '&::after': {
+        content: '"»"',
+        fontStyle: 'normal',
+        paddingLeft: '0.1em', // avoid italics overlapping with guillemet
+    },
+}))
+
 
 /**
  * The `ContainerInfo` component expects only a single property: the container to
@@ -110,12 +124,16 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
         groupicon = <PodIcon fontSize="inherit" />
     }
 
+    const devContainerName = devContainerFolder(container)
+
     const paused = container.paused && <Pause fontSize="inherit" />
     const boxed = container.labels[TurtlefinderContainerPrefixLabelName] 
         && <Turtlepath>[{container.labels[TurtlefinderContainerPrefixLabelName]}]:</Turtlepath>
 
     return !!container && (
         <ContainerInformation className={className}>
+            {devContainerName !== '' && 
+                <><DevContainerIcon fontSize="inherit" /><DevContainerName>{devContainerName}</DevContainerName> a.k.a. </>}
             <ContainerTypeIcon container={container} fontSize="inherit" />
             {paused}
             <ContainerName>{boxed}{container.name}</ContainerName>

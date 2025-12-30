@@ -72,8 +72,7 @@ for (const srcicon of svgs) {
                 jsx.children, // skips the outer <svg> on purpose!
                 false)
             return tpl`${comment}
-import * as React from 'react'
-import { SvgIcon, SvgIconProps } from '@mui/material'
+import { SvgIcon, type SvgIconProps } from "@mui/material"
 
 export const ${componentName} = (props: SvgIconProps) => ${wrappedJSX}
 

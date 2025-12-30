@@ -25,17 +25,20 @@ import "github.com/thediveo/ioctl"
 const _NSIO = 0xb7
 
 var (
-	// Returns a file descriptor that refers to an owning user namespace.
+	// NS_GET_USERNS returns a file descriptor that refers to an owning user
+	// namespace.
 	NS_GET_USERNS = ioctl.IO(_NSIO, 0x1)
-	// Returns a file descriptor that refers to a parent namespace.
+	// NS_GET_PARENT returns a file descriptor that refers to a parent
+	// namespace.
 	NS_GET_PARENT = ioctl.IO(_NSIO, 0x2)
-	// Returns the type of namespace CLONE_NEW* value referred to by a file
-	// descriptor.
+	// NS_GET_NSTYPE returns the type of namespace CLONE_NEW* value referred to
+	// by a file descriptor.
 	NS_GET_NSTYPE = ioctl.IO(_NSIO, 0x3)
-	// Get owner UID (in the caller's user namespace) for a user namespace.
+	// NS_GET_OWNER_UID gets the owner UID (in the caller's user namespace) for
+	// a user namespace.
 	NS_GET_OWNER_UID = ioctl.IO(_NSIO, 0x4)
 
-	// Returns a file descriptor that refers the the network namespace of the
-	// TAP/TUN netdev.
+	// TUNGETDEVNETNS returns a file descriptor that refers the the network
+	// namespace of the TAP/TUN netdev.
 	TUNGETDEVNETNS = ioctl.IO('T', 227)
 )

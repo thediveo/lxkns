@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
@@ -86,19 +86,25 @@ func NewWithMountNamespace(mountns model.Namespace, usernsmap model.NamespaceMap
 
 // New opens the mount namespace for file access and returns a new managing
 // Mountineer. The mount namespace is referenced in one of the following ways:
-//
-// A. a single mount namespace reference that can be addressed in the initial
-// mount namespace. If this reference isn't inside the /proc file system, then
-// it will automatically be taken as relative to the initial mount namespace,
-// that is, the mount namespace of process PID 1.
-//
-// B. a sequence of mount namespace references that need to be opened first
-// before the final namespace reference.
+//   - a single mount namespace reference that can be addressed in the initial
+//     mount namespace. If this reference isn't inside the /proc file system, then
+//     it will automatically be taken as relative to the initial mount namespace.
+//     If the caller has access to PID 1 then this will be the mount namespace of
+//     PID 1; otherwise it will be the caller's process' current mount namespace.
+//   - a sequence of mount namespace references that need to be opened first
+//     before the final namespace reference.
 //
 // Specifying a map of user namespaces allows entering mount namespaces in those
 // situations where the caller has insufficient capabilities itself but has
 // sufficient capabilities in the user namespace owning the mount namespace.
-func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, err error) {
+func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (*Mountineer, error) {
+	return NewInContext(initialContextPID, ref, usernsmap)
+}
+
+// NewInContext opens the mount namespace for file access and returns a new
+// managing Mountineer. In contrast to [New], NewInContext starts in the mount
+// namespace of the process with the specified PID.
+func NewInContext(initialContextPID model.PIDType, ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, err error) {
 	if len(ref) == 0 {
 		return nil, errors.New("cannot open zero mount namespace reference")
 	}
@@ -165,13 +171,13 @@ func New(ref model.NamespaceRef, usernsmap model.NamespaceMap) (m *Mountineer, e
 		var evilrefpath string
 		evilrefpath, err = procfsroot.EvalSymlinks(refpath, contentsRoot, procfsroot.EvalFullPath)
 		if err != nil {
-			err = errors.New("invalid mount namespace reference " + ref[:idx+1].String() + ":" + err.Error())
+			err = errors.New("invalid mount namespace reference " + ref[:idx+1].String() + ": " + err.Error())
 			return
 		}
 		// Start a pause process and attach it to the mount namespace referenced
 		// by "ref" (in the mount namespace reachable via process with "pid").
 		wormholedref := contentsRoot + evilrefpath
-		log.Debugf("opening pandora's sandbox at %s", wormholedref)
+		slog.Debug("opening pandora's sandbox", slog.String("reference", wormholedref))
 		var sandbox Pauser
 		if usernsref := m.usernsref(wormholedref, usernsmap); usernsref != "" {
 			sandbox, err = newPauseProcess(wormholedref, usernsref)

@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	incaps "github.com/thediveo/lxkns/cmd/internal/pkg/caps"
+	incaps "github.com/thediveo/lxkns/cmd/internal/caps"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -37,43 +37,52 @@ type node interface {
 	Children() []node
 }
 
-type targetcaps int
+// targetCapsSummary is a simplified summary statement about a set of
+// capabilities: none, some, or all.
+type targetCapsSummary int
 
 const (
-	incapable targetcaps = iota
-	effcaps
-	allcaps
+	incapable targetCapsSummary = iota // no capabilities at all
+	effcaps                            // some capabilities, but not...
+	allcaps                            // ...all capabilities.
 )
 
-// nsnode represents a namespace node, and either a user namespace node or a
-// non-user namespace node. A user namespace node can have child nodes. A
-// non-user namespace node cannot have children. A namespace node can act as a
-// target namespace.
-type nsnode struct {
-	ns         model.Namespace
-	istarget   bool
-	targetcaps targetcaps
-	children   []node
+// namespaceNode represents a namespace node.
+//   - a user namespace node can have child nodes.
+//   - a non-user namespace node (including a PID namespace node) cannot have
+//     children in our model.
+//   - a namespace node can at as as a "target" namespace.
+type namespaceNode struct {
+	ns                model.Namespace
+	isTarget          bool
+	targetCapsSummary targetCapsSummary
+	children          []node
 }
 
-func (n nsnode) Children() []node { return n.children }
+var _ node = (*namespaceNode)(nil)
 
-// processnode represents the "reference" process whose capabilities are to be
-// evaluated in a target namespace. A processnode always terminates a branch.
-type processnode struct {
+func (n namespaceNode) Children() []node { return n.children }
+
+// processNode represents the "reference" process whose capabilities are to be
+// evaluated in a target namespace. A processNode always terminates a branch, so
+// it never has any children.
+type processNode struct {
 	proc *model.Process
 	euid int
 	caps []string
 }
 
-func (p processnode) Children() []node { return []node{} }
+var _ node = (*processNode)(nil)
 
-// processbranch returns the branch from the initial user namespace down to the
-// user namespace containing the specified process. So, the process branch
+func (p processNode) Children() []node { return []node{} }
+
+// branchOfProcess returns the branch from the initial user namespace down to
+// the user namespace containing the specified process. So, the process branch
 // completely consists of namespace nodes with a final process node.
-func processbranch(proc *model.Process, euid int) (n node, err error) {
+func branchOfProcess(proc *model.Process, euid int) (n node, err error) {
 	// Branch always ends in a user namespace node with a process node as its
-	// sole child.
+	// sole child. Thus, let's grab the user namespace the process is attached
+	// to so we have the final two elements of the branch end.
 	userns, ok := proc.Namespaces[model.UserNS].(model.Ownership)
 	if !ok { // actually, this means that the user namespace is really nil
 		return nil, fmt.Errorf(
@@ -84,10 +93,10 @@ func processbranch(proc *model.Process, euid int) (n node, err error) {
 			proc.PID)
 	}
 	caps := incaps.ProcessCapabilities(proc.PID)
-	n = &nsnode{
+	n = &namespaceNode{
 		ns: userns.(model.Namespace),
 		children: []node{
-			&processnode{
+			&processNode{
 				proc: proc,
 				euid: euid,
 				caps: caps,
@@ -99,7 +108,7 @@ func processbranch(proc *model.Process, euid int) (n node, err error) {
 	// its child user namespace.
 	for userns.(model.Hierarchy).Parent() != nil {
 		userns = userns.(model.Hierarchy).Parent().(model.Ownership)
-		n = &nsnode{
+		n = &namespaceNode{
 			ns: userns.(model.Namespace),
 			children: []node{
 				n,
@@ -109,35 +118,35 @@ func processbranch(proc *model.Process, euid int) (n node, err error) {
 	return
 }
 
-// targetbranch returns the branch from the initial user namespace down to the
+// branchOfTarget returns the branch from the initial user namespace down to the
 // target namespace. Please note that for a user namespace target the branch
 // ends in a that type of namespace, with istarget set. Otherwise, the branch
 // ends in a non-user namespace node, again with istarget set. So, a target
 // branch always consists only of namespace nodes, with the final one having its
 // istarget flag set. All nodes, except maybe for the last, are user namespaces.
-func targetbranch(tns model.Namespace, tcaps targetcaps) (n node) {
+func branchOfTarget(tns model.Namespace, tcaps targetCapsSummary) (n node) {
 	var userns model.Ownership
 	if tns.Type() == species.CLONE_NEWUSER {
 		// Please note that the lxkns namespace model on purpose does not set
 		// the owner relationship on user namespaces: that's the parent
 		// relationship instead.
 		userns = tns.(model.Ownership)
-		n = &nsnode{
-			ns:         userns.(model.Namespace),
-			istarget:   true,
-			targetcaps: tcaps,
+		n = &namespaceNode{
+			ns:                userns.(model.Namespace),
+			isTarget:          true,
+			targetCapsSummary: tcaps,
 		}
 	} else {
 		// Non-user namespaces have their owning user namespace relationship set
 		// in the lxkns information model.
 		userns = tns.Owner()
-		n = &nsnode{
+		n = &namespaceNode{
 			ns: userns.(model.Namespace),
 			children: []node{
-				&nsnode{
-					ns:         tns,
-					istarget:   true,
-					targetcaps: tcaps,
+				&namespaceNode{
+					ns:                tns,
+					isTarget:          true,
+					targetCapsSummary: tcaps,
 				},
 			},
 		}
@@ -147,7 +156,7 @@ func targetbranch(tns model.Namespace, tcaps targetcaps) (n node) {
 	// its child user namespace.
 	for userns.(model.Hierarchy).Parent() != nil {
 		userns = userns.(model.Hierarchy).Parent().(model.Ownership)
-		n = &nsnode{
+		n = &namespaceNode{
 			ns: userns.(model.Namespace),
 			children: []node{
 				n,
@@ -157,18 +166,18 @@ func targetbranch(tns model.Namespace, tcaps targetcaps) (n node) {
 	return
 }
 
-// combine the process branch with the target namespace branch to the extend
-// that these branches share commong user namespaces, or even a target user
+// combine the process branch with the target namespace branch to the extent
+// that these branches share common user namespaces, or even a target user
 // namespace.
-func combine(pbr node, tbr node) (root node) {
+func combine(processBranch node, targetBranch node) (root node) {
 	// TODO: process and target branching not sharing a common root?!
-	root = pbr
-	// If you find a fork in the road ... take it! Please note that we here now
-	// can rely on the fact that both branches always start with a user
-	// namespace, which should be the (true or fake) initial namespace.
-	ppbr := (*nsnode)(nil) // no parent process branch node yet.
+	root = processBranch
+	// If you find a fork in the road ... take it! Please note that we here can
+	// rely on the fact that both branches always start with a user namespace,
+	// which should be the (true or fake) initial namespace.
+	var parentProcBranchNsNode *namespaceNode // no parent process branch node yet.
 	for {
-		pnsnode, ok := pbr.(*nsnode)
+		procBranchNsNode, ok := processBranch.(*namespaceNode)
 		if !ok {
 			// The process branch forks off here, as we've stumbled onto the
 			// final process node in the process branch. Thus, we need to add
@@ -177,33 +186,33 @@ func combine(pbr node, tbr node) (root node) {
 			//      U
 			//      |\
 			// pbr->P ?
-			ppbr.children = append(ppbr.children, tbr)
+			parentProcBranchNsNode.children = append(parentProcBranchNsNode.children, targetBranch)
 			// Mark the parent user namespace, as well as all as descendent user
-			// name spaces down to the target namespace according to what extend
+			// name spaces down to the target namespace according to what extent
 			// the process will have capabilities in them.
-			ppbr.targetcaps = effcaps
-			for tbr != nil {
-				if tbr.(*nsnode).istarget {
+			parentProcBranchNsNode.targetCapsSummary = effcaps
+			for targetBranch != nil {
+				if targetBranch.(*namespaceNode).isTarget {
 					break
 				}
-				tbr.(*nsnode).targetcaps = allcaps
-				tbr = tbr.Children()[0]
+				targetBranch.(*namespaceNode).targetCapsSummary = allcaps
+				targetBranch = targetBranch.Children()[0]
 			}
 			break
 		}
-		if pnsnode.ns != tbr.(*nsnode).ns {
+		if procBranchNsNode.ns != targetBranch.(*namespaceNode).ns {
 			// The target branch forks off here; so add in the forking target
 			// branch at our parent, and then let's call it a day ;)
-			ppbr.children = append(ppbr.children, tbr)
+			parentProcBranchNsNode.children = append(parentProcBranchNsNode.children, targetBranch)
 			// Mark only the user namespace node containing the process node as
 			// offering effective capabilities. Everything else is off limits.
 			for {
-				if _, ok := pbr.(*processnode); ok {
-					ppbr.targetcaps = effcaps
+				if _, ok := processBranch.(*processNode); ok {
+					parentProcBranchNsNode.targetCapsSummary = effcaps
 					break
 				}
-				ppbr = pbr.(*nsnode)
-				pbr = pbr.Children()[0]
+				parentProcBranchNsNode = processBranch.(*namespaceNode)
+				processBranch = processBranch.Children()[0]
 
 			}
 			break
@@ -211,19 +220,19 @@ func combine(pbr node, tbr node) (root node) {
 		// Both branches still share the same user namespace node. But make sure
 		// to take over the istarget flag from the target branch, as this might
 		// be the final node in the target branch.
-		pnsnode.istarget = tbr.(*nsnode).istarget
-		tbrch := tbr.Children()
-		if len(tbrch) == 0 {
+		procBranchNsNode.isTarget = targetBranch.(*namespaceNode).isTarget
+		targetBranchChildren := targetBranch.Children()
+		if len(targetBranchChildren) == 0 {
 			// The target branch ends here, so we're done.
 			break
 		}
-		tbr = tbrch[0] // remember: at most one child node.
+		targetBranch = targetBranchChildren[0] // remember: at most one child node.
 		// At this point, we know that the current process branch node is a user
 		// namespace node, and thus must have still one child node: either another
 		// user namespace node, or a process node. So we can blindly take
 		// whatever child we get, sure that there actually is a child.
-		ppbr = pbr.(*nsnode)
-		pbr = pbr.Children()[0]
+		parentProcBranchNsNode = processBranch.(*namespaceNode)
+		processBranch = processBranch.Children()[0]
 	}
 	return
 }
@@ -231,7 +240,7 @@ func combine(pbr node, tbr node) (root node) {
 // caps decides based on the specific process and target namespace if the
 // process has no capabilities, its effective capabilities, or full capabilities
 // (subject to Linux security modules).
-func caps(proc *model.Process, tns model.Namespace) (tcaps targetcaps, euid int, err error) {
+func caps(proc *model.Process, tns model.Namespace) (tcaps targetCapsSummary, euid int, err error) {
 	// Get the user namespace the process is currently joined to. Since we're
 	// later to climb the ladder, we're more interested in hierarchy than
 	// ownership, just as people often behave. Another case where the things we
@@ -276,7 +285,7 @@ func caps(proc *model.Process, tns model.Namespace) (tcaps targetcaps, euid int,
 	userns := targetuserns
 	childuserns := model.Hierarchy(nil)
 	for {
-		if userns == procuserns {
+		if userns == procuserns { // nolint QF1006
 			break
 		}
 		childuserns = userns

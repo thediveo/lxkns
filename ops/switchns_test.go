@@ -61,7 +61,7 @@ var _ = Describe("Set Namespaces", func() {
 	})
 
 	DescribeTable("describes the error when switching or restoring a namespace",
-		func(err error, msg string, as interface{}) {
+		func(err error, msg string, as any) {
 			Expect(err.Error()).To(Equal(msg))
 			Expect(errors.As(err, &as)).To(BeTrue())
 			Expect(as.(error).Error()).To(Equal(msg))
@@ -90,7 +90,7 @@ var _ = Describe("Set Namespaces", func() {
 	})
 
 	It("Execute()s with errors", func() {
-		Expect(Execute(func() interface{} { return nil }, NamespacePath("foobar"))).Error().To(HaveOccurred())
+		Expect(Execute(func() any { return nil }, NamespacePath("foobar"))).Error().To(HaveOccurred())
 	})
 
 	DescribeTable("Visit()s with errors when attempting to use...",
@@ -122,7 +122,7 @@ var _ = Describe("Set Namespaces", func() {
 	)
 
 	It("Execute()s", func() {
-		Expect(Execute(func() interface{} { return nil })).To(Succeed())
+		Expect(Execute(func() any { return nil })).To(BeNil())
 	})
 
 	It("Go()es into other namespaces", func() {
@@ -157,7 +157,7 @@ read # wait for test to proceed()
 		}, netnsref)).To(Succeed())
 		Expect(<-result).To(Equal(netnsid))
 
-		res, err := Execute(func() interface{} {
+		res, err := Execute(func() any {
 			id, _ := NamespacePath(
 				fmt.Sprintf("/proc/%d/ns/net", unix.Gettid())).
 				ID()

@@ -12,10 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import { useAtom } from 'jotai'
-import { localStorageAtom } from 'utils/persistentsettings'
 
 import {
     Box,
@@ -24,32 +21,24 @@ import {
     Grid,
     List,
     ListItem,
-    ListItemSecondaryAction,
     ListItemText,
     MenuItem,
     Select,
-    SelectChangeEvent,
+    type SelectChangeEvent,
     styled,
     Switch as Toggle,
     Typography,
 } from '@mui/material';
-
-
-const themeKey = 'lxkns.theme'
-const showSystemProcessesKey = 'lxkns.showsystemprocesses'
-const showSharedNamespacesKey = 'lxkns.showsharedns'
-const expandInitiallyKey = 'lxkns.expandinitially'
-const expandWorkloadInitiallyKey = 'lxkns.expandwlinitially'
-
-export const THEME_USERPREF = 0
-export const THEME_LIGHT = 1
-export const THEME_DARK = -1
-export const themeAtom = localStorageAtom(themeKey, THEME_USERPREF)
-
-export const showSystemProcessesAtom = localStorageAtom(showSystemProcessesKey, false)
-export const showSharedNamespacesAtom = localStorageAtom(showSharedNamespacesKey, true)
-export const expandInitiallyAtom = localStorageAtom(expandInitiallyKey, true)
-export const expandWorkloadInitiallyAtom = localStorageAtom(expandWorkloadInitiallyKey, false)
+import { 
+    expandInitiallyAtom, 
+    expandWorkloadInitiallyAtom, 
+    showSharedNamespacesAtom, 
+    showSystemProcessesAtom, 
+    THEME_DARK, 
+    THEME_LIGHT, 
+    THEME_USERPREF, 
+    themeAtom
+} from './atoms';
 
 
 const SettingsGrid = styled(Grid)(({ theme }) => ({
@@ -88,15 +77,14 @@ export const Settings = () => {
                     <Typography variant="subtitle1">Appearance</Typography>
                     <Card>
                         <List>
-                            <ListItem>
+                            <ListItem secondaryAction={
+                                <Select value={theme} onChange={handleThemeChange}>
+                                    <MenuItem value={THEME_USERPREF}>user preference</MenuItem>
+                                    <MenuItem value={THEME_LIGHT}>light</MenuItem>
+                                    <MenuItem value={THEME_DARK}>dark</MenuItem>
+                                </Select>}
+                            >
                                 <ListItemText primary="Theme" />
-                                <ListItemSecondaryAction>
-                                    <Select value={theme} onChange={handleThemeChange}>
-                                        <MenuItem value={THEME_USERPREF}>user preference</MenuItem>
-                                        <MenuItem value={THEME_LIGHT}>light</MenuItem>
-                                        <MenuItem value={THEME_DARK}>dark</MenuItem>
-                                    </Select>
-                                </ListItemSecondaryAction>
                             </ListItem>
                         </List>
                     </Card>
@@ -104,66 +92,62 @@ export const Settings = () => {
                     <Typography variant="subtitle1">Display</Typography>
                     <Card>
                         <List>
-                            <ListItem>
+                            <ListItem secondaryAction={
+                                <Toggle
+                                    checked={showSystemProcesses}
+                                    onChange={() => setShowSystemProcesses(!showSystemProcesses)}
+                                    color="primary"
+                                />}
+                            >
                                 <ListItemText
                                     primary="Show system processes"
                                     secondary={(showSystemProcesses ? 'from' : 'hide') + ' /system.slice, /init.scope, /user.slice'}
                                 />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showSystemProcesses}
-                                        onChange={() => setShowSystemProcesses(!showSystemProcesses)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
                             </ListItem>
                             <Divider />
-                            <ListItem>
+                            <ListItem secondaryAction={
+                                <Toggle
+                                    checked={showSharedNamespaces}
+                                    onChange={() => setShowSharedNamespaces(!showSharedNamespaces)}
+                                    color="primary"
+                                />}
+                            >
                                 <ListItemText
                                     primary="Show shared non-user namespaces"
                                     secondary={showSharedNamespaces
                                         ? 'all namespaces a leader process is attached to'
                                         : 'only namespaces different from parent leader process'}
                                 />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showSharedNamespaces}
-                                        onChange={() => setShowSharedNamespaces(!showSharedNamespaces)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
                             </ListItem>
                             <Divider />
-                            <ListItem>
+                            <ListItem secondaryAction={
+                                <Toggle
+                                    checked={expandInitially}
+                                    onChange={() => setExpandInitially(!expandInitially)}
+                                    color="primary"
+                                />}
+                            >
                                 <ListItemText
                                     primary="Expand newly discovered namespaces"
                                     secondary={expandInitially
                                         ? 'expand newly discovered namespaces'
                                         : 'expand only top-level new namespaces'}
                                 />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={expandInitially}
-                                        onChange={() => setExpandInitially(!expandInitially)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
                             </ListItem>
                             <Divider />
-                            <ListItem>
+                            <ListItem secondaryAction={
+                                <Toggle
+                                    checked={expandWLInitially}
+                                    onChange={() => setExpandWLInitially(!expandWLInitially)}
+                                    color="primary"
+                                />}
+                            >
                                 <ListItemText
                                     primary="Expand newly discovered containers"
                                     secondary={expandWLInitially
                                         ? 'expand newly discovered containers'
                                         : 'don\'t expand newly discovered containers'}
                                 />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={expandWLInitially}
-                                        onChange={() => setExpandWLInitially(!expandWLInitially)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
                             </ListItem>
                         </List>
                     </Card>

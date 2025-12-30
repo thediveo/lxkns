@@ -48,10 +48,15 @@ var _ = Describe("creates and destroys test containers", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
+		var endpoint = "/run/containerd/containerd.sock"
+		if info, err := os.Stat("/run/docker/containerd/containerd.sock"); err == nil && info.Mode()&os.ModeSocket != 0 {
+			endpoint = "/run/docker/containerd/containerd.sock"
+		}
+
 		var err error
-		pool, err = NewPool("/proc/1/root/run/containerd/containerd.sock", "containerd-test")
+		pool, err = NewPool(endpoint, "containerd-test")
 		Expect(err).NotTo(HaveOccurred())
-		DeferCleanup(func() { pool.Client.Close() })
+		DeferCleanup(func() { _ = pool.Client.Close() })
 	})
 
 	It("doesn't fail when purging non-existing container", func() {

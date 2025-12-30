@@ -16,13 +16,12 @@ package composer
 
 import (
 	"context"
-	"os"
+	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/test/matcher"
 	"github.com/thediveo/morbyd"
 	"github.com/thediveo/morbyd/run"
 	"github.com/thediveo/morbyd/session"
@@ -57,16 +56,8 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	}
 
 	var sleepies []*morbyd.Container
-	var docksock string
 
 	BeforeAll(func(ctx context.Context) {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
-		}
-
 		By("creating a new Docker session for testing")
 		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=decorator.composer")))
 		DeferCleanup(func(ctx context.Context) {
@@ -89,8 +80,11 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 	})
 
 	It("decorates composer projects", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		By("watcher whales")
-		mw, err := moby.New(docksock, nil)
+		mw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -104,7 +98,7 @@ var _ = Describe("Decorates composer projects", Ordered, func() {
 		allcontainers := cizer.Containers(ctx, model.NewProcessTable(false), nil)
 		Expect(allcontainers).NotTo(BeEmpty())
 		var canaries []*model.Container
-		Expect(allcontainers).To(ContainElement(matcher.WithType(moby.Type), &canaries))
+		Expect(allcontainers).To(ContainElement(WithType(moby.Type), &canaries))
 		Expect(len(canaries)).To(BeNumerically(">=", len(names)))
 
 		By("decorating the Docker containers")

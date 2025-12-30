@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 import { useLocation, Link } from "react-router-dom"
 
 import { Avatar, ListItemButton, ListItemAvatar, ListItemIcon, Typography } from '@mui/material'
@@ -33,9 +32,10 @@ export interface DrawerLinkItemProps {
 
 /**
  * `DrawerLinkItem` renders an individual item inside an
- * [`AppBarDrawer`](#appbardrawer) and links it to a specific route path. It
- * is a convenience component that simplifies describing the drawer items with
- * their icons and route paths.
+ * [`AppBarDrawer`](#appbardrawer) (also known as a "sidebar") that links to a
+ * specific route path. This is a convenience component that simplifies
+ * describing the drawer items with their icons and route paths in compact
+ * properties form.
  *
  * This component is licensed under the [Apache License, Version
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).

@@ -26,9 +26,6 @@ func main() {
 	// it renders the error message twice, see also:
 	// https://github.com/spf13/cobra/issues/304
 	if err := newRootCmd().Execute(); err != nil {
-		osExit(1)
+		os.Exit(1)
 	}
 }
-
-// For CLI unit tests...
-var osExit = os.Exit

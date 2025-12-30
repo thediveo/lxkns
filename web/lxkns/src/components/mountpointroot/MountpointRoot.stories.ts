@@ -12,34 +12,34 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { MountpointRoot } from './MountpointRoot'
-import { Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
+import { MountpointRoot } from "./MountpointRoot";
+import { type Namespace, type NamespaceMap, NamespaceType } from "models/lxkns";
 
 const meta: Meta<typeof MountpointRoot> = {
-    title: 'Mount/MountpointRoot',
-    component: MountpointRoot,
-    argTypes: {
-        namespaces: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Mount/MountpointRoot",
+  component: MountpointRoot,
+  argTypes: {
+    namespaces: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof MountpointRoot>
+type Story = StoryObj<typeof MountpointRoot>;
 
 const namespaces: NamespaceMap = {
-    '12345678': {
-         nsid: 12345678,
-         type: NamespaceType.net,
-    } as Namespace,
-}
+  "12345678": {
+    nsid: 12345678,
+    type: NamespaceType.net,
+  } as Namespace,
+};
 
 export const Basic: Story = {
-    args: {
-        root: 'net:[12345678]',
-        namespaces: namespaces,
-    },
-}
+  args: {
+    root: "net:[12345678]",
+    namespaces: namespaces,
+  },
+};

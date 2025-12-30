@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -30,6 +31,9 @@ import (
 var _ = Describe("Discover from bind-mounts", func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).

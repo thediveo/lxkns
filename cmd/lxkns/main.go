@@ -17,8 +17,6 @@ package main
 import (
 	"os"
 	"runtime"
-
-	_ "github.com/thediveo/lxkns/log/logrus"
 )
 
 func init() {

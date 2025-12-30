@@ -12,9 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { NamespaceMap } from 'models/lxkns/model'
+import type { NamespaceMap } from 'models/lxkns/model'
 import { NamespaceInfo } from 'components/namespaceinfo'
 
 

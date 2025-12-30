@@ -75,7 +75,7 @@ func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
 	if err != nil {
 		return nil, newInvalidNamespaceError(nsp, err)
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	parentfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_PARENT)
 	// We already know what type the parent must be, so return the properly
 	// typed parent namespace reference object. And we're returning an
@@ -96,7 +96,7 @@ func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.R
 	}
 	openref, err := NewTypedNamespaceFile(f, nsp.nstype)
 	if err != nil {
-		f.Close() // #nosec G104 -- ...do not leak; any error here is irrelevant.
+		_ = f.Close()
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return openref, func() { _ = openref.Close() }, nil

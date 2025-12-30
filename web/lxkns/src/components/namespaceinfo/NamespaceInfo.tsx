@@ -12,14 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import { Person } from '@mui/icons-material'
 
 import Rude from 'icons/Root'
 
 import { ProcessInfo } from 'components/processinfo'
-import { compareBusybodies, Namespace, NamespaceType, ProcessMap } from 'models/lxkns'
+import { compareBusybodies, type Namespace, NamespaceType, type ProcessMap } from 'models/lxkns'
 
 import { NamespaceRef } from 'components/namespaceref'
 import { NamespaceBadge } from 'components/namespacebadge'
@@ -103,6 +101,8 @@ export interface NamespaceInfoProps {
     className?: string,
 }
 
+const namespacesWithChildren: (NamespaceType)[] = [NamespaceType.pid, NamespaceType.user]
+
 /**
  * Component `Namespace` renders information about a particular namespace. The
  * type and ID get rendered, as well as the most senior process with its name,
@@ -129,7 +129,7 @@ export const NamespaceInfo = ({
 
     // Or is there one or more loose threads joined to this namespace? Then show
     // the oldest loose thread instead.
-    const oldesttask = !procinfo && namespace.loosethreads.slice().sort(compareBusybodies)[0]
+    const oldesttask = !procinfo && namespace.loosethreads?.slice().sort(compareBusybodies)[0]
     const taskinfo = !!oldesttask
         && (!noprocess || shortprocess)
         && <TaskInformation task={oldesttask} short={shortprocess} />
@@ -161,7 +161,7 @@ export const NamespaceInfo = ({
 
     // For PID and user namespaces determine the total number of children and
     // grandchildren.
-    const childrenCount = [NamespaceType.pid, NamespaceType.user].includes(namespace.type) && !shared &&
+    const childrenCount = namespacesWithChildren.includes(namespace.type) && !shared &&
         namespace.children.length > 0 &&
         <UserChildrenInfo>
             [<ChildrenIcon fontSize="inherit" />&#8239;{countNamespaceWithChildren(-1, namespace)}]

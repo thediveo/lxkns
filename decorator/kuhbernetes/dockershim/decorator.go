@@ -18,13 +18,13 @@ package dockershim
 // TODO: UID labelling
 
 import (
+	"log/slog"
 	"regexp"
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -99,6 +99,6 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		}
 	}
 	if total > 0 {
-		log.Infof("discovered %d dockershim pods", total)
+		slog.Info("discovered dockershim pods", slog.Int("count", total))
 	}
 }

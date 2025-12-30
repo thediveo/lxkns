@@ -29,7 +29,7 @@ following example we've left out proper error checking for sake of brevity:
 	lockedref, unlocker, _ := portref.Open()
 	defer unlocker()
 	ops.Execute(
-	    func()interface{}{
+	    func()any{
 	        // do something useful in here while attached to the network namespace...
 	        return nil
 	    },
