@@ -23,7 +23,6 @@ jobs:
       - name: test build
         run: |
           corepack enable
-          yarn set version berry
           yarn install
           yarn build
         working-directory: web/lxkns
