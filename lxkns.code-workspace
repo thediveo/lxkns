@@ -5,7 +5,7 @@
 		}
 	],
 	"settings": {
-		"go.lintTool": "golangci-lint",
+		"go.lintTool": "golangci-lint-v2",
 		"plantuml.diagramsRoot": "puml",
 		"plantuml.exportFormat": "svg",
 		"plantuml.exportOutDir": "docs/_images",
@@ -14,5 +14,13 @@
             "-v"
         ],
 		"makefile.extensionOutputFolder": "./.vscode",
+		"eslint.nodePath": "${workspaceFolder}/web/lxkns/node_modules",
+		"eslint.workingDirectories": [
+			"web/lxkns"
+		],
+		"eslint.enable": true,
+		"eslint.useFlatConfig": true,
+		"eslint.runtime": "/usr/local/bin/node",
+		"terminal.integrated.scrollback": 50000,
 	}
 }

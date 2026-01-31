@@ -16,6 +16,7 @@ package model
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -113,27 +114,31 @@ func fridgeStates(fridgepaths []string) (frozens []bool) {
 // frozenV2 returns the cgroups v2 freezer effective status information for the
 // specified process.
 func frozenV2(fridgepath string) (frozen bool) {
-	// But, where's v1's "freezer.state", that is, the process' effective state?
-	// It can now be found as one of possibly many event entries in
-	// "cgroup.events". Yuk. But please also note that the v2 root cgroup
-	// doesn't have the "cgroup.freeze" interface file. Other than that, see
-	// https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files
-	// for details.
-	/* #nosec G304 */
-	if events, err := os.ReadFile(filepath.Join(fridgepath, "cgroup.events")); err == nil {
-		for _, event := range strings.Split(string(events), "\n") {
-			if strings.HasPrefix(event, frozenEventName+" ") {
-				if event[len(frozenEventName)+1] == '1' {
-					frozen = true
-				}
-				break
-			}
-		}
+	// In cgroups v2 there is no dedicated "freezer.state" anymore that
+	// indicates the effective state of a process/task. Instead, It's now one of
+	// multiple entries in "cgroup.events".
+	//
+	// Please note that the v2 root cgroup doesn't have "cgroup.events". As for
+	// more details, please refer to
+	// ttps://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#core-interface-files.
+	//
+	// We try to optimize things here by using the bytes.Lines iterator,
+	// introduced in Go 1.24: this way we avoid splitting strings before
+	// iterating over them or the overhead of a scanner.
+	events, err := os.ReadFile(filepath.Join(fridgepath, "cgroup.events"))
+	if err != nil {
+		return false
 	}
-	return
+	for event := range bytes.Lines(events) {
+		if !bytes.HasPrefix(event, []byte(frozenEventNameWithSpace)) {
+			continue
+		}
+		return event[len(frozenEventNameWithSpace)] == '1'
+	}
+	return false
 }
 
-const frozenEventName = "frozen"
+const frozenEventNameWithSpace = "frozen "
 
 // frozenV1 returns the effective freezer status information for the specified
 // process and maps it onto our v2-like simplified state model.
@@ -189,8 +194,7 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 		if fields := strings.Split(scanner.Text(), ":"); len(fields) == 3 {
 			if fields[1] != "" {
 				// cgroups v1 hierarchies
-				controllers := strings.Split(fields[1], ",")
-				for _, ctrl := range controllers {
+				for ctrl := range strings.SplitSeq(fields[1], ",") {
 					for idx, controllertype := range controllertypes {
 						if ctrl == controllertype {
 							paths[idx] = fields[2]
@@ -229,7 +233,7 @@ func fridgeRoot(pid PIDType) (root string, unified bool) {
 	// hierarchy might also be present ... now don't let us worry about some
 	// software already using the v2 freezer in a hybrid configuration (argh).
 	for _, mountinfo := range mntinfo.MountsOfType(int(pid), "cgroup") {
-		for _, sopt := range strings.Split(mountinfo.SuperOptions, ",") {
+		for sopt := range strings.SplitSeq(mountinfo.SuperOptions, ",") {
 			if sopt == "freezer" {
 				root = "/proc/" + strconv.FormatInt(int64(pid), 10) + "/root" + mountinfo.MountPoint
 				return

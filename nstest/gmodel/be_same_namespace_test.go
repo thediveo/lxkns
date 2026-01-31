@@ -15,6 +15,7 @@
 package gmodel
 
 import (
+	"log/slog"
 	"os"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -25,17 +26,20 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
-var allns *discover.Result
-var userns1 model.Namespace
-var initproc *model.Process
+var _ = Describe("Namespace", Ordered, func() {
 
-var _ = BeforeSuite(func() {
-	allns = discover.Namespaces(discover.WithStandardDiscovery())
-	initproc = allns.Processes[model.PIDType(os.Getpid())]
-	userns1 = initproc.Namespaces[model.UserNS]
-})
+	var allns *discover.Result
+	var userns1 model.Namespace
+	var initproc *model.Process
 
-var _ = Describe("Namespace", func() {
+	BeforeAll(func() {
+		defer slog.SetDefault(slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+		allns = discover.Namespaces(discover.WithStandardDiscovery())
+		initproc = allns.Processes[model.PIDType(os.Getpid())]
+		userns1 = initproc.Namespaces[model.UserNS]
+	})
 
 	It("matches same ID and Type", func() {
 		ns1 := namespaces.NewWithSimpleRef(species.CLONE_NEWNET, species.NamespaceIDfromInode(1), "/foobar")

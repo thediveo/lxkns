@@ -12,9 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Container, Engine, Group } from './container'
-import { Namespace, NamespaceType, Process, Discovery, EngineMap, GroupMap, TaskMap, Task } from './model'
-import { insertCommonChildPrefixMountPaths, MountGroupMap, MountPath, MountPoint } from './mount'
+import type { Container, Engine, Group } from './container'
+import type { Namespace, Process, Discovery, EngineMap, GroupMap, TaskMap, Task } from './model'
+import { NamespaceType } from './model'
+import type { MountGroupMap, MountPath, MountPoint } from './mount'
+import { insertCommonChildPrefixMountPaths } from './mount'
 
 // There are things in *type*script that really give me the creeps, not least
 // being able to *omit* things from types. On the other hand, it's exactly what
@@ -59,7 +61,8 @@ export const fromjson = (discoverydata: unknown): Discovery => {
         switch (ns.type) {
             case NamespaceType.user:
                 ns.tenants = []
-            // falls through
+                ns.children = []
+                break
             case NamespaceType.pid:
                 ns.children = []
         }
@@ -71,6 +74,7 @@ export const fromjson = (discoverydata: unknown): Discovery => {
         // Replace leader PIDs with leader process object references ... if
         // there is a list of leader PIDs; otherwise, set an empty array.
         const leaders: Process[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         (ns as NamespaceJson).leaders
             && (ns as NamespaceJson).leaders.forEach((leader) => {
                 if ((leader as number) in discovery.processes) {
@@ -90,6 +94,7 @@ export const fromjson = (discoverydata: unknown): Discovery => {
             case NamespaceType.pid:
                 ns.parent = ((ns as NamespaceJson).parent &&
                     discovery.namespaces[(ns as NamespaceJson).parent as number]) || null
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 ns.parent && ns.parent.children.push(ns) // ...billions of gothers crying
         }
 
@@ -123,6 +128,7 @@ export const fromjson = (discoverydata: unknown): Discovery => {
         }
         // ...and now for the namespaces the tasks of this process are attached
         // to.
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         proc.tasks && proc.tasks.forEach(task => {
             for (const [type, nsref] of Object.entries(task.namespaces)) {
                 task.namespaces[type] = discovery.namespaces[nsref as unknown as keyof Namespace]

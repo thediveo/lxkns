@@ -12,9 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { compareMountPeers, MountPoint } from 'models/lxkns/mount'
+import { compareMountPeers, type MountPoint } from 'models/lxkns/mount'
 import { MountpointPath } from 'components/mountpointpath'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { styled } from '@mui/material'

@@ -75,7 +75,7 @@ var _ = Describe("mountineer", func() {
 
 			f, err := m.Open("mountineer_test.go")
 			Expect(err).NotTo(HaveOccurred())
-			f.Close()
+			_ = f.Close()
 			Expect(m.Open("foobar.go")).Error().To(HaveOccurred())
 		})
 
@@ -83,9 +83,11 @@ var _ = Describe("mountineer", func() {
 
 	Context("accessing bind-mounted mount namespace", Ordered, func() {
 
-		bindmountpoint := "/tmp/lxkns-unittest-bindmountpoint"
-		testdata := "/tmp/lxkns-unittest-data"
-		canary := testdata + "/killroy.was.here"
+		const (
+			bindmountpoint = "/tmp/lxkns-unittest-bindmountpoint"
+			testdata       = "/tmp/lxkns-unittest-data"
+			canary         = testdata + "/killroy.was.here"
+		)
 
 		BeforeAll(func() {
 			if os.Getegid() != 0 {
@@ -120,14 +122,12 @@ canary=%s`, bindmountpoint, testdata, canary))
 umount $bm || /bin/true
 umount $bm || /bin/true
 touch $bm
-mount --bind $bm $bm
-mount --make-private $bm
+mount --bind --make-private $bm $bm
 
 umount $td || /bin/true
 umount $td || /bin/true
 mkdir -p $td
-mount --bind $td $td
-mount --make-private $td
+mount --bind --make-private $td $td
 
 echo "\"\""
 
@@ -187,7 +187,8 @@ read # wait for test to proceed()
 			Expect(bmnsid).To(Equal(mntnsid))
 
 			// canary must not be visible in this mount namespace
-			Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()))
+			Expect(canary).NotTo(Or(BeADirectory(), BeAnExistingFile()),
+				"shouldn't see the canary file")
 		})
 
 		When("using a mountineer", Ordered, func() {
@@ -198,13 +199,15 @@ read # wait for test to proceed()
 				// tell the mountineer to sandbox the newly created mount namespace via
 				// the bind-mount reference.
 				var err error
-				m, err = New([]string{bindmountpoint}, nil)
+				m, err = NewInContext(model.PIDType(os.Getpid()), []string{bindmountpoint}, nil)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(m).NotTo(BeNil())
+				Expect(m.sandbox).NotTo(BeNil(), "no sandbox created")
 				DeferCleanup(func() { m.Close() })
 			})
 
 			It("created a sandbox/pause process that survives", func() {
-				Expect(m.sandbox).NotTo(BeNil())
+				Expect(m.sandbox).NotTo(BeNil(), "sandbox collapsed")
 				// And the sandbox must not have terminated even if waiting a few
 				// moments.
 				Consistently(func() error {
@@ -228,11 +231,11 @@ read # wait for test to proceed()
 
 				f, err := os.Open(path)
 				Expect(err).NotTo(HaveOccurred())
-				f.Close()
+				_ = f.Close()
 
 				f, err = m.Open(canary)
 				Expect(err).NotTo(HaveOccurred())
-				f.Close()
+				_ = f.Close()
 			})
 
 			It("shuts down correctly and doesn't leak sandboxes", func() {

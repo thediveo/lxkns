@@ -12,36 +12,36 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { MountpointInfo } from './MountpointInfo'
-import { mountpoint } from './fakedata'
+import { MountpointInfo } from "./MountpointInfo";
+import { mountpoint } from "./fakedata";
 
 const meta: Meta<typeof MountpointInfo> = {
-    title: 'Mount/MountpointInfo',
-    component: MountpointInfo,
-    argTypes: {
-        mountpoint: { control: false },
-        namespaces: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Mount/MountpointInfo",
+  component: MountpointInfo,
+  argTypes: {
+    mountpoint: { control: false },
+    namespaces: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof MountpointInfo>
+type Story = StoryObj<typeof MountpointInfo>;
 
 export const MountpointInformation: Story = {
-    args: {
-        mountpoint: mountpoint,
-    },
-}
+  args: {
+    mountpoint: mountpoint,
+  },
+};
 
 export const HiddenMountpoint: Story = {
-    args: {
-        mountpoint: {
-            ...mountpoint,
-            hidden: true,
-        },
+  args: {
+    mountpoint: {
+      ...mountpoint,
+      hidden: true,
     },
-}
+  },
+};

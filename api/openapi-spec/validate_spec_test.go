@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+	"log/slog"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -38,21 +38,21 @@ var allns *discover.Result
 var pidmap model.PIDMapper
 
 var _ = BeforeSuite(func() {
+	// send logging output to the GinkgoWriter, but only do so while we're
+	// inside BeforeSuite; thus plain "defer" instead of DeferCleanup.
+	defer slog.SetDefault(slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 	var err error
 	lxknsapispec, err = openapi3.NewLoader().LoadFromFile("lxkns.yaml")
-	Expect(err).To(Succeed())
+	Expect(err).NotTo(HaveOccurred())
 	Expect(func() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		return lxknsapispec.Validate(ctx)
 	}()).To(Succeed(), "lxkns OpenAPI specification is invalid")
 
-	var docksock string
-	if os.Geteuid() == 0 {
-		docksock = "unix:///proc/1/root/run/docker.sock"
-	}
-
-	mw, err := moby.New(docksock, nil)
+	mw, err := moby.New("", nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -71,7 +71,7 @@ func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error
 	if !ok {
 		return fmt.Errorf("invalid schema reference %q", schemaname)
 	}
-	var jsonobj interface{}
+	var jsonobj any
 	if err := json.Unmarshal(jsondata, &jsonobj); err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 
 	It("validates PIDMap", func() {
 		j, err := json.Marshal(apitypes.NewPIDMap(apitypes.WithPIDMap(pidmap)))
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(validate(lxknsapispec, "PIDMap", j)).To(Succeed())
 	})
 
@@ -97,7 +97,7 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 			ProTaskCommon: proc.ProTaskCommon,
 		})
 		j, err := json.Marshal(proc)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(validate(lxknsapispec, "Process", j)).To(Succeed(), string(j))
 	})
 
@@ -106,7 +106,7 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 		pt := apitypes.NewProcessTable(apitypes.WithProcessTable(
 			model.ProcessTable{proc.PID: proc}))
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})
 
@@ -168,14 +168,14 @@ var _ = Describe("lxkns OpenAPI specification", func() {
 	It("validates actual ProcTable", func() {
 		pt := apitypes.NewProcessTable(apitypes.WithProcessTable(allns.Processes))
 		j, err := json.Marshal(pt)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(validate(lxknsapispec, "ProcessTable", j)).To(Succeed(), string(j))
 	})
 
 	It("validates a full DiscoveryResult round-trip", func() {
 		disco := apitypes.NewDiscoveryResult(apitypes.WithResult(allns))
 		j, err := json.Marshal(disco)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		Expect(validate(lxknsapispec, "DiscoveryResult", j)).To(Succeed(), string(j))
 

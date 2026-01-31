@@ -15,21 +15,22 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/clippy/debug"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/safe"
 	"github.com/thediveo/testbasher"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
+	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/fdooze"
 )
 
@@ -59,6 +60,7 @@ echo "$$"
 `)
 		cmd := scripts.Start("main")
 		pidnsid = nstest.CmdDecodeNSId(cmd)
+		Expect(pidnsid.Ino).NotTo(BeZero())
 		cmd.Decode(&initpid)
 		Expect(initpid).To(Equal(model.PIDType(1)))
 		cmd.Decode(&leafpid)
@@ -72,11 +74,13 @@ echo "$$"
 	})
 
 	It("CLI w/o args renders PID tree", func() {
-		rootCmd := newRootCmd()
-		out := bytes.Buffer{}
-		rootCmd.SetOut(&out)
-		rootCmd.SetArgs([]string{})
-		Expect(rootCmd.Execute()).ToNot(HaveOccurred())
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+		Expect(cmd.Execute()).To(Succeed())
 		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[│ ]+└─ "unshare" \(\d+\).*
 [│ ]+└─ pid:\[%d\], owned by UID %d \(".*"\)
@@ -85,77 +89,95 @@ echo "$$"
 			pidnsid.Ino, os.Geteuid(), leafpid)))
 	})
 
-	It("CLI renders only a branch", func() {
-		out := bytes.Buffer{}
-		cmd := &cobra.Command{}
-		Expect(renderPIDBranch(cmd, &out, model.PIDType(-1), species.NoneID, nil)).To(HaveOccurred())
-		Expect(renderPIDBranch(cmd, &out, model.PIDType(initpid), species.NamespaceIDfromInode(123), nil)).To(HaveOccurred())
-		Expect(renderPIDBranch(cmd, &out, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino), nil)).To(HaveOccurred())
+	DescribeTable("rejecting to render invalid PID branches",
+		func(pid model.PIDType, pidnsid species.NamespaceID) {
+			cmd := newRootCmd()
+			cmd.SetArgs([]string{})
+			var out safe.Buffer
+			cmd.SetOut(&out)
+			cmd.SetErr(&out)
+			debug.SetWriter(cmd, GinkgoWriter)
+			Expect(renderPIDBranch(cmd, &out, pid, pidnsid, nil)).To(HaveOccurred())
+		},
+		Entry(nil, model.PIDType(-1), species.NoneID),
+		Entry(nil, model.PIDType(initpid), species.NamespaceIDfromInode(123)),
+		Entry(nil, model.PIDType(-1), species.NamespaceIDfromInode(pidnsid.Ino)),
+	)
 
-		for _, run := range []struct {
-			ns  string
-			m   OmegaMatcher
-			res OmegaMatcher
-		}{
-			{
-				ns: fmt.Sprintf("%d", pidnsid.Ino),
-				m:  Not(HaveOccurred()),
-				res: MatchRegexp(fmt.Sprintf(`
+	DescribeTable("CLI renders or rejects only a specific branch",
+		func(nsa any, errmatcher types.GomegaMatcher, outmatchera any) {
+			var ns string
+			switch v := nsa.(type) {
+			case string:
+				ns = v
+			case func() string:
+				ns = v()
+			default:
+				panic(fmt.Sprintf("expected string or func() string, but got: %T", v))
+			}
+
+			var outmatcher types.GomegaMatcher
+			switch v := outmatchera.(type) {
+			case types.GomegaMatcher:
+				outmatcher = v
+			case func() types.GomegaMatcher:
+				outmatcher = v()
+			default:
+				panic(fmt.Sprintf("expected types.GomegaMatcher or func() types.GomegaMatcher, but got: %T", v))
+			}
+
+			cmd := newRootCmd()
+			cmd.SetArgs([]string{
+				"--" + turtles.NoContainersFlagName,
+				fmt.Sprintf("--pid=%d", initpid),
+				fmt.Sprintf("--ns=%s", ns),
+			})
+			var out safe.Buffer
+			cmd.SetOut(&out)
+			cmd.SetErr(&out)
+			debug.SetWriter(cmd, GinkgoWriter)
+
+			err := cmd.Execute()
+			Expect(err).To(errmatcher, "pid %d, ns %v", initpid, ns)
+			Expect(out.String()).To(outmatcher)
+		},
+		Entry(nil,
+			func() string { return fmt.Sprintf("%d", pidnsid.Ino) },
+			Not(HaveOccurred()),
+			func() types.GomegaMatcher {
+				return MatchRegexp(fmt.Sprintf(`
 (?m)^ +└─ pid:\[%d\], owned by UID %d \(".*"\)
 \ +└─ "stage2.sh" \(\d+/1\).*
-$`,
-					pidnsid.Ino, os.Geteuid())),
+$`, pidnsid.Ino, os.Geteuid()))
 			},
-			{
-				ns:  "abc",
-				m:   HaveOccurred(),
-				res: MatchRegexp(`Error: not a valid PID namespace ID`),
-			},
-			{
-				ns:  "net:[12345]",
-				m:   HaveOccurred(),
-				res: MatchRegexp(`Error: not a valid PID namespace ID:`),
-			},
-			{
-				ns:  "pid:[12345]",
-				m:   HaveOccurred(),
-				res: MatchRegexp(`Error: unknown PID namespace pid:`),
-			},
-		} {
-			out.Reset()
-			rootCmd := newRootCmd()
-			rootCmd.SetOut(&out)
-			rootCmd.SetErr(&out)
-			rootCmd.SetArgs([]string{
-				fmt.Sprintf("--pid=%d", initpid),
-				fmt.Sprintf("--ns=%s", run.ns),
-			})
-			err := rootCmd.Execute()
-			Expect(err).To(run.m, "pid %d, ns %v", initpid, run.ns)
-			Expect(out.String()).To(run.res)
-		}
+		),
+		Entry(nil, "abc", HaveOccurred(), MatchRegexp(`Error: not a valid PID namespace ID`)),
+		Entry(nil, "net:[12345]", HaveOccurred(), MatchRegexp(`Error: not a valid PID namespace ID:`)),
+		Entry(nil, "pid:[12345]", HaveOccurred(), MatchRegexp(`Error: unknown PID namespace pid:`)),
+	)
+
+	It("CLI --foobar fails correctly", func() {
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--foobar"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
-	It("runs and fails correctly", func() {
-		oldArgs := os.Args
-		oldExit := osExit
-		defer func() {
-			osExit = oldExit
-			os.Args = oldArgs
-		}()
-		exit := 0
-		osExit = func(code int) { exit = code }
+	It("renders PIDs", func() {
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
 
-		os.Args = []string{os.Args[0], "--foobar"}
-		out := getstdout.Stdouterr(main)
-		Expect(exit).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
-
-		os.Args = []string{os.Args[0]}
-		exit = 0
-		out = getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(`^pid:\[`))
-		Expect(exit).To(BeZero())
+		Expect(cmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^pid:\[`))
 	})
 
 })

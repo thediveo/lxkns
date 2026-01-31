@@ -22,12 +22,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/thediveo/clippy"
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
+	"github.com/thediveo/lxkns/cmd/cli/task"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
+
+	_ "github.com/thediveo/clippy/debug"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes
@@ -40,7 +42,7 @@ func dumpns(cmd *cobra.Command, _ []string) error {
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(containerizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
-		task.FromTasks(cmd),
+		task.DiscoveryOption(cmd),
 	)
 	var jsondata []byte
 	var err error
@@ -81,7 +83,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Version: lxkns.SemVersion,
 		Args:    cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return cli.BeforeCommand(cmd)
+			return clippy.BeforeCommand(cmd)
 		},
 		RunE: dumpns,
 	}
@@ -91,12 +93,12 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		"compact instead of pretty-printed output")
 	rootCmd.PersistentFlags().BoolP(
 		"tab", "t", false,
-		"use tabs for indentation instead of two spaces")
+		"use tabs for indentation instead of spaces")
 	rootCmd.PersistentFlags().UintP(
 		"indent", "i", 2,
 		"use the given number of spaces (no more than 8) for indentation")
 
-	cli.AddFlags(rootCmd)
+	clippy.AddFlags(rootCmd)
 	return
 }
 

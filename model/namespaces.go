@@ -251,7 +251,7 @@ type Ownership interface {
 // ready to be filled with funny namespaces, such as “Kevin” and “Chantal”.
 func NewAllNamespaces() *AllNamespaces {
 	allns := &AllNamespaces{}
-	for idx := NamespaceTypeIndex(0); idx < NamespaceTypesCount; idx++ {
+	for idx := range NamespaceTypesCount {
 		allns[idx] = NamespaceMap{}
 	}
 	return allns

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
 
 import { SnackbarProvider } from 'notistack'
@@ -30,7 +30,7 @@ import {
     createTheme,
     Divider,
     alpha,
-    Theme,
+    type Theme,
     ThemeProvider,
     StyledEngineProvider,
     useMediaQuery,
@@ -50,8 +50,7 @@ import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
 import { NamespaceType } from 'models/lxkns'
 
-import { useTreeAction, EXPANDALL, COLLAPSEALL } from './treeaction'
-import { lxknsDarkTheme, lxknsLightTheme } from './appstyles'
+import { lxknsDarkTheme, lxknsLightTheme } from 'styles/themes'
 import { Settings, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
 import { NamespaceIcon } from 'components/namespaceicon'
 import { About } from 'views/about'
@@ -63,6 +62,7 @@ import Logo from 'app/lxkns.svg'
 import { basename } from 'utils/basename'
 import ContainerIcon from 'icons/containers/Container'
 import { Containers } from 'views/containers'
+import type { TreeAPI } from './treeapi'
 
 
 /**
@@ -70,7 +70,7 @@ import { Containers } from 'views/containers'
  * show, label, and the route path it applies to.
  */
 interface viewItem {
-    icon: JSX.Element /** drawer item icon */
+    icon: React.JSX.Element /** drawer item icon */
     label: string /** drawer item label */
     path: string /** route path */
     type?: NamespaceType /** type of namespace to show, if any */
@@ -154,9 +154,13 @@ const LxknsApp = () => {
 
     const theme = useTheme()
 
-    const [treeaction, setTreeAction] = useTreeAction()
-
     const path = useLocation().pathname
+
+    const hideTreeActions = [
+        "/settings",
+        "/about",
+        "/help",
+    ].some((prefix) => path.startsWith(prefix))
 
     // Note: JS returns undefined if the result doesn't turn up a match; that's
     // what we want ... and millions of Gophers are starting to cry (again).
@@ -173,6 +177,19 @@ const LxknsApp = () => {
             .length
         : Object.keys(discovery.namespaces).length
 
+    // keep the various tree API instances, so we can route the collapse/expand
+    // all button actions to the tree in the currently selected view.
+    const forrestRef = useRef(new Map<string, TreeAPI | null>())
+
+    // calls the passed fn with the currently visible tree API instance, if any.
+    // Otherwise, does nothing.
+    const currentAPI = (fn: (api: TreeAPI) => void) => {
+        const api = forrestRef.current?.get(basename+path)
+        if (api) {
+            fn(api)
+        }
+    }
+    
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <LxknsAppBarDrawer
@@ -184,16 +201,22 @@ const LxknsApp = () => {
                     </Badge>
                 </>}
                 tools={() => <>
-                    <Tooltip key="collapseall" title="expand only top-level namespace(s)">
-                        <IconButton color="inherit" onClick={() => setTreeAction(COLLAPSEALL)} size="large">
-                            <ChevronRightIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip key="expandall" title="expand all">
-                        <IconButton color="inherit" onClick={() => setTreeAction(EXPANDALL)} size="large">
-                            <ExpandMoreIcon />
-                        </IconButton>
-                    </Tooltip>
+                    { hideTreeActions ? undefined : <>
+                        <Tooltip key="collapseall" title="expand only top-level namespace(s)">
+                            <IconButton color="inherit" onClick={() => {
+                                    currentAPI((api) => api?.collapseAll())
+                                }} size="large">
+                                <ChevronRightIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip key="expandall" title="expand all">
+                            <IconButton color="inherit" onClick={() => {
+                                    currentAPI((api) => api?.expandAll())
+                                }} size="large">
+                                <ExpandMoreIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </>}
                     <Refresher />
                 </>}
                 drawertitle={() =>
@@ -201,7 +224,7 @@ const LxknsApp = () => {
                         <img alt="lxkns logo" src={Logo} style={{height: '2ex', position: 'relative', top: '0.4ex'}} />&nbsp;lxkns
                     </Typography>
                 }
-                drawer={closeDrawer =>
+                drawer={(closeDrawer: React.MouseEventHandler<HTMLUListElement> | undefined) =>
                     views.map((group, groupidx) => [
                         groupidx > 0 && <Divider key={`div-${groupidx}`} />,
                         <List onClick={closeDrawer} key={groupidx}>
@@ -222,15 +245,40 @@ const LxknsApp = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/help/*" element={<Help />} />
-                    <Route path="/containers" element={<Containers discovery={discovery} action={treeaction} />} />
+                    <Route 
+                        path="/containers"
+                        element={<Containers 
+                            discovery={discovery} 
+                            apiRef={(apiref) => {
+                                forrestRef.current?.set(basename+"/containers", apiref)
+                                return () => { forrestRef.current?.delete(basename+"/containers") }
+                            }} 
+                        />}
+                    />
                     {views.map(group => group.filter(viewitem => !!viewitem.type))
-                        .flat().map(viewitem =>
-                            <Route
+                        .flat().map(viewitem => {
+                            return <Route
                                 key={viewitem.path}
                                 path={viewitem.path}
-                                element={<TypedNamespaces discovery={discovery} action={treeaction} />} />
-                        )}
-                    <Route path="/" element={<AllNamespaces discovery={discovery} action={treeaction} />} />
+                                element={<TypedNamespaces 
+                                    discovery={discovery} 
+                                    apiRef={(apiref) => {
+                                        forrestRef.current?.set(basename+viewitem.path, apiref)
+                                        return () => { forrestRef.current?.delete(basename+viewitem.path) }
+                                    }}
+                                />}
+                            />
+                        })}
+                    <Route 
+                        path="/" 
+                        element={<AllNamespaces 
+                            discovery={discovery} 
+                            apiRef={(apiref) => {
+                                forrestRef.current?.set(basename+"/", apiref)
+                                return () => { forrestRef.current?.delete(basename+"/") }
+                            }}
+                        />}
+                    />
                 </Routes>
             </Box>
         </Box>

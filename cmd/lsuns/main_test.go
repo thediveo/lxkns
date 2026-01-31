@@ -15,15 +15,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/clippy/debug"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
+	"github.com/thediveo/safe"
+	"github.com/thediveo/spacetest"
+	"github.com/thediveo/spacetest/spacer"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -34,12 +36,7 @@ import (
 
 var _ = Describe("renders user namespaces", func() {
 
-	var initusernsid, usernsid, netnsid species.NamespaceID
-
-	BeforeEach(func() {
-		osExit = func(int) {}
-		DeferCleanup(func() { osExit = os.Exit })
-	})
+	var ourUsernsID, childUsernsID, ownedNetnsID uint64 // no dev ID necessary, just the ino's
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -49,59 +46,77 @@ var _ = Describe("renders user namespaces", func() {
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 
-		scripts := testbasher.Basher{}
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("main", `
-process_namespaceid user
-unshare -Unfr $stage2
-`)
-		scripts.Script("stage2", `
-process_namespaceid user
-process_namespaceid net
-read
-`)
-		cmd := scripts.Start("main")
-		initusernsid = nstest.CmdDecodeNSId(cmd)
-		usernsid = nstest.CmdDecodeNSId(cmd)
-		netnsid = nstest.CmdDecodeNSId(cmd)
+		ourUsernsID = spacetest.CurrentIno(unix.CLONE_NEWUSER)
 
+		By("spinning up a local spacer service")
+		ctx, cancel := context.WithCancel(context.Background())
+		spacerClient := spacer.New(ctx, spacer.WithErr(GinkgoWriter))
 		DeferCleanup(func() {
-			if cmd != nil {
-				cmd.Close()
-			}
-			scripts.Done()
+			cancel()
+			spacerClient.Close()
 		})
+
+		By("creating a child user namespace")
+		subspaceClient, subspc := spacerClient.Subspace(true, false)
+		DeferCleanup(func() {
+			subspaceClient.Close()
+		})
+
+		childUsernsID = spacetest.Ino(subspc.User, unix.CLONE_NEWUSER)
+
+		By("creating a network namespace owned by child user namespace")
+		netnsfd := subspaceClient.NewTransient(unix.CLONE_NEWNET)
+		ownedNetnsID = spacetest.Ino(netnsfd, unix.CLONE_NEWNET)
 	})
 
 	It("fails for unknown CLI flag", func() {
-		oldExit := osExit
-		defer func() { osExit = oldExit }()
-		exit := 0
-		osExit = func(code int) { exit = code }
-		os.Args = append(os.Args[:1], "--foobar")
-		out := getstdout.Stdouterr(main)
-		Expect(exit).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--foobar"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("renders just the user tree without any CLI args", func() {
-		os.Args = os.Args[:1]
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
-			initusernsid.Ino)))
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^[├└]─ user:\[%d\] .*$`,
-			usernsid.Ino)))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+		Expect(cmd.Execute()).To(Succeed())
+		output := out.String()
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			ourUsernsID)))
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^[├└]─ user:\[%d\] .*$`,
+			childUsernsID)))
 	})
 
 	It("renders user tree with owned namespaces with CLI -d", func() {
-		os.Args = append(os.Args[:1], "-d")
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
-			initusernsid.Ino)))
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"-d", "--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		output := out.String()
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			ourUsernsID)))
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[├└]─ user:\[%d\] process .*
-[│ ]+⋄─ net:\[%d\] process .*$`,
-			usernsid.Ino, netnsid.Ino)))
+[│ ]+⋄─ mnt:.*
+[│ ]+⋄─ net:\[%d\] (referenced from )?(process|task|process/task) .*$`,
+			childUsernsID, ownedNetnsID)))
 	})
 
 	It("renders user tree with loose threads with CLI -d", func() {
@@ -132,40 +147,71 @@ read
 		Eventually(tidch).Should(Receive(&tid))
 
 		By("discovering from processes and tasks")
-		os.Args = append(os.Args[:1], "-d")
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
-			initusernsid.Ino)))
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"-d", "--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		output := out.String()
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			ourUsernsID)))
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`
 [│ ]+⋄─ mnt:\[.*\] task ".*" \[%d\] of ".*" \(%d\)`,
 			tid, os.Getpid())))
 
 		By("discovering from processes only")
-		os.Args = append(os.Args[:1], "-d", "--task=false")
-		out = getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
-			initusernsid.Ino)))
-		Expect(out).NotTo(MatchRegexp(fmt.Sprintf(`
+		cmd = newRootCmd()
+		cmd.SetArgs([]string{"-d", "--task=false", "--" + turtles.NoContainersFlagName})
+		var out2 safe.Buffer
+		cmd.SetOut(&out2)
+		cmd.SetErr(&out2)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		output = out2.String()
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			ourUsernsID)))
+		Expect(output).NotTo(MatchRegexp(fmt.Sprintf(`
 [│ ]+⋄─ mnt:\[.*\] task ".*" \[%d\] of ".*" \(%d\)`,
 			tid, os.Getpid())))
 	})
 
 	It("filters owned namespaces with CLI -f", func() {
-		os.Args = append(os.Args[:1], "-d", "-f=pid")
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
-			initusernsid.Ino)))
-		Expect(out).ToNot(MatchRegexp(fmt.Sprintf(`
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"-d", "-f=pid", "--" + turtles.NoContainersFlagName})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		output := out.String()
+
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`(?m)^user:\[%d\] .*$`,
+			ourUsernsID)))
+		Expect(output).ToNot(MatchRegexp(fmt.Sprintf(`
 (?m)^[├└]─ user:\[%d\] process .*
 [│ ]+⋄─ .*$`,
-			usernsid.Ino)))
+			childUsernsID)))
 
-		os.Args = append(os.Args[:1], "-d", "-f=ipc,net,pid")
-		out = getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`
+		cmd = newRootCmd()
+		cmd.SetArgs([]string{"-d", "-f=ipc,net,pid", "--" + turtles.NoContainersFlagName})
+		var out2 safe.Buffer
+		cmd.SetOut(&out2)
+		cmd.SetErr(&out2)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		output = out2.String()
+		Expect(output).To(MatchRegexp(fmt.Sprintf(`
 (?m)^[├└]─ user:\[%d\] process .*
-[│ ]+⋄─ net:\[%d\] process .*$`,
-			usernsid.Ino, netnsid.Ino)))
+[│ ]+⋄─ net:\[%d\] (referenced from )?(process|task|process/task) .*$`,
+			childUsernsID, ownedNetnsID)))
 	})
 
 })

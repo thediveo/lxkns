@@ -16,12 +16,12 @@ package main
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -43,7 +43,8 @@ func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 		err := json.NewEncoder(w).Encode(
 			types.NewDiscoveryResult(types.WithResult(allns))) // ...brackets galore!!!
 		if err != nil {
-			log.Errorf("namespaces discovery error: %s", err.Error())
+			slog.Error("namespaces discovery failed",
+				slog.String("err", err.Error()))
 		}
 	}
 }
@@ -63,7 +64,8 @@ func GetProcessesHandler(w http.ResponseWriter, req *http.Request) {
 	err := json.NewEncoder(w).Encode(
 		types.NewProcessTable(types.WithProcessTable(disco.Processes)))
 	if err != nil {
-		log.Errorf("processes discovery error: %s", err.Error())
+		slog.Error("processes discovery failed",
+			slog.String("err", err.Error()))
 	}
 }
 
@@ -81,6 +83,7 @@ func GetPIDMapHandler(w http.ResponseWriter, req *http.Request) {
 	err := json.NewEncoder(w).Encode(
 		types.NewPIDMap(types.WithPIDMap(pidmap)))
 	if err != nil {
-		log.Errorf("pid translation map discovery error: %s", err.Error())
+		slog.Error("pid translation map discovery failed",
+			slog.String("err", err.Error()))
 	}
 }

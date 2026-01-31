@@ -12,78 +12,91 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { ContainerInfo } from './ContainerInfo'
-import { Container, Engine, Group, Process } from 'models/lxkns'
+import { ContainerInfo } from "./ContainerInfo";
+import type { Container, Engine, Group, Process } from "models/lxkns";
 
 const meta: Meta<typeof ContainerInfo> = {
-    title: 'Container/ContainerInfo',
-    component: ContainerInfo,
-    argTypes: {
-        container: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Container/ContainerInfo",
+  component: ContainerInfo,
+  argTypes: {
+    container: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ContainerInfo>
+type Story = StoryObj<typeof ContainerInfo>;
 
 const process: Process = {
-    pid: 41,
-    ppid: 1,
-    name: 'foobar-process',
-} as Process
+  pid: 41,
+  ppid: 1,
+  name: "foobar-process",
+} as Process;
 
 const container: Container = {
-    id: 'deadbeafco1dcafe',
-    name: 'mouldy_moby',
-    type: 'docker.com',
-    flavor: 'docker.com',
-    pid: 41,
-    paused: false,
-    labels: {},
-    groups: [],
-    engine: {} as Engine,
-    process: process,
-}
+  id: "deadbeafco1dcafe",
+  name: "mouldy_moby",
+  type: "docker.com",
+  flavor: "docker.com",
+  pid: 41,
+  paused: false,
+  labels: {},
+  groups: [],
+  engine: {} as Engine,
+  process: process,
+};
 
 export const Running: Story = {
-    args: {
-        container: container,
-    },
-}
+  args: {
+    container: container,
+  },
+};
 
 export const Paused: Story = {
-    args: {
-        container: {
-            ...container,
-            paused: true,
-        },
+  args: {
+    container: {
+      ...container,
+      paused: true,
     },
-}
+  },
+};
 
-export const Grouped: Story = {
-    args: {
-        container: {
-            ...container,
-            groups: [{
-                name: 'bleary_beathoven',
-                type: 'com.docker.compose.project',
-                flavor: 'com.docker.compose.project',
-            } as Group],
-        },
+export const Grouped_in_Compose_Project: Story = {
+  args: {
+    container: {
+      ...container,
+      groups: [
+        {
+          name: "bleary_beathoven",
+          type: "com.docker.compose.project",
+          flavor: "com.docker.compose.project",
+        } as Group,
+      ],
     },
-}
+  },
+};
 
-export const ContainerInContainer: Story = {
-    args: {
-        container: {
-            ...container,
-            labels: {
-                'turtlefinder/container/prefix': 'outer-container',
-            }
-        },
+export const Development_Container: Story = {
+  args: {
+    container: {
+      ...container,
+      labels: {
+        "devcontainer.local_folder": "/home/lusers/githarp/lxkns",
+      },
     },
-}
+  },
+};
+
+export const Container_in_Container: Story = {
+  args: {
+    container: {
+      ...container,
+      labels: {
+        "turtlefinder/container/prefix": "outer-container",
+      },
+    },
+  },
+};

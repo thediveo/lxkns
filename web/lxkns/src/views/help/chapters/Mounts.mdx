@@ -1,7 +1,6 @@
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
 import { MountTreeDetailer } from "components/mounttree";
 import { expandInitiallyAtom } from "views/settings";
-import { EXPANDALL } from "app/treeaction";
 import { discovery } from "../fakehelpdata";
 import { PeerIcon } from "icons/propagation/Peer";
 import { SlaveIcon } from "icons/propagation/Slave";
@@ -19,7 +18,6 @@ point views in its mount namespace view, such as in this example:
     type="mnt"
     discovery={discovery}
     details={MountTreeDetailer}
-    action={{action: EXPANDALL }}
   />
 </Example>
 

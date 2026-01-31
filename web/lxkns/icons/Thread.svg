@@ -7,7 +7,7 @@
    version="1.1"
    id="svg8"
    sodipodi:docname="Thread.svg"
-   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -44,7 +44,8 @@
        apply_no_radius="true"
        apply_with_radius="true"
        only_selected="true"
-       hide_knots="false" />
+       hide_knots="false"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,1,0,1 @ F,0,1,1,0,1,0,1" />
     <inkscape:path-effect
        effect="fillet_chamfer"
        id="path-effect1692-3"
@@ -61,7 +62,8 @@
        apply_no_radius="true"
        apply_with_radius="true"
        only_selected="true"
-       hide_knots="false" />
+       hide_knots="false"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,1,0,1 @ F,0,1,1,0,1,0,1" />
   </defs>
   <sodipodi:namedview
      pagecolor="#ffffff"
@@ -73,12 +75,12 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="2560"
-     inkscape:window-height="1361"
+     inkscape:window-height="1362"
      id="namedview10"
      showgrid="true"
-     inkscape:zoom="22.627417"
-     inkscape:cx="16.83798"
-     inkscape:cy="15.202796"
+     inkscape:zoom="45.254834"
+     inkscape:cx="6.4633979"
+     inkscape:cy="10.728136"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -89,18 +91,20 @@
      inkscape:snap-object-midpoints="true"
      inkscape:snap-smooth-nodes="true"
      inkscape:snap-midpoints="true"
-     inkscape:snap-grids="true">
+     inkscape:snap-grids="true"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
     <inkscape:grid
        type="xygrid"
-       id="grid911" />
+       id="grid911"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px" />
   </sodipodi:namedview>
   <path
-     style="fill:none"
-     inkscape:connector-curvature="0"
-     id="path2"
-     d="M 0,0 H 24 V 24 H 0 Z" />
-  <path
-     id="rect926"
+     id="path6"
      style="fill:#000000;stroke:none;stroke-width:0.1;stroke-miterlimit:4;stroke-dasharray:none"
-     d="M 3 3 L 3 6 A 1 1 0 0 0 4 7 L 14 7 A 1 1 0 0 0 15 6 L 15 3 L 3 3 z M 4 4 L 14 4 L 14 6 L 4 6 L 4 4 z M 5 8 L 5 10 L 13 10 L 13 9.5 C 13.999999 9.5 15.72304 9.510758 16.994141 9.8574219 C 17.629691 10.030754 18.130548 10.291414 18.384766 10.589844 C 18.638984 10.888274 18.735862 11.210383 18.525391 11.841797 C 18.329777 12.428638 18.387694 12.999941 18.585938 13.464844 C 18.784178 13.929747 19.105018 14.296671 19.431641 14.585938 C 20.084887 15.164471 20.806641 15.460938 20.806641 15.460938 L 21.193359 14.539062 C 21.193359 14.539062 20.598617 14.285015 20.09375 13.837891 C 19.841317 13.614329 19.623325 13.34774 19.505859 13.072266 C 19.388393 12.796791 19.353996 12.520045 19.474609 12.158203 C 19.764138 11.289619 19.611016 10.486726 19.146484 9.9414062 C 18.681949 9.3960869 17.995307 9.0942458 17.255859 8.8925781 C 15.776963 8.4892428 13.999999 8.5 13 8.5 L 13 8 L 5 8 z M 5 11 L 5 13 L 13 13 L 13 11 L 5 11 z M 5 14 L 5 16 L 13 16 L 13 14 L 5 14 z M 4 17 A 1 1 0 0 0 3 18 L 3 21 L 15 21 L 15 18 A 1 1 0 0 0 14 17 L 4 17 z M 4 18 L 14 18 L 14 20 L 4 20 L 4 18 z " />
+     d="m 3,3 v 3 a 1,1 0 0 0 1,1 h 1 v 2 l 8,-2 h 1 A 1,1 0 0 0 15,6 V 3 Z M 4,4 H 14 V 6 H 4 Z m 9,6 -8,2 v 2 l 8,-2 v -0.5 c 0.999999,0 2.72304,0.01076 3.994141,0.357422 0.63555,0.173332 1.136407,0.433992 1.390625,0.732422 0.254218,0.29843 0.351096,0.620539 0.140625,1.251953 -0.195614,0.586841 -0.137701,1.158144 0.06055,1.623047 0.198239,0.464903 0.51908,0.831827 0.845703,1.121094 0.653246,0.578533 1.375,0.875 1.375,0.875 l 0.386718,-0.921876 c 0,0 -0.594742,-0.254047 -1.099609,-0.701171 -0.252433,-0.223562 -0.470425,-0.490151 -0.587891,-0.765625 -0.117466,-0.275475 -0.151863,-0.552221 -0.03125,-0.914063 0.289529,-0.868584 0.136407,-1.671477 -0.328125,-2.216797 -0.464541,-0.545319 -1.15118,-0.84716 -1.890628,-1.048828 C 15.776963,10.489243 13.999999,10.5 13,10.5 Z m 0,6 -4,1 H 4 a 1,1 0 0 0 -1,1 v 3 h 12 v -3 a 1,1 0 0 0 -1,-1 h -1 z m -9,2 h 1 8 1 v 2 H 4 Z" />
 </svg>

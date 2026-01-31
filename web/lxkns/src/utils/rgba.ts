@@ -25,5 +25,5 @@ import colorRgba from 'color-rgba'
  */
 export const rgba = (color: string, alpha: number) => {
     const [r, g, b, a] = colorRgba(color) || [0, 0, 0, 0]
-    return `rgba(${r},${g},${b},${a*alpha})`
+    return `rgba(${r},${g},${b},${(a ?? 0)*alpha})`
 }

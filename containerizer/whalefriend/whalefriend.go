@@ -18,10 +18,11 @@ package whalefriend
 
 import (
 	"context"
+	"log/slog"
+	"maps"
 
 	"github.com/gammazero/workerpool"
 	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 )
@@ -99,10 +100,7 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 			// adding labels would modify the labels shared through the
 			// underlying container label source. So, clone the labels
 			// (top-level only) and then happy decorating.
-			clonedLabels := model.Labels{}
-			for k, v := range container.Labels {
-				clonedLabels[k] = v
-			}
+			clonedLabels := maps.Clone(container.Labels)
 			cntr := &model.Container{
 				ID:     container.ID,
 				Name:   container.Name,
@@ -129,9 +127,8 @@ func (c *WhaleFriend) Containers(
 	// pool. First, we submit query jobs for all engines that we watch...
 	ch := make(chan []*model.Container)
 	for _, watcher := range c.watchers {
-		watcher := watcher // ...oh well...
 		c.workers.Submit(func() {
-			log.Debugf("querying workload from '%s'", watcher.ID(ctx))
+			slog.Debug("querying engine workload", slog.String("id", watcher.ID(ctx)))
 			ch <- c.watchersContainers(ctx, watcher)
 		})
 	}

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { atom, Getter, Setter } from 'jotai'
+import { atom, type Getter, type Setter } from 'jotai'
 
 
 /**
@@ -37,6 +37,7 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
             let value
             try {
                 value = JSON.parse(json)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 // The stored setting isn't valid a JSON value, so take it as a
                 // verbatim string.
@@ -58,6 +59,7 @@ const initialAtomValue = <T>(storageKey: string, defaultValue: T): T => {
             // the default value.
             return typeof(value) === typeof(defaultValue) ? value : defaultValue
         }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) { /* empty */ }
     return defaultValue
 }

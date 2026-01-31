@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
@@ -30,6 +31,9 @@ import (
 var _ = Describe("Discover", func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
@@ -40,7 +44,7 @@ var _ = Describe("Discover", func() {
 	It("discovers nothing unless told so", func() {
 		allns := Namespaces()
 		for _, nsmap := range allns.Namespaces {
-			Expect(nsmap).To(HaveLen(0))
+			Expect(nsmap).To(BeEmpty())
 		}
 	})
 

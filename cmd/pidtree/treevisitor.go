@@ -17,10 +17,11 @@
 package main
 
 import (
-	"reflect"
 	"slices"
 
-	"github.com/thediveo/lxkns/cmd/internal/tool"
+	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )
@@ -33,15 +34,24 @@ type TreeVisitor struct {
 	Details   bool
 	PIDMap    model.PIDMapper
 	RootPIDNS model.Namespace
+	// render function for namespace icons, where its exact behavior depends on
+	// CLI flags.
+	NamespaceIcon func(model.Namespace) string
+	// render function for cgroup (path) names
+	CgroupDisplayName func(string) string
 }
+
+var _ asciitree.Visitor = (*TreeVisitor)(nil)
 
 // Roots returns the given "topmost" hierarchical process namespaces sorted;
 // it will be called on the list of "topmost" PID namespace(s). It won't be
 // called ever afterwards. In our case, we'll only ever pass in a slice of
 // exactly one PID namespace, the "root" PID namespace. However, we leave this
 // code in for instructional purposes.
-func (v *TreeVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
-	return tool.SortRootNamespaces(roots)
+func (v *TreeVisitor) Roots(roots any) (children []any) {
+	rootNamespaces, _ := roots.([]model.Namespace)
+	discover.SortNamespaces(rootNamespaces)
+	return xslices.Any(rootNamespaces)
 }
 
 // Label returns a node label text, which varies depending on whether the node
@@ -51,11 +61,11 @@ func (v *TreeVisitor) Roots(roots reflect.Value) (children []reflect.Value) {
 // label contains the name and "global" PID, but also the translated "local"
 // PID (which is the PID as seen from inside the PID namespace of the
 // Process).
-func (v *TreeVisitor) Label(node reflect.Value) (label string) {
-	if proc, ok := node.Interface().(*model.Process); ok {
-		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS)
+func (v *TreeVisitor) Label(node any) (label string) {
+	if proc, ok := node.(*model.Process); ok {
+		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS, v.CgroupDisplayName)
 	}
-	return PIDNamespaceLabel(node.Interface().(model.Namespace))
+	return PIDNamespaceLabel(node.(model.Namespace), v.NamespaceIcon)
 }
 
 // Get is called on nodes which can be either (1) PID namespaces or (2)
@@ -64,52 +74,71 @@ func (v *TreeVisitor) Label(node reflect.Value) (label string) {
 // returns process children, unless these children are in a different PID
 // namespace: then, their PID namespaces are returned instead. Polymorphism
 // galore!
-func (v *TreeVisitor) Get(node reflect.Value) (
-	label string, properties []string, children reflect.Value) {
+func (v *TreeVisitor) Get(node any) (label string, properties []string, children []any) {
 	// Label for this (1) PID namespace or (2) process.
 	label = v.Label(node)
 	// Children of this (1) PID namespace are always processes, but for (2)
 	// processes the children can be any combination of (a) child processes
 	// still in the same namespace and (b) child PID namespaces.
-	clist := []interface{}{}
-	if proc, ok := node.Interface().(*model.Process); ok {
-		pidns := proc.Namespaces[model.PIDNS]
-		childprocesses := slices.Clone(proc.Children)
-		slices.SortFunc(childprocesses, model.SortProcessByPID)
-		childpidns := map[species.NamespaceID]bool{}
-		for _, childproc := range childprocesses {
-			if childproc.Namespaces[model.PIDNS] == pidns {
-				clist = append(clist, childproc)
-			} else {
-				// We might also end up here in case we have insufficient
-				// privileges (capabilities) to discover the PID namespace of
-				// a process. In this case, we only can dump the processes,
-				// but with a signature indicating that we don't known about
-				// their namespaces. Otherwise, we insert a PID namespace
-				// node, from which the tree will branch into that PID
-				// namespace's leader processes.
-				cpidns := childproc.Namespaces[model.PIDNS]
-				if cpidns == nil {
-					// PID namespace is not known.
-					clist = append(clist, childproc)
-				} else {
-					// Ensure to add the same PID namespace only once.
-					if _, ok := childpidns[cpidns.ID()]; !ok {
-						clist = append(clist, cpidns)
-						childpidns[cpidns.ID()] = true
+	if proc, ok := node.(*model.Process); ok {
+		nodePIDNs := proc.Namespaces[model.PIDNS]
+		childProcs := slices.Clone(proc.Children)
+		slices.SortFunc(childProcs, model.SortProcessByPID)
+
+		childPIDNsSet := map[species.NamespaceID]struct{}{}
+		for _, childProc := range childProcs {
+			if childProc.Namespaces[model.PIDNS] == nodePIDNs {
+				children = append(children, childProc)
+				continue
+			}
+			// We might also end up here in case we have insufficient
+			// privileges (capabilities) to discover the PID namespace of
+			// a process. In this case, we only can dump the processes,
+			// but with a signature indicating that we don't known about
+			// their namespaces. Otherwise, we insert a PID namespace
+			// node, from which the tree will branch into that PID
+			// namespace's leader processes.
+			childPIDNs := childProc.Namespaces[model.PIDNS]
+			if childPIDNs == nil {
+				// PID namespace is not known.
+				children = append(children, childProc)
+				continue
+			}
+			// Ensure to add the same PID namespace only once.
+			if _, ok := childPIDNsSet[childPIDNs.ID()]; !ok {
+				// Avoid ending up in a circular loop if we are dealing
+				// with an intermediate process node where we could not
+				// determine its PID namespace and now our child yet has
+				// again a properly discovered PID namespace. Oh, the
+				// fallacies of non-root...
+				if nodePIDNs == nil {
+					proc /*sic!*/ := proc.Parent
+					hasPIDNsAbove := false
+					for proc != nil {
+						if proc.Namespaces[model.PIDNS] == childPIDNs {
+							hasPIDNsAbove = true
+							break
+						}
+						proc = proc.Parent
+					}
+					if hasPIDNsAbove {
+						children = append(children, childProc)
+						continue
 					}
 				}
+
+				children = append(children, childPIDNs)
+				childPIDNsSet[childPIDNs.ID()] = struct{}{}
 			}
 		}
 	} else {
 		// The child nodes of a PID namespace tree node will be the "leader"
 		// (or "topmost") processes inside the PID namespace.
-		leaders := slices.Clone(node.Interface().(model.Namespace).Leaders())
+		leaders := slices.Clone(node.(model.Namespace).Leaders())
 		slices.SortFunc(leaders, model.SortProcessByPID)
 		for _, proc := range leaders {
-			clist = append(clist, proc)
+			children = append(children, proc)
 		}
 	}
-	children = reflect.ValueOf(clist)
-	return
+	return label, nil, children
 }

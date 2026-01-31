@@ -23,8 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/lxkns/cmd/internal/pkg/output"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
+	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -32,7 +31,7 @@ import (
 // information such as not only the PID and process name, but also translating
 // the PID into the process' "own" PID namespace, if it differs from the
 // initial/root PID namespace.
-func ProcessLabel(proc *model.Process, pidmap model.PIDMapper, rootpidns model.Namespace) string {
+func ProcessLabel(proc *model.Process, pidmap model.PIDMapper, rootpidns model.Namespace, cgrpDisplayName func(string) string) string {
 	// Do we have namespace information for it? If yes, then we can translate
 	// between the process-local PID namespace and the "initial" PID
 	// namespace. For convenience, we show all PIDs in all PID namespaces,
@@ -62,7 +61,7 @@ func ProcessLabel(proc *model.Process, pidmap model.PIDMapper, rootpidns model.N
 				style.ProcessStyle.V(style.ProcessName(proc)), proc.PID)
 		}
 		if showCgroupController && proc.CpuCgroup != "" {
-			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(output.ControlgroupDisplayName(proc.CpuCgroup)))
+			s += fmt.Sprintf(" controlled by %q", style.ControlGroupStyle.V(cgrpDisplayName(proc.CpuCgroup)))
 		}
 		return s
 	}
@@ -79,8 +78,8 @@ func ProcessLabel(proc *model.Process, pidmap model.PIDMapper, rootpidns model.N
 // PIDNamespaceLabel returns the text label for a PID namespace, giving not
 // only the details about type (always PID) and ID, but additionally the
 // owner's UID and user name.
-func PIDNamespaceLabel(pidns model.Namespace) (label string) {
-	label = output.NamespaceIcon(pidns) +
+func PIDNamespaceLabel(pidns model.Namespace, nsicon func(model.Namespace) string) (label string) {
+	label = nsicon(pidns) +
 		style.PIDStyle.S(pidns.(model.NamespaceStringer).TypeIDString())
 	if pidns.Owner() != nil {
 		uid := pidns.Owner().UID()

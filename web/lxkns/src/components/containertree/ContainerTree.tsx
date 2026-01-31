@@ -12,18 +12,19 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
-import { Action, COLLAPSEALL, EXPANDALL } from 'app/treeaction'
-import { Discovery, Engine, Namespace } from 'models/lxkns'
+import type { Discovery, Engine, Namespace } from 'models/lxkns'
 import { Typography } from '@mui/material'
-import { SimpleTreeView, TreeItem } from '@mui/x-tree-view'
-import { EngineInfo } from 'components/engineinfo'
+import { SimpleTreeView, TreeItem, type TreeViewItemId } from '@mui/x-tree-view'
 import { compareEngines } from 'utils/engine'
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
 import { expandWorkloadInitiallyAtom } from 'views/settings'
 import { useAtom } from 'jotai'
+
+import type { ContainerTreeProps } from './types'
+import EngineInfo from 'components/engineinfo'
 
 const coll = new Intl.Collator(undefined, {
     numeric: true,
@@ -31,14 +32,7 @@ const coll = new Intl.Collator(undefined, {
 
 const enginekeyid = (engine: Engine) => `eng-${engine.type}-${engine.pid}`
 
-export interface ContainerTreeProps {
-    /** tree action */
-    action: Action
-    /** lxkns discovery data */
-    discovery: Discovery
-}
-
-export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
+export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
 
     const [expandWLInitially] = useAtom(expandWorkloadInitiallyAtom)
 
@@ -53,32 +47,26 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
 
     useEffect(() => { currExpanded.current = expanded }, [expanded])
 
-    // Trigger an action when the action "state" changes; we are ignoring any
-    // stuff appended to the commands, as we need to add noise to the commands
-    // in order to make state changes trigger. Oh, well, bummer.
-    useEffect(() => {
-        const engines = discovery.engines || {}
-        switch (action.action) {
-            case EXPANDALL: {
-                // expand all engines with their workload, as well as their
-                // namespaces.
-                const allengines = Object.values(engines)
-                    .map(engine => enginekeyid(engine))
-                const workloads = Object.values(engines)
-                    .map(engine => engine.containers)
-                    .flat()
-                    .map(cntr => cntr.process.pid.toString())
-                setExpanded(allengines.concat(workloads))
-                break
-            }
-            case COLLAPSEALL: {
-                const allengines = Object.values(engines)
-                    .map(engine => enginekeyid(engine))
-                setExpanded(allengines)
-                break
-            }
-        }
-    }, [action, discovery])
+    useImperativeHandle(apiRef, () => ({
+        expandAll() {
+            const engines = discovery.engines || {}
+            // expand all engines with their workload, as well as their
+            // namespaces.
+            const allengines = Object.values(engines)
+                .map(engine => enginekeyid(engine))
+            const workloads = Object.values(engines)
+                .map(engine => engine.containers)
+                .flat()
+                .map(cntr => cntr.process.pid.toString())
+            setExpanded(allengines.concat(workloads))
+        },
+        collapseAll() {
+            const engines = discovery.engines || {}
+            const allengines = Object.values(engines)
+                .map(engine => enginekeyid(engine))
+            setExpanded(allengines)
+        },
+    }))
 
     useEffect(() => {
         const engines = discovery.engines || {}
@@ -106,7 +94,7 @@ export const ContainerTree = ({ action, discovery }: ContainerTreeProps) => {
     // update the tree's expand state accordingly. This allows us to
     // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
     // state of the tree.
-    const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+    const handleToggle = (_event: React.SyntheticEvent | null, nodeIds: Array<TreeViewItemId>) => {
         setExpanded(nodeIds)
     }
 

@@ -33,10 +33,10 @@ var mountpathmap = mounts.NewMountPathMap([]mntinfo.Mountinfo{
 	{MountPoint: "/b", MountID: 4, ParentID: 2},
 })
 
-type M map[string]interface{}
+type M map[string]any
 
-func (m M) get(path string) interface{} {
-	val, err := jsonpath.Get(path, map[string]interface{}(m))
+func (m M) get(path string) any {
+	val, err := jsonpath.Get(path, map[string]any(m))
 	Expect(err).NotTo(HaveOccurred(), "no %q in %v", path, m)
 	return val
 }
@@ -47,7 +47,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		jtext, err := json.Marshal(MountPathMap(mountpathmap))
 		Expect(err).NotTo(HaveOccurred())
 		var m M
-		Expect(json.Unmarshal([]byte(jtext), &m)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal([]byte(jtext), &m)).To(Succeed())
 
 		rootid := m.get(`$["/"].pathid`).(float64)
 		Expect(rootid).NotTo(BeZero())
@@ -67,7 +67,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		jtext, err := json.Marshal(mpm)
 		Expect(err).NotTo(HaveOccurred())
 		var m MountPathMap
-		Expect(json.Unmarshal(jtext, &m)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(jtext, &m)).To(Succeed())
 		for path, mountpath := range m {
 			// Checks mount path hierarchy...
 			if mpm[path].Parent != nil {
@@ -119,7 +119,7 @@ var _ = Describe("NamespacedMountMap JSON", func() {
 		jtext, err := json.Marshal(NamespacedMountMap(allm))
 		Expect(err).NotTo(HaveOccurred())
 		var m M
-		Expect(json.Unmarshal([]byte(jtext), &m)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal([]byte(jtext), &m)).To(Succeed())
 		Expect(m.get(`$["123"]`)).NotTo(BeNil())
 		Expect(m.get(`$["123"]["/"]`)).NotTo(BeNil())
 	})

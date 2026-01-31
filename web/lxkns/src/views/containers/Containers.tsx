@@ -12,23 +12,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { Discovery } from 'models/lxkns'
-import { Action } from 'app/treeaction'
+import type { Discovery } from 'models/lxkns'
 import { Box } from '@mui/material'
 import ContainerTree from 'components/containertree'
+import type { TreeAPI } from 'app/treeapi'
 
 
 export interface ContainersProps {
+    /** tree API for expansion, collapsing */
+    apiRef?: React.Ref<TreeAPI>
     /** lxkns discovery data */
     discovery: Discovery
-    /** tree action */
-    action: Action
 }
 
-export const Containers = ({ discovery, action }: ContainersProps) => (
+export const Containers = ({ apiRef, discovery }: ContainersProps) => (
     <Box pl={1}>
-        <ContainerTree discovery={discovery} action={action} />
+        <ContainerTree discovery={discovery} apiRef={apiRef} />
     </Box>
 )

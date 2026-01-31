@@ -12,29 +12,56 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { StorybookConfig } from '@storybook/react-vite'
+import type { StorybookConfig as StorybookViteConfig } from '@storybook/react-vite'
+import { mdxConfiguration } from '../src/mdxconfig.ts'
+import type { Plugin } from 'vite'
 
-const config: StorybookConfig = {
+const config: StorybookViteConfig = {
     framework: {
         name: '@storybook/react-vite',
         options: {},
     },
+
     stories: [
-        '../src/**/*.stories.@(js|jsx|ts|tsx)',
-        '../src/**/*.sb.mdx',
+        '../src/**/*.stories.@(ts|tsx)',
+        '../src/*.mdx',
     ],
+
     addons: [
+        {
+            name: '@storybook/addon-docs',
+            options: {
+                mdxPluginOptions: {
+                    mdxCompileOptions: {
+                        ...mdxConfiguration,
+                    }
+                },
+            }
+        },
         '@storybook/addon-links',
-        '@storybook/addon-essentials',
-        '@storybook/addon-interactions',
     ],
+
     docs: {
-        autodocs: 'tag',
+        defaultName: 'Description',
     },
+
     core: {
         disableTelemetry: true,
         disableWhatsNewNotifications: true,
     },
+
+    typescript: {
+        check: true,
+    },
+
+    async viteFinal(config) {
+        // drop the @mdx-js/rollup plugin that we get from the vite
+        // configuration, as this otherwise causes problems with the mdx plugin
+        // brought in by @storybook/addon-docs.
+        config.plugins = config.plugins?.filter(e => (e as Plugin)?.name !== '@mdx-js/rollup')
+        return config
+    },
+
 }
 
 export default config

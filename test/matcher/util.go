@@ -25,7 +25,7 @@ import (
 // withContainer returns a matcher that transforms actual into a container value
 // and then applies the specified matcher.
 func withContainer(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
-	return o.WithTransform(func(actual interface{}) (model.Container, error) {
+	return o.WithTransform(func(actual any) (model.Container, error) {
 		switch container := actual.(type) {
 		case model.Container:
 			return container, nil
@@ -42,7 +42,7 @@ func withContainer(matcherName string, matcher types.GomegaMatcher) types.Gomega
 // withGroup returns a matcher that transforms actual into a group value and
 // then applies the specified matcher.
 func withGroup(matcherName string, matcher types.GomegaMatcher) types.GomegaMatcher {
-	return o.WithTransform(func(actual interface{}) (model.Group, error) {
+	return o.WithTransform(func(actual any) (model.Group, error) {
 		switch group := actual.(type) {
 		case model.Group:
 			return group, nil

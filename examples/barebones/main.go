@@ -48,7 +48,7 @@ func main() {
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
 	)
 
-	for nsidx := model.MountNS; nsidx < model.NamespaceTypesCount; nsidx++ {
+	for nsidx := range model.NamespaceTypesCount {
 		for _, ns := range result.SortedNamespaces(nsidx) {
 			fmt.Println(ns.String())
 		}

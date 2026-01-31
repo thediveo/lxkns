@@ -12,11 +12,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 
 import { Pause, PlayArrow } from '@mui/icons-material'
 import { styled, Tooltip } from '@mui/material'
-import { Busybody } from 'models/lxkns'
+import { type Busybody } from 'models/lxkns'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import clsx from 'clsx'
 
@@ -52,15 +51,22 @@ const CgroupPath = styled('span')(({ theme }) => ({
 
 
 export interface CgroupInfoProps {
-    /** process or task to take the cgroup controller information from. */
+    /** the process or task to take the cgroup controller information from. */
     busybody: Busybody
     /** optional CSS class name(s). */
     className?: string
 }
 
 /**
- * The `CgroupInfo` component renders information about a process's or task's
- * control group.
+ * `CgroupInfo` renders information about a process's or task's control group.
+ * In particular:
+ * 
+ * - the running/frozen state as either a play or pause symbol,
+ * 
+ * - the (unified) cgroup path.
+ * 
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const CgroupInfo = ({ busybody, className }: CgroupInfoProps) => {
 

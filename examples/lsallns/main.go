@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/klo"
@@ -32,7 +33,6 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher"
 	"github.com/thediveo/whalewatcher/watcher/moby"
-	"golang.org/x/exp/slices"
 )
 
 // NamespaceRow stores information about a single namespace, to be printed

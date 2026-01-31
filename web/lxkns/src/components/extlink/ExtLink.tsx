@@ -12,9 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { styled } from '@mui/material'
+import { Link, styled } from '@mui/material'
 
 import LaunchIcon from '@mui/icons-material/Launch'
 
@@ -51,22 +49,25 @@ export interface ExtLinkProps {
 }
 
 /**
- * Renders an external link together with an "external link" icon before the
- * link text. The external link opens in a new blank tab. Additionally, the link
- * gets set to
+ * `ExtLink` renders an external link adorned with an "external link" icon
+ * before (or alternatively after) the link text. This external link always
+ * opens in a new blank tab. Additionally, the link gets set to
  * "[noopener](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/noopener)"
  * and
  * "[noreferrer](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/noreferrer)"
  * in order to avoid granting the new browsing context access to your single
  * page app and leaking referrer information.
+ * 
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const ExtLink = ({ href, iconposition, children }: ExtLinkProps) => (
     <NixWieWegHier>
-        {iconposition !== 'after' && <LaunchIcon className="before" />}<a
+        {iconposition !== 'after' && <LaunchIcon className="before" />}<Link 
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-        >{children}</a>{iconposition === 'after' && <LaunchIcon className="after" />}
+        >{children}</Link>{iconposition === 'after' && <LaunchIcon className="after" />}
     </NixWieWegHier>
 )
 

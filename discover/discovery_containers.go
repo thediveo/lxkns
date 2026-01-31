@@ -19,12 +19,11 @@ package discover
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/plural"
 
 	_ "github.com/thediveo/lxkns/decorator/all" // register all decorator plugins
 )
@@ -97,9 +96,8 @@ func discoverContainers(result *Result) {
 	for engine := range enginesPIDns {
 		engines = append(engines, engine)
 	}
-	log.Infof("discovered %s managed by %s",
-		plural.Elements(len(containers), "containers"),
-		plural.Elements(len(engines), "container engines"))
+	slog.Info("discovered containers",
+		slog.Int("count", len(containers)), slog.Int("engine_count", len(engines)))
 	// Run registered Decorators on discovered containers.
 	for _, decorator := range plugger.Group[decorator.Decorate]().Symbols() {
 		decorator(engines, result.Options.Labels)

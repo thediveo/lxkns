@@ -12,15 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
 
 import ProcessIcon from 'icons/Process'
 import Init1Icon from 'icons/Init1'
-import { Process } from 'models/lxkns'
+import type { Process } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo/ContainerInfo'
 import CgroupInfo from 'components/cgroupinfo/CgroupInfo'
 import CPUList from 'components/cpulist/CPUList'
@@ -82,24 +80,37 @@ export interface ProcessInfoProps {
 }
 
 /** 
- * The `ProcessInfo` component renders only (almost) minimal information about a
- * single Linux OS process to make it easily identifyable:
+ * `ProcessInfo` renders certain information about a single Linux OS process to
+ * make it easily identifyable (see
+ * [TaskInfo](?path=/docs/process-taskinfo--docs) for displaying OS task-related
+ * details):
  *
- * - if associated with a container: container information (name, group).
+ * - when associated with a container: the **container name** and "**group**";
+ *   this group can be a Compose project, a Kubernetes namespace, ... This
+ *   information is hidden when `short=true`.
  *
- * - name of the process, which is has been either set by the process itself, or
- *   has been derived from the process' command line. Please note that this
- *   component only renders the `name` field, so this has to be set.
- * - PID.
- * - cgroup path, if path is not empty.
- * - pause indication if process is freezing or has been frozen.
+ * - the **name of the process**, which is has been either set by the process
+ *   itself, or has been derived from the process' command line. Please note
+ *   that this component only renders the `process.name` field, so this has to
+ *   be set.
+ * 
+ * - the **PID**.
+ * 
+ * - the **cgroup path** unless the path empty (which means "we don't known").
+ *   This information is hidden when `short=true`.
+ * 
+ * - a **pause indication** when process is freezing or has been frozen. This
+ *   information is hidden when `short=true`.
  *
- * On purpose, this component doesn't render more comprehensive information
+ * On purpose, this component doesn't render even more comprehensive information
  * (such as parent and children, et cetera), as it is to be used in concise
  * contexts, such as a single process tree node.
  *
  * Also in this spirit, this component doesn't render the cgroup-related
  * information in case the process belongs to a container.
+ * 
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
     return !!process && (

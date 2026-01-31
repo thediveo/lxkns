@@ -15,6 +15,7 @@
 package discover
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -36,6 +37,9 @@ var _ = Describe("Discover hierarchy", func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("finds hidden hierarchical user namespaces", func() {

@@ -78,7 +78,7 @@ var _ = Describe("PIDMap twin", func() {
 		It("marshals PIDMap", func() {
 			pmt := NewPIDMap(WithPIDMap(pmap))
 			j, err := json.Marshal(pmt)
-			Expect(err).To(Succeed())
+			Expect(err).NotTo(HaveOccurred())
 			obj := []namespacedPIDs{}
 			Expect(json.Unmarshal(j, &obj)).To(Succeed())
 			Expect(obj).To(HaveLen(2))
@@ -107,7 +107,7 @@ var _ = Describe("PIDMap twin", func() {
 		It("survives a full roundtrip without hiccup", func() {
 			// Marshal the existing PID map.
 			j, err := json.Marshal(NewPIDMap(WithPIDMap(allpidmap)))
-			Expect(err).To(Succeed())
+			Expect(err).NotTo(HaveOccurred())
 
 			// Unmarshal the JSON soup using the existing PID namespace map.
 			pmt2 := NewPIDMap(WithPIDNamespaces(allns.Namespaces[model.PIDNS]))
@@ -118,7 +118,7 @@ var _ = Describe("PIDMap twin", func() {
 				return s
 			}
 			Expect(json.Unmarshal(j, &pmt2)).To(Succeed())
-			Expect(len(pmt2.PIDMap.(pidmap.PIDMap))).To(Equal(len(allpidmap.(pidmap.PIDMap))), dumponerror)
+			Expect(pmt2.PIDMap.(pidmap.PIDMap)).To(HaveLen(len(allpidmap.(pidmap.PIDMap))), dumponerror)
 			Expect(pmt2.PIDMap).To(Equal(allpidmap), dumponerror)
 		})
 

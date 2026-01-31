@@ -12,14 +12,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
 import { Box } from '@mui/material'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { SmartA } from 'components/smarta'
 
 import AboutContent from "./About.mdx"
-import { MDXComponents } from 'mdx/types'
+import type { MDXComponents } from 'mdx/types'
 
 
 export const About = () => (

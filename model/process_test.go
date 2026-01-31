@@ -15,6 +15,7 @@
 package model
 
 import (
+	"log/slog"
 	"os"
 	"runtime"
 	"slices"
@@ -108,7 +109,7 @@ var _ = Describe("processes and tasks", func() {
 			proc42 := NewProcessInProcfs(PIDType(42), false, "test/proctable/proc")
 			Expect(proc42.Cmdline).To(HaveLen(3))
 			Expect(proc42.Basename()).To(Equal("mumble.exe"))
-			Expect(proc42.Cmdline[2], "arg2")
+			Expect(proc42.Cmdline[2]).To(Equal("arg2"))
 
 			// $0 doesn't contain any "/"
 			proc667 := NewProcessInProcfs(PIDType(667), false, "test/proctable/kaputt")
@@ -199,6 +200,9 @@ var _ = Describe("process table", func() {
 	})
 
 	It("gathers from real /proc", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		proc := pt[PIDType(os.Getpid())]
@@ -208,6 +212,9 @@ var _ = Describe("process table", func() {
 	})
 
 	It("returns Process objects for PIDs", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		pt := NewProcessTable(false)
 		Expect(pt).NotTo(BeNil())
 		procs := pt.ProcessesByPIDs(PIDType(os.Getpid()))
@@ -240,7 +247,7 @@ var _ = Describe("cpu affinity", func() {
 	It("retrieves cpu affinities of processes and tasks", func() {
 		proc := NewProcess(PIDType(os.Getpid()), true)
 		Expect(proc).NotTo(BeNil())
-		Expect(proc.RetrieveAffinityScheduling()).To(Succeed())
+		Expect(proc.RetrieveAffinity()).To(Succeed())
 		Expect(proc.Affinity).NotTo(BeEmpty())
 		Expect(proc.Nice).To(Equal(0))
 		Expect(proc.Priority).To(Equal(0))
@@ -249,7 +256,7 @@ var _ = Describe("cpu affinity", func() {
 		defer runtime.UnlockOSThread()
 		var task *Task
 		Expect(proc.Tasks).To(ContainElement(HaveField("TID", PIDType(unix.Gettid())), &task))
-		Expect(task.RetrieveAffinityScheduling()).To(Succeed())
+		Expect(task.RetrieveAffinity()).To(Succeed())
 		Expect(task.Affinity).NotTo(BeEmpty())
 		Expect(task.Affinity).To(Equal(proc.Affinity))
 		Expect(proc.Nice).To(Equal(0))
@@ -268,22 +275,27 @@ var _ = Describe("cpu affinity", func() {
 		var task *Task
 		Expect(proc.Tasks).To(ContainElement(HaveField("TID", PIDType(tid)), &task))
 
-		fun := func() {
+		func() {
 			oldschedattr := Successful(unix.SchedGetAttr(0, 0))
 			Expect(oldschedattr.Size).NotTo(BeZero())
 			defer func() {
 				Expect(unix.SchedSetAttr(0, oldschedattr, 0)).To(Succeed())
 			}()
+
 			newschedattr := *oldschedattr
 			newschedattr.Flags = unix.SCHED_FLAG_RESET_ON_FORK
 			newschedattr.Policy = unix.SCHED_BATCH
 			newschedattr.Nice = -20
 			Expect(unix.SchedSetAttr(0, &newschedattr, 0)).To(Succeed())
-			Expect(task.RetrieveAffinityScheduling()).To(Succeed())
-		}
-		fun()
+
+			proc = NewProcess(PIDType(os.Getpid()), true)
+		}()
 
 		runtime.UnlockOSThread()
+
+		Expect(proc).NotTo(BeNil())
+		Expect(proc.Tasks).To(ContainElement(HaveField("TID", PIDType(tid)), &task))
+		Expect(task.RetrieveAffinity()).To(Succeed())
 
 		Expect(task.Policy).To(Equal(unix.SCHED_BATCH))
 		Expect(task.Nice).To(Equal(-20))

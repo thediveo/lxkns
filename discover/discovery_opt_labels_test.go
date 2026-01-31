@@ -16,7 +16,7 @@ package discover
 
 import (
 	"context"
-	"os"
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/go-plugger/v3"
@@ -64,21 +64,16 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	const name = "decorator-test-container"
 
 	var sleepy *morbyd.Container
-	var docksock string
 
 	BeforeAll(func(ctx context.Context) {
-		// In case we're run as root we use a procfs wormhole so we can access
-		// the Docker socket even from a test container without mounting it
-		// explicitly into the test container.
-		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
-		}
-
 		By("creating a new Docker session for testing")
 		sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=discover.labels")))
 		DeferCleanup(func(ctx context.Context) {
@@ -97,7 +92,10 @@ var _ = Describe("decorator discovery labels", Ordered, func() {
 	})
 
 	It("passes discovery labels to decorators", func() {
-		mw, err := moby.New(docksock, nil)
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+		mw, err := moby.New("", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())

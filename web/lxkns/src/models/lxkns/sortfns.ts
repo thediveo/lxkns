@@ -12,9 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { Busybody, isTask, Namespace, Process, Task } from './model'
+import { devContainerFolder } from './devcontainer'
+import type { Busybody, Namespace, Process, Task } from './model'
+import { isTask } from './model'
 
-const prefixLabelName = 'turtlefinder/container/prefix'
+export const prefixLabelName = 'turtlefinder/container/prefix'
 
 const coll = new Intl.Collator(undefined, {
     numeric: true,
@@ -60,7 +62,7 @@ export const compareNamespaceByTypeId = (ns1: Namespace, ns2: Namespace) => {
  * @param ns2 another namespace
  */
 export const compareNamespaceByRefTypeId = (ns1: Namespace, ns2: Namespace) => {
-    const beforeAfter = coll.compare(ns1.reference.join(":"), ns2.reference.join(":"))
+    const beforeAfter = coll.compare(ns1.reference.join(':'), ns2.reference.join(':'))
     return beforeAfter !== 0 ? beforeAfter : compareNamespaceByTypeId
 }
 
@@ -68,11 +70,15 @@ const sortableName = (c: Process | Busybody) => {
     if (isTask(c) || !c.container) {
         return '/'+c.name
     }
+    const devContainerName = devContainerFolder(c.container)
     const prefix = c.container.labels[prefixLabelName]
-    if (!prefix) {
-        return '/'+c.container.name
-    }
-    return '/'+prefix+'/'+c.container.name
+    // nota bene: ' ' sorts before anything else, '_' before '-', and '/'
+    // unfortunately after '-' (so it is not really useful as a group
+    // separator).
+    const sname = (prefix ? prefix + ' ' : '') +
+        (devContainerName ? devContainerName : c.container.name) + ' ' +
+        c.container.name
+    return sname
 }
 
 /**

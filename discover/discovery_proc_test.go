@@ -16,9 +16,12 @@ package discover
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"regexp"
 	"runtime"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
@@ -34,11 +37,17 @@ import (
 var _ = Describe("Discover from processes", Ordered, func() {
 
 	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
 	It("finds at least the namespaces lsns finds", func() {
@@ -66,17 +75,17 @@ var _ = Describe("Discover from processes", Ordered, func() {
 				// the spurious false positives due to test basher scripts
 				// spinning up and down with some delay, so lsnslist and lxkns
 				// might see different system states.
-				lsnslist := ""
+				var lsnslist strings.Builder
 				for _, entry := range alllsns {
-					lsnslist += fmt.Sprintf("\t%v\n", entry)
+					fmt.Fprintf(&lsnslist, "\t%v\n", entry)
 				}
-				lxnslist := ""
-				for nstype := model.NamespaceTypeIndex(0); nstype < model.NamespaceTypesCount; nstype++ {
+				var lxnslist strings.Builder
+				for nstype := range model.NamespaceTypesCount {
 					for _, ns := range allns.Namespaces[nstype] {
-						lxnslist += fmt.Sprintf("\t%s\n", ns.String())
+						fmt.Fprintf(&lxnslist, "\t%s\n", ns.String())
 					}
 				}
-				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", lsns.Type, lsns.NS, lsnslist, lxnslist)
+				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", lsns.Type, lsns.NS, lsnslist.String(), lxnslist.String())
 			})
 			// As of lsns util-linux 2.39.1 we now get bind-mounted namespaces
 			// as well, so we need to cover this case especially.
@@ -99,10 +108,8 @@ var _ = Describe("Discover from processes", Ordered, func() {
 				pids := []model.PIDType{}
 				for p != nil {
 					pids = append(pids, p.PID)
-					for _, lPID := range leaders {
-						if lPID == p.PID {
-							return
-						}
+					if slices.Contains(leaders, p.PID) {
+						return
 					}
 					p = p.Parent
 				}

@@ -12,14 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
 import clsx from 'clsx'
 
 import Tooltip from '@mui/material/Tooltip'
 
-import { Namespace } from 'models/lxkns'
+import type { Namespace } from 'models/lxkns'
 
-import { darken, alpha, lighten, Theme, styled } from '@mui/material'
+import { darken, alpha, lighten, type Theme, styled } from '@mui/material'
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
 
 
@@ -55,7 +54,6 @@ const namespaceInitial = "initial-namespace"
 const styles = (nstype: string, theme: Theme, mixin?: object) => ({
     [`&.${nstype}`]: {
         backgroundColor: theme.palette.namespace[nstype as keyof typeof theme.palette.namespace],
-        /* eslint-disable @typescript-eslint/no-explicit-any */
         ...mixin,
     },
     [`&.${nstype}.${namespaceInitial}`]: {
@@ -131,6 +129,10 @@ export interface NamespaceBadgeProps {
  * Additionally, the badge gets a namespace type-specific icon. Finally, if the
  * namespace is an initial namespace then it gets visually marked using a dashed
  * border.
+ * 
+ * **Note:** namespace badges have a fixed width in order to avoid ragged
+ * namespace stacks. At the same time, this fixed width must account for the
+ * longest namespace type, which happens to be "cgroup" in normal weight.
  */
 export const NamespaceBadge = ({ namespace, tooltipprefix, shared, className }: NamespaceBadgeProps) => {
     // Ouch ... Tooltip won't display its tooltip on a <> child, but
@@ -141,7 +143,7 @@ export const NamespaceBadge = ({ namespace, tooltipprefix, shared, className }: 
     // https://github.com/facebook/create-react-app/issues/8687 ... which still
     // is open.
     return (
-        <Tooltip title={`${tooltipprefix ? tooltipprefix + ' ' : ''}${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial' : ''} ${namespaceTypeInfo[namespace.type].tooltip} namespace`}>
+        <Tooltip title={`${tooltipprefix ? tooltipprefix + ' ' : ''}${shared ? '«shared» ' : ''} ${namespace.initial ? 'initial' : ''} ${namespaceTypeInfo[namespace.type]?.tooltip} namespace`}>
             <Badge className={clsx(
                 namespace.type,
                 shared && namespaceShared,

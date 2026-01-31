@@ -1,8 +1,0 @@
-#!/bin/sh
-set -e
-TIMEOUT=3m
-echo "starting tests... 🦗 🦗 🦗"
-echo "PHASE I: as root 🤪"
-go test -v -p 1 -timeout ${TIMEOUT} -exec sudo ./...
-echo "PHASE II: as non-root user 😇"
-go test -v -p 1 -timeout ${TIMEOUT} ./...

@@ -21,15 +21,20 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/thediveo/go-asciitree"
+	"github.com/thediveo/clippy"
+	"github.com/thediveo/go-asciitree/v2"
 	"github.com/thediveo/lxkns"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/cli"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/task"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/turtles"
+	"github.com/thediveo/lxkns/cmd/cli/icon"
+	"github.com/thediveo/lxkns/cmd/cli/reflabel"
+	"github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/style"
+	"github.com/thediveo/lxkns/cmd/cli/task"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+
+	_ "github.com/thediveo/clippy/debug"
 )
 
 func newRootCmd() (rootCmd *cobra.Command) {
@@ -49,10 +54,11 @@ func newRootCmd() (rootCmd *cobra.Command) {
 			return nil
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return cli.BeforeCommand(cmd)
+			return clippy.BeforeCommand(cmd)
 		},
 		RunE: nscapscmd,
 	}
+	silent.PreferSilence(rootCmd)
 	// Sets up the flags.
 	rootCmd.PersistentFlags().Uint32P("pid", "p", 0,
 		"PID of process for which to calculate capabilities")
@@ -66,7 +72,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	rootCmd.PersistentFlags().BoolVar(&briefCaps,
 		"brief", false,
 		"show only a summary statement for the capabilities in the target namespace")
-	cli.AddFlags(rootCmd)
+	clippy.AddFlags(rootCmd)
 	return
 }
 
@@ -123,7 +129,7 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 		discover.WithStandardDiscovery(),
 		discover.WithContainerizer(cizer),
 		discover.WithPIDMapper(), // recommended when using WithContainerizer.
-		task.FromTasks(cmd),
+		task.DiscoveryOption(cmd),
 	)
 	pidmap := allns.PIDMap
 	rootpidns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.PIDNS]
@@ -163,17 +169,20 @@ func nscapscmd(cmd *cobra.Command, args []string) error {
 	}
 	// Next, create the separate process and target (node) branches,
 	// then combine them to the extend possible for rendering.
-	procbr, err := processbranch(proc, proceuid)
+	procbr, err := branchOfProcess(proc, proceuid)
 	if err != nil {
 		return err
 	}
-	tbr := targetbranch(tns, tcaps)
+	tbr := branchOfTarget(tns, tcaps)
 	root := combine(procbr, tbr)
 	// Finally, we can render this mess.
-	fmt.Fprint(os.Stdout,
+	_, err = fmt.Fprint(cmd.OutOrStdout(),
 		asciitree.Render(
 			root,
-			&NodeVisitor{},
+			&NodeVisitor{
+				NamespaceIcon:           icon.NamespaceIcon(cmd),
+				NamespaceReferenceLabel: reflabel.NamespaceReferenceLabel(cmd),
+			},
 			style.NamespaceStyler))
-	return nil
+	return err
 }

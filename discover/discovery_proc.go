@@ -31,14 +31,14 @@
 package discover
 
 import (
+	"context"
+	"log/slog"
 	"os"
 	"strconv"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -47,17 +47,17 @@ import (
 // filesystem: "/proc/[PID]/ns/...". It does not check any other places, as
 // these are covered by separate discovery functions.
 func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
-	andTasks := ""
+	src := "processes"
 	if result.Options.ScanTasks {
-		andTasks = " and tasks"
+		src = "processes,tasks"
 	}
 	if !result.Options.ScanProcs {
-		log.Infof("skipping discovery of %s namespaces used by processes%s",
-			andTasks, nstype.Name())
+		slog.Info("skipping discovery of namespaces",
+			slog.String("src", src), slog.String("type", nstype.Name()))
 		return
 	}
-	log.Debugf("discovering %s namespaces used by processes%s...",
-		andTasks, nstype.Name())
+	slog.Debug("discovering namespaces",
+		slog.String("src", src), slog.String("type", nstype.Name()))
 
 	// Things we want to do only once in order to not do them inside the
 	// loops... yeah, we obviously don't trust the compiler to correctly
@@ -71,6 +71,7 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 	}
 	nsmap := result.Namespaces[nstypeidx]
 
+	debugEnabled := slog.Default().Enabled(context.Background(), slog.LevelDebug)
 	total := 0
 	// For all processes (but not yet any tasks/threads) listed in /proc try to
 	// gather the namespaces of a given type they use.
@@ -92,10 +93,10 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			continue
 		}
 		if isnew {
-			if log.LevelEnabled(log.DebugLevel) {
-				log.Debugf("found namespace %s at %s[=%s]",
-					foundns.(model.NamespaceStringer).TypeIDString(),
-					nsref, proc.Name)
+			if debugEnabled {
+				slog.Debug("found namespace from process",
+					slog.String("namespace", foundns.(model.NamespaceStringer).TypeIDString()),
+					slog.String("ref", nsref), slog.String("process", proc.Name))
 			}
 			total++
 		}
@@ -109,10 +110,10 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 		if foundns == nil || !isnew {
 			continue
 		}
-		if log.LevelEnabled(log.DebugLevel) {
-			log.Debugf("found namespace %s at %s[=%s]",
-				foundns.(model.NamespaceStringer).TypeIDString(),
-				nsref, proc.Name)
+		if debugEnabled {
+			slog.Debug("found namespace from process",
+				slog.String("namespace", foundns.(model.NamespaceStringer).TypeIDString()),
+				slog.String("ref", nsref), slog.String("process", proc.Name))
 		}
 		total++
 	}
@@ -147,10 +148,10 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 				newns.(namespaces.NamespaceConfigurer).AddLooseThread(task)
 			}
 			if isnew {
-				if log.LevelEnabled(log.DebugLevel) {
-					log.Debugf("found namespace %s at %s[=task of %s]",
-						newns.(model.NamespaceStringer).TypeIDString(),
-						nsref, proc.Name)
+				if debugEnabled {
+					slog.Debug("found namespace from task",
+						slog.String("namespace", newns.(model.NamespaceStringer).TypeIDString()),
+						slog.String("ref", nsref), slog.String("proc", proc.Name))
 				}
 				total++
 			}
@@ -166,17 +167,18 @@ func discoverFromProc(nstype species.NamespaceType, _ string, result *Result) {
 			if newns != procns {
 				newns.(namespaces.NamespaceConfigurer).AddLooseThread(task)
 			}
-			if log.LevelEnabled(log.DebugLevel) {
-				log.Debugf("found namespace %s at %s[=%s]",
-					newns.(model.NamespaceStringer).TypeIDString(),
-					nsref, proc.Name)
+			if debugEnabled {
+				slog.Debug("found namespace from task",
+					slog.String("namespace", newns.(model.NamespaceStringer).TypeIDString()),
+					slog.String("ref", nsref), slog.String("proc", proc.Name))
 			}
 			total++
 		}
 	}
 
-	log.Infof("found %s joined by processes%s",
-		plural.Elements(total, "%s namespaces", nstype.Name()), andTasks)
+	slog.Info("found namespaces",
+		slog.String("src", src), slog.String("type", nstype.Name()),
+		slog.Int("count", total))
 }
 
 type determineNamespaceFlags uint8
@@ -214,7 +216,7 @@ func determineNamespace(
 	// carry out multiple query operations and avoid repeated opening and
 	// closing for each individual query on the same namespace.
 	nsf, _ := ops.NewTypedNamespaceFile(f, nstype)
-	defer nsf.Close() // ...we've taken over ownership of the *os.File as well!
+	defer func() { _ = nsf.Close() }() // ...we've taken over ownership of the *os.File as well!
 	nsid, err := nsf.ID()
 	if err != nil {
 		return nil, false

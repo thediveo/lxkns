@@ -17,10 +17,10 @@
 package discover
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -34,8 +34,8 @@ func PIDfromPath(path string) model.PIDType {
 	}
 	path = path[len(procPrefix):]
 	pidfield := path
-	if idx := strings.Index(path, "/"); idx >= 0 {
-		pidfield = path[:idx]
+	if before, _, ok := strings.Cut(path, "/"); ok {
+		pidfield = before
 	}
 	// PIDs are unsigned, but passed as int32...
 	pid, err := strconv.ParseUint(pidfield, 10, 31)
@@ -73,7 +73,8 @@ func NewlyProcfsPathIsBetter(newly, known model.NamespaceRef, processes model.Pr
 			return false
 		}
 	}
-	log.Warnf("newly: %s, known: %s", newly.String(), known.String())
+	slog.Warn("found better namespace reference for earlier discovered namespace",
+		slog.String("new", newly.String()), slog.String("known", known.String()))
 
 	newproc := processes[newpid]
 	knownproc := processes[knownpid]

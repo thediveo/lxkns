@@ -12,48 +12,142 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { NamespaceBadge } from './NamespaceBadge'
-import { initProc } from 'models/lxkns/mock'
-import { Namespace } from 'models/lxkns'
+import { NamespaceBadge } from "./NamespaceBadge";
+import { initProc } from "models/lxkns/mock";
+import { NamespaceType, type Namespace } from "models/lxkns";
 
 const meta: Meta<typeof NamespaceBadge> = {
-    title: 'Namespace/NamespaceBadge',
+    title: "Namespace/NamespaceBadge",
     component: NamespaceBadge,
     argTypes: {
         namespace: { control: false },
     },
-    tags: ['autodocs'],
-}
+    tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof NamespaceBadge>
+type Story = StoryObj<typeof NamespaceBadge>;
 
 const nspace: Namespace = {
     nsid: initProc.namespaces.pid.nsid,
     type: initProc.namespaces.pid.type,
-} as Namespace
+    initial: false,
+} as Namespace;
 
 export const Basic: Story = {
     args: {
         namespace: nspace,
     },
-}
+};
 
 export const Initial: Story = {
     args: {
         namespace: {
             ...nspace,
             initial: true,
-        }
+        },
     },
-}
+    parameters: {
+        docs: {
+            description: {
+                story: 'Notice how "initial" namespaces get a dashed border.',
+            },
+        },
+    },
+};
 
 export const Shared: Story = {
     args: {
         namespace: nspace,
         shared: true,
     },
-}
+    parameters: {
+        docs: {
+            description: {
+                story: 'Notice how "shared" namespaces are rendered in muted colors.',
+            },
+        },
+    },
+};
+
+export const UserNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.user,
+        },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Notice how user namespaces are always using bold text.',
+            },
+        },
+    },
+};
+
+export const PID_Namespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.pid,
+        },
+    },
+};
+
+export const CgroupNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.cgroup,
+        },
+    },
+};
+
+export const IPCNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.ipc,
+        },
+    },
+};
+
+export const MountNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.mnt,
+        },
+    },
+};
+
+export const NetworkNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.net,
+        },
+    },
+};
+
+export const UnixTimesharingSystemNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.uts,
+        },
+    },
+};
+
+export const TimeNamespace: Story = {
+    args: {
+        namespace: {
+            ...nspace,
+            type: NamespaceType.time,
+        },
+    },
+};

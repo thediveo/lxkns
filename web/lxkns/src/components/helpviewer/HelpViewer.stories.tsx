@@ -12,28 +12,27 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { MemoryRouter } from 'react-router'
-import type { Meta, StoryObj } from '@storybook/react'
-import { MuiMarkdown } from 'components/muimarkdown'
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { MuiMarkdown, type MuiMarkdownProps } from "components/muimarkdown"
 
-import { HelpViewer } from './HelpViewer'
+import { HelpViewer } from "./HelpViewer"
 
-import chintro from "./01-intro.mdx"
-import chfoobar from "./02-foobar.mdx"
-import chnew from "./03-newchapter.mdx"
+import chintro from "./chapters/01-intro.mdx"
+import chfoobar from "./chapters/02-foobar.mdx"
+import chnew from "./chapters/03-newchapter.mdx"
 
-const MyMarkdowner = (props: any) => (<MuiMarkdown {...props} />);
+const MyMarkdowner = (props: MuiMarkdownProps) => <MuiMarkdown {...props} />
 
 const chapters = [
     { title: "Intro", chapter: chintro },
     { title: "Foo Bar", chapter: chfoobar },
     { title: "A New Chapter", chapter: chnew },
-];
+]
 
 const meta: Meta<typeof HelpViewer> = {
-    title: 'Universal/HelpViewer',
+    title: "Universal/HelpViewer",
     component: HelpViewer,
-    tags: ['autodocs'],
+    tags: ["autodocs"],
 }
 
 export default meta
@@ -41,12 +40,17 @@ export default meta
 type Story = StoryObj<typeof HelpViewer>
 
 export const Standard: Story = {
-    render: () => <MemoryRouter initialEntries={['/help']}>
+    parameters: {
+        routerProps: {
+            initialEntries: ["/help"]
+        },
+    },
+    render: () => (
         <HelpViewer
             chapters={chapters}
-            baseroute='/help'
-            style={{ height: '30ex', maxHeight: '30ex' }}
+            baseroute="/help"
+            style={{ height: "50ex", maxHeight: "50ex" }}
             markdowner={MyMarkdowner}
         />
-    </MemoryRouter>
+    ),
 }

@@ -17,6 +17,7 @@ package cri
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -137,11 +138,14 @@ var _ = Describe("k8s (CRI) pods", Ordered, func() {
 		}).Within(30*time.Second).ProbeEvery(1*time.Second).
 			Should(Succeed(), "CRI API provider never became responsive")
 		DeferCleanup(func() {
-			cricl.Close()
+			_ = cricl.Close()
 		})
 	})
 
 	It("creates a pod for the containers of a pod", func(ctx context.Context) {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
 		By("creating a CRI watcher and waiting to become synchronized")
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()

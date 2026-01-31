@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"regexp"
 	"strconv"
@@ -30,7 +31,6 @@ import (
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/morbyd"
 	"github.com/thediveo/morbyd/run"
@@ -60,11 +60,10 @@ var (
 )
 
 var _ = BeforeSuite(func(ctx context.Context) {
-	// Spin up a Docker engine watcher and wait for it to become ready...
-	docksock := ""
-	if os.Getegid() == 0 {
-		docksock = "unix:///proc/1/root/run/docker.sock"
-	}
+	// send logging output to the GinkgoWriter, but only do so while we're
+	// inside BeforeSuite; thus plain "defer" instead of DeferCleanup.
+	defer slog.SetDefault(slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 
 	DeferCleanup(func() { scripts.Done() })
 
@@ -85,7 +84,7 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	// containers.
 	Expect(sleepy.PID(ctx)).NotTo(BeZero())
 
-	mobywatcher, err := moby.New(docksock, nil)
+	mobywatcher, err := moby.New("", nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	cizerctx, cizercancel := context.WithCancel(context.Background())
@@ -184,7 +183,7 @@ var _ = Describe("namespaces JSON", func() {
 		Expect(ns).NotTo(BeNil())
 		d := NewNamespacesDict(nil)
 		j, err := d.marshalNamespace(ns, nil)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "net",
@@ -205,7 +204,7 @@ var _ = Describe("namespaces JSON", func() {
 		// the parent reference instead.
 		parentuserns := userns.(model.Hierarchy).Parent().(model.Namespace)
 		j, err = d.marshalNamespace(userns, usernames)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
@@ -227,7 +226,7 @@ var _ = Describe("namespaces JSON", func() {
 
 		// Check for the correct child list of the parent user namespace.
 		j, err = d.marshalNamespace(parentuserns, usernames)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
@@ -248,7 +247,7 @@ var _ = Describe("namespaces JSON", func() {
 		// Also check the grandparent user namespace.
 		grandpa := parentuserns.(model.Hierarchy).Parent().(model.Namespace)
 		j, err = d.marshalNamespace(grandpa, usernames)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 				"nsid": %d,
 				"type": "user",
@@ -282,29 +281,29 @@ var _ = Describe("namespaces JSON", func() {
 		// First create a JSON textual representation for a user namespace we
 		// want to unmarshal next...
 		j, err := d.marshalNamespace(userns, nil)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		// ...now check that unmarshalling correctly works.
 		nsdict := NewNamespacesDict(nil)
 		uns, err := nsdict.UnmarshalNamespace(j)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(uns).To(BeSameNamespace(userns))
 
 		// Check that unmarshalling a (flat) namespace also works correctly.
 		ns := allns.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS]
 		j, err = nsdict.marshalNamespace(ns, nil)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		ns2, err := nsdict.UnmarshalNamespace(j)
-		Expect(err).To(Succeed())
-		Expect(ns2).To(gmodel.BeSameNamespace(ns))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ns2).To(BeSameNamespace(ns))
 	})
 
 	It("marshals NamespacesDict", func() {
 		d := NewNamespacesDict(nil)
 		d.AllNamespaces[model.UserNS][userns.ID()] = userns
 		j, err := json.Marshal(d)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		username := regexp.MustCompile(`"user-name":"(.*?)"`).FindStringSubmatch(string(j))[1]
 		Expect(j).To(MatchJSON(fmt.Sprintf(`{
 			"%d": {
@@ -338,7 +337,7 @@ var _ = Describe("namespaces JSON", func() {
 		d = NewNamespacesDict(nil)
 		d.AllNamespaces[model.UserNS][userns.ID()] = userns
 		j, err := json.Marshal(d)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 
 		// ...now unmarshal again and see what nonsense we got...
 		d2 := NewNamespacesDict(nil)
@@ -355,18 +354,18 @@ var _ = Describe("namespaces JSON", func() {
 	It("survives a NamespacesDict roundtrip", func() {
 		d := NewNamespacesDict(allns)
 		j, err := json.Marshal(d)
-		Expect(err).To(Succeed())
-		Expect(j).NotTo(HaveLen(0))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(j).NotTo(BeEmpty())
 
 		d2 := NewNamespacesDict(nil)
 		Expect(json.Unmarshal(j, &d2)).To(Succeed())
 
 		allns2 := (*model.AllNamespaces)(d2.AllNamespaces)
-		for idx := model.NamespaceTypeIndex(0); idx < model.NamespaceTypesCount; idx++ {
+		for idx := range model.NamespaceTypesCount {
 			nsset := allns.Namespaces[idx]
 			Expect(allns2[idx]).To(HaveLen(len(nsset)))
 			for _, ns := range allns2[idx] {
-				Expect(ns).To(gmodel.BeSameNamespace(nsset[ns.ID()]))
+				Expect(ns).To(BeSameNamespace(nsset[ns.ID()]))
 			}
 		}
 	})

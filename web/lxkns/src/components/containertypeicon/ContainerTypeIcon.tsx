@@ -12,10 +12,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
+import type React from 'react'
 
-import { SvgIconProps } from '@mui/material';
-
+import { type SvgIconProps } from '@mui/material';
 
 import ContainerIcon from 'icons/containers/Container'
 import DockerIcon from 'icons/containers/Docker'
@@ -24,12 +23,12 @@ import ContainerdIcon from 'icons/containers/Containerd'
 import IERuntimeIcon from 'icons/containers/IERuntime'
 import IEAppIcon from 'icons/containers/IEApp'
 
-import { Container } from 'models/lxkns'
+import { type Container } from 'models/lxkns'
 import DockerManagedPluginIcon from 'icons/containers/DockerManagedPlugin'
 import CRIIcon from 'icons/containers/CRI'
 import PodmanIcon from 'icons/containers/Podman';
 
-const containerTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
+const containerTypeIcons: { [key: string]: (props: SvgIconProps) => React.JSX.Element } = {
     'docker.com': DockerIcon,
     'plugin.docker.com': DockerManagedPluginIcon,
     'containerd.io': ContainerdIcon,
@@ -54,7 +53,7 @@ export interface ContainerTypeIconProps extends SvgIconProps {
  *
  * @param container container object.
  */
-export const ContainerTypeIcon = ({container, ...props}: ContainerTypeIconProps): JSX.Element => {
+export const ContainerTypeIcon = ({container, ...props}: ContainerTypeIconProps): React.JSX.Element => {
     // Now try to find a suitable container-flavor icon, or fall back to our
     // generic one.
     const Icon = containerTypeIcons[container.flavor]

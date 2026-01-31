@@ -17,6 +17,7 @@ package discover
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"syscall"
 	"time"
@@ -62,6 +63,9 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 			Skip("needs root")
 			return
 		}
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
@@ -116,7 +120,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 			return err
 		}).Within(30*time.Second).ProbeEvery(1*time.Second).
 			Should(Succeed(), "containerd API never became responsive")
-		cdclient.Close() // not needed anymore, will create fresh ones over and over again
+		_ = cdclient.Close() // not needed anymore, will create fresh ones over and over again
 
 		By("creating a dummy containerd workload that runs detached")
 		cmd := Successful(providerCntr.Exec(ctx,

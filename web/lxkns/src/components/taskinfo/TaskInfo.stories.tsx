@@ -12,75 +12,75 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { TaskInfo } from './TaskInfo'
-import { Container, Engine, NamespaceSet, Process, Task } from 'models/lxkns'
+import { TaskInfo } from "./TaskInfo";
+import type { Container, Engine, NamespaceSet, Process, Task } from "models/lxkns";
 
 const meta: Meta<typeof TaskInfo> = {
-    title: 'Process/TaskInfo',
-    component: TaskInfo,
-    argTypes: {
-        task: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Process/TaskInfo",
+  component: TaskInfo,
+  argTypes: {
+    task: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof TaskInfo>
+type Story = StoryObj<typeof TaskInfo>;
 
 const container: Container = {
-    id: 'deadbeafco1dcafe',
-    name: 'mouldy_moby',
-    type: 'docker.com',
-    flavor: 'docker.com',
-    pid: 41,
-    paused: false,
-    labels: {},
-    groups: [],
-    engine: {} as Engine,
-    process: {} as Process,
-}
+  id: "deadbeafco1dcafe",
+  name: "mouldy_moby",
+  type: "docker.com",
+  flavor: "docker.com",
+  pid: 41,
+  paused: false,
+  labels: {},
+  groups: [],
+  engine: {} as Engine,
+  process: {} as Process,
+};
 
 const process: Process = {
-    pid: 41,
-    ppid: 1,
-    name: 'foobar-process',
-} as Process
+  pid: 41,
+  ppid: 1,
+  name: "foobar-process",
+} as Process;
 
 const task: Task = {
-    tid: 42,
-    name: 'foobartask',
-    process: process,
-    starttime: 123,
-    cpucgroup: "/fridge",
-    fridgecgroup: "/fridge",
-    fridgefrozen: true,
-    namespaces: {} as NamespaceSet,
-}
+  tid: 42,
+  name: "foobartask",
+  process: process,
+  starttime: 123,
+  cpucgroup: "/fridge",
+  fridgecgroup: "/fridge",
+  fridgefrozen: true,
+  namespaces: {} as NamespaceSet,
+};
 
-export const Basic: Story = {
-    args: {
-        task: task,
-    },
-}
+export const Default: Story = {
+  args: {
+    task: task,
+  },
+};
 
 export const Short: Story = {
-    args: {
-        task: task,
-        short: true,
-    },
-}
+  args: {
+    task: task,
+    short: true,
+  },
+};
 
 export const InContainer: Story = {
-    args: {
-        task: {
-            ...task,
-            process: {
-                ...process,
-                container: container,
-            },
-        },
+  args: {
+    task: {
+      ...task,
+      process: {
+        ...process,
+        container: container,
+      },
     },
-}
+  },
+};

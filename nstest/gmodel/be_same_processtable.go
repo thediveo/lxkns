@@ -26,28 +26,26 @@ import (
 // [model.ProcessTable] to an expected ProcessTable. This matcher doesn't test
 // for deep equality (you could do this already using the existing matchers) but
 // instead does only flat [model.Process] matching.
-func BeSameProcessTable(expectedproctable interface{}) types.GomegaMatcher {
+func BeSameProcessTable(expectedproctable any) types.GomegaMatcher {
 	return &beSameProcessTableMatcher{expected: expectedproctable}
 }
 
 type beSameProcessTableMatcher struct {
-	expected interface{}
+	expected any
 }
 
-var dummyproctable = model.ProcessTable{}
-var processtableT = reflect.TypeOf(dummyproctable)
+var processtableT = reflect.TypeFor[model.ProcessTable]()
 
-func (matcher *beSameProcessTableMatcher) Match(actual interface{}) (bool, error) {
+func (matcher *beSameProcessTableMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
+		//nolint ST1005 communicate useful messages, not Go platitudes.
 		return false, fmt.Errorf(
-			// revive:disable-next-line:error-strings Gomega matchers
-			// communicate useful messages, not Go platitudes.
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}
 	// "unpack" the ProcessTable-s
 	actval := reflect.Indirect(reflect.ValueOf(actual))
 	expval := reflect.Indirect(reflect.ValueOf(matcher.expected))
-	if !(actval.IsValid() && expval.IsValid()) {
+	if !actval.IsValid() || !expval.IsValid() {
 		return actval.IsValid() == expval.IsValid(), nil
 	}
 	if actval.Type() != processtableT {
@@ -72,13 +70,13 @@ func (matcher *beSameProcessTableMatcher) Match(actual interface{}) (bool, error
 	return true, nil
 }
 
-func (matcher *beSameProcessTableMatcher) FailureMessage(actual interface{}) string {
+func (matcher *beSameProcessTableMatcher) FailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected process table\n\t%+v\nto match actual process table\n\t%+v",
 		actual, matcher.expected)
 }
 
-func (matcher *beSameProcessTableMatcher) NegatedFailureMessage(actual interface{}) string {
+func (matcher *beSameProcessTableMatcher) NegatedFailureMessage(actual any) string {
 	return fmt.Sprintf(
 		"Expected process table\n\t%+v\nto not match actual process table\n\t%+v",
 		actual, matcher.expected)

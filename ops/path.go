@@ -49,7 +49,7 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	if err != nil {
 		return 0, newInvalidNamespaceError(nsp, err)
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	t, err := unix.IoctlRetInt(int(fd), nsioctl.NS_GET_NSTYPE)
 	if err != nil {
 		return 0, newNamespaceOperationError(nsp, "NS_GET_TYPE", err)
@@ -65,7 +65,7 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 	if err != nil {
 		return species.NoneID, err
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	return fdID(nsp, int(fd))
 }
 
@@ -81,7 +81,7 @@ func (nsp NamespacePath) User() (relations.Relation, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	userfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_USERNS)
 	// From the Linux namespace architecture, we already know that the owning
 	// namespace must be a user namespace (otherwise there is something really
@@ -104,7 +104,7 @@ func (nsp NamespacePath) Parent() (relations.Relation, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	parentfd, err := ioctl.RetFd(fd, nsioctl.NS_GET_PARENT)
 	// We don't know the proper type, so return the parent namespace reference
 	// as an un-typed os.File-based reference, so we can reuse the lifecycle
@@ -121,7 +121,7 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer unix.Close(fd)
+	defer func() { _ = unix.Close(fd) }()
 	return ownerUID(nsp, fd)
 }
 
@@ -138,7 +138,7 @@ func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.Refere
 	}
 	openref, err := NewTypedNamespaceFile(f, 0)
 	if err != nil {
-		f.Close() // #nosec G104 -- irrelevant error code, but do not leak ... anymore; now my detector pays off ;)
+		_ = f.Close()
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
 	return openref, func() { _ = openref.Close() }, nil

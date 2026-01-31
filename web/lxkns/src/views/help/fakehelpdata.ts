@@ -13,7 +13,7 @@
 // under the License.
 
 import { cloneDeep } from 'lodash'
-import { Discovery, fromjson } from 'models/lxkns'
+import { type Discovery, fromjson } from 'models/lxkns'
 import fakedata from './fakediscoverydata.json'
 
 export const discovery: Discovery = fromjson(

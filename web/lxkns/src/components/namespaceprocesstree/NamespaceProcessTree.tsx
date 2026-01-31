@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState, useRef, useImperativeHandle } from 'react'
 
 import { useAtom } from 'jotai'
 
@@ -21,21 +21,26 @@ import { SimpleTreeView, TreeItem } from '@mui/x-tree-view'
 
 import ProcessInfo from 'components/processinfo'
 import { NamespaceInfo } from 'components/namespaceinfo'
-import { Busybody, compareBusybodies, compareNamespaceById, compareProcessByNameId, Discovery, isProcess, Namespace, NamespaceMap, NamespaceType, Process, ProcessMap } from 'models/lxkns'
-import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
+import { 
+    type Busybody, 
+    compareBusybodies, 
+    compareNamespaceById, 
+    compareProcessByNameId, 
+    type Discovery, 
+    isProcess, 
+    type Namespace, 
+    type NamespaceMap, 
+    NamespaceType, 
+    type Process, 
+    type ProcessMap
+} from 'models/lxkns'
 import { expandInitiallyAtom, showSystemProcessesAtom } from 'views/settings'
 import { MountpointInfoModalProvider } from 'components/mountpointinfomodal'
 import { TaskInfo } from 'components/taskinfo'
+import React from 'react'
+import type { TreeAPI } from 'app/treeapi'
+import { showProcess } from 'models/showprocess'
 
-
-/** Internal helper to filter "system(d)" processes. */
-const showProcess = (process: Process, showSystemProcs: boolean) =>
-    showSystemProcs ||
-    (process.pid > 2 &&
-        !(process.cpucgroup.startsWith('/system.slice/') &&
-            !process.cpucgroup.startsWith('/system.slice/docker-')) &&
-        !process.cpucgroup.startsWith('/init.scope/') &&
-        process.cpucgroup !== '/user.slice')
 
 /**
  * Searches for sub-processes of a given process which are still in the same
@@ -79,7 +84,7 @@ const findNamespaceProcesses = (namespace: Namespace) =>
  * @param nstype type of namespace confining the search for further
  * sub-processes still considered to be confined in the same namespace.
  */
-const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSystemProcesses: boolean): JSX.Element | JSX.Element[] => {
+const controlledProcessTreeItem = (proc: Process, nstype: NamespaceType, showSystemProcesses: boolean): React.JSX.Element | React.JSX.Element[] => {
 
     const children = findSubProcesses(proc, nstype)
         .sort(compareProcessByNameId)
@@ -122,7 +127,7 @@ const NamespaceTreeItem = (
 
     // For later display we want to know if there is only one loose threads and
     // no leaders so that we don't render the loose thread twice...
-    const loosethreads = namespace.ealdorman === null && namespace.loosethreads.length === 1
+    const loosethreads = namespace.ealdorman === null && namespace.loosethreads?.length === 1
         ? [] : namespace.loosethreads
 
     // Get the leader processes and maybe some sub-processes (in different
@@ -175,7 +180,7 @@ export interface NamespaceProcessTreeDetailComponentProps {
  * Factory for returning components to render the details of a particular
  * namespace.
  */
-export type NamespaceProcessTreeDetailFactory = (props: NamespaceProcessTreeDetailComponentProps) => JSX.Element
+export type NamespaceProcessTreeDetailFactory = (props: NamespaceProcessTreeDetailComponentProps) => React.JSX.Element
 
 export interface NamespaceProcessTreeTreeDetails {
     factory: NamespaceProcessTreeDetailFactory
@@ -185,9 +190,9 @@ export interface NamespaceProcessTreeTreeDetails {
 
 export interface NamespaceProcessTreeProps {
     type?: string
-    action: Action
     discovery: Discovery
     details?: NamespaceProcessTreeTreeDetails
+    apiRef?: React.Ref<TreeAPI>
 }
 
 /**
@@ -201,7 +206,7 @@ export interface NamespaceProcessTreeProps {
  */
 export const NamespaceProcessTree = ({
     type,
-    action,
+    apiRef,
     discovery,
     details
 }: NamespaceProcessTreeProps) => {
@@ -220,7 +225,12 @@ export const NamespaceProcessTree = ({
     // Tree node expansion is a component-local state. We need to also use a
     // reference to the really current expansion state as for yet unknown
     // reasons setExpanded() will pass stale state information to its reducer.
-    const [expanded, setExpanded] = useState([] as string[])
+    const [expanded, setExpanded] = useState(() => {
+        const allrootnsids = Object.values(discovery.namespaces)
+            .filter(ns => ns.type === nstype && ns.parent == null)
+            .map(ns => ns.nsid.toString())
+        return allrootnsids.concat(details?.collapseAll ? details.collapseAll(discovery.namespaces) : [])
+    })
     const currExpanded = useRef([] as string[])
 
     // Remember the current tree node expansion state in order to be able to
@@ -230,36 +240,29 @@ export const NamespaceProcessTree = ({
         currExpanded.current = expanded
     }, [expanded])
 
-    // Trigger an action when the action "state" changes; we are looking only at
-    // the action itself, ignoring its mutation counter, as we need to add noise
-    // to the commands in order to make state changes trigger. Oh, well, bummer.
-    useEffect(() => {
-        switch (action.action) {
-            case EXPANDALL: {
-                // expand all namespaces as well as all confined processes.
-                const allns = Object.values(discovery.namespaces)
-                    .filter(ns => ns.type === nstype)
-                const allnsids = allns.map(ns => ns.nsid.toString())
-                const allprocids = allns.map(ns => findNamespaceProcesses(ns))
-                    .flat()
-                    .map(proc => proc.pid.toString())
-                setExpanded(allnsids.concat(
-                    allprocids,
-                    details?.expandAll ? details.expandAll(discovery.namespaces) : []))
-                break
-            }
-            case COLLAPSEALL: {
-                // collapse everything except for the root namespaces.
-                const allrootnsids = Object.values(discovery.namespaces)
-                    .filter(ns => ns.type === nstype && ns.parent == null)
-                    .map(ns => ns.nsid.toString())
-                setExpanded(allrootnsids.concat(
-                    details?.collapseAll ? details.collapseAll(discovery.namespaces) : []))
-                break
-            }
-        }
-    }, [action, nstype, discovery, details])
-
+    useImperativeHandle(apiRef, () => ({
+        expandAll() {
+            // expand all namespaces as well as all confined processes.
+            const allns = Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype)
+            const allnsids = allns.map(ns => ns.nsid.toString())
+            const allprocids = allns.map(ns => findNamespaceProcesses(ns))
+                .flat()
+                .map(proc => proc.pid.toString())
+            setExpanded(allnsids.concat(
+                allprocids,
+                details?.expandAll ? details.expandAll(discovery.namespaces) : []))
+        },
+        collapseAll() {
+            // collapse everything except for the root namespaces.
+            const allrootnsids = Object.values(discovery.namespaces)
+                .filter(ns => ns.type === nstype && ns.parent == null)
+                .map(ns => ns.nsid.toString())
+            setExpanded(allrootnsids.concat(
+                details?.collapseAll ? details.collapseAll(discovery.namespaces) : []))
+        },
+    }))
+    
     // Whenever the discovery changes, we want to update the expansion state of
     // the newly arrived namespaces. We default to newly seen "root" namespaces
     // being expanded to show their processes (if there are multiple leader and
@@ -299,7 +302,7 @@ export const NamespaceProcessTree = ({
     // update the tree's expand state accordingly. This allows us to explicitly
     // "take back control" (ha ... hah ... HAHAHAHA!!!) of the expansion state
     // of the tree.
-    const handleToggle = (event: unknown, nodeIds: string[]) => {
+    const handleToggle = (_: unknown, nodeIds: string[]) => {
         setExpanded(nodeIds)
     }
 

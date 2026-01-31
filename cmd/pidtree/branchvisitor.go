@@ -20,6 +20,7 @@ package main
 import (
 	"reflect"
 
+	"github.com/thediveo/go-asciitree/v2"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -31,12 +32,19 @@ type BranchVisitor struct {
 	Details   bool
 	PIDMap    model.PIDMapper
 	RootPIDNS model.Namespace
+	// render function for namespace icons, where its exact behavior depends on
+	// CLI flags.
+	NamespaceIcon func(model.Namespace) string
+	// render function for cgroup (path) names
+	CgroupDisplayName func(string) string
 }
+
+var _ asciitree.Visitor = (*BranchVisitor)(nil)
 
 // Roots simply returns the specified branch as the only root, as the Get
 // visitor method will take care of all details.
-func (v *BranchVisitor) Roots(branch reflect.Value) (children []reflect.Value) {
-	return []reflect.Value{branch.Index(0)}
+func (v *BranchVisitor) Roots(branch any) (children []any) {
+	return []any{reflect.ValueOf(branch).Index(0).Interface()}
 }
 
 // Label returns a node label text, which varies depending on whether the node
@@ -46,12 +54,12 @@ func (v *BranchVisitor) Roots(branch reflect.Value) (children []reflect.Value) {
 // label contains the name and "global" PID, but also the translated "local"
 // PID (which is the PID as seen from inside the PID namespace of the
 // Process).
-func (v *BranchVisitor) Label(branch reflect.Value) (label string) {
-	nodeif := branch.Interface().(SingleBranch).Branch[0]
+func (v *BranchVisitor) Label(branch any) (label string) {
+	nodeif := branch.(SingleBranch).Branch[0]
 	if proc, ok := nodeif.(*model.Process); ok {
-		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS)
+		return ProcessLabel(proc, v.PIDMap, v.RootPIDNS, v.CgroupDisplayName)
 	}
-	return PIDNamespaceLabel(nodeif.(model.Namespace))
+	return PIDNamespaceLabel(nodeif.(model.Namespace), v.NamespaceIcon)
 }
 
 // Get is called on nodes which can be either (1) PID namespaces or (2)
@@ -60,18 +68,16 @@ func (v *BranchVisitor) Label(branch reflect.Value) (label string) {
 // returns process children, unless these children are in a different PID
 // namespace: then, their PID namespaces are returned instead. Polymorphism
 // galore!
-func (v *BranchVisitor) Get(branch reflect.Value) (
-	label string, properties []string, children reflect.Value) {
+func (v *BranchVisitor) Get(branch any) (label string, properties []string, children []any) {
 	// Label for this (1) PID namespace or (2) process.
 	label = v.Label(branch)
 	// The only child can be either a PID namespace or a process, as we'll
 	// find out later ... but there will only be exactly one "child" in any
 	// case.
-	clist := []interface{}{}
-	if b := branch.Interface().(SingleBranch).Branch[1:]; len(b) > 0 {
+	clist := []any{}
+	if b := branch.(SingleBranch).Branch[1:]; len(b) > 0 {
 		subbranch := SingleBranch{Branch: b}
 		clist = append(clist, subbranch)
 	}
-	children = reflect.ValueOf(clist)
-	return
+	return label, nil, clist
 }

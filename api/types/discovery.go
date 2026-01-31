@@ -80,7 +80,7 @@ func (doh *DiscoveryOptions) UnmarshalJSON(data []byte) error {
 type DiscoveryResult struct {
 	// Maps discovery result top-level JSON elements to their (un)marshalling
 	// types (the ones that then must do the real work).
-	Fields          map[string]interface{}
+	Fields          map[string]any
 	DiscoveryResult *discover.Result `json:"-"`
 	ContainerModel  *ContainerModel  `json:"-"`
 }
@@ -101,7 +101,7 @@ const (
 func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	// A very limited initialization only before immediately applying any
 	// options specified to us.
-	dr := &DiscoveryResult{Fields: map[string]interface{}{}}
+	dr := &DiscoveryResult{Fields: map[string]any{}}
 	for _, opt := range opts {
 		opt(dr)
 	}
@@ -163,7 +163,7 @@ func WithResult(result *discover.Result) NewDiscoveryResultOption {
 // un/marshalling to discovery results when using [NewDiscoveryResult]. For
 // unmarshalling you need to use WithElement in order to add a non-nil zero
 // value of the correct type in order to be able to unmarshal into the correct
-// type instead of a generic map[string]interface{}:
+// type instead of a generic map[string]any:
 //
 //	// foobar is a JSON un/marshallable type of your own. For unmarshalling,
 //	// allocate a non-nil zero value, which can be unmarshalled correctly.
@@ -176,7 +176,7 @@ func WithResult(result *discover.Result) NewDiscoveryResultOption {
 //
 //	discoresult := NewDiscoveryResult(WithElement("foobar", foobar))
 //	json.Unmarshal(jsondata, discoresult)
-func WithElement(name string, obj interface{}) NewDiscoveryResultOption {
+func WithElement(name string, obj any) NewDiscoveryResultOption {
 	return func(ndr *DiscoveryResult) {
 		ndr.Fields[name] = obj
 	}
@@ -201,7 +201,7 @@ func (dr DiscoveryResult) Mounts() discover.NamespacedMountPathMap {
 // Get returns the user-specified result extension object for the specified
 // extension field. The field must have been added first with the [WithElement]
 // option when creating the un/marshalling wrapper object for discovery results.
-func (dr DiscoveryResult) Get(name string) interface{} {
+func (dr DiscoveryResult) Get(name string) any {
 	return dr.Fields[name]
 }
 

@@ -26,7 +26,7 @@ import {
     styled,
 } from '@mui/material'
 import { ChapterSkeleton } from 'components/chapterskeleton'
-import { MDXComponents, MDXContent } from 'mdx/types'
+import type { MDXComponents, MDXContent } from 'mdx/types'
 
 
 // Defines how to map the components emitted by MDX onto Material-UI components,
@@ -136,29 +136,82 @@ export interface MuiMarkdownProps {
     /** CSS class name(s). */
     className?: string
     /** fallback components to render when lazily loading the mdx. */
-    fallback?: JSX.Element
+    fallback?: React.JSX.Element
 }
 
 /**
- * Renders the given [MDX](https://mdxjs.com/) using Material-UI `Typography`
- * components (where appropriate). The MDX can be either statically imported
- * beforehand or alternatively lazily imported when needed using `React.lazy()`.
- * This component will handle both use cases transparently: it uses a
- * `React.Suspense` child component and shows a `ChapterSkeleton` component
- * while lazily loading MDX.
+ * `MuiMarkdown` renders the given [MDX](https://mdxjs.com/) using Material-UI
+ * `Typography` components (where appropriate). The MDX can be either statically
+ * imported beforehand or alternatively lazily imported when needed using
+ * `React.lazy()`. This component will handle both use cases transparently: it
+ * uses a `React.Suspense` child component and shows a
+ * [ChapterSkeleton](?path=/docs/universal-chapterskeleton--description)
+ * component while lazily loading MDX.
  *
  * - uses [mdx.js](https://github.com/mdx-js/mdx).
  * - headings automatically get `id` slugs via
- *   [remark-slug](https://github.com/remarkjs/remark-slug).
- * - some typography goodies via
+ *   [rehype-slug](https://github.com/rehypejs/rehype-slug).
+ * - typography goodies:
+ *   - turns `--` into _endashes_.
+ *   - number range _endashes_,
+ * - some more typography goodies via
  *   [remark-textr](https://github.com/remarkjs/remark-textr):
  *   - typographic ellipsis,
  *   - typgraphic quotes,
- *   - number range endashes,
- *   - turns `--` into emdashes.
+ *   - and more.
  *
- * Please see the [`HelpViewer`](#helpviewer) component for a no-frills help
- * document viewer with multiple chapter support and chapter navigation.
+ * Please see the [HelpViewer](?path=/docs/universal-helpviewer--description)
+ * component for a no-frills help document viewer with multiple chapter support
+ * and chapter navigation.
+ * 
+ * We recommend configuring your MDX integration as follows; pass
+ * `mdxConfiguration` to your particular `mdx` setup like in
+ * `mdx(mdxConfiguration)`.
+ * 
+ * ```ts
+ * import remarkGfm from 'remark-gfm'
+ * import remarkImages from 'remark-images'
+ * import remarkTextr from 'remark-textr'
+ * import remarkGEmoji from 'remark-gemoji'
+ * 
+ * import textrTypoApos from 'typographic-apostrophes'
+ * import textrTypoQuotes from 'typographic-quotes'
+ * import textrTypoPossPluralsApos from 'typographic-apostrophes-for-possessive-plurals'
+ * import textrTypoEllipses from 'typographic-ellipses'
+ * import textrTypoNumberEnDashes from 'typographic-en-dashes'
+ * 
+ * import rehypeSlug from 'rehype-slug'
+ * import type { Options } from '@mdx-js/rollup'
+ * 
+ * const textrTypoEnDashes = (input: string) => {
+ *     return input
+ *         .replace(/ -- /gim, ' – ')
+ * }
+ * 
+ * export const mdxConfiguration: Readonly<Options> = {
+ *     remarkPlugins: [
+ *         remarkGfm,
+ *         remarkImages,
+ *         remarkGEmoji,
+ *         [remarkTextr, {
+ *             plugins: [
+ *                 textrTypoApos,
+ *                 textrTypoQuotes,
+ *                 textrTypoPossPluralsApos,
+ *                 textrTypoEllipses,
+ *                 textrTypoNumberEnDashes,
+ *                 textrTypoEnDashes,
+ *             ],
+ *             options: {
+ *                 locale: 'en-us'
+ *             }
+ *         }],
+ *     ],
+ *     rehypePlugins: [
+ *         rehypeSlug,
+ *     ],
+ * }
+ * ```
  */
 export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => (
     <React.Suspense fallback={fallback || <ChapterSkeleton />}>

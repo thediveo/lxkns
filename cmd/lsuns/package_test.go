@@ -17,12 +17,15 @@ package main
 import (
 	"testing"
 
+	"github.com/onsi/gomega/format"
+	"github.com/thediveo/lxkns/cmd/cli/style"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/cmd/internal/pkg/style"
 )
 
 func TestLsunsCmd(t *testing.T) {
+	format.MaxLength = 30_000
 	style.PrepareForTest()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "lsuns command")

@@ -12,15 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { styled, Theme, Tooltip } from '@mui/material'
+import { styled, type Theme, Tooltip } from '@mui/material'
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow'
 import { NamespaceIcon } from 'icons/Namespace'
 import { GhostIcon } from 'icons/Ghost'
 import { AngryghostIcon } from 'icons/Angryghost'
 
-import { Namespace, ProcessMap } from 'models/lxkns'
+import type { Namespace, ProcessMap } from 'models/lxkns'
 import { keyframes } from '@mui/system'
 
 

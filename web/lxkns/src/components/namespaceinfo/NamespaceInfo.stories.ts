@@ -12,35 +12,35 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { NamespaceInfo } from './NamespaceInfo'
-import { Namespace, NamespaceType } from 'models/lxkns'
+import { NamespaceInfo } from "./NamespaceInfo";
+import { type Namespace, NamespaceType } from "models/lxkns";
 
 const meta: Meta<typeof NamespaceInfo> = {
-    title: 'Namespace/NamespaceInfo',
-    component: NamespaceInfo,
-    argTypes: {
-        namespace: { control: false },
-        processes: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Namespace/NamespaceInfo",
+  component: NamespaceInfo,
+  argTypes: {
+    namespace: { control: false },
+    processes: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof NamespaceInfo>
+type Story = StoryObj<typeof NamespaceInfo>;
 
 const namespace: Namespace = {
-    nsid: 12345678,
-    type: NamespaceType.net,
-} as Namespace
+  nsid: 12345678,
+  type: NamespaceType.net,
+} as Namespace;
 
 export const ProcfsFdReference: Story = {
-    args: {
-        namespace: {
-            ...namespace,
-            ref: '/proc/123/fd/42',
-        } as Namespace,
-    },
-}
+  args: {
+    namespace: {
+      ...namespace,
+      ref: "/proc/123/fd/42",
+    } as Namespace,
+  },
+};

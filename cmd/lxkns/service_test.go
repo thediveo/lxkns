@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -24,7 +25,6 @@ import (
 
 	"github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/morbyd"
 	"github.com/thediveo/morbyd/run"
@@ -51,7 +51,7 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 	BeforeAll(func(ctx context.Context) {
 		docksock := ""
 		if os.Geteuid() == 0 {
-			docksock = "unix:///proc/1/root/run/docker.sock"
+			docksock = "unix:///proc/self/root/run/docker.sock"
 		}
 
 		// "hardcore" check after all has been said and done
@@ -94,9 +94,16 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		Eventually(moby.Ready, "5s").Should(BeClosed())
 
 		By("starting the service")
-		log.SetLevel(log.FatalLevel)
+		oldSlogger := slog.Default()
+		DeferCleanup(func() {
+			slog.SetDefault(oldSlogger)
+		})
+		slog.SetDefault(slog.New(
+			slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+				Level: slog.LevelError + 4,
+			})))
 		serveraddr, err := startServer("127.0.0.1:0", cizer)
-		Expect(err).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
 		baseurl = "http://" + serveraddr.String() + "/api/"
 		DeferCleanup(func() {
 			stopServer(5 * time.Second)
@@ -121,8 +128,8 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
 		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "foobar")
-		Expect(err).To(Succeed())
-		defer resp.Body.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = resp.Body.Close() }()
 		Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 	})
 
@@ -130,8 +137,8 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
 		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "namespaces")
-		Expect(err).To(Succeed())
-		defer resp.Body.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = resp.Body.Close() }()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		allns := types.NewDiscoveryResult()
 		Expect(json.NewDecoder(resp.Body).Decode(allns)).To(Succeed())
@@ -152,8 +159,8 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
 		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "processes")
-		Expect(err).To(Succeed())
-		defer resp.Body.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = resp.Body.Close() }()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		procs := types.NewProcessTable()
 		Expect(json.NewDecoder(resp.Body).Decode(&procs)).To(Succeed())
@@ -164,8 +171,8 @@ var _ = Describe("serves API endpoints", Ordered, func() {
 		clnt := &http.Client{Timeout: 10 * time.Second}
 		defer clnt.CloseIdleConnections()
 		resp, err := clnt.Get(baseurl + "pidmap")
-		Expect(err).To(Succeed())
-		defer resp.Body.Close()
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = resp.Body.Close() }()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		pidmap := types.NewPIDMap()
 		Expect(json.NewDecoder(resp.Body).Decode(&pidmap)).To(Succeed())

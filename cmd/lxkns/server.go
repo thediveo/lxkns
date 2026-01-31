@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -24,7 +25,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/spaserve"
 )
 
@@ -37,7 +37,7 @@ var (
 // requests get logged at info level.
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Infof("http %s %s", req.Method, req.RequestURI)
+		slog.Info("http request", slog.String("method", req.Method), slog.String("uri", req.RequestURI))
 		next.ServeHTTP(w, req)
 	})
 }
@@ -66,9 +66,9 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	go func() {
-		log.Infof("starting lxkns server to serve at %s", listener.Addr().String())
+		slog.Info("starting lxkns service", slog.String("addr", listener.Addr().String()))
 		if err := server.Serve(listener); err != nil {
-			log.Errorf("lxkns server error: %s", err.Error())
+			slog.Error("lxkns service failed to start", slog.String("err", err.Error()))
 		}
 	}()
 	return listener.Addr(), nil
@@ -77,12 +77,12 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 func stopServer(wait time.Duration) {
 	once.Do(func() {
 		if server != nil {
-			log.Infof("gracefully shutting down lxkns server, waiting up to %s...",
-				wait)
+			slog.Info("gracefully shutting down lxkns service",
+				slog.Duration("grace", wait))
 			ctx, cancel := context.WithTimeout(context.Background(), wait)
 			defer cancel()
 			_ = server.Shutdown(ctx)
-			log.Infof("lxkns server stopped.")
+			slog.Info("lxkns service stopped")
 		}
 	})
 }

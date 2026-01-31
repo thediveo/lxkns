@@ -12,83 +12,83 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { ContainerTypeIcon } from './ContainerTypeIcon'
-import { Container } from 'models/lxkns'
+import { ContainerTypeIcon } from "./ContainerTypeIcon";
+import type { Container } from "models/lxkns";
 
-const unknownCntr = {flavor: 'unknown'} as Container
+const unknownCntr = { flavor: "unknown" } as Container;
 
 const meta: Meta<typeof ContainerTypeIcon> = {
-    title: 'Container/ContainerTypeIcon',
-    component: ContainerTypeIcon,
-    argTypes: {
-        container: { control: false },
-    },
-    tags: ['autodocs'],
-}
+  title: "Container/ContainerTypeIcon",
+  component: ContainerTypeIcon,
+  argTypes: {
+    container: { control: false },
+  },
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ContainerTypeIcon>
+type Story = StoryObj<typeof ContainerTypeIcon>;
 
 export const UnknownContainerTypeAndFlavor: Story = {
-    args: {
-        container: unknownCntr,
-    },
-}
+  args: {
+    container: unknownCntr,
+  },
+};
 
 export const DockerContainer: Story = {
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'docker.com'
-        },
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "docker.com",
     },
-}
+  },
+};
 
 export const DockerPlugin: Story = {
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'plugin.docker.com'
-        },
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "plugin.docker.com",
     },
-}
+  },
+};
 
 export const ContainerdContainer: Story = {
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'containerd.io'
-        },
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "containerd.io",
     },
-}
+  },
+};
 
 export const IndustrialEdgeRuntimeContainer: Story = {
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'com.siemens.industrialedge.runtime'
-        },
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "com.siemens.industrialedge.runtime",
     },
-}
+  },
+};
 
 export const IndustrialEdgeAppContainer: Story = {
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'com.siemens.industrialedge.app'
-        },
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "com.siemens.industrialedge.app",
     },
-}
+  },
+};
 
 export const CRIContainer: Story = {
-    name: 'CRI',
-    args: {
-        container: {
-            ...unknownCntr,
-            flavor: 'k8s.io/cri-api'
-        },
+  name: "CRI",
+  args: {
+    container: {
+      ...unknownCntr,
+      flavor: "k8s.io/cri-api",
     },
-}
+  },
+};

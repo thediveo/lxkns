@@ -1,6 +1,8 @@
 /*
 lspidns lists the tree of PID namespaces, optionally with their owning user
-namespaces.
+namespaces. When showing user namespaces has been requested (using “--user”) the
+namespace tree will be mixed with user namespaces intertwined with the PID
+namespaces owned by them.
 
 # Usage
 
@@ -29,6 +31,7 @@ The following lspidns flags are available:
 	    --icon                   show/hide unicode icons next to namespaces
 	    --proc proc[=name]       process name style; can be 'name' (default if omitted), 'basename',
 	                             or 'exe' (default name)
+	    --task                   discover also tasks (default true)
 	    --theme theme            colorization theme 'dark' or 'light' (default dark)
 	    --treestyle treestyle    select the tree render style; can be 'line' or 'ascii' (default line)
 	-u, --user                   shows owner user namespaces
@@ -37,20 +40,20 @@ The following lspidns flags are available:
 
 # Colorization
 
-Unless specified otherwise using the "--color=none" flag, lspidns colorizes its
+Unless specified otherwise using the “--color=none” flag, lspidns colorizes its
 output in order to make different types of namespaces easier to differentiate.
 Colorization gets disabled if lspidns detects that stdout isn't connected to a
-terminal, such as when piping into tools like "less".
+terminal, such as when piping into tools like “less”.
 
 Out of the box (or rather, Gopher hole), lspidns supports two color themes,
-called "dark" and "light". Default is the dark theme, but it can be changed
-using "--theme light". In order to set a theme permanently, and to optionally
+called “dark” and “light”. Default is the dark theme, but it can be changed
+using“--theme light”. In order to set a theme permanently, and to optionally
 adapt it later to personal preferences, the selected theme can be written to
 stdout:
 
 	lspidns --theme light --dump > ~/.lxknsrc.yaml
 
-For each type of Linux-kernel namespace the styling file "~.lxknsrc.yaml"
+For each type of Linux-kernel namespace the styling file “~.lxknsrc.yaml”
 contains a top-level element:
 
 	user:
@@ -61,11 +64,15 @@ contains a top-level element:
 	net:
 	uts:
 
-Additional output elements can also be styled:
+Additional output elements can also be styled through top-level elements:
 
-	process: # process names
-	owner:   # owner UIDs and user names
-	unknown: # unknown PIDs and PID namespaces
+	container:    # container names
+	process:      # process names
+	task:         # task names
+	owner:        # owner UIDs and user names
+	controlgroup: # cgroup information
+	path:         # paths
+	unknown:      # unknown PIDs and PID namespaces
 
 For each top-level element the foreground and background colors can be set
 independently, as well as several different type face and font rendering
@@ -73,9 +80,9 @@ attributes. If the foreground and/or background color(s) or a specific attribute
 are not specified, then the terminal defaults apply.
 
 Colors and attributes need to be specified in form of YAML list members,
-introduced with a "-" dash. Colors can be specified either in #RRGGBB format, or
-alternatively as ANSI colors (0-255). Make sure to always enclose color values
-in (single or double) quotes.
+introduced with a “-” dash. Colors can be specified either in “#RRGGBB” format,
+or alternatively as ANSI colors (0-255). Make sure to always enclose color
+values in (single or double) quotes.
 
 For example:
 

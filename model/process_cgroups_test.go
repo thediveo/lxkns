@@ -17,6 +17,7 @@ package model
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path"
@@ -27,12 +28,13 @@ import (
 	"github.com/samber/lo"
 	"github.com/thediveo/go-mntinfo"
 
+	"github.com/onsi/gomega/gexec"
+
 	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
-	. "github.com/thediveo/lxkns/test/success"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("Freezer", func() {
@@ -63,6 +65,16 @@ var _ = Describe("Freezer", func() {
 })
 
 var _ = Describe("cgrouping", func() {
+
+	BeforeEach(func() {
+		DeferCleanup(func(oldSlogger *slog.Logger) {
+			slog.SetDefault(oldSlogger)
+		}, slog.Default())
+		slog.SetDefault(slog.New(
+			slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+				Level: slog.LevelError,
+			})))
+	})
 
 	It("finds control groups of processes", func() {
 		procs := NewProcessTable(false)

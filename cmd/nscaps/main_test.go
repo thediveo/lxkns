@@ -19,8 +19,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/thediveo/lxkns/cmd/internal/test/getstdout"
+	"github.com/thediveo/clippy/debug"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/safe"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -44,147 +46,232 @@ var _ = Describe("renders branches", func() {
 	})
 
 	It("CLI --foobar fails correctly", func() {
-		os.Args = append(os.Args[:1], "--foobar")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown flag: --foobar`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--foobar"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown flag: --foobar`))
 	})
 
 	It("CLI rejects invalid target namespaces", func() {
-		os.Args = append(os.Args[:1], "foo:[666]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: not a valid namespace:`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"foo:[666]"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: not a valid namespace:`))
 	})
 
 	It("CLI rejects invalid --ns", func() {
-		os.Args = append(os.Args[:1],
-			"--ns", "net:[666]",
-			"net:[12345678]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: not a valid PID namespace:`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--ns", "net:[666]", "net:[12345678]"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: not a valid PID namespace:`))
 	})
 
 	It("CLI rejects valid --ns ID without --pid", func() {
-		os.Args = append(os.Args[:1],
-			"--ns", "666",
-			"net:[12345678]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: --ns requires --pid`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"--ns", "666", "net:[12345678]"})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: --ns requires --pid`))
 	})
 
 	It("CLI rejects non-existing --ns ID", func() {
-		os.Args = append(os.Args[:1],
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
 			"--ns", "666",
 			"--pid", "666",
-			"net:[12345678]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown PID namespace`))
+			"--" + turtles.NoContainersFlagName,
+			"net:[12345678]",
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown PID namespace`))
 	})
 
 	It("CLI rejects non-existing PID", func() {
 		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
 		Expect(err).ToNot(HaveOccurred())
-		os.Args = append(os.Args[:1],
+
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
 			"--ns", fmt.Sprintf("%d", mypidns.Ino),
 			"--pid", fmt.Sprintf("%d", ^uint32(0)),
-			"net:[12345678]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown process PID .* in`))
+			"--" + turtles.NoContainersFlagName,
+			"net:[12345678]",
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
 
-		os.Args = append(os.Args[:1],
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown process PID .* in`))
+
+		cmd.SetArgs([]string{
 			"--pid", fmt.Sprintf("%d", ^uint32(0)),
-			"net:[12345678]")
-		out = getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown process PID .*`))
+			"--" + turtles.NoContainersFlagName,
+			"net:[12345678]",
+		})
+		var out2 safe.Buffer
+		cmd.SetOut(&out2)
+		cmd.SetErr(&out2)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown process PID .*`))
 	})
 
 	It("CLI rejects non-existing target namespace", func() {
 		mypidns, err := ops.NamespacePath("/proc/self/ns/pid").ID()
 		Expect(err).ToNot(HaveOccurred())
-		os.Args = append(os.Args[:1],
+
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
 			"--ns", fmt.Sprintf("%d", mypidns.Ino),
 			"--pid", fmt.Sprintf("%d", os.Getpid()),
-			"net:[12345678]")
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: unknown namespace net:`))
+			"--" + turtles.NoContainersFlagName,
+			"net:[12345678]",
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: unknown namespace net:`))
 	})
 
 	It("CLI w/o args fails", func() {
-		os.Args = os.Args[:1]
-		out := getstdout.Stdouterr(main)
-		Expect(exitcode).To(Equal(1))
-		Expect(out).To(MatchRegexp(`^Error: expects 1 arg, received 0`))
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).NotTo(Succeed())
+		Expect(out.String()).To(MatchRegexp(`^Error: expects 1 arg, received 0`))
 	})
 
 	It("CLI with target non-user namespace below process in owned user namespace", func() {
 		if os.Geteuid() == 0 {
 			Skip("only non-root")
 		}
+
 		mynetnsid, err := ops.NamespacePath("/proc/self/ns/net").ID()
-		Expect(err).To(Succeed())
-		os.Args = append(os.Args[:1],
-			fmt.Sprintf("net:[%d]", mynetnsid.Ino))
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
+		Expect(err).NotTo(HaveOccurred())
+
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
+			"--" + turtles.NoContainersFlagName,
+			fmt.Sprintf("net:[%d]", mynetnsid.Ino),
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
 ├─ process .*
 │     ⋄─ \(no effective capabilities\)
 └─ target net:\[%d\] process .*
       ⋄─ \(no effective capabilities\)$`,
-			initusernsid.Ino, mynetnsid.Ino)))
+			initialUsernsID.Ino, mynetnsid.Ino)))
 	})
 
 	It("CLI with target non-user namespace below process in owned user namespace", func() {
 		if os.Geteuid() == 0 {
 			Skip("only non-root")
 		}
-		os.Args = append(os.Args[:1],
-			fmt.Sprintf("net:[%d]", tnsid.Ino))
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
+
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
+			"--" + turtles.NoContainersFlagName,
+			fmt.Sprintf("net:[%d]", targetNetnsID.Ino),
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`(?m)^⛛ user:\[%d\] process .*
 ├─ process .*
 │     ⋄─ \(no effective capabilities\)
 └─ ✓ user:\[%d\] process .*
-   └─ target net:\[%d\] process .*
+   └─ target net:\[%d\] (referenced from )?(process|task|process/task) .*
          ⋄─ cap_audit_control .*$`,
-			initusernsid.Ino, tuserid.Ino, tnsid.Ino)))
+			initialUsernsID.Ino, targetUsernsID.Ino, targetNetnsID.Ino)))
 	})
 
 	It("CLI with target non-user namespace at process", func() {
-		os.Args = append(os.Args[:1],
-			"-p", fmt.Sprintf("%d", tpid),
-			fmt.Sprintf("net:[%d]", tnsid.Ino))
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛔ user:\[%d\] process .*
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
+			"-p", fmt.Sprintf("%d", targetPID),
+			"--" + turtles.NoContainersFlagName,
+			fmt.Sprintf("net:[%d]", targetNetnsID.Ino),
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`(?m)^⛔ user:\[%d\] process .*
 └─ ⛛ user:\[%d\] process .*
    ├─ process .*
    │     ⋄─ cap_audit_control .*
 (   │     ⋄─ .*
-)*   └─ target net:\[%d\] process .*
+)*   └─ target net:\[%d\] (referenced from )?(process|task|process/task) .*
          ⋄─ cap_audit_control .*$`,
-			initusernsid.Ino, tuserid.Ino, tnsid.Ino)))
+			initialUsernsID.Ino, targetUsernsID.Ino, targetNetnsID.Ino)))
 	})
 
 	It("CLI with process in other user namespace branch than target non-user namespace", func() {
-		os.Args = append(os.Args[:1],
-			"-p", fmt.Sprintf("%d", procpid),
-			fmt.Sprintf("net:[%d]", tnsid.Ino))
-		out := getstdout.Stdouterr(main)
-		Expect(out).To(MatchRegexp(fmt.Sprintf(`(?m)^⛔ user:\[%d\] process .*
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{
+			"-p", fmt.Sprintf("%d", someProcPID),
+			"--" + turtles.NoContainersFlagName,
+			fmt.Sprintf("net:[%d]", targetNetnsID.Ino),
+		})
+		var out safe.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&out)
+		debug.SetWriter(cmd, GinkgoWriter)
+
+		Expect(cmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(fmt.Sprintf(`(?m)^⛔ user:\[%d\] process .*
 ├─ ⛛ user:\[%d\] process .*
 │  └─ process .*
 │        ⋄─ cap_audit_control .*
 (│        ⋄─ .*
 )*└─ ⛔ user:\[%d\] process .*
-   └─ target net:\[%d\] process .*
+   └─ target net:\[%d\] (referenced from )?(process|task|process/task) .*
          ⋄─ \(no capabilities\)$`,
-			initusernsid.Ino, procusernsid.Ino, tuserid.Ino, tnsid.Ino)))
+			initialUsernsID.Ino, someProcUsernsID.Ino, targetUsernsID.Ino, targetNetnsID.Ino)))
 	})
 
 })

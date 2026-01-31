@@ -20,19 +20,19 @@
 package discover
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/thediveo/go-mntinfo"
 	"github.com/thediveo/lxkns/internal/namespaces"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
-	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -53,10 +53,14 @@ type BindmountedNamespaceInfo struct {
 // capabilities in them).
 func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 	if !result.Options.ScanBindmounts {
-		log.Infof("skipping discovery of bind-mounted namespaces")
+		slog.Info("skipping discovery of bind-mounted namespaces",
+			slog.String("src", "bind-mounts"))
 		return
 	}
-	log.Debugf("starting discovery of bind-mounted namespaces...")
+	slog.Debug("discovery of bind-mounted namespaces",
+		slog.String("src", "bind-mounts"))
+
+	debugEnabled := slog.Default().Enabled(context.Background(), slog.LevelDebug)
 	total := 0
 	// In order to avoid multiple visits to the same namespace, keep track of
 	// which mount namespaces not to visit again.
@@ -105,9 +109,10 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 				ns = namespaces.New(bmntns.Type, bmntns.ID, nil)
 				result.Namespaces[typeidx][bmntns.ID] = ns
 				ns.(namespaces.NamespaceConfigurer).SetRef(bmntns.Ref)
-				if log.LevelEnabled(log.DebugLevel) {
-					log.Debugf("found bind-mounted namespace %s:[%d] at %s",
-						bmntns.Type.Name(), bmntns.ID.Ino, bmntns.Ref.String())
+				if debugEnabled {
+					slog.Debug("found bind-mounted namespace",
+						slog.String("namespace", ns.(model.NamespaceStringer).TypeIDString()),
+						slog.String("ref", bmntns.Ref.String()))
 				}
 				total++
 				// And if its a mount namespace we haven't yet visited, add it
@@ -134,23 +139,27 @@ func discoverBindmounts(_ species.NamespaceType, _ string, result *Result) {
 		if _, ok := visitedmntns[mntns.ID()]; ok {
 			continue // We already visited you ... next one!
 		}
-		if log.LevelEnabled(log.DebugLevel) {
-			log.Debugf("scanning mnt:[%d] (%s) for bind-mounted namespaces...",
-				mntns.ID().Ino, refString(mntns, result))
+		if debugEnabled {
+			slog.Debug("scanning mount namespace for further bind-mounted namespaces...",
+				slog.String("namespace", mntns.(model.NamespaceStringer).TypeIDString()),
+				slog.String("ref", refString(mntns, result)))
 		}
 		visitedmntns[mntns.ID()] = struct{}{}
 
 		mnteer, err := mountineer.NewWithMountNamespace(mntns, result.Namespaces[model.MountNS])
 		if err != nil {
-			log.Errorf("cannot open mnt:[%d] (reference: %s) for VFS operations: %s",
-				mntns.ID().Ino, mntns.Ref().String(), err)
+			slog.Error("cannot open mount namespace for VFS operations",
+				slog.String("namespace", mntns.(model.NamespaceStringer).TypeIDString()),
+				slog.String("ref", mntns.Ref().String()),
+				slog.String("err", err.Error()))
 			continue
 		}
-		ownedbindmounts := ownedBindMounts(mnteer)
+		ownedbindmounts := ownedBindMounts(mnteer, debugEnabled)
 		mnteer.Close()
 		updateNamespaces(ownedbindmounts)
 	}
-	log.Infof("found %s", plural.Elements(total, "bind-mounted namespaces"))
+	slog.Info("found namespaces",
+		slog.String("src", "bind-mounts"), slog.Int("count", total))
 }
 
 // refString returns a printable namespace reference, additionally resolving
@@ -178,7 +187,7 @@ func refString(mntns model.Namespace, r *Result) string {
 
 // Returns a list of bind-mounted namespaces for process with PID, including
 // owning user namespace ID information.
-func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
+func ownedBindMounts(mnteer *mountineer.Mountineer, debugEnabled bool) []BindmountedNamespaceInfo {
 	// Please note that while the mount details of /proc/[PID]/mountinfo tell us
 	// about bind-mounted namespaces with their types and inodes, they don't
 	// tell us the device IDs of those namespaces. Argh, again we need to go
@@ -191,12 +200,13 @@ func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 		var ownernsid species.NamespaceID
 		path, err := mnteer.Resolve(bindmount.MountPoint)
 		if err != nil {
-			log.Errorf("cannot resolve reference %s: %s",
-				bindmount.MountPoint, err.Error())
+			slog.Error("cannot resolve reference",
+				slog.String("ref", bindmount.MountPoint), slog.String("err", err.Error()))
 			continue
 		}
-		if log.LevelEnabled(log.DebugLevel) {
-			log.Debugf("mount point for %s at %s", bindmount.Root, path)
+		if debugEnabled {
+			slog.Debug("mount point",
+				slog.String("root", bindmount.Root), slog.String("path", path))
 		}
 		// Get the type and ID of the bind-mounted namespace. IDwithType now
 		// always returns a complete ID consisting of dev number and inode
@@ -211,7 +221,9 @@ func ownedBindMounts(mnteer *mountineer.Mountineer) []BindmountedNamespaceInfo {
 		} else {
 			// log an error, but otherwise ignore the missing ownership in order
 			// to create an albeit incomplete namespace entry.
-			log.Errorf("%s", err.Error())
+			slog.Error("cannot determine owning user namespace",
+				slog.String("ref", string(ns)),
+				slog.String("err", err.Error()))
 		}
 		ownedbindmounts = append(ownedbindmounts, BindmountedNamespaceInfo{
 			Type:      nstype,

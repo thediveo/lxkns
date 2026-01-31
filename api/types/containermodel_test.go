@@ -120,7 +120,7 @@ var _ = Describe("container model JSON", func() {
 		jtxt, err := json.Marshal(&cm.Containers)
 		Expect(err).NotTo(HaveOccurred())
 		cmu := NewContainerModel(nil)
-		Expect(json.Unmarshal(jtxt, &cmu.Containers)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(jtxt, &cmu.Containers)).To(Succeed())
 		Expect(cmu.Containers.Containers).To(ConsistOf(
 			PointTo(MatchFields(IgnoreExtras, Fields{
 				"ID":     Equal(c1.ID),
@@ -172,7 +172,7 @@ var _ = Describe("container model JSON", func() {
 		jtxt, err := json.Marshal(&cm.ContainerEngines)
 		Expect(err).NotTo(HaveOccurred())
 		cmu := NewContainerModel(nil)
-		Expect(json.Unmarshal(jtxt, &cmu.ContainerEngines)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(jtxt, &cmu.ContainerEngines)).To(Succeed())
 		Expect(cmu.ContainerEngines.enginesByRefID).To(ConsistOf(
 			PointTo(MatchFields(IgnoreExtras, Fields{
 				"ID":         Equal(ce1.ID),
@@ -209,7 +209,7 @@ var _ = Describe("container model JSON", func() {
 		jtxt, err := json.Marshal(&cm.Groups)
 		Expect(err).NotTo(HaveOccurred())
 		cmu := NewContainerModel(nil)
-		Expect(json.Unmarshal(jtxt, &cmu.Groups)).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(jtxt, &cmu.Groups)).To(Succeed())
 		Expect(cmu.Groups.groupsByRefID).To(ConsistOf(
 			PointTo(MatchFields(IgnoreExtras, Fields{
 				"Name":       Equal(g1.Name),
@@ -283,13 +283,13 @@ var _ = Describe("container model JSON", func() {
 
 		permute([]F{
 			func(cm *ContainerModel) {
-				Expect(json.Unmarshal(ctxt, &cm.Containers)).NotTo(HaveOccurred())
+				Expect(json.Unmarshal(ctxt, &cm.Containers)).To(Succeed())
 			},
 			func(cm *ContainerModel) {
-				Expect(json.Unmarshal(etxt, &cm.ContainerEngines)).NotTo(HaveOccurred())
+				Expect(json.Unmarshal(etxt, &cm.ContainerEngines)).To(Succeed())
 			},
 			func(cm *ContainerModel) {
-				Expect(json.Unmarshal(gtxt, &cm.Groups)).NotTo(HaveOccurred())
+				Expect(json.Unmarshal(gtxt, &cm.Groups)).To(Succeed())
 			},
 		}, 0)
 		Expect(permutes).To(Equal(6)) // ...admittedly, I'm slightly overcautious here.

@@ -1,0 +1,40 @@
+# dark lxkns colorization theme
+user:
+- bold
+- background: '#404040'
+pid:
+- bold
+- background: '#c0ffff'
+- foreground: '#000000'
+cgroup:
+- background: '#800000'
+ipc:
+- background: '#808000'
+mnt:
+- background: '#000080'
+net:
+- background: '#008000'
+time:
+- background: '#804000'
+uts:
+- background: '#800080'
+
+process:
+- foreground: '#00c000'
+task:
+- foreground: '#00c000'
+- italic
+owner:
+- foreground: '#e0e000'
+controlgroup:
+- foreground: '#ff9900'
+unknown:
+- foreground: '#ff0000'
+
+container:
+- bold
+- foreground: '#0099ff'
+
+path:
+- bold
+- foreground: '#009999'

@@ -12,31 +12,31 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { ExtLink } from './ExtLink'
+import { ExtLink } from "./ExtLink";
 
 const meta: Meta<typeof ExtLink> = {
-    title: 'Universal/ExtLink',
-    component: ExtLink,
-    tags: ['autodocs'],
-}
+  title: "Universal/ExtLink",
+  component: ExtLink,
+  tags: ["autodocs"],
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ExtLink>
+type Story = StoryObj<typeof ExtLink>;
 
-export const Standard: Story = {
-    args: {
-        href: 'https://github.com/thediveo/lxkns',
-        children: '@thediveo/lxkns',
-    },
-}
+export const StandardBefore: Story = {
+  args: {
+    href: "https://github.com/thediveo/lxkns",
+    children: "@thediveo/lxkns",
+  },
+};
 
-export const After: Story = {
-    args: {
-        iconposition: 'after',
-        href: 'https://github.com/thediveo/lxkns',
-        children: '@thediveo/lxkns',
-    },
-}
+export const AlternativeAfterPlacement: Story = {
+  args: {
+    iconposition: "after",
+    href: "https://github.com/thediveo/lxkns",
+    children: "@thediveo/lxkns",
+  },
+};

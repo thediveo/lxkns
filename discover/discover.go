@@ -20,14 +20,15 @@
 package discover
 
 import (
+	"context"
 	"fmt"
-	"strings"
+	"log/slog"
 
-	"github.com/thediveo/lxkns/log"
+	"slices"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 // Result stores the results of a tour through Linux processes and
@@ -151,7 +152,7 @@ var discoverySequence = []model.NamespaceTypeIndex{
 // that user namespaces come first, then PID namespaces, then all other
 // namespace types.
 func init() {
-	for typeidx := model.NamespaceTypeIndex(0); typeidx < model.NamespaceTypesCount; typeidx++ {
+	for typeidx := range model.NamespaceTypesCount {
 		if typeidx != model.UserNS && typeidx != model.PIDNS {
 			discoverySequence = append(discoverySequence, typeidx)
 		}
@@ -211,15 +212,14 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	if opts.NamespaceTypes&species.CLONE_NEWPID != 0 {
 		result.PIDNSRoots = rootNamespaces(result.Namespaces[model.PIDNS])
 	}
-	// TODO: Find the initial namespaces...
 
-	log.Infofn(func() string {
-		perns := []string{}
+	if slog.Default().Enabled(context.Background(), slog.LevelInfo) {
+		counts := map[string]int{}
 		for nstypeidx, nsmap := range result.Namespaces {
-			perns = append(perns, fmt.Sprintf("%d %s", len(nsmap), model.TypesByIndex[nstypeidx].Name()))
+			counts[model.TypesByIndex[nstypeidx].Name()] = len(nsmap)
 		}
-		return fmt.Sprintf("discovered %s namespaces", strings.Join(perns, ", "))
-	})
+		slog.Info("discovered namespaces", slog.Any("counts", counts))
+	}
 
 	// Do we need a PID mapping between PID namespaces?
 	if opts.withPIDmap {
@@ -231,7 +231,7 @@ func Namespaces(options ...DiscoveryOption) *Result {
 	discoverContainers(result)
 
 	// Pick up leader process CPU affinity and scheduling setup.
-	discoverAffinityScheduling(result)
+	discoverAffinity(result)
 
 	// As a C oldie it gives me the shivers to return a pointer to what might
 	// look like an "auto" local struct ;)

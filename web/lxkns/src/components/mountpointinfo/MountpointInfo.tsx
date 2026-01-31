@@ -12,15 +12,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { MountPoint } from 'models/lxkns/mount'
+import type { MountPoint } from 'models/lxkns/mount'
 import { IconButton, styled, Tooltip } from '@mui/material'
 import { filesystemTypeLink } from './fslinks'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { MountpointPath } from 'components/mountpointpath'
 import { GroupedPropagationMembers } from 'components/groupedpropagationmembers/GroupedPropagationMembers'
-import { NamespaceMap } from 'models/lxkns/model'
+import type { NamespaceMap } from 'models/lxkns/model'
 import { MountpointRoot } from 'components/mountpointroot'
 import { NamespaceInfo } from 'components/namespaceinfo'
 
@@ -109,7 +107,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
     // Please note: mount point tags cannot contain spaces in their names or
     // values, as spaces are used as separators between tags. Values are
     // optional.
-    const Tags = () => <>{Object.entries(mountpoint.tags)
+    const tags = <>{Object.entries(mountpoint.tags)
         .sort(([tagname1,], [tagname2,]) => tagname1.localeCompare(tagname2, undefined, { numeric: true }))
         .map(([tagname, tagvalue], idx) => [
             idx > 0 && <br key={`tags-br-${idx}`} />,
@@ -166,7 +164,6 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
                         <IconButton
                             color="primary"
                             size="small"
-                            aria-label="external documentation"
                             href={filesystemTypeLink(mountpoint.fstype)}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -199,7 +196,7 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
             />}
             <NameValueRow key="mntid" name="ID" value={mountpoint.mountid} />
             <NameValueRow key="parentid" name="parent ID" value={parent} />
-            <NameValueRow key="tags" name="tags" value={<Tags />} />
+            <NameValueRow key="tags" name="tags" value={tags} />
         </MountProperties>
     </>
 }

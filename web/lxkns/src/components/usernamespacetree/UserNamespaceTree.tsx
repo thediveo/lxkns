@@ -12,21 +12,27 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef, useImperativeHandle } from 'react'
 
 import Typography from '@mui/material/Typography'
 import { SimpleTreeView } from '@mui/x-tree-view'
 
-import { compareNamespaceById, Discovery, Namespace, NamespaceMap, NamespaceType } from 'models/lxkns'
+import { 
+    compareNamespaceById, 
+    type Discovery, 
+    type Namespace, 
+    type NamespaceMap, 
+    NamespaceType
+} from 'models/lxkns'
 import { UserNamespaceTreeItem, uniqueProcsOfTenants } from 'components/usernamespacetreeitem'
-import { Action, EXPANDALL, COLLAPSEALL } from 'app/treeaction'
 import { expandInitiallyAtom } from 'views/settings'
 import { useAtom } from 'jotai'
+import type { TreeAPI } from 'app/treeapi'
 
 
 export interface UserNamespaceTreeProps {
-    /** trigger tree action. */
-    action: Action
+    /** tree API for expansion, collapsing */
+    apiRef?: React.Ref<TreeAPI>
     /** discovery data. */
     discovery: Discovery
 }
@@ -40,7 +46,7 @@ export interface UserNamespaceTreeProps {
 //
 // This component also supports sending action commands for expanding or
 // collapsing (almost) all user namespaces via the properties mechanism.
-export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps) => {
+export const UserNamespaceTree = ({ apiRef, discovery }: UserNamespaceTreeProps) => {
 
     const [expandInitially] = useAtom(expandInitiallyAtom)
 
@@ -53,33 +59,26 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
     const [expanded, setExpanded] = useState<string[]>([])
     const currExpanded = useRef<string[]>([])
 
-    useEffect(() => { currExpanded.current = expanded }, [expanded])
+    useImperativeHandle(apiRef, () => ({
+        expandAll() {
+            // expand all user namespaces and all included process nodes.
+            const alluserns = Object.values(discovery.namespaces)
+                .filter(ns => ns.type === "user")
+                .map(ns => ns.nsid.toString())
+            const allealdormen = Object.values(discovery.namespaces)
+                .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
+                .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
+            setExpanded(alluserns.concat(allealdormen))
+        },
+        collapseAll() {
+            const topuserns = Object.values(discovery.namespaces)
+                .filter(ns => ns.type === "user" && ns.parent === null)
+                .map(ns => ns.nsid.toString())
+            setExpanded(topuserns)
+        },
+    }))
 
-    // Trigger an action when the action "state" changes; we are ignoring any
-    // stuff appended to the commands, as we need to add noise to the commands
-    // in order to make state changes trigger. Oh, well, bummer.
-    useEffect(() => {
-        switch (action.action) {
-            case EXPANDALL: {
-                // expand all user namespaces and all included process nodes.
-                const alluserns = Object.values(discovery.namespaces)
-                    .filter(ns => ns.type === "user")
-                    .map(ns => ns.nsid.toString())
-                const allealdormen = Object.values(discovery.namespaces)
-                    .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
-                    .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
-                setExpanded(alluserns.concat(allealdormen))
-                break
-            }
-            case COLLAPSEALL: {
-                const topuserns = Object.values(discovery.namespaces)
-                    .filter(ns => ns.type === "user" && ns.parent === null)
-                    .map(ns => ns.nsid.toString())
-                setExpanded(topuserns)
-                break
-            }
-        }
-    }, [action, discovery])
+    useEffect(() => { currExpanded.current = expanded }, [expanded])
 
     // After updating the discovery information, check if there are any new user
     // namespaces (including their sub items grouping non-user namespaces by
@@ -130,7 +129,7 @@ export const UserNamespaceTree = ({ action, discovery }: UserNamespaceTreeProps)
     // update the tree's expand state accordingly. This allows us to
     // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
     // state of the tree.
-    const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+    const handleToggle = (_: React.SyntheticEvent | null, nodeIds: string[]) => {
         setExpanded(nodeIds)
     }
 

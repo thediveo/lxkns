@@ -102,7 +102,7 @@ specified namespaces.
 
 [Execute](f, namespaces...) is a synchronous version of Go() which waits for the
 namespace-switched f() to complete and to return some result (in form of an
-interface{}). Execute then returns this result to the caller.
+any). Execute then returns this result to the caller.
 
 [Visit](f, namespaces...) is for those situations where the caller wants to
 avoid creating a new go routine, but is prepared to throw away its current go
@@ -139,11 +139,11 @@ runnining a specific function only in the specified namespaces).
 # Execute
 
 [Execute] is the synchronous twin of Go(): it waits for the namespace-switched
-function f() to complete and to return an interface{}. Execute then passes on
+function f() to complete and to return an any. Execute then passes on
 this result to its caller.
 
 	netns := ops.NamespacePath("/proc/self/ns/net")
-	result, err := ops.Execute(func() interface{} {
+	result, err := ops.Execute(func() any {
 	    return "Nobody expects the Spanish Inquisition!"
 	}, netns)
 

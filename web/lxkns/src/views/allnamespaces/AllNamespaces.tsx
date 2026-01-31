@@ -12,23 +12,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React from 'react'
-
-import { Discovery } from 'models/lxkns'
-import { Action } from 'app/treeaction'
+import type { Discovery } from 'models/lxkns'
 import { UserNamespaceTree } from 'components/usernamespacetree'
 import { Box } from '@mui/material'
+import type { TreeAPI } from 'app/treeapi'
 
 
 export interface AllNamespacesProps {
+    /** tree API for expansion, collapsing */
+    apiRef?: React.Ref<TreeAPI>
     /** lxkns discovery data */
     discovery: Discovery
-    /** tree action */
-    action: Action
 }
 
-export const AllNamespaces = ({ discovery, action }: AllNamespacesProps) => (
+export const AllNamespaces = ({ apiRef, discovery }: AllNamespacesProps) => (
     <Box pl={1}>
-        <UserNamespaceTree discovery={discovery} action={action} />
+        <UserNamespaceTree discovery={discovery} apiRef={apiRef} />
     </Box>
 )

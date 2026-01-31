@@ -31,15 +31,15 @@
 package discover
 
 import (
+	"context"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/thediveo/lxkns/internal/namespaces"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/relations"
-	"github.com/thediveo/lxkns/plural"
 	"github.com/thediveo/lxkns/species"
 )
 
@@ -57,12 +57,13 @@ import (
 // then force us to keep potentially a larger number of fd's open.
 func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 	if !result.Options.DiscoverHierarchy {
-		log.Infof("skipping discovery of %s namespace hierarchy", nstype.Name())
+		slog.Info("skipping discovery of namespace hierarchy", slog.String("type", nstype.Name()))
 		return
 	}
-	log.Debugf("starting discovery of %s namespace hierarchy...", nstype.Name())
+	slog.Debug("discovering namespace hierarchy", slog.String("type", nstype.Name()))
 	hidden := 0
 
+	debugEnabled := slog.Default().Enabled(context.Background(), slog.LevelDebug)
 	nstypeidx := model.TypeIndex(nstype)
 	nsmap := result.Namespaces[nstypeidx]
 	for _, startns := range nsmap {
@@ -77,8 +78,8 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 		// descriptors referencing the namespaces to be queried for their
 		// parents.
 		if len(ns.Ref()) != 1 {
-			log.Infof("skipping bind-mounted namespace %s:[%d]",
-				ns.Type(), ns.ID().Ino)
+			slog.Info("skipping bind-mounted namespace",
+				slog.String("namespace", ns.(model.NamespaceStringer).TypeIDString()))
 			continue
 		}
 		f, err := os.Open(ns.Ref()[0])
@@ -93,7 +94,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 			// to climb up further. This won't catch the initial user/pid
 			// namespaces, but then these will break out of the loop anyway,
 			// as they don't have any parents.
-			if ns.(model.Hierarchy).Parent() != nil {
+			if ns.(model.Hierarchy).Parent() != nil { //nolint QF1006
 				break
 			}
 			// By the way ... if it's a user namespace, then get its owner's
@@ -139,8 +140,9 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 				// found.
 				parentns = namespaces.New(nstype, parentnsid, nil)
 				nsmap[parentnsid] = parentns
-				if log.LevelEnabled(log.DebugLevel) {
-					log.Debugf("found hidden intermediate namespace %s:[%d]", nstype.Name(), parentnsid.Ino)
+				if debugEnabled {
+					slog.Debug("found hidden intermediate namespace",
+						slog.String("namespace", parentns.(model.NamespaceStringer).TypeIDString()))
 				}
 				hidden++
 			}
@@ -154,5 +156,5 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 		// Don't leak...
 		_ = nsf.(io.Closer).Close()
 	}
-	log.Infof("found %s", plural.Elements(hidden, "hidden %s namespaces", nstype.Name()))
+	slog.Info("found hidden namespaces in hierarchy", slog.Int("count", hidden))
 }
