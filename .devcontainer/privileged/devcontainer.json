@@ -12,7 +12,8 @@
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest",
             "moby": false // go for the upstream Docker-CE
-        },        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
+        },
+        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
             "port": "3400",
             "livereload-port": "3401"
         },
@@ -48,7 +49,7 @@
     },
     "postCreateCommand": {
         "use-project-lxknsrc": "ln -sf ${containerWorkspaceFolder}/.lxknsrc.yaml ${HOME}/.lxknsrc.yaml", 
-        "node-for-all": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
+        "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node && . ${NVM_DIR}/nvm.sh && cd web/lxkns && corepack enable && echo Y | yarn set version latest",
         "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
         // considering the enormous noise made by the user namespace proponents
         // it breaks any existing and future irony meter that the same
