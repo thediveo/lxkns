@@ -23,6 +23,7 @@ jobs:
       - name: test build
         run: |
           corepack enable
+          echo Y | yarn set version latest
           yarn install
           yarn build
         working-directory: web/lxkns
