@@ -2,7 +2,7 @@
 
 import http from 'http'
 import fs from 'fs'
-import md5 from 'md5'
+import crypto from 'crypto'
 
 // see: https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/,
 // even more simplified.
@@ -41,7 +41,9 @@ const cmd = (c) => {
     const anonymous = Math.random().toString(36).slice(2)
     Object.values(data['namespaces']).forEach(netns => {
         if (netns['user-name'] !== 'root') {
-            netns['user-name'] = 'user' + md5(anonymous + netns['user-name'])
+            const shasum = crypto.createHash('sha1')
+            shasum.update(anonymous + netns['user-name'])
+            netns['user-name'] = 'user' + shasum.digest('hex')
         }
     })
 
