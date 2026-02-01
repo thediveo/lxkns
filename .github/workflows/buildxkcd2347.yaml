@@ -23,7 +23,7 @@ jobs:
       - name: test build
         run: |
           corepack enable
-          echo Y | yarn set version latest
+          yarn set version latest # has CI envvar already set, so yarn will not be asking back
           yarn install
           yarn build
         working-directory: web/lxkns
