@@ -41,7 +41,7 @@ const cmd = (c) => {
     const anonymous = Math.random().toString(36).slice(2)
     Object.values(data['namespaces']).forEach(netns => {
         if (netns['user-name'] !== 'root') {
-            const shasum = crypto.createHash('sha1')
+            const shasum = crypto.createHash('sha256')
             shasum.update(anonymous + netns['user-name'])
             netns['user-name'] = 'user' + shasum.digest('hex')
         }
