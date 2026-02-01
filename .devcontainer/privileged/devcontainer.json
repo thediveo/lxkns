@@ -49,7 +49,8 @@
     },
     "postCreateCommand": {
         "use-project-lxknsrc": "ln -sf ${containerWorkspaceFolder}/.lxknsrc.yaml ${HOME}/.lxknsrc.yaml", 
-        "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node && . ${NVM_DIR}/nvm.sh && cd web/lxkns && corepack enable && echo Y | yarn set version latest",
+        "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
+        "yawn": ". ${NVM_DIR}/nvm.sh && cd web/lxkns && corepack enable && CI=1 yarn set version latest",
         "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
         // considering the enormous noise made by the user namespace proponents
         // it breaks any existing and future irony meter that the same
