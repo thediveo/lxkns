@@ -85,3 +85,14 @@ jobs:
             ${{ env.BUILDCONTEXTS }}
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux
             kernel namespaces discovery
+
+      - name: Publish compose file as OCI artifact
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          echo "${{ steps.metadata.outputs.tag-names }}" | while read -r tag; do
+            TAG="$tag" docker compose \
+              -f deployments/oci-artifact-app/docker-compose.yaml \
+              publish --resolve-image-digests \
+                ghcr.io/${{ github.repository }}/app:$tag
+          done

@@ -23,7 +23,8 @@ _invisible_.
 
 ## Quick Start
 
-First, ensure that you have the Docker compose v2 plugin installed.
+First, ensure that you have the Docker compose v2 plugin version 2.34.0 or later
+installed. Version 2.34.0 was released March 2025.
 
 > [!NOTE]
 > Debian users typically need to install docker-ce instead of docker.io
@@ -31,13 +32,14 @@ First, ensure that you have the Docker compose v2 plugin installed.
 > features completely – which absolutely makes sense in a fast moving container
 > world ... _NOT_.
 
-Make sure you have a Linux kernel of at least version 4.11 installed, however we
-highly recommend at least kernel version 5.6 or later.
+Make also sure you have a Linux kernel of at least version 4.11 installed,
+however we highly recommend at least kernel version 5.6 or later.
+
+Then issue this command that pulls the versioned docker-compose.yaml from the
+GitHub OCI registry:
 
 ```bash
-wget -q --no-cache -O - \
-  https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
-  | docker compose -f - up
+docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
 ```
 
 Finally, visit `http://localhost:5010` and start looking around Linux kernel
