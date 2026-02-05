@@ -87,8 +87,9 @@ jobs:
             kernel namespaces discovery
 
       - name: Publish compose file as OCI artifact
+        if: github.ref_type == 'tag'
         run: |
-          for tag in latest "{{version}}" "{{major}}.{{minor}}" "{{major}}"; do
+          echo "${{ steps.metadata.outputs.tags }}" | while read -r tag; do
             docker compose \
               -f deployments/oci-artifact-app/docker-compose.yaml \
               publish --resolve-image-digests \
