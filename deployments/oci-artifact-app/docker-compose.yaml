@@ -1,7 +1,7 @@
 name: lxkns
 services: 
     lxkns:
-        image: ghcr.io/thediveo/lxkns:${TAG} # gets sha256-pinned as part of publication
+        image: ghcr.io/thediveo/lxkns:${TAG:-latest} # gets sha256-pinned as part of publication
         restart: 'unless-stopped'
         read_only: true
         command:
