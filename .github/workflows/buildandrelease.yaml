@@ -89,12 +89,10 @@ jobs:
       - name: Publish compose file as OCI artifact
         if: github.ref_type == 'tag'
         shell: bash
-        env:
-          TAGS: 
         run: |
-          echo "${{ steps.metadata.outputs.tags }}" | while read -r tag; do
+          echo "${{ steps.metadata.outputs.tag-names }}" | while read -r tag; do
             docker compose \
               -f deployments/oci-artifact-app/docker-compose.yaml \
               publish --resolve-image-digests \
-                ghcr.io/${{ github.repository }}:$tag
+                ghcr.io/${{ github.repository }}/app:$tag
           done
