@@ -1,14 +1,14 @@
 name: lxkns
 services: 
     lxkns:
-        image: ghcr.io/thediveo/lxkns # gets pinned as part of publication
+        image: ghcr.io/thediveo/lxkns:${TAG} # gets sha256-pinned as part of publication
         restart: 'unless-stopped'
         read_only: true
         command:
             - "/lxkns"
             - "--debug"
         ports:
-            - "5010:5010"
+            - "127.0.0.1:5010:5010"
         user: "65534"
         security_opt:
             - apparmor:unconfined # cannot load a remote profile

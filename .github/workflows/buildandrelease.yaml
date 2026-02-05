@@ -91,7 +91,7 @@ jobs:
         shell: bash
         run: |
           echo "${{ steps.metadata.outputs.tag-names }}" | while read -r tag; do
-            docker compose \
+            TAG="$tag" docker compose \
               -f deployments/oci-artifact-app/docker-compose.yaml \
               publish --resolve-image-digests \
                 ghcr.io/${{ github.repository }}/app:$tag
