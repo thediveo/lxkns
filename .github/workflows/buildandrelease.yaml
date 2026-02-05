@@ -85,3 +85,13 @@ jobs:
             ${{ env.BUILDCONTEXTS }}
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux
             kernel namespaces discovery
+
+      - name: Publish compose file as OCI artifact
+        run: |
+          for tag in latest "{{version}}" "{{major}}.{{minor}}" "{{major}}"; do
+            docker compose \
+              -f deployments/oci-artifact-app/docker-compose.yaml \
+              publish --resolve-image-digests \
+                ghcr.io/${{ github.repository }}:$tag
+              ;
+          done
