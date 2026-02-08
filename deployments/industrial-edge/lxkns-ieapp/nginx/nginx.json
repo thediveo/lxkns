@@ -1,0 +1,12 @@
+{
+    "lxkns": [
+        {
+            "name": "lxkns",
+            "protocol": "HTTP",
+            "port": "5010",
+            "headers": "",
+            "subpath": "",
+            "rewriteTarget": "/"
+        }
+    ]
+}

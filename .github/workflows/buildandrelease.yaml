@@ -14,11 +14,11 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Check out the repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Get all git tags
         run: |
@@ -37,7 +37,6 @@ jobs:
 
       - name: Log into the container registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        if: github.ref_type == 'tag'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -52,7 +51,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value={{sha}},enable=${{ github.ref_type != 'tag' }}
 
       - name: Prepare (fake) Go workspace and build contexts
         shell: bash
@@ -87,7 +85,6 @@ jobs:
             kernel namespaces discovery
 
       - name: Publish compose file as OCI artifact
-        if: github.ref_type == 'tag'
         shell: bash
         run: |
           echo "${{ steps.metadata.outputs.tag-names }}" | while read -r tag; do
@@ -96,3 +93,20 @@ jobs:
               publish --resolve-image-digests \
                 ghcr.io/${{ github.repository }}/app:$tag
           done
+
+      - name: Build Industrial Edge app bundle
+        shell: bash
+        run: |
+          export TAG="${{github.ref_name}}"
+          TAG="${TAG#v}"
+          go run github.com/thediveo/tiap/cmd/tiap@v0.14.1 \
+            deployments/industrial-edge \
+            --out lxkns.app \
+            --app-version "${{github.ref_name}}"
+          zip -9 lxkns.zip lxkns.app LICENSE
+
+      - name: Release Industrial Edge app bundle
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        with:
+          files: |
+            lxkns.zip

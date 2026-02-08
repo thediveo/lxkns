@@ -67,7 +67,8 @@
                 "stkb.rewrap",
                 "brunnerh.insert-unicode",
                 "mhutchie.git-graph",
-                "ms-vscode.live-server"
+                "ms-vscode.live-server",
+                "docker.docker"
             ]
         }
     }
