@@ -1,12 +1,11 @@
-version: '2.4'
 services: 
     lxkns:
-        image: lxkns:latest
+        image: lxkns:${TAG:-latest}
+        restart: 'unless-stopped'
         read_only: true
         mem_limit: 32mb
         command:
             - "/lxkns"
-            - "--initialcgroup"
         ports:
             - "5010:5010"
         user: "65534"
@@ -30,5 +29,4 @@ services:
         # lxkns. Unfortunately, the compose definition yet doesn't support
         # setting the cgroup namespace mode "private" or "host" (it simply
         # doesn't exist).
-        #
-        # cgroup: host
+        cgroup: host

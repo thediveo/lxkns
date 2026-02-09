@@ -22,5 +22,6 @@
 		"eslint.useFlatConfig": true,
 		"eslint.runtime": "/usr/local/bin/node",
 		"terminal.integrated.scrollback": 50000,
+		"docker.lsp.telemetry": "off",
 	}
 }
