@@ -7,7 +7,7 @@
     "redirectSection": "lxkns",
     "redirectUrl": "lxkns/",
     "restRedirectUrl": "",
-    "description": "Discover the Linux kernel namespaces and mount points used by your apps in your SIEMENS Industrial Edge devices.\n\nSee the virtual \"wiring\" and network configuration in your web browser. For instance, your container's IP and MAC addresses, their IP routing, and DNS configuration.\n\nEasily capture your container network traffic with the SIEMENS Edgeshark plugin for the Wireshark network capture program. Simply install the Edgeshark plugin on your desktop system (Windows and Linux) and you are ready to capture. In the plugin, you see the containers running on your Industrial Edge device. Just click on the container you want to capture from.\n\nNo fiddling around with low-level Linux CLI tools, or baking capture tools into your containers for diagnosis.",
+    "description": "Discover the Linux kernel namespaces and mount points used by your apps in your SIEMENS Industrial Edge devices. Linux kernel namespaces and mount points are important technological building blocks for app containers.",
     "swarmModeEnable": false,
     "required": [],
     "releaseNotes": "",
