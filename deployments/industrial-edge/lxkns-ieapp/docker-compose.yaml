@@ -1,6 +1,6 @@
 services: 
     lxkns:
-        image: lxkns:${TAG:-latest}
+        image: ghcr.io/thediveo/lxkns:${TAG:-latest}
         restart: 'unless-stopped'
         read_only: true
         mem_limit: 32mb
