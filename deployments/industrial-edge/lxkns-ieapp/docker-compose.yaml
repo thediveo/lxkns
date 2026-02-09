@@ -6,8 +6,6 @@ services:
         mem_limit: 32mb
         command:
             - "/lxkns"
-        ports:
-            - "5010:5010"
         user: "65534"
         # Clean all default capabilities Docker might otherwise grant us and
         # several of them we don't need; add only those capabilities we really
