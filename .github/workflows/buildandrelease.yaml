@@ -77,7 +77,7 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
             WSDISKPATHS=./lxkns
-            GIT_VERSION=${{ github.ref_name }}
+            REACT_APP_GIT_VERSION=${{ github.ref_name }}
           build-contexts: |
             webappsrc=./web/lxkns
             ${{ env.BUILDCONTEXTS }}
