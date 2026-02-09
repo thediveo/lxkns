@@ -102,6 +102,7 @@ jobs:
           go run github.com/thediveo/tiap/cmd/tiap@v0.14.1 \
             deployments/industrial-edge \
             --out lxkns.app \
+            --interpolate \
             --app-version "${{github.ref_name}}"
           zip -9 lxkns.zip lxkns.app LICENSE
 
