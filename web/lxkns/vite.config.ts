@@ -22,7 +22,8 @@ const srcs = [
 export default defineConfig({
     base: './',
     build: {
-        outDir: 'build'
+        outDir: 'build',
+        chunkSizeWarningLimit: 1024,
     },
     server: {
         host: "0.0.0.0",
