@@ -22,7 +22,7 @@ import ComposerProjectIcon from 'icons/containers/ComposerProject'
 import PodIcon from 'icons/containers/K8sPod'
 import IEAppIcon from 'icons/containers/IEApp'
 import DevContainerIcon from 'icons/containers/DevContainer'
-import { devContainerFolder } from 'models/lxkns/devcontainer'
+import CodespaceIcon from 'icons/containers/Codespace'
 
 // https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
 const TurtlefinderContainerPrefixLabelName = 'turtlefinder/container/prefix'
@@ -124,7 +124,8 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
         groupicon = <PodIcon fontSize="inherit" />
     }
 
-    const devContainerName = devContainerFolder(container)
+    const devContainerName = container.labels['lxkns.devcontainer.name'] || ''
+    const codespaceName = container.labels['lxkns.codespace.name'] || ''
 
     const paused = container.paused && <Pause fontSize="inherit" />
     const boxed = container.labels[TurtlefinderContainerPrefixLabelName] 
@@ -132,6 +133,8 @@ export const ContainerInfo = ({ container, className }: ContainerInfoProps) => {
 
     return !!container && (
         <ContainerInformation className={className}>
+            {codespaceName !== '' && 
+                <><CodespaceIcon fontSize="inherit" /><DevContainerName>{codespaceName}</DevContainerName> a.k.a. </>}
             {devContainerName !== '' && 
                 <><DevContainerIcon fontSize="inherit" /><DevContainerName>{devContainerName}</DevContainerName> a.k.a. </>}
             <ContainerTypeIcon container={container} fontSize="inherit" />

@@ -1,5 +1,5 @@
 /*
-Package dockerplugin decorates containerd containers that are represent managed
+Package dockerplugin decorates containerd containers that represent managed
 Docker plugins.
 */
 package dockerplugin

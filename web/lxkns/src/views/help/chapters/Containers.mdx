@@ -10,6 +10,9 @@ import ComposerProject from 'icons/containers/ComposerProject.tsx';
 import IEApp from 'icons/containers/IEApp.tsx';
 import K8sPod from 'icons/containers/K8sPod.tsx';
 
+import DevContainer from 'icons/containers/DevContainer.tsx';
+import Codespace from 'icons/containers/Codespace.tsx';
+
 
 # Containers
 
@@ -50,3 +53,13 @@ on the type of container group, together with the group name.
 > podman-specific API, because of the negative experience gained in the
 > now-archived [sealwatcher](https://github.com/thediveo/sealwatcher) podman
 > watcher project.
+
+## Development Containers
+
+Some containers may be used as development containers, sometimes as part of a
+GitHub codespaces.
+
+| Symbol | Type of Container Group |
+| --- | --- |
+| <DevContainer/> | [development container](https://containers.dev/) |
+| <Codespace/> | development container as part of a [Github codespace](https://github.com/features/codespaces) |
