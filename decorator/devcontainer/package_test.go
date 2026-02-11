@@ -1,4 +1,4 @@
-// Copyright 2025 Harald Albrecht.
+// Copyright 2026 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,11 +12,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Container } from './container'
+package devcontainer
 
-export const DevContainerLocalFolderLabelName = 'devcontainer.local_folder'
+import (
+	"testing"
 
-export const devContainerFolder = (container: Container) => (
-    (container.labels && 
-        container.labels[DevContainerLocalFolderLabelName]?.split(/[\\/]/).at(-1)) ?? ''
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
+
+func TestDevcontainerDecorator(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "lxkns/decorator/devcontainer package")
+}

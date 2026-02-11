@@ -6,6 +6,7 @@ package all
 
 import (
 	_ "github.com/thediveo/lxkns/decorator/composer"               // pull in decorator plugin
+	_ "github.com/thediveo/lxkns/decorator/devcontainer"           // pull in decorator plugin
 	_ "github.com/thediveo/lxkns/decorator/dockerplugin"           // pull in decorator plugin
 	_ "github.com/thediveo/lxkns/decorator/industrialedge"         // pull in decorator plugin
 	_ "github.com/thediveo/lxkns/decorator/kuhbernetes/cri"        // pull in decorator plugin

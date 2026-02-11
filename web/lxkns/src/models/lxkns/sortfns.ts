@@ -12,7 +12,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { devContainerFolder } from './devcontainer'
 import type { Busybody, Namespace, Process, Task } from './model'
 import { isTask } from './model'
 
@@ -66,18 +65,19 @@ export const compareNamespaceByRefTypeId = (ns1: Namespace, ns2: Namespace) => {
     return beforeAfter !== 0 ? beforeAfter : compareNamespaceByTypeId
 }
 
-const sortableName = (c: Process | Busybody) => {
-    if (isTask(c) || !c.container) {
-        return '/'+c.name
+const sortableName = (bb: Busybody) => {
+    if (isTask(bb) || !bb.container) {
+        return '/'+bb.name
     }
-    const devContainerName = devContainerFolder(c.container)
-    const prefix = c.container.labels[prefixLabelName]
+    const codespaceName = bb.container?.labels['lxkns.codespace.name']
+    const devContainerName = codespaceName || bb.container?.labels['lxkns.devcontainer.name']
+    const prefix = bb.container?.labels[prefixLabelName]
     // nota bene: ' ' sorts before anything else, '_' before '-', and '/'
     // unfortunately after '-' (so it is not really useful as a group
     // separator).
     const sname = (prefix ? prefix + ' ' : '') +
-        (devContainerName ? devContainerName : c.container.name) + ' ' +
-        c.container.name
+        (devContainerName ? devContainerName : bb.container.name) + ' ' +
+        bb.container.name
     return sname
 }
 
