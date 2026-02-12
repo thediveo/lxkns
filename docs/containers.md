@@ -52,20 +52,31 @@ sibling project:
 
 **lxkns** features an extensible decorator plug-in infrastructure leveraging the
 [go-plugger](https://github.com/thediveo/go-plugger) sibling project for Go
-plugin management (but only using statically compiled-in plugins).
+plugin management (but only using statically compiled-in plugins). Decorators
+augment the found containers with additional information normally not directly
+returned by container engine APIs as part of container inspection. For instance,
+the composer detector (see next) creates composer project group elements based
+on label annotations.
 
 - [composer project](https://github.com/compose-spec/compose-spec) detection,
   based on `com.docker.composer.project` labels.
+
+- [devcontainer](https://containers.dev/) and [Github
+  codespace](https://github.com/features/codespaces) awareness, based on
+  devcontainer-specific container labels and the metadata JSON information
+  contained in some of these labels.
 
 - Siemens [Industrial Edge](https://github.com/industrial-edge) app (and
   runtime) detection, which are a "flavor" of composer projects.
 
 - [Kubernetes](https://kubernetes.io) pod detection:
-  - [dockershim](https://github.com/kubernetes/kubernetes/tree/master/pkg/kubelet/dockershim),
-    based on the esspecially encoded Docker container names.
   - [containerd CRI
     annotations](https://github.com/containerd/containerd/tree/main/pkg/cri),
     based on CRI-specific container labels.
+  - [dockershim](https://github.com/kubernetes/kubernetes/tree/master/pkg/kubelet/dockershim),
+    based on the esspecially encoded Docker container names. As the dockershim
+    has been phased out of k8s a long time ago we'll drop this decorator in the
+    not-to-far future.
 
 > [!TIP] Applications using the `lxkns` module directly can seamlessly add their
 > own decorators. They simply need to register them as "plugins" using the
