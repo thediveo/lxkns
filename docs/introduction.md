@@ -4,8 +4,6 @@
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 
-![build and test](https://github.com/thediveo/lxkns/workflows/build%20and%20test/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-87.7%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
@@ -30,20 +28,15 @@ technology](https://snapcraft.io/docs). This discovery engine even determines
 the **visibility of mount points**, taking different forms of **overmounting**
 into consideration.
 
-> [!WARNING] Please check [Important Changes](changelog), especially if you
-> have been used the API in the past, and not only the service.
-
 ## Quick Deploy
 
 Make sure that you have a fairly recent Docker engine installed, including the
-Docker compose plugin. (Debian users are advised to install docker-ce packages
+Docker compose v2 plugin. (Debian users are advised to install docker-ce packages
 instead of Debian's outdated docker.io ones).
 
 ```bash
 # I feel lucky!
-wget -q --no-cache -O - \
-  https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
-  | docker compose -f - up
+docker compose -f oci://github.com/thediveo/lxkns/app up -d
 ```
 
 This loads a suitable Docker composer deployment file and feeds it directly into
