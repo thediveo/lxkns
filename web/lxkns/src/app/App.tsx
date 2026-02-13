@@ -63,6 +63,8 @@ import { basename } from 'utils/basename'
 import ContainerIcon from 'icons/containers/Container'
 import { Containers } from 'views/containers'
 import type { TreeAPI } from './treeapi'
+import CPUAffinityIcon from 'icons/CPUAffinity'
+import { Affinities } from 'views/affinities'
 
 
 /**
@@ -83,7 +85,8 @@ interface viewItem {
 const views: viewItem[][] = [
     [
         { icon: <HomeIcon />, label: "all namespaces", path: "/" },
-        { icon: <ContainerIcon />, label: "all containers", path: "containers" },
+        { icon: <ContainerIcon />, label: "all containers", path: "/containers" },
+        { icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities" },
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
@@ -253,6 +256,16 @@ const LxknsApp = () => {
                                 forrestRef.current?.set(basename+"/containers", apiref)
                                 return () => { forrestRef.current?.delete(basename+"/containers") }
                             }} 
+                        />}
+                    />
+                    <Route
+                        path="/affinities"
+                        element={<Affinities 
+                            discovery={discovery}
+                            apiRef={(apiref) => {
+                                forrestRef.current?.set(basename+"/affinities", apiref)
+                                return () => { forrestRef.current?.delete(basename+"/affinities") }
+                            }}
                         />}
                     />
                     {views.map(group => group.filter(viewitem => !!viewitem.type))

@@ -35,6 +35,7 @@ func GetNamespacesHandler(cizer containerizer.Containerizer) http.HandlerFunc {
 			discover.WithContainerizer(cizer),
 			discover.WithPIDMapper(), // recommended when using WithContainerizer.
 			discover.WithAffinityAndScheduling(),
+			discover.WithTaskAffinityAndScheduling(),
 		)
 		// Note bene: set header before writing the header with the status code;
 		// actually makes sense, innit?

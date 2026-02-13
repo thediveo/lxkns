@@ -12,8 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Container, Engine, Group } from "./container";
-import type { MountPathMap, NamespacedMountPathMaps } from "./mount";
+import type { Container, Engine, Group } from "./container"
+import type { MountPathMap, NamespacedMountPathMaps } from "./mount"
 
 /**
  * Namespace type identifier strings: these are de-facto definitions from the
@@ -29,9 +29,9 @@ export const NamespaceType = {
     user: 'user',
     uts: 'uts',
     time: 'time'
-} as const;
+} as const
 
-export type NamespaceType = typeof NamespaceType[keyof typeof NamespaceType];
+export type NamespaceType = typeof NamespaceType[keyof typeof NamespaceType]
 
 /**
  * Information about a Linux-kernel namespace, with its relationship to other
@@ -149,6 +149,7 @@ export interface Task {
     fridgecgroup: string
     fridgefrozen: boolean
     namespaces: NamespaceSet
+    affinity: number[][] | null
 }
 
 export interface TaskMap { [key: string]: Task }
