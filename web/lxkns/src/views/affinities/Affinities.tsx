@@ -12,24 +12,43 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import type { Discovery, Process, ProcessMap, Task } from "models/lxkns"
-import { Box } from "@mui/material"
+import { compareBusybodies, isProcess, type Busybody, type Discovery, type Process, type ProcessMap } from "models/lxkns"
+import { Box, styled } from "@mui/material"
 import type { TreeAPI } from "app/treeapi"
 import { SimpleTreeView, TreeItem } from "@mui/x-tree-view"
 import CPUAffinityIcon from "icons/CPUAffinity"
+import ProcessInfo from "components/processinfo"
 import TaskInfo from "components/taskinfo"
+import { useImperativeHandle, useMemo } from "react"
 
-type PinnedTask = {
+/**
+ * Information about a task or process that either has been pinned or is an
+ * anchestor process up to the particular root PID1 or PID2.
+ */
+type Executor = {
     pinned: boolean
-    task: Task
+    busybody: Busybody
+    children?: Executor[]
 }
-type TaskCorePinnings = { [key: number]: PinnedTask }
 
-const pinnedTasks = (processes: ProcessMap) => {
-    const tasksOnCores: TaskCorePinnings[] = []
+/**
+ * Mapping a PID or TID (same number space) to information about that task or
+ * process on a particular logical CPU. While the name on purpose focuses on the
+ * pinned tasks and processes, this map additionally contains information about
+ * the process branches leading to these pinned tasks and threads.
+ */
+type CorePinnedExecutors = { [key: number]: Executor }
 
+type PerCoreExecutors = { [key: number]: CorePinnedExecutors }
+
+const pinnedExecutors = (processes: ProcessMap) => {
+    const perCoreExecs: PerCoreExecutors = {}
+
+    // Pour over all processes with all their tasks and pick up the tasks that
+    // are pinned to a single logical CPU only.
     Object.values(processes).forEach((proc) => {
         Object.values(proc.tasks).forEach(task => {
+
             // we want to work only on tasks with single logical CPU affinity;
             // all others we'll ignore...
             const affinities = task?.affinity
@@ -40,31 +59,94 @@ const pinnedTasks = (processes: ProcessMap) => {
 
             // now we're looking at a single logical CPU, ensure that we have a
             // map for this particular logical CPU.
-            let coreTasks = tasksOnCores[cpu]
-            if (!coreTasks) {
-                coreTasks = tasksOnCores[cpu] = {} as TaskCorePinnings
+            let coreExecutors = perCoreExecs[cpu]
+            if (!coreExecutors) {
+                coreExecutors = perCoreExecs[cpu] = {} as CorePinnedExecutors
             }
 
             // this task is pinned, so we put it into our per-CPU map as pinned,
-            // no way around.
-            coreTasks[task.tid] = {pinned: true, task: task}
-
-            // add the branch of processes (that is, task group leaders) that
-            // lead to this task; we first check if our task is already
-            // representing the process itself: in this case we skip this task
-            // group leader and go for the parent process/task group leader.
-            let proc: Process | null = task.process
-            if (task.tid === proc.pid) {
-                proc = proc?.parent
+            // no way around. However, if this task is the sole task in its
+            // process, we map just the process instead of the task.
+            const busybody = (task.process.tasks.length == 1) ? task.process : task
+            let lowerexec = {
+                pinned: true,
+                busybody: busybody,
             }
+            coreExecutors[task.tid] = lowerexec
+
+            // walk up the process tree to collect breadcrumbs. As we start
+            // back-tracking our beginning is either already a process or a
+            // task. In case of a task we proceed from the task's process, but
+            // in case of the single-task process we've already mapped the
+            // process, so we don't want to do this twice.
+            let proc: Process | null = isProcess(busybody) ? busybody.parent : busybody.process
             while (proc) {
-                if (coreTasks[proc.pid]) break
-                coreTasks[proc.pid] = {pinned: false, task: proc.tasks[0]}
+                // have we reached a parent that we've already mapped?
+                let exec = coreExecutors[proc.pid]
+                if (exec) {
+                    // don't forget to chain the crumbs!
+                    if (!exec.children) exec.children = []
+                    exec.children.push(lowerexec)
+                    break
+                }
+                exec = {
+                    pinned: false,
+                    busybody: proc,
+                    children: [lowerexec],
+                }
+                coreExecutors[proc.pid] = exec
+                lowerexec = exec
+                proc = proc.parent
             }
         })
     })
 
-    return tasksOnCores
+    return perCoreExecs
+}
+
+const ptid = (bb: Busybody) => isProcess(bb) ? bb.pid : bb.tid
+
+const cpuItemID = (cpu: number) => `cpu${cpu}`
+
+const executorItemID = (tid: number, cpu: number) => `task${tid}-${cpu}`
+
+// Unpinned overrides the foreground color for child elements with higher
+// priority.
+const Unpinned = styled('span')(({ theme }) => ({
+    '& *': {
+        color: theme.palette.text.disabled + "!important",
+    },
+}))
+
+const Info = ({ busybody, pinned }: { busybody: Busybody, pinned: boolean }) => {
+    const info = isProcess(busybody) ? <ProcessInfo process={busybody} /> : <TaskInfo task={busybody} />
+    return pinned ? info : <Unpinned>{info}</Unpinned>
+}
+
+// execTree recursively renders the process or task with the specified TID/PID
+// as well as all its children leading up to pinned tasks.
+const execTree = (tid: number, cpu: number, execsPerCore: CorePinnedExecutors) => {
+    const exec = execsPerCore[tid]
+    if (!exec) {
+        return <></>
+    }
+    return <TreeItem
+        key={tid}
+        itemId={executorItemID(tid, cpu)}
+        label={<Info busybody={exec.busybody} pinned={exec.pinned} />}
+    >{
+            exec.children?.
+                sort((a, b) => {
+                    const isProcessA = isProcess(a.busybody)
+                    const isProcessB = isProcess(b.busybody)
+                    if (isProcessA != isProcessB) {
+                        return (+isProcessB) - (+isProcessA)
+                    }
+
+                    return compareBusybodies(a.busybody, b.busybody)
+                }).
+                map((exec) => execTree(ptid(exec.busybody), cpu, execsPerCore))
+        }</TreeItem>
 }
 
 export interface AffinitiesProps {
@@ -74,32 +156,31 @@ export interface AffinitiesProps {
     discovery: Discovery
 }
 
-//@ts-expect-error develop
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
-    const tasksOnCores = pinnedTasks(discovery.processes)
 
-    const cpus = tasksOnCores.map((tasksOnCore, cpu) => {
-        return <TreeItem
-            key={cpu}
-            itemId={`cpu${cpu}`}
-            label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
-        >{
-                Object.entries(tasksOnCore).map(([tid, pinnedTask]) => {
-                    return <TreeItem
-                        key={tid}
-                        itemId={`cpu${cpu}task${tid}`}
-                        label={<TaskInfo task={pinnedTask.task}/>}
-                    ></TreeItem>
-                })
-            }</TreeItem>
-    })
+    useImperativeHandle(apiRef, () => ({
+        expandAll() {
+        },
+        collapseAll() {
+        },
+    }))
+
+    const cpusMemo = useMemo(() => (Object.entries(pinnedExecutors(discovery.processes)).
+        map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, CorePinnedExecutors]).
+        sort(([cpuA,], [cpuB]) => cpuA - cpuB).
+        map(([cpu, execsPerCore]) => {
+            return <TreeItem
+                key={cpu}
+                itemId={cpuItemID(cpu)}
+                label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
+            >{[2, 1].map((tid) => execTree(tid, cpu, execsPerCore))}</TreeItem>
+        })), [discovery])
 
     return (
         <Box pl={1}>
             <SimpleTreeView
                 className="affinitytree"
-            >{cpus}</SimpleTreeView>
+            >{cpusMemo}</SimpleTreeView>
         </Box>
     )
 }
