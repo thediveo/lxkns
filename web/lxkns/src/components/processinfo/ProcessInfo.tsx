@@ -23,6 +23,8 @@ import ContainerInfo from 'components/containerinfo/ContainerInfo'
 import CgroupInfo from 'components/cgroupinfo/CgroupInfo'
 import CPUList from 'components/cpulist/CPUList'
 import SchedulerInfo from 'components/schedinfo/SchedulerInfo'
+import ProcessName from 'components/processname/ProcessName'
+import TuxIcon from 'icons/Tux'
 
 const piShort = "short-processinfo"
 
@@ -50,20 +52,6 @@ const ProcessInformation = styled('span')(({ theme }) => ({
 
 const ContainerInformation = styled(ContainerInfo)(() => ({
     marginRight: '0.5em',
-}))
-
-export const ProcessName = styled('span')(({ theme }) => ({
-    fontStyle: 'italic',
-    color: theme.palette.process,
-    '&::before': {
-        content: '"«"',
-        fontStyle: 'normal',
-    },
-    '&::after': {
-        content: '"»"',
-        fontStyle: 'normal',
-        paddingLeft: '0.1em', // avoid italics overlapping with guillemet
-    },
 }))
 
 /**
@@ -113,11 +101,14 @@ export interface ProcessInfoProps {
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
+
     return !!process && (
         <ProcessInformation className={clsx(className, short && piShort)}>
             {process.container && <ContainerInformation container={process.container} />}
             <Tooltip title="process"><>
-                {process.pid === 1 ? <Init1Icon className="init1" fontSize="inherit" /> : <ProcessIcon fontSize="inherit" />}
+                {process.pid === 1 
+                    ? <Init1Icon className="init1" fontSize="inherit" /> 
+                    : process.pid === 2 || process.parent?.pid === 2 ? <TuxIcon fontSize="inherit" /> : <ProcessIcon fontSize="inherit" />}
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>

@@ -19,8 +19,8 @@ import { styled, Tooltip } from '@mui/material'
 import ThreadIcon from 'icons/Thread'
 import type { Task } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo'
-import { ProcessName } from 'components/processinfo'
 import CgroupInfo from 'components/cgroupinfo'
+import ProcessName from 'components/processname/ProcessName'
 
 
 const tiShort = "short-taskinfo"

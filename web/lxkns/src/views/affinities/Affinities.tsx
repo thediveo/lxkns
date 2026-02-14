@@ -13,13 +13,13 @@
 // under the License.
 
 import { compareBusybodies, isProcess, type Busybody, type Discovery, type Process, type ProcessMap } from "models/lxkns"
-import { Box, styled } from "@mui/material"
+import { Box, styled, Typography } from "@mui/material"
 import type { TreeAPI } from "app/treeapi"
-import { SimpleTreeView, TreeItem } from "@mui/x-tree-view"
+import { SimpleTreeView, TreeItem, type TreeViewItemId } from "@mui/x-tree-view"
 import CPUAffinityIcon from "icons/CPUAffinity"
 import ProcessInfo from "components/processinfo"
 import TaskInfo from "components/taskinfo"
-import { useImperativeHandle, useMemo } from "react"
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 
 /**
  * Information about a task or process that either has been pinned or is an
@@ -135,8 +135,8 @@ const execTree = (tid: number, cpu: number, execsPerCore: CorePinnedExecutors) =
         itemId={executorItemID(tid, cpu)}
         label={<Info busybody={exec.busybody} pinned={exec.pinned} />}
     >{
-            exec.children?.
-                sort((a, b) => {
+            exec.children
+                ?.sort((a, b) => {
                     const isProcessA = isProcess(a.busybody)
                     const isProcessB = isProcess(b.busybody)
                     if (isProcessA != isProcessB) {
@@ -144,8 +144,8 @@ const execTree = (tid: number, cpu: number, execsPerCore: CorePinnedExecutors) =
                     }
 
                     return compareBusybodies(a.busybody, b.busybody)
-                }).
-                map((exec) => execTree(ptid(exec.busybody), cpu, execsPerCore))
+                })
+                .map((exec) => execTree(ptid(exec.busybody), cpu, execsPerCore))
         }</TreeItem>
 }
 
@@ -158,14 +158,53 @@ export interface AffinitiesProps {
 
 export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
 
+    const pinnedExecutorsMemo = useMemo(() => pinnedExecutors(discovery.processes), [discovery])
+
+    // Tree node expansion is a component-local state. We need to also use a
+    // reference to the really current expansion state as for yet unknown
+    // reasons setExpanded() will pass stale state information to its reducer.  
+    const [expanded, setExpanded] = useState<string[]>([])
+    const currExpanded = useRef<string[]>([])
+
+    useEffect(() => { currExpanded.current = expanded }, [expanded])
+
     useImperativeHandle(apiRef, () => ({
         expandAll() {
+            const cpus = Object.keys(pinnedExecutorsMemo)
+                .map((cpu) => cpuItemID(Number(cpu)))
+            const lowerexecs = Object.entries(pinnedExecutorsMemo)
+                .map(([cpuno, coreExecutors]) => {
+                    const cpu = Number(cpuno)
+                    return Object.values(coreExecutors)
+                        .filter(exec => exec.children && exec.children.length > 0)
+                        .map(exec => executorItemID(ptid(exec.busybody), cpu))
+                })
+                .flat()
+            setExpanded(cpus.concat(lowerexecs))
         },
         collapseAll() {
+            const cpus = Object.keys(pinnedExecutorsMemo).map((cpu) => cpuItemID(Number(cpu)))
+            setExpanded(cpus)
         },
     }))
 
-    const cpusMemo = useMemo(() => (Object.entries(pinnedExecutors(discovery.processes)).
+    // ensure that the CPU nodes are always expanded.
+    useEffect(() => {
+        const cpuIds = Object.keys(pinnedExecutorsMemo)
+            .map(cpu => cpuItemID(Number(cpu)))
+            .filter(id => !currExpanded.current.includes(id))
+        setExpanded(cpuIds)
+    }, [discovery, pinnedExecutorsMemo])
+
+    // Whenever the user clicks on the expand/close icon next to a tree item,
+    // update the tree's expand state accordingly. This allows us to
+    // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
+    // state of the tree.
+    const handleToggle = (_event: React.SyntheticEvent | null, nodeIds: Array<TreeViewItemId>) => {
+        setExpanded(nodeIds)
+    }
+
+    const cpusMemo = useMemo(() => (Object.entries(pinnedExecutorsMemo).
         map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, CorePinnedExecutors]).
         sort(([cpuA,], [cpuB]) => cpuA - cpuB).
         map(([cpu, execsPerCore]) => {
@@ -174,13 +213,21 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
                 itemId={cpuItemID(cpu)}
                 label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
             >{[2, 1].map((tid) => execTree(tid, cpu, execsPerCore))}</TreeItem>
-        })), [discovery])
+        })), [pinnedExecutorsMemo])
 
     return (
         <Box pl={1}>
-            <SimpleTreeView
-                className="affinitytree"
-            >{cpusMemo}</SimpleTreeView>
+            {(cpusMemo.length &&
+                <SimpleTreeView
+                    className="affinitytree"
+                    onExpandedItemsChange={handleToggle}
+                    expandedItems={expanded}
+                >{cpusMemo}</SimpleTreeView>
+            ) || (
+                    <Typography variant="body1" color="textSecondary">
+                        nothing discovered yet, please refresh
+                    </Typography>
+                )}
         </Box>
     )
 }

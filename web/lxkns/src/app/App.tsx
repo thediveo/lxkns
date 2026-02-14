@@ -86,7 +86,6 @@ const views: viewItem[][] = [
     [
         { icon: <HomeIcon />, label: "all namespaces", path: "/" },
         { icon: <ContainerIcon />, label: "all containers", path: "/containers" },
-        { icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities" },
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
@@ -120,6 +119,8 @@ const views: viewItem[][] = [
             icon: <NamespaceIcon type={NamespaceType.time} />,
             label: "time namespaces", path: "/time", type: NamespaceType.time
         },
+    ], [
+        { icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities" },
     ], [
         { icon: <TuneIcon />, label: "settings", path: "/settings" },
         { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
