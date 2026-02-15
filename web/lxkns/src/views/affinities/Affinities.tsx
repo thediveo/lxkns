@@ -119,7 +119,9 @@ const Unpinned = styled('span')(({ theme }) => ({
 }))
 
 const Info = ({ busybody, pinned }: { busybody: Busybody, pinned: boolean }) => {
-    const info = isProcess(busybody) ? <ProcessInfo process={busybody} /> : <TaskInfo task={busybody} />
+    const info = isProcess(busybody)
+        ? <ProcessInfo process={busybody} hideAffinity={pinned} /> 
+        : <TaskInfo task={busybody} />
     return pinned ? info : <Unpinned>{info}</Unpinned>
 }
 
@@ -127,7 +129,7 @@ type execOnCoreHandler = (event: React.MouseEvent<HTMLDivElement>, cpu: number, 
 
 // execsTreeOnCore recursively renders the process or task with the specified
 // TID/PID as well as all its children leading up to pinned tasks.
-const execsTreeOnCore = (cpu: number, ptid: number, execsPerCore: CorePinnedExecutors, doubleClick: execOnCoreHandler) => {
+const execsTreeOnCore = (cpu: number, ptid: number, execsPerCore: CorePinnedExecutors, onDoubleClick: execOnCoreHandler, onMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void) => {
     const exec = execsPerCore[ptid]
     if (!exec) {
         return <></>
@@ -138,7 +140,8 @@ const execsTreeOnCore = (cpu: number, ptid: number, execsPerCore: CorePinnedExec
         label={<Info busybody={exec.busybody} pinned={exec.pinned} />}
         slotProps={{
             content: {
-                onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => doubleClick(event, cpu, ptid)
+                onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => onDoubleClick(event, cpu, ptid),
+                onMouseDown: onMouseDown,
             }
         }}
     >{
@@ -152,7 +155,7 @@ const execsTreeOnCore = (cpu: number, ptid: number, execsPerCore: CorePinnedExec
 
                     return compareBusybodies(a.busybody, b.busybody)
                 })
-                .map((exec) => execsTreeOnCore(cpu, pidtid(exec.busybody), execsPerCore, doubleClick))
+                .map((exec) => execsTreeOnCore(cpu, pidtid(exec.busybody), execsPerCore, onDoubleClick, onMouseDown))
         }</TreeItem>
 }
 
@@ -213,8 +216,8 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
 
     // double clicking on the contents of a CPU node expands it, together with
     // all its child and grandchild nodes.
-    const handleCpuDoubleClick = (event: React.MouseEvent<HTMLDivElement>, cpu: number) => {
-        event.stopPropagation()
+    const handleCoreExpand = (event: React.MouseEvent<HTMLDivElement>, cpu: number) => {
+        event.preventDefault()
         const execIds = Object.values(pinnedExecutorsMemo[cpu]).
             map(exec => executorItemID(pidtid(exec.busybody), cpu))
         setExpanded(expanded.concat(execIds, cpuItemID(cpu)))
@@ -229,12 +232,25 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
         return ids.concat(exec.children.map(subexec => execSubtreeIds(cpu, subexec)).flat())
     }
 
-    // double clicking on the contents of a task/process node expands it,
-    // together with all child and grandchild nodes.
-    const handleExecDoubleClick = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => {
-        event.stopPropagation()
-        const exec = pinnedExecutorsMemo[cpu][tid]
-        setExpanded(expanded.concat(execSubtreeIds(cpu, exec)))
+    // double clicking on the contents of a collapsed task/process node expands
+    // it, together with all child and grandchild nodes. Double clicking on an
+    // expanded task/process node collapses it.
+    const handleExecExpandCollapse = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => {
+        event.preventDefault() // ♫ I'm the Great Preventer ♪♬
+        const idx = expanded.indexOf(executorItemID(tid, cpu))
+        if (idx >= 0) {
+            setExpanded([...expanded.slice(0, idx), ...expanded.slice(idx+1)])
+            return
+        }
+        setExpanded(expanded.concat(execSubtreeIds(cpu, pinnedExecutorsMemo[cpu][tid])))
+    }
+
+    // prevent the browser from selecting the node contents upon double
+    // clicking; this still allows click-dragging to select content.
+    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (event.detail === 2) {
+            event.preventDefault()
+        }
     }
 
     // render all CPU nodes, as well as their pinned task child and grandchild
@@ -249,10 +265,11 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
                 label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
                 slotProps={{
                     content: {
-                        onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => handleCpuDoubleClick(event, cpu)
+                        onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => handleCoreExpand(event, cpu),
+                        onMouseDown: handleMouseDown,
                     }
                 }}
-            >{[2, 1].map((tid) => execsTreeOnCore(cpu, tid, execsPerCore, handleExecDoubleClick))}</TreeItem>
+            >{[2, 1].map((tid) => execsTreeOnCore(cpu, tid, execsPerCore, handleExecExpandCollapse, handleMouseDown))}</TreeItem>
         })
 
     return (

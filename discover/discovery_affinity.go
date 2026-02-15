@@ -26,6 +26,13 @@ func discoverAffinity(result *Result) {
 		for _, proc := range result.Processes {
 			for _, task := range proc.Tasks {
 				_ = task.RetrieveAffinity()
+				if task.TID == proc.PID {
+					// this is the task group leader, so propagate the affinity
+					// to the process; we don't need to propagate the scheduling
+					// policy etc. information as it is picked up during the
+					// process scan anyway.
+					proc.Affinity = task.Affinity
+				}
 			}
 		}
 	case result.Options.DiscoverAffinityScheduling:

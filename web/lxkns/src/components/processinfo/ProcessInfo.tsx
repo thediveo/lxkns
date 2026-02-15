@@ -63,6 +63,8 @@ export interface ProcessInfoProps {
     process: Process
     /** render only process name with PID and nothing else */
     short?: boolean
+    /** hide CPU affinity detail */
+    hideAffinity?: boolean
     /** optional CSS class name(s). */
     className?: string
 }
@@ -84,6 +86,8 @@ export interface ProcessInfoProps {
  * 
  * - the **PID**.
  * 
+ * - the **CPU affinity**, unless `hideAffinity=true` or `short=true`.
+ * 
  * - the **cgroup path** unless the path empty (which means "we don't known").
  *   This information is hidden when `short=true`.
  * 
@@ -100,7 +104,7 @@ export interface ProcessInfoProps {
  * This component is licensed under the [Apache License, Version
  * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
-export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => {
+export const ProcessInfo = ({ process, short, hideAffinity, className }: ProcessInfoProps) => {
 
     return !!process && (
         <ProcessInformation className={clsx(className, short && piShort)}>
@@ -112,10 +116,8 @@ export const ProcessInfo = ({ process, short, className }: ProcessInfoProps) => 
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>
-            {!short && <>
-                <CPUList cpus={process.affinity} noWrap showIcon tooltip="CPU affinity list" />
-                <SchedulerInfo process={process} />
-            </>}
+            {!(short || hideAffinity) && <CPUList cpus={process.affinity} noWrap showIcon tooltip="CPU affinity list" />}
+            {!short && <SchedulerInfo process={process} />}
             {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container
                 && <CgroupInfo busybody={process} />}
         </ProcessInformation>
