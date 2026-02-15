@@ -104,11 +104,11 @@ const pinnedExecutors = (processes: ProcessMap) => {
     return perCoreExecs
 }
 
-const ptid = (bb: Busybody) => isProcess(bb) ? bb.pid : bb.tid
+const pidtid = (bb: Busybody) => isProcess(bb) ? bb.pid : bb.tid
 
 const cpuItemID = (cpu: number) => `cpu${cpu}`
 
-const executorItemID = (tid: number, cpu: number) => `task${tid}-${cpu}`
+const executorItemID = (tid: number, cpu: number) => `task${tid}-cpu${cpu}`
 
 // Unpinned overrides the foreground color for child elements with higher
 // priority.
@@ -123,17 +123,24 @@ const Info = ({ busybody, pinned }: { busybody: Busybody, pinned: boolean }) => 
     return pinned ? info : <Unpinned>{info}</Unpinned>
 }
 
-// execTree recursively renders the process or task with the specified TID/PID
-// as well as all its children leading up to pinned tasks.
-const execTree = (tid: number, cpu: number, execsPerCore: CorePinnedExecutors) => {
-    const exec = execsPerCore[tid]
+type execOnCoreHandler = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => void
+
+// execsTreeOnCore recursively renders the process or task with the specified
+// TID/PID as well as all its children leading up to pinned tasks.
+const execsTreeOnCore = (cpu: number, ptid: number, execsPerCore: CorePinnedExecutors, doubleClick: execOnCoreHandler) => {
+    const exec = execsPerCore[ptid]
     if (!exec) {
         return <></>
     }
     return <TreeItem
-        key={tid}
-        itemId={executorItemID(tid, cpu)}
+        key={ptid}
+        itemId={executorItemID(ptid, cpu)}
         label={<Info busybody={exec.busybody} pinned={exec.pinned} />}
+        slotProps={{
+            content: {
+                onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => doubleClick(event, cpu, ptid)
+            }
+        }}
     >{
             exec.children
                 ?.sort((a, b) => {
@@ -145,7 +152,7 @@ const execTree = (tid: number, cpu: number, execsPerCore: CorePinnedExecutors) =
 
                     return compareBusybodies(a.busybody, b.busybody)
                 })
-                .map((exec) => execTree(ptid(exec.busybody), cpu, execsPerCore))
+                .map((exec) => execsTreeOnCore(cpu, pidtid(exec.busybody), execsPerCore, doubleClick))
         }</TreeItem>
 }
 
@@ -177,7 +184,7 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
                     const cpu = Number(cpuno)
                     return Object.values(coreExecutors)
                         .filter(exec => exec.children && exec.children.length > 0)
-                        .map(exec => executorItemID(ptid(exec.busybody), cpu))
+                        .map(exec => executorItemID(pidtid(exec.busybody), cpu))
                 })
                 .flat()
             setExpanded(cpus.concat(lowerexecs))
@@ -204,7 +211,35 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
         setExpanded(nodeIds)
     }
 
-    const cpusMemo = useMemo(() => (Object.entries(pinnedExecutorsMemo).
+    // double clicking on the contents of a CPU node expands it, together with
+    // all its child and grandchild nodes.
+    const handleCpuDoubleClick = (event: React.MouseEvent<HTMLDivElement>, cpu: number) => {
+        event.stopPropagation()
+        const execIds = Object.values(pinnedExecutorsMemo[cpu]).
+            map(exec => executorItemID(pidtid(exec.busybody), cpu))
+        setExpanded(expanded.concat(execIds, cpuItemID(cpu)))
+    }
+
+    // return all the ids of the pinned task/process as well as of all children.
+    const execSubtreeIds = (cpu: number, exec: Executor): string[] => {
+        const ids = [executorItemID(pidtid(exec.busybody), cpu)]
+        if (!exec.children || exec.children.length === 0) {
+            return ids
+        }
+        return ids.concat(exec.children.map(subexec => execSubtreeIds(cpu, subexec)).flat())
+    }
+
+    // double clicking on the contents of a task/process node expands it,
+    // together with all child and grandchild nodes.
+    const handleExecDoubleClick = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => {
+        event.stopPropagation()
+        const exec = pinnedExecutorsMemo[cpu][tid]
+        setExpanded(expanded.concat(execSubtreeIds(cpu, exec)))
+    }
+
+    // render all CPU nodes, as well as their pinned task child and grandchild
+    // nodes.
+    const cpus = Object.entries(pinnedExecutorsMemo).
         map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, CorePinnedExecutors]).
         sort(([cpuA,], [cpuB]) => cpuA - cpuB).
         map(([cpu, execsPerCore]) => {
@@ -212,17 +247,23 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
                 key={cpu}
                 itemId={cpuItemID(cpu)}
                 label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
-            >{[2, 1].map((tid) => execTree(tid, cpu, execsPerCore))}</TreeItem>
-        })), [pinnedExecutorsMemo])
+                slotProps={{
+                    content: {
+                        onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => handleCpuDoubleClick(event, cpu)
+                    }
+                }}
+            >{[2, 1].map((tid) => execsTreeOnCore(cpu, tid, execsPerCore, handleExecDoubleClick))}</TreeItem>
+        })
 
     return (
         <Box pl={1}>
-            {(cpusMemo.length &&
+            {(cpus.length &&
                 <SimpleTreeView
                     className="affinitytree"
                     onExpandedItemsChange={handleToggle}
                     expandedItems={expanded}
-                >{cpusMemo}</SimpleTreeView>
+                    expansionTrigger="iconContainer"
+                >{cpus}</SimpleTreeView>
             ) || (
                     <Typography variant="body1" color="textSecondary">
                         nothing discovered yet, please refresh

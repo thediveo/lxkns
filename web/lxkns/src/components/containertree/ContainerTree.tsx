@@ -156,6 +156,7 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
                 className="containertree"
                 onExpandedItemsChange={handleToggle}
                 expandedItems={expanded}
+                expansionTrigger="iconContainer"
             >{engineItemsMemo}</SimpleTreeView>
         ) || (discovery.namespaces.length && (!discovery.containers || !Object.keys(discovery.containers).length) &&
             <Typography variant="body1" color="textSecondary">
