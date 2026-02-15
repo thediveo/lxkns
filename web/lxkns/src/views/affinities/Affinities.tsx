@@ -20,6 +20,7 @@ import CPUAffinityIcon from "icons/CPUAffinity"
 import ProcessInfo from "components/processinfo"
 import TaskInfo from "components/taskinfo"
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import PinnedIcon from "icons/Pinned"
 
 /**
  * Information about a task or process that either has been pinned or is an
@@ -110,9 +111,17 @@ const cpuItemID = (cpu: number) => `cpu${cpu}`
 
 const executorItemID = (tid: number, cpu: number) => `task${tid}-cpu${cpu}`
 
-// Unpinned overrides the foreground color for child elements with higher
+const OnlineCore = styled('span')(() => ({
+    '& > .MuiSvgIcon-root': {
+        verticalAlign: 'text-top',
+        position: 'relative',
+        top: '0.1ex',
+    },
+}))
+
+// UnpinnedInfo overrides the foreground color for child elements with higher
 // priority.
-const Unpinned = styled('span')(({ theme }) => ({
+const UnpinnedInfo = styled('span')(({ theme }) => ({
     '& *': {
         color: theme.palette.text.disabled + "!important",
     },
@@ -120,9 +129,9 @@ const Unpinned = styled('span')(({ theme }) => ({
 
 const Info = ({ busybody, pinned }: { busybody: Busybody, pinned: boolean }) => {
     const info = isProcess(busybody)
-        ? <ProcessInfo process={busybody} hideAffinity={pinned} /> 
+        ? <ProcessInfo process={busybody} hideAffinity={pinned} />
         : <TaskInfo task={busybody} />
-    return pinned ? info : <Unpinned>{info}</Unpinned>
+    return pinned ? info : <UnpinnedInfo>{info}</UnpinnedInfo>
 }
 
 type execOnCoreHandler = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => void
@@ -176,6 +185,8 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
     const [expanded, setExpanded] = useState<string[]>([])
     const currExpanded = useRef<string[]>([])
 
+    const currOnlineCPUs = useRef<string[]>([])
+
     useEffect(() => { currExpanded.current = expanded }, [expanded])
 
     useImperativeHandle(apiRef, () => ({
@@ -198,13 +209,16 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
         },
     }))
 
-    // ensure that the CPU nodes are always expanded.
+    // ensure that the CPU nodes are always expanded when the discovery results
+    // are updated; but don't force CPU nodes open that have been collapsed.
     useEffect(() => {
-        const cpuIds = Object.keys(pinnedExecutorsMemo)
+        const cpus = Object.keys(pinnedExecutorsMemo)
+        const newCpuIds = cpus
+            .filter(cpu => !currOnlineCPUs.current?.includes(cpu))
             .map(cpu => cpuItemID(Number(cpu)))
-            .filter(id => !currExpanded.current.includes(id))
-        setExpanded(cpuIds)
-    }, [discovery, pinnedExecutorsMemo])
+        currOnlineCPUs.current = cpus
+        setExpanded(expanded => newCpuIds.concat(expanded))
+    }, [pinnedExecutorsMemo])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
     // update the tree's expand state accordingly. This allows us to
@@ -239,7 +253,7 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
         event.preventDefault() // ♫ I'm the Great Preventer ♪♬
         const idx = expanded.indexOf(executorItemID(tid, cpu))
         if (idx >= 0) {
-            setExpanded([...expanded.slice(0, idx), ...expanded.slice(idx+1)])
+            setExpanded([...expanded.slice(0, idx), ...expanded.slice(idx + 1)])
             return
         }
         setExpanded(expanded.concat(execSubtreeIds(cpu, pinnedExecutorsMemo[cpu][tid])))
@@ -259,10 +273,14 @@ export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
         map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, CorePinnedExecutors]).
         sort(([cpuA,], [cpuB]) => cpuA - cpuB).
         map(([cpu, execsPerCore]) => {
+            const hasUserspacePinnings = !!execsPerCore[1]?.children
             return <TreeItem
                 key={cpu}
                 itemId={cpuItemID(cpu)}
-                label={<span><CPUAffinityIcon fontSize="inherit" />{cpu}</span>}
+                label={<OnlineCore>
+                    <CPUAffinityIcon fontSize="inherit" /> {cpu}
+                    {hasUserspacePinnings && <> <PinnedIcon fontSize="inherit" /></>}
+                </OnlineCore>}
                 slotProps={{
                     content: {
                         onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => handleCoreExpand(event, cpu),
