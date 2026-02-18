@@ -58,6 +58,7 @@ const task: Task = {
   fridgecgroup: "/fridge",
   fridgefrozen: true,
   namespaces: {} as NamespaceSet,
+  affinity: null,
 };
 
 export const Default: Story = {

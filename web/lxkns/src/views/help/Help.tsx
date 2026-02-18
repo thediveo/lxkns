@@ -37,10 +37,11 @@ const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
 const chapters: HelpViewerChapter[] = [
     { title: 'lxkns', chapter: ch('Lxkns'), slug: 'lxkns' },
     { title: 'Refresh', chapter: ch('Refresh'), slug: 'refresh' },
-    { title: 'All View', chapter: ch('Allview'), slug: 'allview' },
-    { title: 'Containers', chapter: ch('Containers'), slug: 'containers' },
+    { title: '“All” View', chapter: ch('Allview'), slug: 'allview' },
     { title: 'Type-Specific Views', chapter: ch('Typedviews'), slug: 'typedviews' },
     { title: 'Mount Namespaces', chapter: ch('Mounts'), slug: 'mounts' },
+    { title: 'Containers', chapter: ch('Containers'), slug: 'containers' },
+    { title: 'Core Fancy', chapter: ch('Affinities'), slug: 'affinities'},
     { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
     { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },

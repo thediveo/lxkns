@@ -23,11 +23,11 @@ cannot be changed or extended while a kernel runs.
 
 Linux-kernel namespaces do **not** have names.
 
-For identifying individual namespaces, Lxkns follows the textual representation
-used throughout the Linux kernel, for instance, when executing "`ls -l
-/proc/self/ns/net`": the type of namespace, followed by the inode number of the
-namespace. The identifier of a namespace is constant only during its lifetime
-and can be recycled at any time afterwards.
+For identifying individual namespaces, **lxkns** follows the textual
+representation used throughout the Linux kernel, for instance, when executing
+"`ls -l /proc/self/ns/net`": the type of namespace, followed by the inode number
+of the namespace. The identifier of a namespace is constant only during its
+lifetime and can be recycled at any time afterwards.
 
 ## Flat Versus Hierarchy
 
@@ -95,7 +95,7 @@ referenced at least in one of the following ways:
 
 - the PID or user namespace has at least one child namespace that still exists.
   
-  > lxkns shows a <Ghost fontSize="inherit"/> in this case, when no other kind
+  > **lxkns** shows a <Ghost fontSize="inherit"/> in this case, when no other kind
   of reference exists and the PID/user namespace is kind of "hidden" inside the
   namespace hierarchy.
 

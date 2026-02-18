@@ -68,6 +68,11 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
         },
     }))
 
+    // ensure that the engine nodes are always expanded; optionally, when the
+    // corresponding setting has been enabled, also expand the
+    // workload/container nodes. Expanding the engine nodes shows the
+    // workload/containers. Expanding the workload/containers shows the
+    // namespaces. 
     useEffect(() => {
         const engines = discovery.engines || {}
         const previousEngines = previousDiscovery.current.engines || {}
@@ -87,7 +92,7 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
             .filter(id => expandWLInitially && !previousWorkloadIds.includes(id))
 
         setExpanded(currExpanded.current.concat(expandEngineIds, expandWorkloadsIds))
-        previousDiscovery.current = discovery;
+        previousDiscovery.current = discovery
     }, [discovery, expandWLInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
@@ -151,6 +156,7 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
                 className="containertree"
                 onExpandedItemsChange={handleToggle}
                 expandedItems={expanded}
+                expansionTrigger="iconContainer"
             >{engineItemsMemo}</SimpleTreeView>
         ) || (discovery.namespaces.length && (!discovery.containers || !Object.keys(discovery.containers).length) &&
             <Typography variant="body1" color="textSecondary">

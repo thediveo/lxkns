@@ -25,12 +25,12 @@ Please note that mount namespaces additionally show their mount points, see
 ### Cgroup Grouping
 
 In case the processes attached to a namespace belong to different cgroup
-controller paths, then additionally all the leader (topmost) processes in the process
-tree with differing cgroup paths are shown. This is especially usefull in such
-cases, where containers share namespaces (either with other containers or the
-host). Such as in case of our "lxkns" service container that needs its processes
-to run attached to the host's initial PID namespace for correct namespace
-discovery:
+controller paths, then additionally all the leader (topmost) processes in the
+process tree with differing cgroup paths are shown. This is especially usefull
+in such cases, where containers share namespaces (either with other containers
+or the host). Such as in case of our **lxkns** service container that needs its
+processes to run attached to the host's initial PID namespace for correct
+namespace discovery:
 
 <Example>
   <NamespaceProcessTree type="pid" discovery={discovery} action={{ action: "" }} />
@@ -55,8 +55,8 @@ child and grandchild namespaces is shown right after a namespace "badge".
 ### Container Processes
 
 In case a process that is "attached" to a namespace is also associated with a
-container then lxkns will first show the name of the container associated with
-the particular leader processes.
+container then **lxkns** will first show the name of the container associated
+with the particular leader processes.
 
 If a container happens to be part of some types of groups, then these group
 names will be shown after the container name. These groups are recognized in the
@@ -68,14 +68,14 @@ user interface:
 ### "Leader" Processes
 
 Often, multiple (well, _many_) processes are "attached" to (using) the same
-namespace. Instead of showing the complete mess, lxkns partitions the attached
-processes into groups and shows only the "leader process" for each group.
-Grouping is done based on the process tree: a leader process is the topmost
-process in the process tree still attached to the same namespace as its
+namespace. Instead of showing the complete mess, **lxkns** partitions the
+attached processes into groups and shows only the "leader process" for each
+group. Grouping is done based on the process tree: a leader process is the
+topmost process in the process tree still attached to the same namespace as its
 children.
 
 If processes attached to the same namespace are controlled by different CPU
-cgroups (using different cpu cgroup paths), then lxkns divides them into
+cgroups (using different cpu cgroup paths), then **lxkns** divides them into
 separate groups, based on the cgroup paths found.
 
 Additionally, the "freezer" cgroup state is also shown: a <Pause

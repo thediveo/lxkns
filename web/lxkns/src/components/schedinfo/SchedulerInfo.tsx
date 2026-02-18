@@ -23,6 +23,7 @@ const SchedInformation = styled('span')(({ theme }) => ({
     color: theme.palette.cpulist,
     '& .policy': {
         fontSize: '80%',
+        fontWeight: '500',
     },
     '& .normal,& .batch,& .idle': {
         color: theme.palette.relaxedsched,
