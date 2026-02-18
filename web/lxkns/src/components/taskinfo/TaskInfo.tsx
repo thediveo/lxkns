@@ -19,11 +19,11 @@ import { styled, Tooltip } from '@mui/material'
 import ThreadIcon from 'icons/Thread'
 import type { Task } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo'
-import { ProcessName } from 'components/processinfo'
 import CgroupInfo from 'components/cgroupinfo'
+import ProcessName from 'components/processname/ProcessName'
 
 
-const tiShort = "short-taskinfo"
+const taskInfoClass = "short-taskinfo"
 
 const TaskInformation = styled('span')(({ theme }) => ({
     fontWeight: theme.typography.fontWeightLight,
@@ -39,7 +39,7 @@ const TaskInformation = styled('span')(({ theme }) => ({
     '& .init1': {
         color: theme.palette.init1,
     },
-    [`&.${tiShort},&.${tiShort} *`]: {
+    [`&.${taskInfoClass},&.${taskInfoClass} *`]: {
         color: theme.palette.text.disabled,
     }
 }))
@@ -112,7 +112,7 @@ export const TaskInfo = ({ task, short, className }: TaskInfoProps) => {
     const process = task && task.process
 
     return !!task && (
-        <TaskInformation className={clsx(className, short && tiShort)}>
+        <TaskInformation className={clsx(className, short && taskInfoClass)}>
             <ThreadIcon fontSize="inherit" />
             <Tooltip title="task"><>
                 <TaskName>{task.name}</TaskName>

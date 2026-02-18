@@ -324,6 +324,7 @@ export const NamespaceProcessTree = ({
                     disableSelection={true}
                     onExpandedItemsChange={handleToggle}
                     expandedItems={expanded}
+                    expansionTrigger="iconContainer"
                 >{treeItemsMemo}</SimpleTreeView>
             </MountpointInfoModalProvider>
         ) || (Object.keys(discovery.namespaces).length &&

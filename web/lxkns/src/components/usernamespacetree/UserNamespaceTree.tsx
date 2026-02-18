@@ -158,6 +158,7 @@ export const UserNamespaceTree = ({ apiRef, discovery }: UserNamespaceTreeProps)
                 className="namespacetree"
                 onExpandedItemsChange={handleToggle}
                 expandedItems={expanded}
+                expansionTrigger="iconContainer"
             >{treeItemsMemo}</SimpleTreeView>
         ) || (
             <Typography variant="body1" color="textSecondary">

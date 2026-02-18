@@ -8,7 +8,7 @@ import {
   showSystemProcessesAtom,
 } from "views/settings";
 
-# All View
+# "All" View
 
 This "home" display shows all discovered [namespaces](/help/namespaces),
 organized along the hierarchy of the so-called user namespaces. For example:
@@ -39,8 +39,8 @@ and grandchild user namespaces is shown right after a user namespace "badge".
 ### Container Processes
 
 In case a process that is "attached" to a namespace is also associated with a
-container then lxkns will first show the name of the container associated with
-the particular leader processes.
+container then **lxkns** will first show the name of the container associated
+with the particular leader processes.
 
 If a container happens to be part of some types of groups, then these group
 names will be shown after the container name. These groups are recognized in the
@@ -54,14 +54,14 @@ Please see also [containers](/help/containers) for more information.
 ### "Leader" Processes
 
 Often, multiple (well, _many_) processes are "attached" to (using) the same
-namespace. Instead of showing the complete mess, lxkns partitions the attached
-processes into groups and shows only the "leader process" for each group.
-Grouping is done based on the process tree: a leader process is the topmost
-process in the process tree still attached to the same namespace as its
+namespace. Instead of showing the complete mess, **lxkns** partitions the
+attached processes into groups and shows only the "leader process" for each
+group. Grouping is done based on the process tree: a leader process is the
+topmost process in the process tree still attached to the same namespace as its
 children.
 
 If processes attached to the same namespace are controlled by different CPU
-cgroups (using different cpu cgroup paths), then lxkns divides them into
+cgroups (using different cpu cgroup paths), then **lxkns** divides them into
 separate groups, based on the cgroup paths found.
 
 Additionally, the "freezer" cgroup state is also shown: a <Pause
@@ -85,22 +85,22 @@ attached to that particular *user* namespace.
 
 ### "Shared" Namespaces
 
-When the namespaces owned by a user namespace are attached also to processes other
-than the most senior "leader" process of the user namespace, then lxkns will
-automatically group the owned namespaces by their leader processes. This helps in
-quickly understanding how namespaces relate to leader processes. Now, not every
-leader process might use its own namespaces but instead multiple leader processes
-might "share" some namespaces between them.
+When the namespaces owned by a user namespace are attached also to processes
+other than the most senior "leader" process of the user namespace, then
+**lxkns** will automatically group the owned namespaces by their leader
+processes. This helps in quickly understanding how namespaces relate to leader
+processes. Now, not every leader process might use its own namespaces but
+instead multiple leader processes might "share" some namespaces between them.
 
 | Display | Notes |
 | --- | --- |
 | <NamespaceExample type="pid" shared={true} initial={true} /> | namespace created by a most senior leader process and shared with this process. |
 | <NamespaceExample type="pid" initial={true} /> | namespace created by most senior leader process and shared with other leader processes. |
 
-lxkns shows all namespaces (except for the user namespace)
-for the leader processes with different cgroup paths, but "fades" namespaces
-that are the same as the most senior leader process. The display of shared
-namespaces can be configured (switched on/off) in the [settings](/help/settings).
+**lxkns** shows all namespaces (except for the user namespace) for the leader
+processes with different cgroup paths, but "fades" namespaces that are the same
+as the most senior leader process. The display of shared namespaces can be
+configured (switched on/off) in the [settings](/help/settings).
 
 > **Note:** For lack of a better word, we term such namespaces "shared", but
 > this is our user-land terminology, but not Linux-kernel terminology.

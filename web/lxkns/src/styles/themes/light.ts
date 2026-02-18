@@ -52,6 +52,11 @@ export const lxknsLightTheme = {
                         marginLeft: '24px',
                     },
                 },
+                '.affinitytree': {
+                    '& .MuiTreeItem-root': {
+                        marginLeft: '24px',
+                    },
+                },
             },
         },
         MuiTreeItem: {

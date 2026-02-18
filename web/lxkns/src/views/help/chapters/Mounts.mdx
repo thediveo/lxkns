@@ -9,9 +9,10 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
 # Mount Namespaces
 
-Linux [mount namespaces partition the mount points](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html)
-seen by the processes in a particular mount namespace. Lxkns shows these mount
-point views in its mount namespace view, such as in this example:
+Linux [mount namespaces partition the mount
+points](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html) seen by
+the processes in a particular mount namespace. **lxkns** shows these mount point
+views in its mount namespace view, such as in this example:
 
 <Example states={[[expandInitiallyAtom, true]]}>
   <NamespaceProcessTree
@@ -21,9 +22,9 @@ point views in its mount namespace view, such as in this example:
   />
 </Example>
 
-As a special feature, lxkns also shows the mount points inside bind-mounted namespaces to
-which no process has been attached (kind of [findmnt(8)](https://man7.org/linux/man-pages/man8/findmnt.8.html)
-on drugs).
+As a special feature, **lxkns** also shows the mount points inside bind-mounted
+namespaces to which no process has been attached (kind of
+[findmnt(8)](https://man7.org/linux/man-pages/man8/findmnt.8.html) on drugs).
 
 Each mount point is shown with its (shortened) path, type of filesystem, visibility
 state (grayed-out, crossed-out), and optional propagation state information (see below). 
@@ -35,9 +36,10 @@ of them can be visible in the virtual filesystem view (VFS). The other mount poi
 also said to be "overmounted". Moreover, later mount points higher up the VFS path
 hierarchy can also hide (overmount) other mount points.
 
-lxkns automatically determines the visibility of mount points itself, as unfortunately
-the Linux kernel does not explicitly expose visibility information for mount points.
-Hidden (overmounted) mount points are grayed-out and their path crossed out.
+**lxkns** automatically determines the visibility of mount points itself, as
+unfortunately the Linux kernel does not explicitly expose visibility information
+for mount points. Hidden (overmounted) mount points are grayed-out and their
+path crossed out.
 
 ### Mount Point Propagation
 
