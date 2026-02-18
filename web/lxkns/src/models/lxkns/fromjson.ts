@@ -55,6 +55,7 @@ interface ContainerJson extends Omit<Container,
  */
 export const fromjson = (discoverydata: unknown): Discovery => {
     const discovery = discoverydata as Discovery
+
     // Process all (hierarchical) namespaces in a first round to initialize
     // their hierarchical references to empty array references.
     Object.values(discovery.namespaces).forEach(ns => {
@@ -181,11 +182,11 @@ export const fromjson = (discoverydata: unknown): Discovery => {
             engine.containers.push(container)
             // transform group references
             const groups: Group[] = []
-            ;((container as ContainerJson).groups as number[]).forEach(gid => {
-                const group = discovery.groups[gid]
-                groups.push(group)
-                group.containers.push(container)
-            })
+                ; ((container as ContainerJson).groups as number[]).forEach(gid => {
+                    const group = discovery.groups[gid]
+                    groups.push(group)
+                    group.containers.push(container)
+                })
             container.groups = groups
             // link with process (if possible), keyed by PID
             const proc = discovery.processes[pid]
@@ -285,6 +286,8 @@ export const fromjson = (discoverydata: unknown): Discovery => {
     Object.entries(discovery.mounts).forEach(([mntnsid, mountpathmap]) => {
         discovery.namespaces[mntnsid].mountpaths = mountpathmap
     })
+
+    discovery.onlineCPUs = (discovery as any)['cpus-online'] as number[][] | null
 
     // A small step for me, a huge misstep for type safety...
     return discovery

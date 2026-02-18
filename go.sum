@@ -255,6 +255,8 @@ github.com/thediveo/clippy v0.2.1 h1:YmtaxyNV9OlC9dGtH92/854r16yr64Gx2vyghKKC13g
 github.com/thediveo/clippy v0.2.1/go.mod h1:VM8sNokcvljM6lXX064B85hh/c19IgCXmLJWOpGbTYc=
 github.com/thediveo/cpus v0.9.0 h1:JP8bvFAKpCympd5NeYm9DLvXu7ALbRlur0k+ZPC9hYo=
 github.com/thediveo/cpus v0.9.0/go.mod h1:2ORWu/1t5JH7MUNjoe9kmQhRoI5QsXJoyVbvVKnVWX8=
+github.com/thediveo/cpus v0.10.0 h1:nLClToicwzvSQHIkSHCHyXvc3yr6/INvuPzuxpYL0+I=
+github.com/thediveo/cpus v0.10.0/go.mod h1:2ORWu/1t5JH7MUNjoe9kmQhRoI5QsXJoyVbvVKnVWX8=
 github.com/thediveo/enumflag/v2 v2.1.0 h1:F80w/h1U4B3/sBpFVUewzMVTfLk2m0D60+61UCuXSf8=
 github.com/thediveo/enumflag/v2 v2.1.0/go.mod h1:wj2B0dHqqFOqIgnJ7mD8s97wK7/46oOZvDg93muD68g=
 github.com/thediveo/faf v0.2.2 h1:u5MK+N0oBjPNzghw1T19fVtOZkQCzidTZDU+Dt9oLjc=

@@ -73,7 +73,8 @@ type ProTaskCommon struct {
 }
 
 // Task represents our very, very limited view and interest in a particular
-// Linux task (including the main task that represents the whole process).
+// Linux task (including the main/group leader task that represents the whole
+// process).
 type Task struct {
 	ProTaskCommon
 	TID     PIDType  `json:"tid"` // our task's identifier.

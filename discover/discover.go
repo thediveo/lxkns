@@ -26,6 +26,7 @@ import (
 
 	"slices"
 
+	"github.com/thediveo/cpus"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 	"golang.org/x/exp/maps"
@@ -42,8 +43,9 @@ type Result struct {
 	Processes         model.ProcessTable     // processes checked for namespaces.
 	PIDMap            model.PIDMapper        `json:"-"` // optional PID translator.
 	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
-	Containers        model.Containers       // all alive containers found
-	SocketProcessMap  SocketProcesses        // optional socket inode number to process(es) mapping
+	Containers        model.Containers       // all alive containers found.
+	SocketProcessMap  SocketProcesses        // optional socket inode number to process(es) mapping.
+	OnlineCPUs        cpus.List              // optional list of online CPUs when discovering process/task affinities.
 }
 
 // SocketProcesses maps socket inode numbers to processes that have open file

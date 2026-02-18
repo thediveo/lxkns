@@ -16,7 +16,10 @@
 
 package discover
 
-import "github.com/thediveo/lxkns/model"
+import (
+	"github.com/thediveo/cpus"
+	"github.com/thediveo/lxkns/model"
+)
 
 // discoverAffinity discovers the CPU affinity lists for either the leader
 // processes of all discovered namespaces, or for all tasks, if requested.
@@ -35,6 +38,7 @@ func discoverAffinity(result *Result) {
 				}
 			}
 		}
+		result.OnlineCPUs = cpus.Online()
 	case result.Options.DiscoverAffinityScheduling:
 		for nstype := range model.NamespaceTypesCount {
 			for _, ns := range result.Namespaces[nstype] {
@@ -46,5 +50,6 @@ func discoverAffinity(result *Result) {
 				}
 			}
 		}
+		result.OnlineCPUs = cpus.Online()
 	}
 }
