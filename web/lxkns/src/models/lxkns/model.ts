@@ -173,4 +173,5 @@ export interface Discovery {
     containers: ContainerMap
     engines: EngineMap
     groups: GroupMap
+    onlineCPUs: number[][] | null
 }

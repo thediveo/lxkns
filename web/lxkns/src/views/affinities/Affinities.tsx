@@ -83,11 +83,7 @@ type PerCoreExecutors = { [key: number]: Executor }
  */
 type CoresWithExecutors = { [key: number]: PerCoreExecutors }
 
-const pinnedExecutors = (processes: ProcessMap) => {
-    // Find out the online CPUs: we go the short route via PID2 kthreadd. We're
-    // not using PID1 on purpose, as especially systemd supports pinning itself
-    // to certain CPUs. Unfortunately, it does not support pinning to -Inf.
-    const onlineCPUs = processes[2]?.affinity
+const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
 
     const coresWithExecutors: CoresWithExecutors = {}
     // Pour over all processes with all their tasks and pick up the tasks that
@@ -313,7 +309,7 @@ export interface AffinitiesProps {
  */
 export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => {
 
-    const pinnedExecutorsMemo = useMemo(() => pinnedExecutors(discovery.processes), [discovery])
+    const pinnedExecutorsMemo = useMemo(() => pinnedExecutors(discovery.processes, discovery.onlineCPUs), [discovery])
 
     // Tree node expansion is a component-local state. We need to also use a
     // reference to the really current expansion state as for yet unknown

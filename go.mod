@@ -130,7 +130,7 @@ require (
 	github.com/samber/lo v1.52.0
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/thediveo/caps v0.10.2
-	github.com/thediveo/cpus v0.9.0
+	github.com/thediveo/cpus v0.10.0
 	github.com/thediveo/go-plugger/v3 v3.1.1
 	github.com/vishvananda/netlink v1.3.1 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect

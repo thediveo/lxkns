@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/thediveo/cpus"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -94,6 +95,7 @@ const (
 	FieldContainers       = "containers"
 	FieldContainerEngines = "container-engines"
 	FieldContainerGroups  = "container-groups"
+	FieldOnlineCPUs       = "cpus-online"
 )
 
 // NewDiscoveryResult returns a discovery result object ready for unmarshalling
@@ -141,6 +143,12 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	dr.Fields[FieldContainers] = &dr.ContainerModel.Containers
 	dr.Fields[FieldContainerEngines] = &dr.ContainerModel.ContainerEngines
 	dr.Fields[FieldContainerGroups] = &dr.ContainerModel.Groups
+	// online CPUs...
+	if len(dr.DiscoveryResult.OnlineCPUs) != 0 {
+		dr.Fields[FieldOnlineCPUs] = &dr.DiscoveryResult.OnlineCPUs
+	} else {
+		dr.Fields[FieldOnlineCPUs] = &cpus.List{}
+	}
 	// Done. Phew.
 	return dr
 }
