@@ -16,7 +16,7 @@ import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
 
-import type { Process } from 'models/lxkns/model'
+import type { Busybody } from 'models/lxkns/model'
 
 
 const SchedInformation = styled('span')(({ theme }) => ({
@@ -51,19 +51,19 @@ const schedulerPolicies: { [key: string]: string } = {
     '6': 'DEADLINE',
 }
 
-const hasPriority = (process: Process) => {
+const hasPriority = (process: Busybody) => {
     const policy = process.policy || 0
     return policy === 1 || policy === 2
 }
 
-const hasNice = (process: Process) => {
+const hasNice = (process: Busybody) => {
     const policy = process.policy || 0
     return policy === 0 || policy === 3
 }
 
 export interface SchedulerInfoProps {
     /** information about a discovered Linux OS process. */
-    process: Process
+    process: Busybody
     /** also schow (SCHED_) NORMAL? */
     showNormal?: boolean
 }

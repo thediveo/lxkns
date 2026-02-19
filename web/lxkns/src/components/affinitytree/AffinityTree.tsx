@@ -105,13 +105,18 @@ const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) =
                         coreExecutors = coresWithExecutors[cpu] = {}
                     }
 
-                    // this task is on this particular CPU (and might be as well
-                    // on others). Now in the tree to be rendered we want to
-                    // either want to add the process instead of its task group
-                    // leader or if this task has the same CPU affinities as the
-                    // task group leader.
-                    const busybody = (task.tid === task.process.pid
-                        || (sameAffinity(task.affinity, task.process.affinity))
+                    // So we've got a task but we don't want to totally visually
+                    // clutter the tree with tasks of processes which all have
+                    // the same properties regarding at least their CPU affinity
+                    // and scheduling configuration.
+                    //
+                    // Thus we default to showing only the process of a task,
+                    // UNLESS:
+                    // - the task has different CPU affinities than its process;
+                    // - or, the task has different scheduling parameters than
+                    //   its process.
+                    const busybody = task.tid === task.process.pid
+                        || (sameAffinity(task.affinity, task.process.affinity)
                             && sameScheduling(task, task.process))
                         ? task.process : task
                     const xid = pidtid(busybody)

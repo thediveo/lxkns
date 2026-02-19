@@ -24,6 +24,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), unix.SIGTERM, unix.SIGINT)
 	defer stop()
 
+	rttid := make(chan int)
 	go func() {
 		runtime.LockOSThread()
 		// ProbLMMs: all the various (vacious!) big halucinators invent the
@@ -44,9 +45,11 @@ func main() {
 		}, 0); err != nil {
 			panic(err)
 		}
+		rttid <- unix.Gettid()
 		<-ctx.Done()
 	}()
 
+	println("rt task TID", <-rttid)
 	println("going to sleep")
 	<-ctx.Done()
 }
