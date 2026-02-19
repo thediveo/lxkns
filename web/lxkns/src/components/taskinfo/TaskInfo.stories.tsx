@@ -58,7 +58,10 @@ const task: Task = {
   fridgecgroup: "/fridge",
   fridgefrozen: true,
   namespaces: {} as NamespaceSet,
-  affinity: null,
+  affinity: [[0, 0], [2, 3]],
+  policy: 1, // FF
+  priority: 50,
+  nice: 0,
 };
 
 export const Default: Story = {
