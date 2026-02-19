@@ -160,10 +160,11 @@ const LxknsApp = () => {
 
     const path = useLocation().pathname
 
+    // Should we show the expand/collapse tree actions for this view/path?
     const hideTreeActions = [
-        "/settings",
-        "/about",
-        "/help",
+        '/settings',
+        '/about',
+        '/help',
     ].some((prefix) => path.startsWith(prefix))
 
     // Note: JS returns undefined if the result doesn't turn up a match; that's
@@ -171,6 +172,17 @@ const LxknsApp = () => {
     const [typeview] = views
         .flat()
         .filter(view => view.path === path && view.type)
+
+    // Which title should we show for this view/path?
+    const titleEntry = (Object.entries({
+        '/containers': 'All Container Namespaces',
+        '/affinities': 'Core Fancy',
+        '/settings': 'Settings',
+        '/about': 'About lxkns',
+        '/help': 'Help',
+    }).filter(([prefix]) => path.startsWith(prefix))[0])
+        || ['', <>{!typeview && 'All '}Linux {typeview && <em>{typeview.type} </em>}Namespaces</>]
+    const [, title] = titleEntry
 
     const discovery = useDiscovery()
 
@@ -188,12 +200,12 @@ const LxknsApp = () => {
     // calls the passed fn with the currently visible tree API instance, if any.
     // Otherwise, does nothing.
     const currentAPI = (fn: (api: TreeAPI) => void) => {
-        const api = forrestRef.current?.get(basename+path)
+        const api = forrestRef.current?.get(basename + path)
         if (api) {
             fn(api)
         }
     }
-    
+
     return (
         <Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <LxknsAppBarDrawer
@@ -201,22 +213,22 @@ const LxknsApp = () => {
                 swipeAreaWidth={Number(theme.spacing(1))}
                 title={<>
                     <Badge badgeContent={count} color="secondary">
-                        <Typography variant="h6">Linux {typeview && <em>{typeview.type} </em>}Namespaces</Typography>
+                        <Typography variant="h6">{title}</Typography>
                     </Badge>
                 </>}
                 tools={() => <>
-                    { hideTreeActions ? undefined : <>
+                    {hideTreeActions ? undefined : <>
                         <Tooltip key="collapseall" title="expand only top-level namespace(s)">
                             <IconButton color="inherit" onClick={() => {
-                                    currentAPI((api) => api?.collapseAll())
-                                }} size="large">
+                                currentAPI((api) => api?.collapseAll())
+                            }} size="large">
                                 <ChevronRightIcon />
                             </IconButton>
                         </Tooltip>
                         <Tooltip key="expandall" title="expand all">
                             <IconButton color="inherit" onClick={() => {
-                                    currentAPI((api) => api?.expandAll())
-                                }} size="large">
+                                currentAPI((api) => api?.expandAll())
+                            }} size="large">
                                 <ExpandMoreIcon />
                             </IconButton>
                         </Tooltip>
@@ -225,7 +237,7 @@ const LxknsApp = () => {
                 </>}
                 drawertitle={() =>
                     <Typography variant="h6" style={{ flexGrow: 1 }} color="textSecondary" component="span">
-                        <img alt="lxkns logo" src={Logo} style={{height: '2ex', position: 'relative', top: '0.4ex'}} />&nbsp;lxkns
+                        <img alt="lxkns logo" src={Logo} style={{ height: '2ex', position: 'relative', top: '0.4ex' }} />&nbsp;lxkns
                     </Typography>
                 }
                 drawer={(closeDrawer: React.MouseEventHandler<HTMLUListElement> | undefined) =>
@@ -249,23 +261,23 @@ const LxknsApp = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/help/*" element={<Help />} />
-                    <Route 
+                    <Route
                         path="/containers"
-                        element={<Containers 
-                            discovery={discovery} 
+                        element={<Containers
+                            discovery={discovery}
                             apiRef={(apiref) => {
-                                forrestRef.current?.set(basename+"/containers", apiref)
-                                return () => { forrestRef.current?.delete(basename+"/containers") }
-                            }} 
+                                forrestRef.current?.set(basename + "/containers", apiref)
+                                return () => { forrestRef.current?.delete(basename + "/containers") }
+                            }}
                         />}
                     />
                     <Route
                         path="/affinities"
-                        element={<Affinities 
+                        element={<Affinities
                             discovery={discovery}
                             apiRef={(apiref) => {
-                                forrestRef.current?.set(basename+"/affinities", apiref)
-                                return () => { forrestRef.current?.delete(basename+"/affinities") }
+                                forrestRef.current?.set(basename + "/affinities", apiref)
+                                return () => { forrestRef.current?.delete(basename + "/affinities") }
                             }}
                         />}
                     />
@@ -274,22 +286,22 @@ const LxknsApp = () => {
                             return <Route
                                 key={viewitem.path}
                                 path={viewitem.path}
-                                element={<TypedNamespaces 
-                                    discovery={discovery} 
+                                element={<TypedNamespaces
+                                    discovery={discovery}
                                     apiRef={(apiref) => {
-                                        forrestRef.current?.set(basename+viewitem.path, apiref)
-                                        return () => { forrestRef.current?.delete(basename+viewitem.path) }
+                                        forrestRef.current?.set(basename + viewitem.path, apiref)
+                                        return () => { forrestRef.current?.delete(basename + viewitem.path) }
                                     }}
                                 />}
                             />
                         })}
-                    <Route 
-                        path="/" 
-                        element={<AllNamespaces 
-                            discovery={discovery} 
+                    <Route
+                        path="/"
+                        element={<AllNamespaces
+                            discovery={discovery}
                             apiRef={(apiref) => {
-                                forrestRef.current?.set(basename+"/", apiref)
-                                return () => { forrestRef.current?.delete(basename+"/") }
+                                forrestRef.current?.set(basename + "/", apiref)
+                                return () => { forrestRef.current?.delete(basename + "/") }
                             }}
                         />}
                     />

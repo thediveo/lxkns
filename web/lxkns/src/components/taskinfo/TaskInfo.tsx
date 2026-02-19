@@ -21,6 +21,7 @@ import type { Task } from 'models/lxkns'
 import ContainerInfo from 'components/containerinfo'
 import CgroupInfo from 'components/cgroupinfo'
 import ProcessName from 'components/processname/ProcessName'
+import SchedulerInfo from 'components/schedinfo'
 
 
 const taskInfoClass = "short-taskinfo"
@@ -94,6 +95,9 @@ export interface TaskInfoProps {
  * 
  * - the **PID and name of the process** to which the task belongs to.
  * 
+ * - the **scheduling policy as well as priority/niceness** unless the short
+ *   form is requested.
+ * 
  * - the **cgroup path** unless the path empty (which means "we don't known").
  *   This information is hidden when `short=true`.
  * 
@@ -123,6 +127,7 @@ export const TaskInfo = ({ task, short, className }: TaskInfoProps) => {
                 <ProcessName>{process ? process.name : ''}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
             </></Tooltip>
+            {!short && <> <SchedulerInfo process={task} /></>}
             {!short && task.cpucgroup && task.cpucgroup !== "/" && !process.container 
                 && <CgroupInfo busybody={task} />}
         </TaskInformation>
