@@ -70,6 +70,12 @@ type Executor = {
     children?: Executor[]
 }
 
+const sameScheduling = (bbA: Busybody, bbB: Busybody) => {
+    return (bbA?.policy || 0) === (bbB?.policy || 0)
+        && (bbA?.priority || 0) === (bbB?.priority || 0) // assuming 0 is fine here
+        && (bbA?.nice || 0) === (bbB?.nice || 0)
+}
+
 /**
  * Mapping a PID or TID (same number space) to information about that task or
  * process on a particular logical CPU. While the name on purpose focuses on the
@@ -105,7 +111,8 @@ const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) =
                     // leader or if this task has the same CPU affinities as the
                     // task group leader.
                     const busybody = (task.tid === task.process.pid
-                        || sameAffinity(task.affinity, task.process.affinity))
+                        || (sameAffinity(task.affinity, task.process.affinity))
+                            && sameScheduling(task, task.process))
                         ? task.process : task
                     const xid = pidtid(busybody)
                     let lowerexec = coreExecutors[xid]

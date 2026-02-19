@@ -150,6 +150,9 @@ export interface Task {
     fridgefrozen: boolean
     namespaces: NamespaceSet
     affinity: number[][] | null
+    policy: number | null
+    priority: number | null
+    nice: number | null
 }
 
 export interface TaskMap { [key: string]: Task }
