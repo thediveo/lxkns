@@ -7,20 +7,12 @@ nice web-based UI.
 ![lxkns teaser](_images/teaser.png)
 
 1. make sure you have installed:
-   - Docker and with the [Docker compose plugin](https://docs.docker.com/ compose/install/linux/)
-2. now you have two different deployment options:
-   - pull and deploy the prebuild multi-architecture image:
-     ```bash
-     wget -q -O - \
-         https://github.com/thediveo/lxkns/raw/master/deployments/wget/docker-compose.yaml \
-       | docker compose -f - up
-     ```
-   - build the service and then deploy it yourself:
-     1. for this, you need the Go tool chain locally installed in a recent
-        version (only the current and the previous one are supported), as well
-        as git and build essentials (namely, `make`).
-     2. do `make deploy` in the top-level of the repository. Then wait for the
-        service to get built and deployed.
+   - Docker and with the [Docker compose v2+
+     plugin](https://docs.docker.com/compose/install/linux/)
+2. execute
+   ```bash
+   docker compose -f oci://ghcr.io/thediveo/lxkns/app up -d
+   ```
 3. navigate your web browser to [http://localhost:5010](http://localhost:5010),
    where you should be greeted by the [lxkns web app](getting-around).
 

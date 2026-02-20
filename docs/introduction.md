@@ -68,14 +68,15 @@ service has been successfully deployed.
 - a set of **CLI tools**, as well as our `lsns`-on-drugs example in
   `examples/lsallns` that lists *all* namespaces with their corresponding
   *containers*.
+
   ```console
-NAMESPACE  TYPE   CONTAINER     PID   PROCESS/[TASK]    COMMENT
-4026531835 cgroup               1     systemd           cgroup:/init.scope
-4026532740 mnt    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
-4026532741 uts    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
-4026532742 ipc    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
-4026532743 net    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
-4026532861 net                  9313  [stray thread :p] cgroup:/user.slice/user-1000.slice/user@1000.service/app.slice/snap.code.code.b9d9c611-0444-4f49-9566-ea28bef2e6a4.scope
+  NAMESPACE  TYPE   CONTAINER     PID   PROCESS/[TASK]    COMMENT
+  4026531835 cgroup               1     systemd           cgroup:/init.scope
+  4026532740 mnt    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
+  4026532741 uts    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
+  4026532742 ipc    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
+  4026532743 net    lxkns-lxkns-1 12706 lxkns             cgroup:/system.slice/docker-88c84e7f9e668b6ea63af1e9b496b265638f5b0493bc20c3e406e438f53a9e05.scope
+  4026532861 net                  9313  [stray thread :p] cgroup:/user.slice/user-1000.slice/user@1000.service/app.slice/snap.code.code.b9d9c611-0444-4f49-9566-ea28bef2e6a4.scope
   ```
 
 #### Notes
