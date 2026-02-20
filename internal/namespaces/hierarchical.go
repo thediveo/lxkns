@@ -2,6 +2,7 @@ package namespaces
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/thediveo/lxkns/model"
@@ -92,4 +93,23 @@ func (hns *HierarchicalNamespace) SetParent(parent model.Hierarchy) {
 // embedded instance when setting the "owned" relationship.
 func (hns *HierarchicalNamespace) ResolveOwner(usernsmap model.NamespaceMap) {
 	hns.resolveOwner(hns, usernsmap)
+}
+
+func (hns *HierarchicalNamespace) RemoveChild(child model.Hierarchy) {
+	switch child := child.(type) {
+	case *HierarchicalNamespace:
+		child.Unparent(hns)
+	case *UserNamespace:
+		child.Unparent(hns)
+	}
+	hns.children = slices.DeleteFunc(hns.children,
+		func(e model.Hierarchy) bool {
+			return e == child
+		})
+}
+
+func (hns *HierarchicalNamespace) Unparent(parent model.Hierarchy) {
+	if hns.parent == parent {
+		hns.parent = nil
+	}
 }

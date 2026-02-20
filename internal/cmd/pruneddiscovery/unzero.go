@@ -1,6 +1,4 @@
-// General package definitions.
-
-// Copyright 2020 Harald Albrecht.
+// Copyright 2026 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -14,7 +12,27 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package main
 
-// SemVersion is the semantic version string of the lxkns module.
-//go:generate go run ./internal/cmd/version
+import "iter"
+
+// allUnzeros iterates over all non-zero ("unzero") elements in the passed
+// slice.
+//
+// Yepp, I'm having to much fun on this.
+func allUnzeros[S ~[]E, E comparable](s S) iter.Seq[E] {
+	var zero E
+	return func(yield func(E) bool) {
+		for _, e := range s {
+			if e == zero {
+				continue
+			}
+			if !yield(e) {
+				return
+			}
+		}
+	}
+}
+
+// withoutNils is just another name for allNonZeros, no pun to people named Nils.
+func withoutNils[S ~[]*E, E any](s S) iter.Seq[*E] { return allUnzeros(s) }

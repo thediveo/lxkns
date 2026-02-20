@@ -51,6 +51,23 @@ const (
 	NamespaceTypesCount // number of namespace types
 )
 
+// indexedTypenames maps namespace type indices to their abbreviated form type
+// names.
+var indexedTypenames = map[NamespaceTypeIndex]string{}
+
+func init() {
+	for typname, typindex := range typenameIndices {
+		indexedTypenames[typindex] = typname
+	}
+}
+
+// NamespaceTypeNameByIndex maps the namespace type indices to their abbreviated
+// textual names, such as “mnt” and “net”.
+func NamespaceTypeNameByIndex(idx NamespaceTypeIndex) (string, bool) {
+	name, ok := indexedTypenames[idx]
+	return name, ok
+}
+
 // typenameIndices maps the namespace type names (in their abbreviated form) to
 // type indices as used in our lxkns model in various places.
 var typenameIndices = map[string]NamespaceTypeIndex{

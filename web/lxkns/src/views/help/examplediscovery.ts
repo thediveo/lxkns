@@ -1,6 +1,4 @@
-// General package definitions.
-
-// Copyright 2020 Harald Albrecht.
+// Copyright 2021 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -14,7 +12,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+import { cloneDeep } from 'lodash'
+import { type Discovery, fromjson } from 'models/lxkns'
+import fakedata from './examplediscovery.json'
 
-// SemVersion is the semantic version string of the lxkns module.
-//go:generate go run ./internal/cmd/version
+export const discovery: Discovery = fromjson(
+    // ouch! fromjson() works in-place, so we need to pass it a copy of the
+    // original data, at least during development with hot reloading.
+    cloneDeep(fakedata))

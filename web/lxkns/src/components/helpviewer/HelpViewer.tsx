@@ -12,8 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { type MouseEvent, type ReactNode, useState } from 'react'
-import { useMatch, useNavigate } from 'react-router-dom'
+import React, { type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react'
+import { useLocation, useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
@@ -65,9 +65,18 @@ const NavigatorButton = styled(IconButton)(({ theme }) => ({
     },
 }))
 
-const Markdowner = styled(MuiMarkdown)(() => ({
+const Markdowner = styled(MuiMarkdown)(({theme}) => ({
     // Compensate for the height of the sticky toc navigator button.
     marginTop: '-24px',
+
+    '& .MuiSvgIcon-root.avatar': {
+        verticalAlign: 'middle',
+        fontSize: 'calc(175% + 2px)',
+        backgroundColor: theme.alpha(theme.palette.grey[400], 0.25),
+        padding: 4,
+        borderRadius: '50%',
+    },
+
 }))
 
 const Padding = styled('div')(({ theme }) => ({
@@ -213,9 +222,16 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         </Button>)
     }
 
+    const location = useLocation()
+    const canvas = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        canvas.current?.parentElement?.scrollTo({top: 0, left: 0})
+    }, [location])
+
     // Anchor state for the ToC navigation popup menu.
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    
+
     // Pop up the table of contents menu...
     const handleNavButtonClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget)
@@ -232,7 +248,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         setAnchorEl(null)
     }
 
-    return <HelpCanvas style={style}>
+    return <HelpCanvas style={style} ref={canvas}>
         {/* 
             the ToC navigation/navigator button is sticky, but of course in the
             *outer* "canvas" div. In consequence, the outer canvas must not
@@ -269,14 +285,14 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 mdx={chapters[currentChapterIndex].chapter as MDXContent}
                 fallback={
                     <Box sx={{ marginTop: '-24px' }} m={1}>
-                        <ChapterSkeleton sx={{width: '15rem'}}/>
+                        <ChapterSkeleton sx={{ width: '15rem' }} />
                     </Box>
                 }
                 shortcodes={shortcodes}
             />
             <Divider />
-            { chapterButton(currentChapterIndex - 1) }
-            { chapterButton(currentChapterIndex + 1) }
+            {chapterButton(currentChapterIndex - 1)}
+            {chapterButton(currentChapterIndex + 1)}
             <div style={{ clear: 'both' }}></div>
         </Padding>
     </HelpCanvas>

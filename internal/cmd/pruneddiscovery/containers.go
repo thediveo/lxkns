@@ -1,4 +1,4 @@
-// Copyright 2021 Harald Albrecht.
+// Copyright 2026 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -12,11 +12,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { cloneDeep } from 'lodash'
-import { type Discovery, fromjson } from 'models/lxkns'
-import fakedata from './fakediscoverydata.json'
+package main
 
-export const discovery: Discovery = fromjson(
-    // ouch! fromjson() works in-place, so we need to pass it a copy of the
-    // original data, at least during development with hot reloading.
-    cloneDeep(fakedata))
+import (
+	"strings"
+
+	"github.com/thediveo/lxkns/discover"
+)
+
+func sanitizeContainers(d *discover.Result) {
+	for _, cntr := range d.Containers {
+		for key, value := range cntr.Labels {
+			if strings.Contains(value, "@") {
+				delete(cntr.Labels, key)
+				continue
+			}
+		}
+	}
+}

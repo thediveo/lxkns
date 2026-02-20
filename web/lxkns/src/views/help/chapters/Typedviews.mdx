@@ -1,28 +1,47 @@
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
-import { discovery } from "../fakehelpdata";
+import { MountTreeDetailer } from "components/mounttree";
+import { discovery } from "../examplediscovery";
 import { Pause, PlayArrow } from '@mui/icons-material';
 
 # Type-Specific Views
 
 The type-specific namespace views show namespaces just of a single specific
 type. Then, they are mostly _flat_ views, except for PID and user namespace
-views. For instance, this is a view into only _user_ namespaces, now _without_
+views.
+
+### Hierarchical Namespaces
+
+For instance, this is a view into only _user_ namespaces, now _without_
 the owned namespaces:
 
 <Example>
-  <NamespaceProcessTree type="user" discovery={discovery} action={{ action: "" }} />
+  <NamespaceProcessTree type="user" discovery={discovery} />
 </Example>
 
-And this is an example view into only _mount_ namespaces:
+### Flat Namespaces
+
+All other types of namespaces except for _user_ and _PID_ are **flat** (contrary
+to what can be read much too often). This is an example of the network
+namespaces view:
 
 <Example>
-  <NamespaceProcessTree type="mnt" discovery={discovery} action={{ action: "" }} />
+  <NamespaceProcessTree type="net" discovery={discovery} />
+</Example>
+
+### Mount Namespaces with Mounts
+
+And below is an example view into only _mount_ namespaces; this view does not
+only show the mount namespaces but also the mounts inside them. For more details
+please see our dedicated [Mount Namespaces](/help/mounts) chapter.
+
+<Example>
+  <NamespaceProcessTree type="mnt" discovery={discovery} details={MountTreeDetailer} />
 </Example>
 
 Please note that mount namespaces additionally show their mount points, see
 [mount namespaces](/help/mounts) for details.
 
-### Cgroup Grouping
+## Cgroup Path Grouping
 
 In case the processes attached to a namespace belong to different cgroup
 controller paths, then additionally all the leader (topmost) processes in the
@@ -33,10 +52,10 @@ processes to run attached to the host's initial PID namespace for correct
 namespace discovery:
 
 <Example>
-  <NamespaceProcessTree type="pid" discovery={discovery} action={{ action: "" }} />
+  <NamespaceProcessTree type="pid" discovery={discovery} />
 </Example>
 
-### Initial Namespaces
+## Initial Namespaces
 
 As the Linux kernel initializes, it creates a set of so-called "initial"
 namespaces: these are indicated by dashed borders around their namespace
@@ -47,12 +66,12 @@ namespaces: these are indicated by dashed borders around their namespace
 </Example>
 
 
-### Number of Child User/PID Namespaces
+## Number of Child User/PID Namespaces
 
 When user or PID namespaces have child user namespaces, then the total number of
 child and grandchild namespaces is shown right after a namespace "badge".
 
-### Container Processes
+## Container Processes
 
 In case a process that is "attached" to a namespace is also associated with a
 container then **lxkns** will first show the name of the container associated
@@ -65,7 +84,7 @@ user interface:
 - Docker/nerdctl composer projects,
 - Kubernetes pods.
 
-### "Leader" Processes
+## "Leader" Processes
 
 Often, multiple (well, _many_) processes are "attached" to (using) the same
 namespace. Instead of showing the complete mess, **lxkns** partitions the
@@ -82,7 +101,7 @@ Additionally, the "freezer" cgroup state is also shown: a <Pause
 className="icon"/> paused process is said to be "frozen" in Linux, while a
 &#32;<PlayArrow className="icon"/> running process is also said to be "thawed".
 
-### Loose Threads
+## Loose Threads
 
 Loose threads – for lack of better official terminology – are Linux OS-level
 threads (that is, _non-process_ tasks) that are attached to at least some

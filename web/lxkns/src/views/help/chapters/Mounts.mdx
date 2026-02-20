@@ -1,11 +1,12 @@
 import { NamespaceProcessTree } from "components/namespaceprocesstree";
 import { MountTreeDetailer } from "components/mounttree";
 import { expandInitiallyAtom } from "views/settings";
-import { discovery } from "../fakehelpdata";
+import { discovery } from "../examplediscovery";
 import { PeerIcon } from "icons/propagation/Peer";
 import { SlaveIcon } from "icons/propagation/Slave";
 import { UnbindableIcon } from "icons/propagation/Unbindable";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+
 
 # Mount Namespaces
 
@@ -38,8 +39,11 @@ hierarchy can also hide (overmount) other mount points.
 
 **lxkns** automatically determines the visibility of mount points itself, as
 unfortunately the Linux kernel does not explicitly expose visibility information
-for mount points. Hidden (overmounted) mount points are grayed-out and their
-path crossed out.
+for mount points.
+
+- Mount points that haven't been over-mounted are shown in normal text color: "sys/fs/binfmt_misc"
+- Hidden (overmounted) mount points are grayed-out and their path crossed out:
+  <DisabledText>~~"sys/fs/binfmt_misc"~~</DisabledText>
 
 ### Mount Point Propagation
 

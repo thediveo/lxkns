@@ -2,17 +2,26 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Badge from '@mui/material/Badge';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SyncIcon from '@mui/icons-material/Sync';
 
 # Application Bar
 
-## <MenuIcon className="icon"/> Drawer
+The "Application Bar" sits at the top of the web user interface page. It
+consists of the following elements...
+
+## <MenuIcon className="icon"/>/<ChevronLeftIcon className="icon"/> Open/Close the Drawer
 
 The <MenuIcon className="icon"/> button in the application bar opens the
-(navigation) drawer. The drawer switches between different namespace views and
-also provides access to [settings](/help/settings) and information about this
-application.
+(navigation) drawer. When opened, the drawer shows a <ChevronLeftIcon
+className="icon"/> close button to dismiss the drawer.
+
+The drawer allows switching between different views and also provides access to
+[settings](/help/settings) and information about this application. The first two
+sections in the drawer relate specifically to showing Linux kernel namespaces
+from different perspectives. The last but one section shows [process affinities
+for CPUs](/help/affinities).
 
 ## <Badge badgeContent="42" color="secondary">Namespaces</Badge>
 

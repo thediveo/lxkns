@@ -1,3 +1,5 @@
+import AffinityTree from 'components/affinitytree';
+import { discovery } from "../examplediscovery";
 import CPUIcon from 'icons/CPU.tsx';
 import PinnedBelow from 'icons/PinnedBelow.tsx';
 import Pinned from 'icons/Pinned.tsx';
@@ -18,33 +20,64 @@ often termed "pinning".
 > where the most fundamental unit is the "(logical) CPU", where a "core"
 > contains multiple "CPUs".
 
-Pinning tasks to CPUs is actually used en masse by the Linux kernel itself:
+## CPU-Process Mapping
+
+This is a (logical) CPU-centric view, tackling the use case of "what's going on
+on CPU x?".
+
+<Example>
+  <AffinityTree discovery={discovery} />
+</Example>
+
+All currently online CPUs are listed at the leftmost indentation level and
+indicated by <CPUIcon className="icon" />.
+
+Then, all processes, threads, and finally all kernel threads are organized under
+each CPU's two "roots":
+
+- first, kernel threads are organized below the "kthreadd&nbsp;(2)" root.
+- second, all user-space processes and tasks are to be found below the "...(1)"
+  root, where "..." usually will be "systemd".
+
+> **Note:** **Double clicking on a CPU node** expands all those branches that
+> lead to "pinned" processes and tasks. 
+
+> **Note:** **Double clicking on a process node** expands the child and
+> grandchild nodes that are in line to a "pinned" process or task, keeping all
+> other "unpinned" process nodes collapsed.
+
+## Pinning
+
+"Pinning" tasks to CPUs is actually used en masse by the Linux kernel itself:
 several of its so-called "kernel threads" (kthreads) are pinned to single cores,
 where these kthreads are present once on each logical CPU. However, there are
-also other kernel threads that are free to roam across CPUs. lxkns indicates
+also other kernel threads that are free to roam across CPUs. **lxkns** indicates
 kernel threads using a <Tux className="icon" /> icon. 
 
 Another example are Wayland-related tasks of Wayland-aware applications, such as
 Firefox. These wayland-related tasks are typically pinned in a weaving pattern
 to groups of multiple CPUs, as to distribute load.
 
-The "Core Fancy" view shows a tree, with the currently online CPUs as its first
-level, indicated by <CPUIcon className="icon" />.
-
 Below the individual CPUs are the processes and tasks that can be executed on
 this particular CPU. This can be either because their affinities _include_ this
 specific CPU or they are specifically pinned to this CPU (single affinity).
 
+## Visual Clues
+
 There are visual clues to help with quickly judging the situation:
+
+- <Tux className="icon" /> indicates a kernel thread (which actually is a
+  _process_ with a "kthreadd(2)" parent process).
+
 - <Pinned className="icon" /> indicates that a task or process can **execute
   only** on this particular CPU, but not on any other CPU.
+
 - <PinnedBelow className="icon" /> signals that there is a task or process
   deeper down the hierarchy that is specifically pinned to this CPU only, or to
   a _subset_ of CPUs (but **cannot** be freely executed on _any_ CPU).
+
 - **semi-transparent** task or process information shows that a particular
   process can execute on _any_ CPU, including this particular CPU.
-- grayed-out task or process information signals that a process **can't
-  execute** on this CPU but is included as a result of the process hierarchy.
 
-**Double clicking on a process node** expands all those process child and
-grandchild nodes that are in line to a pinned process or task.
+- **grayed-out** task or process information signals that a process **can't
+  execute** on this CPU but is included as a result of the process hierarchy.

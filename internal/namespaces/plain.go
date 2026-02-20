@@ -3,6 +3,7 @@ package namespaces
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/thediveo/lxkns/model"
@@ -135,6 +136,10 @@ func (pns *PlainNamespace) String() string {
 	}
 	if l := pns.LeaderString(); l != "" {
 		s += ", " + l
+	} else {
+		if ref := pns.Ref(); ref != nil {
+			s += ", referenced by " + ref.String()
+		}
 	}
 	return s
 }
@@ -245,4 +250,20 @@ func (pns *PlainNamespace) resolveOwner(namespace model.Namespace, usernsmap mod
 		// sux.
 		ownerns.ownedns[model.TypeIndex(pns.nstype)][pns.nsid] = namespace
 	}
+}
+
+// RemoveLeader allows module-internal users to remove leader processes. It is
+// no error trying to remove a process that isn't a leader process.
+func (pns *PlainNamespace) RemoveLeader(proc *model.Process) {
+	pns.leaders = slices.DeleteFunc(pns.leaders,
+		func(leader *model.Process) bool {
+			return leader == proc && leader.PID == proc.PID
+		})
+}
+
+func (pns *PlainNamespace) RemoveLooseThread(task *model.Task) {
+	pns.loosethreads = slices.DeleteFunc(pns.loosethreads,
+		func(loose *model.Task) bool {
+			return loose == task && loose.TID == task.TID
+		})
 }
