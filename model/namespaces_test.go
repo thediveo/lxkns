@@ -46,4 +46,21 @@ var _ = Describe("model", func() {
 		Entry(nil, "time", TimeNS, true),
 	)
 
+	DescribeTable("returns namespace type names for type indices",
+		func(idx NamespaceTypeIndex, expected string, expectedok bool) {
+			tname, ok := NamespaceTypeNameByIndex(idx)
+			Expect(ok).To(Equal(expectedok))
+			Expect(tname).To(Equal(expected))
+		},
+		Entry(nil, NamespaceTypeIndex(-1), "", false),
+		Entry(nil, MountNS, "mnt", true),
+		Entry(nil, CgroupNS, "cgroup", true),
+		Entry(nil, UTSNS, "uts", true),
+		Entry(nil, IPCNS, "ipc", true),
+		Entry(nil, UserNS, "user", true),
+		Entry(nil, PIDNS, "pid", true),
+		Entry(nil, NetNS, "net", true),
+		Entry(nil, TimeNS, "time", true),
+	)
+
 })

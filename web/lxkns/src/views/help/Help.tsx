@@ -110,6 +110,10 @@ const IconBox = styled('span')(({ theme }) => ({
 }))
 
 
+const DisabledText = styled('span')(({theme}) => ({
+    color: theme.palette.text.disabled,
+}))
+
 const BoxedIcons = ({ children }: { children: ReactNode }) => {
     return <IconBox>{children}</IconBox>
 }
@@ -131,7 +135,8 @@ export const Help = () => (
         markdowner={MuiMarkdown}
         shortcodes={{ 
             a: SmartA, 
-            BoxedIcons, 
+            BoxedIcons,
+            DisabledText,
             Example, 
             NamespaceBadge, 
             NamespaceExample 

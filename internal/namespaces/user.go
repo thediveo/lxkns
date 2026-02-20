@@ -3,6 +3,7 @@ package namespaces
 import (
 	"fmt"
 	"os/user"
+	"slices"
 	"strings"
 
 	"github.com/thediveo/lxkns/model"
@@ -102,4 +103,16 @@ func (uns *UserNamespace) ResolveOwner(usernsmap model.NamespaceMap) {
 func (uns *UserNamespace) AddChild(child model.Hierarchy) {
 	child.(HierarchyConfigurer).SetParent(uns)
 	uns.children = append(uns.children, child)
+}
+
+func (uns *UserNamespace) RemoveChild(child model.Hierarchy) {
+	uns.children = slices.DeleteFunc(uns.children,
+		func(e model.Hierarchy) bool {
+			return e == child
+		})
+}
+
+// Disown the specified namespace.
+func (uns *UserNamespace) Disown(namespace model.Namespace) {
+	delete(uns.ownedns[model.TypeIndex(namespace.Type())], namespace.ID())
 }

@@ -1,6 +1,4 @@
-// General package definitions.
-
-// Copyright 2020 Harald Albrecht.
+// Copyright 2026 Harald Albrecht.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy
@@ -14,7 +12,23 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package lxkns
+package main
 
-// SemVersion is the semantic version string of the lxkns module.
-//go:generate go run ./internal/cmd/version
+import (
+	"maps"
+	"slices"
+
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
+)
+
+// purgeMounts purges the mounts for mount namespaces that have been previously
+// purged themselves.
+func purgeMounts(d *discover.Result) {
+	for _, nsid := range slices.Collect(maps.Keys(d.Mounts)) {
+		if _, ok := d.Namespaces[model.MountNS][nsid]; ok {
+			continue
+		}
+		delete(d.Mounts, nsid)
+	}
+}

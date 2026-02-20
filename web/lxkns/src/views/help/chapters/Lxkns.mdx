@@ -1,7 +1,18 @@
 import { Toc as TocIcon } from "@mui/icons-material";
 import Logo from 'app/lxkns.svg';
+import { NamespaceType } from 'models/lxkns';
+import { NamespaceIcon } from 'components/namespaceicon';
+import HomeIcon from '@mui/icons-material/Home';
+import ContainerIcon from 'icons/containers/Container';
+import CPUAffinityIcon from 'icons/CPUAffinity';
+
 
 # <img src={Logo} style={{height: '2ex', position: 'relative', top: '0.3ex'}} /> Linux Kernel Namespaces Discovery
+
+...and more discoveries: the mount point hierarchy as well process/task affinity
+to (logical) CPUs.
+
+## (Nameless) Namespaces
 
 This app displays [Linux-kernel
 namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) discovered
@@ -11,18 +22,50 @@ file system, processes, network interfaces), so that processes that are members
 of a particular namespace only see these resources isolated in that namespace.
 **lxkns** is container-aware, helping with orientation.
 
-Namespaces can be either displayed in an all-inclusive view (the "all
-namespaces" view), or filtered for each type of namespace individually.
-
 In a weird twist of penguin logic, "namespaces" actually do not have any names.
 Historically, the first type of namespace in Linux was the "mount" namespace
 which is about system paths and partitioning mount points ... and this is where
 the meaning of namespace actually originates from.
 
+Namespaces can be either displayed in an all-inclusive view (the "all
+namespaces" view)...
+<p/>
+
+[<HomeIcon className="avatar" />](/help/allview)
+<p/>
+
+...or filtered for each type of namespace individually:
+<p/>
+
+[<NamespaceIcon type={NamespaceType.user} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.pid} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.cgroup} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.ipc} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.mnt} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.net} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.uts} className="avatar" />](/help/typedviews)
+[<NamespaceIcon type={NamespaceType.time} className="avatar" />](/help/typedviews)
+<p/>
+
+Finally, you can focus on the namespaces of the currently running (or paused)
+containers:
+<p/>
+
+[<ContainerIcon className="avatar" />](/help/containers)
+<p/>
+
+## Process/Task Scheduling and Affinity
+
 Additionally, **lxkns** features showing the scheduling configuration of
-processes and tasks and how these can be executed on any or specific subsets of
-online CPUs. This isn't `htop`, but instead renders a _topological_ process and
-task hierarchy independently of CPU load.
+processes and tasks and [how these can be executed on any or specific subsets of
+online CPUs](/help/affinities).
+<p/>
+
+[<CPUAffinityIcon className="avatar" />](/help/affinities)
+<p/>
+
+This isn't `htop`, but instead renders a _topological_ process and task
+hierarchy independently of CPU load.
 
 ## Navigation
 

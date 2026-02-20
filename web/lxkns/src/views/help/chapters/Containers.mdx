@@ -13,6 +13,9 @@ import K8sPod from 'icons/containers/K8sPod.tsx';
 import DevContainer from 'icons/containers/DevContainer.tsx';
 import Codespace from 'icons/containers/Codespace.tsx';
 
+import ContainerTree from 'components/containertree';
+import { discovery } from "../examplediscovery";
+
 
 # Containers
 
@@ -22,6 +25,17 @@ import Codespace from 'icons/containers/Codespace.tsx';
 [application bar drawer](/help/appbar), either by sliding from the left border
 or clicking/tapping the <MenuIcon className="icon"/> button in the top-left
 corner.
+
+<Example>
+  <ContainerTree discovery={discovery} />
+</Example>
+
+Yes, you're seeing this example correctly: there are multiple Docker engines –
+it's a codespace where the host has its Docker engine. This host Docker runs a
+devcontainer that in turns runs its own Docker-in-Docker. The **lxkns** service
+has been deployed to this "inner" Docker instance, and there's also another
+container for demonstration purposes (that has been pinned to the second logical
+CPU, but no other).
 
 ## Container (Engine) Types
 
@@ -35,7 +49,7 @@ belongs to.
 | <Docker/> | [Docker](https://docker.com)/[Moby](https://https://mobyproject.org/) |
 | <DockerPlugin/> | Docker managed plugin |
 | <CRI/> | CRI (Kubernetes Container Runtime Interface) |
-| <Podman/> | [podman](https://podman.io) |
+| <Podman/> | [podman](https://podman.io) – notice that we cannot detect podman user instances unless they are systemd-activated. This is a principal architectural issue of podman.  |
 | <IERuntime/> | Siemens Industrial Edge runtime |
 | <Container/> | unknown container type |
 
