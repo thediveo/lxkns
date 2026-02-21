@@ -223,9 +223,7 @@
       maxLevel: 3,
       subMaxLevel: 3,
 
-      loadFooter: true,
-
-      markdown: function (marked, renderer) {
+      markdown(marked, renderer) {
         marked.use({
           gfm: true,
           markedSmartypants,
