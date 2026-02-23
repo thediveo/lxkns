@@ -1,5 +1,5 @@
 {
-    "name": "lxkns (minimal tooling, fully privileged, Docker-in-Docker)",
+    "name": "lxkns (minimal tools setup, fully privileged, Docker-in-Docker)",
     "portsAttributes": {
         "6060": {
             "label": "lxkns Go package documentation",
@@ -12,16 +12,7 @@
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest",
             "moby": false // go for the upstream Docker-CE
-        },
-        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:0": {},
-        "ghcr.io/thediveo/devcontainer-features/gocover:0": {
-            "root": true,           // test both as ordinary user and root
-            "num-programs": "1",    // do never run package-level tests in parallel
-            "race": true,           // enable race detector
-            "verbose": true,
-            "html": true            // generate coverage.html
-        },
-        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {}
+        }
     },
     "runArgs": [
         "--pid=host",
