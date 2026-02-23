@@ -89,8 +89,20 @@ type PerCoreExecutors = { [key: number]: Executor }
  */
 type CoresWithExecutors = { [key: number]: PerCoreExecutors }
 
+/**
+ * Given the process table/hierarchy including tasks, as well as the list on
+ * CPUs currently online, return a table/map of the process and task hierarchies
+ * on the individual CPUs. These hierarchies are represented by objects/maps
+ * keyed by PID/TID and with top-down hierarchy that is directly suitable for
+ * rendering this hierarchy. 
+ * 
+ * @param processes table/map of processes with tasks. 
+ * @param onlineCPUs list of ranges of CPUs that are currently online. @returns
+ * object/map indexed by logical CPU number to per-CPU maps containing the
+ *   processes and tasks that are on this CPU or are in the hierarchy to a
+ *   process or task on this CPU, keyed by PID/TID. 
+ */
 const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
-
     const coresWithExecutors: CoresWithExecutors = {}
     // Pour over all processes with all their tasks and pick up the tasks that
     // are allowed to run on a particular logical CPU.
@@ -216,12 +228,16 @@ const cpuItemID = (cpu: number) => `cpu${cpu}`
 const executorItemID = (pidtid: number, cpu: number) => `task${pidtid}-cpu${cpu}`
 
 interface InfoProps {
-    busybody: Busybody
-    onCPU: boolean
-    pinned: boolean
-    pinnedBelow: boolean
+    busybody: Busybody /** process or task to render details for. */
+    onCPU: boolean /** this process/task can be executed on this CPU the tree. */
+    pinned: boolean /** true if this process/task is pinned. */
+    pinnedBelow: boolean /** true if there's a pinned process/task below. */
 }
 
+/**
+ * Component `Info` renders information about a process or task in the context
+ * of a specific CPU.
+ */
 const Info = ({ busybody, onCPU, pinned, pinnedBelow }: InfoProps) => {
     const bbInfo = isProcess(busybody)
         ? <ProcessInfo process={busybody} hideAffinity={true} />
@@ -264,7 +280,7 @@ const execsTreeOnCore = (cpu: number, xid: number, execsPerCore: PerCoreExecutor
     if (!exec) {
         return <></>
     }
-    const isPinned = exec.pinned
+    const isPinned = exec.pinned && exec.onCPU // ignore pinning indication when not on this CPU
     return <TreeItem
         key={xid}
         itemId={executorItemID(xid, cpu)}

@@ -20,7 +20,6 @@ import { SnackbarProvider } from 'notistack'
 import { Provider as StateProvider, useAtom } from 'jotai'
 
 import CssBaseline from '@mui/material/CssBaseline'
-import Badge from '@mui/material/Badge'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
@@ -65,7 +64,12 @@ import { Containers } from 'views/containers'
 import type { TreeAPI } from './treeapi'
 import CPUAffinityIcon from 'icons/CPUAffinity'
 import { Affinities } from 'views/affinities'
+import { CondBadge } from 'components/condbadge'
 
+interface tooltips {
+    collapseall: string
+    expandall: string
+}
 
 /**
  * Describes properties of an individual sidebar view item, such as its icon to
@@ -73,9 +77,16 @@ import { Affinities } from 'views/affinities'
  */
 interface viewItem {
     icon: React.JSX.Element /** drawer item icon */
-    label: string /** drawer item label */
+    label: string /** drawer item label text */
     path: string /** route path */
+
+    title: string /** title */
+
     type?: NamespaceType /** type of namespace to show, if any */
+
+    badge?: boolean /** show namespaces count badge */
+    treeactions?: boolean /** show tree expand/collapse buttons */
+    tooltips?: tooltips /** tooltip text if differing from default */
 }
 
 /**
@@ -84,49 +95,78 @@ interface viewItem {
  */
 const views: viewItem[][] = [
     [
-        { icon: <HomeIcon />, label: "all namespaces", path: "/" },
-        { icon: <ContainerIcon />, label: "all containers", path: "/containers" },
+        {
+            icon: <HomeIcon />, label: "all namespaces", path: "/",
+            title: "All Linux Namespaces",
+            badge: true, treeactions: true
+        },
+        {
+            icon: <ContainerIcon />, label: "all containers", path: "/containers",
+            title: "All Container Namespaces",
+            badge: true, treeactions: true
+        },
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
-            label: "user namespaces", path: "/user", type: NamespaceType.user
+            title: "Linux User Namespaces",
+            label: "user namespaces", path: "/user", type: NamespaceType.user, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.pid} />,
-            label: "PID namespaces", path: "/pid", type: NamespaceType.pid
+            title: "Linux PID Namespaces",
+            label: "PID namespaces", path: "/pid", type: NamespaceType.pid, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.cgroup} />,
-            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup
+            title: "Linux Cgroup Namespaces",
+            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.ipc} />,
-            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc
+            title: "Linux IPC Namespaces",
+            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.mnt} />,
-            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt
+            title: "Linux Mnt Namespaces",
+            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.net} />,
-            label: "network namespaces", path: "/net", type: NamespaceType.net
+            title: "Linux Net Namespaces",
+            label: "network namespaces", path: "/net", type: NamespaceType.net, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.uts} />,
-            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts
+            title: "Linux UTS Namespaces",
+            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts, badge: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.time} />,
-            label: "time namespaces", path: "/time", type: NamespaceType.time
+            title: "Linux Time Namespaces",
+            label: "time namespaces", path: "/time", type: NamespaceType.time, badge: true, treeactions: true
         },
     ], [
-        { icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities" },
+        {
+            icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities",
+            title: "Core Fancy",
+            treeactions: true,
+            tooltips: {
+                expandall: "expand all CPUs with all their processes and tasks",
+                collapseall: "collapse to show only CPU nodes with PID1 and PID2"
+            }
+        },
     ], [
-        { icon: <TuneIcon />, label: "settings", path: "/settings" },
-        { icon: <HelpIcon />, label: "help", path: "/help/lxkns" },
-        { icon: <InfoIcon />, label: "about", path: "/about" },
+        { icon: <TuneIcon />, label: "settings", path: "/settings", title: "Settings" },
+        { icon: <HelpIcon />, label: "help", path: "/help/lxkns", title: "Help" },
+        { icon: <InfoIcon />, label: "about", path: "/about", title: "About lxkns" },
     ]
 ]
+
+const viewProperties = (location: string) => (
+    (views.flat().filter((vi) => location.startsWith(vi.path)) // grab only matching paths
+        .sort((a, b) => b.path.length - a.path.length))[0] // then sort with longest match first
+)
 
 const themedFade = (theme: Theme, el: ('dark' | 'light'), f: number) => (
     theme.palette.mode === 'light'
@@ -159,30 +199,8 @@ const LxknsApp = () => {
     const theme = useTheme()
 
     const path = useLocation().pathname
-
-    // Should we show the expand/collapse tree actions for this view/path?
-    const hideTreeActions = [
-        '/settings',
-        '/about',
-        '/help',
-    ].some((prefix) => path.startsWith(prefix))
-
-    // Note: JS returns undefined if the result doesn't turn up a match; that's
-    // what we want ... and millions of Gophers are starting to cry (again).
-    const [typeview] = views
-        .flat()
-        .filter(view => view.path === path && view.type)
-
-    // Which title should we show for this view/path?
-    const titleEntry = (Object.entries({
-        '/containers': 'All Container Namespaces',
-        '/affinities': 'Core Fancy',
-        '/settings': 'Settings',
-        '/about': 'About lxkns',
-        '/help': 'Help',
-    }).filter(([prefix]) => path.startsWith(prefix))[0])
-        || ['', <>{!typeview && 'All '}Linux {typeview && <em>{typeview.type} </em>}Namespaces</>]
-    const [, title] = titleEntry
+    const view = viewProperties(path)
+    const typeview = view?.type ? view : undefined
 
     const discovery = useDiscovery()
 
@@ -211,21 +229,21 @@ const LxknsApp = () => {
             <LxknsAppBarDrawer
                 drawerwidth={300}
                 swipeAreaWidth={Number(theme.spacing(1))}
-                title={<>
-                    <Badge badgeContent={count} color="secondary">
-                        <Typography variant="h6">{title}</Typography>
-                    </Badge>
-                </>}
+                title={
+                    <CondBadge show={view.badge || false} badgeContent={count} color="secondary">
+                        <Typography variant="h6">{view.title}</Typography>
+                    </CondBadge>
+                }
                 tools={() => <>
-                    {hideTreeActions ? undefined : <>
-                        <Tooltip key="collapseall" title="expand only top-level namespace(s)">
+                    {view.treeactions && <>
+                        <Tooltip key="collapseall" title={view.tooltips?.collapseall || "expand only top-level namespace(s)"}>
                             <IconButton color="inherit" onClick={() => {
                                 currentAPI((api) => api?.collapseAll())
                             }} size="large">
                                 <ChevronRightIcon />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip key="expandall" title="expand all">
+                        <Tooltip key="expandall" title={view.tooltips?.expandall || "expand all"}>
                             <IconButton color="inherit" onClick={() => {
                                 currentAPI((api) => api?.expandAll())
                             }} size="large">
