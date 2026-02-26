@@ -49,6 +49,7 @@ const schedulerPolicies: { [key: string]: string } = {
     '3': 'BATCH',
     '5': 'IDLE',
     '6': 'DEADLINE',
+    '7': 'EXT',
 }
 
 const hasPriority = (process: Busybody) => {

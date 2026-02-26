@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
     title: lxkns
-    version: 0.23.0
+    version: 0.42.0
     description: |-
         Discover Linux-kernel namespaces, almost everywhere in a Linux host. Also look
         for mount points and their hierarchy, as well as for containers.
@@ -162,6 +162,9 @@ components:
                 container-groups:
                     $ref: '#/components/schemas/ContainerGroupMap'
                     description: Groups of containers.
+                cpus-online:
+                    $ref: '#/components/schemas/CPUList'
+                    description: List of currently online CPUs.
         Namespace:
             description: |-
                 Information about a single Linux-kernel namespace. Depending on the extent of
@@ -585,8 +588,8 @@ components:
             properties:
                 name:
                     description: |-
-                        Name of group, such as a (Docker) composer project name, Kubernetes pod
-                        namespace/name, et cetera.
+                        Name of group, such as a (Docker) composer project name,
+                        Kubernetes pod namespace/name, et cetera.
                     type: string
                 type:
                     description: Group type identifier.
@@ -604,8 +607,9 @@ components:
                     description: Additional KEY=VALUE information.
         ContainerMap:
             description: |-
-                Maps container PIDs to containers. Container PIDs are the PIDs of initial
-                container processes only, but not any child processes.
+                Maps container PIDs to containers. Container PIDs are the PIDs
+                of initial container processes only, but not any child
+                processes.
             type: object
             additionalProperties:
                 $ref: '#/components/schemas/Container'
@@ -621,8 +625,9 @@ components:
                 $ref: '#/components/schemas/ContainerGroup'
         Task:
             description: |-
-                Information about a specific task of a process, such as the TID, name, and the
-                references (IDs) of the namespaces the process is joined to.
+                Information about a specific task of a process, such as the TID,
+                name, and the references (IDs) of the namespaces the process is
+                joined to.
             type: object
             allOf:
                 -
@@ -656,32 +661,48 @@ components:
                 starttime:
                     format: int64
                     description: |-
-                        The time this process started after system boot and expressed in clock ticks.
-                        It is taken from /proc/$PID/stat, see also
+                        The time this process started after system boot and
+                        expressed in clock ticks. It is taken from
+                        /proc/$PID/stat, see also
                         [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
                     type: integer
                 cpucgroup:
                     description: |-
-                        The (CPU) cgroup (control group) path name in the hierarchy this process is in. The
-                        path name does not specify the root mount path of the complete hierarchy, but
-                        only the (pseudo) absolute path starting from the root of the particular (v1) or
-                        unified (v2) cgroup hierarchy.
+                        The (CPU) cgroup (control group) path name in the
+                        hierarchy this process is in. The path name does not
+                        specify the root mount path of the complete hierarchy,
+                        but only the (pseudo) absolute path starting from the
+                        root of the particular (v1) or unified (v2) cgroup
+                        hierarchy.
                     type: string
                 namespaces:
                     $ref: '#/components/schemas/NamespacesSet'
                     description: |-
-                        References the namespaces this process is joined to, in form of the namespace
-                        IDs (inode numbers).
+                        References the namespaces this process is joined to, in
+                        form of the namespace IDs (inode numbers).
                 fridgecgroup:
                     description: The freezer cgroup path name in the hierarchy this process is in.
                     type: string
                 fridgefrozen:
                     description: The effective freezer state of this process.
                     type: boolean
+                affinity:
+                    $ref: '#/components/schemas/CPUList'
+                    description: list of CPUs this process/task is allowed to be scheduled on.
+                policy:
+                    $ref: '#/components/schemas/SchedulingPolicy'
+                    description: The scheduling policy. 
+                priority:
+                    $ref: '#/components/schemas/SchedulingPriority'
+                    description: For FIFO and RR scheduling policies the assigned priority.
+                nice:
+                    $ref: '#/components/schemas/SchedulingNice'
+                    description: For non-RT scheduling policies the assigned niceness.
         Process:
             description: |-
-                Information about a specific process, such as its PID, name, and command line
-                arguments, the references (IDs) of the namespaces the process is joined to.
+                Information about a specific process, such as its PID, name, and
+                command line arguments, the references (IDs) of the namespaces
+                the process is joined to.
             type: object
             allOf:
                 -
@@ -693,8 +714,9 @@ components:
                     properties:
                         cmdline:
                             description: |-
-                                The command line arguments of the process, including the process binary file
-                                name. Taken from /proc/$PID/cmdline, see also
+                                The command line arguments of the process,
+                                including the process binary file name. Taken
+                                from /proc/$PID/cmdline, see also
                                 [https://man7.org/linux/man-pages/man5/proc.5.html](proc(5)).
                             type: array
                             items:
@@ -706,12 +728,10 @@ components:
                         ppid:
                             format: int32
                             description: >-
-                                The PID of the parent process, or 0 if there is no parent process. On Linux,
-                                the
-
-                                only processes without a parent are the initial process PID 1 and the PID 2
-
-                                kthreadd kernel threads "process".
+                                The PID of the parent process, or 0 if there is
+                                no parent process. On Linux, the only processes
+                                without a parent are the initial process PID 1
+                                and the PID 2 kthreadd kernel threads "process".
                             type: integer
                         tasks:
                             description: The tasks belonging to this process.
@@ -720,5 +740,50 @@ components:
                                 $ref: '#/components/schemas/Task'
                 -
                     $ref: '#/components/schemas/ProTaskCommon'
-security:
-    - {}
+        CPUList:
+            description: |-
+                A list of CPUs represented as a series of [from, to] inclusive
+                logical CPU number ranges.
+            type: array
+            items:
+                $ref: '#/components/schemas/CPURange'
+            example: [[0, 0], [42, 666]]
+        CPURange:
+            description: |-
+                An inclusive range of logical CPU numbers in the form [from,
+                to]. "from" must be less than or equal to "to".
+            type: array
+            items:
+                type: integer
+            minItems: 2
+            maxItems: 2
+            minimum: 0
+            example: [42, 666]
+        SchedulingPolicy:
+            description: |-
+                Linux kernel scheduling policy:
+                - 0: NORMAL
+                - 1: FIFO
+                - 2: RR
+                - 3: BATCH
+                - 5: IDLE
+                - 6: DEADLINE
+            type: integer
+            enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 5
+                - 6
+        SchedulingPriority:
+            description: Linux kernel RT scheduling priority for policies FIFO and RR.
+            type: integer
+            minimum: 1
+            maximum: 99
+        SchedulingNice:
+            description: |-
+                Linux kernel non-RT niceness, from +19 (very nice) to -20 (not nice at all).
+            type: integer
+            minimum: -20
+            maximum: 19

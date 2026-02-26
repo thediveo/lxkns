@@ -4,6 +4,7 @@ import CPUIcon from 'icons/CPU.tsx';
 import PinnedBelow from 'icons/PinnedBelow.tsx';
 import Pinned from 'icons/Pinned.tsx';
 import Tux from 'icons/Tux.tsx';
+import RealtimeIcon from 'icons/Realtime';
 
 
 # Core Fancy: Task/Process Affinities
@@ -69,8 +70,12 @@ There are visual clues to help with quickly judging the situation:
 - <Tux className="icon" /> indicates a kernel thread (which actually is a
   _process_ with a "kthreadd(2)" parent process).
 
-- <Pinned className="icon" /> indicates that a task or process can **execute
+- <Pinned className="icon" /> signals that a task or process can **execute
   only** on this particular CPU, but not on any other CPU.
+
+- <RealtimeIcon className="icon" /> points out that there is a realtime process
+  or task deeper down the hierarchy and it is scheduled with one of these
+  policies: FIFO, RR, or DEADLINE.
 
 - <PinnedBelow className="icon" /> signals that there is a task or process
   deeper down the hierarchy that is specifically pinned to this CPU only, or to

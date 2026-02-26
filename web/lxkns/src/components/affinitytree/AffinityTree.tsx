@@ -15,16 +15,17 @@
 import { compareBusybodies, isProcess, isTask, type Busybody, type Discovery, type Process, type ProcessMap } from "models/lxkns"
 import { styled, Typography } from "@mui/material"
 import type { TreeAPI } from "app/treeapi"
-import { SimpleTreeView, TreeItem, type TreeViewItemId } from "@mui/x-tree-view"
+import { RichTreeView, TreeItemContent, TreeItemIconContainer, TreeItemProvider, TreeItemRoot, useTreeItem, useTreeItemModel, type TreeViewItemId, type UseTreeItemParameters } from "@mui/x-tree-view"
 import ProcessInfo from "components/processinfo"
 import TaskInfo from "components/taskinfo"
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import CPUList from "components/cpulist"
 import PinnedIcon from "icons/Pinned"
 import PinnedBelowIcon from "icons/PinnedBelow"
 import { numCPUs, sameAffinity } from "models/lxkns/affinity"
 import CPUIcon from "icons/CPU"
-
+import { ChevronRight, ExpandMore } from "@mui/icons-material"
+import RealtimeIcon from "icons/Realtime"
 
 const OnlineCore = styled('span')(() => ({
     '& > .MuiSvgIcon-root': {
@@ -32,6 +33,14 @@ const OnlineCore = styled('span')(() => ({
         position: 'relative',
         top: '0.1ex',
     },
+}))
+
+const RunnerItemBlock = styled('div')(({ theme }) => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    '& > .MuiSvgIcon-root.rt-below': {
+        color: theme.palette.stressedsched,
+    }
 }))
 
 // OffCPUInfo overrides the foreground color for child elements with higher
@@ -45,7 +54,7 @@ const OffCPUInfo = styled('span')(({ theme }) => ({
 
 const UnpinnedInfo = styled('span')(() => ({
     '& *': {
-        opacity: '0.75 !important',
+        opacity: '0.85 !important',
     },
 }))
 
@@ -55,25 +64,37 @@ const UnpinnedInfo = styled('span')(() => ({
  * to a subset of CPUs) or is an anchestor process up to the particular root
  * PID1 or PID2.
  */
-type Executor = {
+type Runner = {
+    /** process or task */
+    busybody: Busybody
+
     /** true if on-CPU, false if anchestor on other CPU(s) */
     onCPU: boolean
     /** true if a subset of the online CPU(s) */
     pinned: boolean
     /** true if processes or tasks exists below that are using only a subset of CPUs */
     pinnedBelow: boolean
-    /** process or task */
-    busybody: Busybody
+
+    realtimeBelow?: boolean
+
     /** further processes and tasks, might not be on-CPU if there's an process
      * or task further down the branch.
      */
-    children?: Executor[]
+    children?: Runner[]
 }
 
+// sameScheduling returns true if both processes or tasks are subject to the
+// same scheduling policy as well as scheduling priority or niceness.
 const sameScheduling = (bbA: Busybody, bbB: Busybody) => {
     return (bbA?.policy || 0) === (bbB?.policy || 0)
         && (bbA?.priority || 0) === (bbB?.priority || 0) // assuming 0 is fine here
         && (bbA?.nice || 0) === (bbB?.nice || 0)
+}
+
+// Is a process or task scheduled with one of the FIFO/RR/DEADLINE policies?
+const isRealtime = (bb: Busybody) => {
+    const policy = bb.policy
+    return policy == 1 || policy == 2 || policy == 6
 }
 
 /**
@@ -82,40 +103,34 @@ const sameScheduling = (bbA: Busybody, bbB: Busybody) => {
  * on-CPU/pinned tasks and processes, this map additionally contains information
  * about the process branches leading to these on-CPU tasks and threads.
  */
-type PerCoreExecutors = { [key: number]: Executor }
+type SameCPURunners = { [key: number]: Runner }
 
 /**
- * Mapping a logical CPU number to the PerCoreExecutors.
+ * Mapping a logical CPU number to the map and hierarchy of processes/tasks on
+ * that particular CPU.
  */
-type CoresWithExecutors = { [key: number]: PerCoreExecutors }
+type RunnersByCPU = { [key: number]: SameCPURunners }
 
 /**
- * Given the process table/hierarchy including tasks, as well as the list on
- * CPUs currently online, return a table/map of the process and task hierarchies
- * on the individual CPUs. These hierarchies are represented by objects/maps
- * keyed by PID/TID and with top-down hierarchy that is directly suitable for
- * rendering this hierarchy. 
+ * mapRunners returns the mapping and hierarchy of processes and tasks on
+ * particular CPUs.
  * 
- * @param processes table/map of processes with tasks. 
- * @param onlineCPUs list of ranges of CPUs that are currently online. @returns
- * object/map indexed by logical CPU number to per-CPU maps containing the
- *   processes and tasks that are on this CPU or are in the hierarchy to a
- *   process or task on this CPU, keyed by PID/TID. 
+ * @param processes map of all processes and tasks, with their affinities.
+ * @param onlineCPUs list of online CPUs, as a series of ranges.
+ * @returns map indexed by logical CPU number to the process and task hierarchy
+ *   on this cpu.
  */
-const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
-    const coresWithExecutors: CoresWithExecutors = {}
+const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
+    const runnersByCPU: RunnersByCPU = {}
     // Pour over all processes with all their tasks and pick up the tasks that
     // are allowed to run on a particular logical CPU.
-    Object.values(processes).forEach((proc) => {
+    Object.values(processes).forEach(proc => {
         Object.values(proc.tasks).forEach(task => {
-            task?.affinity?.forEach(([from, to]) => {
-                for (let cpu = from; cpu <= to; cpu++) {
+            task?.affinity?.forEach(([cpuFrom, cpuTo]) => {
+                for (let cpu = cpuFrom; cpu <= cpuTo; cpu++) {
                     // now that we're looking at a single logical CPU, ensure
                     // that we have a map for this particular logical CPU.
-                    let coreExecutors = coresWithExecutors[cpu]
-                    if (!coreExecutors) {
-                        coreExecutors = coresWithExecutors[cpu] = {}
-                    }
+                    const runnersOnCPU = runnersByCPU[cpu] ??= {}
 
                     // So we've got a task but we don't want to totally visually
                     // clutter the tree with tasks of processes which all have
@@ -131,71 +146,86 @@ const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) =
                         || (sameAffinity(task.affinity, task.process.affinity)
                             && sameScheduling(task, task.process))
                         ? task.process : task
-                    const xid = pidtid(busybody)
-                    let lowerexec = coreExecutors[xid]
-                    if (!lowerexec) {
-                        lowerexec = coreExecutors[xid] = {
+                    const xid = xidOf(busybody)
+                    const realtime = isRealtime(busybody)
+                    let runner = runnersOnCPU[xid]
+                    if (!runner) {
+                        runner = runnersOnCPU[xid] = {
+                            busybody: busybody,
                             onCPU: true,
                             pinned: !sameAffinity(busybody.affinity, onlineCPUs),
                             pinnedBelow: false,
-                            busybody: busybody,
                         }
                     } else {
                         // We've already processed this task, but it might have
                         // been as part of a branch, so mark this as actually
                         // on-CPU and then call it a day.
-                        lowerexec.onCPU = true
+                        runner.onCPU = true
                         break
                     }
 
-                    const pinned = !sameAffinity(busybody.affinity, onlineCPUs)
                     // walk up the process tree to collect breadcrumbs. As we start
                     // back-tracking our beginning is either already a process or a
                     // task. In case of a task we proceed from the task's process, but
                     // in case of the single-task process we've already mapped the
                     // process, so we don't want to do this twice.
                     let proc: Process | null = isProcess(busybody) ? busybody.parent : busybody.process
+                    const pinned = !sameAffinity(busybody.affinity, onlineCPUs)
                     while (proc) {
                         // have we reached a parent that we've already mapped?
-                        let exec = coreExecutors[proc.pid]
-                        if (exec) {
+                        let procRunner = runnersOnCPU[proc.pid]
+                        if (procRunner) {
                             // don't forget to chain the crumbs! That is, the
                             // downward chain, a.k.a. path, so that we later can
                             // recursively render the tree view without further
                             // hunting.
-                            if (!exec.children) exec.children = []
-                            exec.children.push(lowerexec)
+                            if (!procRunner.children) procRunner.children = []
+                            procRunner.children.push(runner)
                             if (pinned) {
-                                // when we're dealing with a task/process that
-                                // has been pinned to a single specific CPU then
-                                // make sure to set indicators along the
-                                // breadcrumb path, so that we later can render
-                                // node adornments whenever we're on a branch
-                                // with single CPU pinning somewhere below.
-                                while (exec && !exec.pinnedBelow) {
-                                    exec.pinnedBelow = true
+                                const procShadow = proc
+                                const procRunnerShadow = procRunner
+                                {
+                                    let proc: Process | null = procShadow
+                                    let procRunner = procRunnerShadow
+                                    // when we're dealing with a task/process that
+                                    // has been pinned to a single specific CPU then
+                                    // make sure to set indicators along the
+                                    // breadcrumb path, so that we later can render
+                                    // node adornments whenever we're on a branch
+                                    // with single CPU pinning somewhere below.
+                                    while (procRunner && !procRunner.pinnedBelow) {
+                                        procRunner.pinnedBelow = true
+                                        proc = proc?.parent || null
+                                        procRunner = runnersOnCPU[proc?.pid || 0]
+                                    }
+                                }
+                            }
+                            if (realtime) {
+                                while (procRunner && !procRunner?.realtimeBelow) {
+                                    procRunner.realtimeBelow = true
                                     proc = proc?.parent || null
-                                    exec = coreExecutors[proc?.pid || 0]
+                                    procRunner = runnersOnCPU[proc?.pid || 0]
                                 }
                             }
                             break
                         }
-                        exec = {
+                        procRunner = {
+                            busybody: proc,
                             onCPU: false,
                             pinned: !sameAffinity(proc.affinity, onlineCPUs),
                             pinnedBelow: pinned,
-                            busybody: proc,
-                            children: [lowerexec],
+                            realtimeBelow: realtime,
+                            children: [runner],
                         }
-                        coreExecutors[proc.pid] = exec
-                        lowerexec = exec
+                        runnersOnCPU[proc.pid] = procRunner
+                        runner = procRunner
                         proc = proc.parent
                     }
                 }
             })
         })
     })
-    return coresWithExecutors
+    return runnersByCPU
 }
 
 /**
@@ -206,7 +236,7 @@ const pinnedExecutors = (processes: ProcessMap, onlineCPUs: number[][] | null) =
  * @param bb a Process or Task
  * @returns PID of Process or TID of Task
  */
-const pidtid = (bb: Busybody) => isProcess(bb) ? bb.pid : bb.tid
+const xidOf = (bb: Busybody) => isProcess(bb) ? bb.pid : bb.tid
 
 /**
  * Return a tree item ID for a CPU item; CPU item IDs are guaranteed to not
@@ -221,24 +251,125 @@ const cpuItemID = (cpu: number) => `cpu${cpu}`
  * Return a tree item ID for a task/process on a particular logical CPU;
  * task/process item IDs are guaranteed to not clash with CPU item IDs.
  * 
- * @param pidtid PID or TID of a task/process
+ * @param xit PID or TID of a task/process
  * @param cpu logical CPU number
  * @returns stable item ID (string)
  */
-const executorItemID = (pidtid: number, cpu: number) => `task${pidtid}-cpu${cpu}`
+const runnerOnCPUItemID = (xit: number, cpu: number) => `task${xit}-cpu${cpu}`
 
-interface InfoProps {
-    busybody: Busybody /** process or task to render details for. */
-    onCPU: boolean /** this process/task can be executed on this CPU the tree. */
-    pinned: boolean /** true if this process/task is pinned. */
-    pinnedBelow: boolean /** true if there's a pinned process/task below. */
+// cpuTID extracts the logical CPU number and optionally a runner's TID (PID)
+// from the specified item ID.
+const itemCPUTID = (id: string): { cpu?: number, tid?: number } => {
+    if (id.startsWith('task')) {
+        const cpuIdx = id.indexOf('-cpu')
+        if (cpuIdx < 0) return {}
+        return {
+            cpu: Number(id.slice(cpuIdx + 4)),
+            tid: Number(id.slice(4, cpuIdx))
+        }
+    } else if (id.startsWith('cpu')) {
+        return {
+            cpu: Number(id.slice(3)),
+        }
+    }
+    return {}
+}
+
+// CPUItem represents a logcial CPU in the affinity tree.
+type CPUItem = {
+    cpu: number
+}
+
+// RunnerItem represents a process or task in the affinity tree.
+type RunnerItem = {
+    runner: Runner
+}
+
+// AffinityTreeItem is either a CPU or a task/process, and each item might have
+// child items in the affinity tree.
+type AffinityTreeItem = (CPUItem | RunnerItem) & {
+    /** unique ID (used by the rendering tree view) */
+    id: string
+
+    children?: AffinityTreeItem[]
+}
+
+// isCPUItem is a type guard returning true if an AffinityTreeItem is a
+// LogicalCPU.
+const isCPUItem = (item: AffinityTreeItem): item is Extract<AffinityTreeItem, CPUItem> =>
+    (item as CPUItem).cpu !== undefined
+
+// isRunnerItem is a type guard returning true if an AffinityTreeItem is a
+// Runner, representing a process or task.
+const isRunnerItem = (item: AffinityTreeItem): item is Extract<AffinityTreeItem, RunnerItem> =>
+    (item as RunnerItem).runner !== undefined
+
+// runnersBranch returns a runner's affinity tree item for the specified
+// PID/TID, where this tree item recursively contains child runner items as
+// discovered.
+const runnersBranch = (cpu: number, xid: number, runnersOnCPU: SameCPURunners): Exclude<AffinityTreeItem, CPUItem> | null => {
+    const runner = runnersOnCPU[xid]
+    if (!runner) {
+        return null
+    }
+    const children = runner.children
+        ?.map(subexec => runnersBranch(cpu, xidOf(subexec.busybody), runnersOnCPU))
+        .filter(item => !!item)
+        .sort((a, b) => compareRunners(a.runner, b.runner))
+    return {
+        id: runnerOnCPUItemID(xidOf(runner.busybody), cpu),
+        runner: runner,
+        children: children,
+    }
+}
+
+// returns the top-level list of logical CPU tree items, with the CPU tree items
+// containing the PID2 and PID1 hierarchies of processes and tasks related to
+// that CPU.
+const toplevelAffinityItems = (runnersByCPU: RunnersByCPU) => {
+    return Object.entries(runnersByCPU)
+        .map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, SameCPURunners])
+        .sort(([cpuA], [cpuB]) => cpuA - cpuB)
+        .map(([cpu, execsPerCore]) => {
+            return {
+                id: cpuItemID(cpu),
+                cpu: cpu,
+                children: [
+                    runnersBranch(cpu, 2, execsPerCore),
+                    runnersBranch(cpu, 1, execsPerCore),
+                ].filter(item => !!item),
+            } satisfies AffinityTreeItem
+        })
+}
+
+const treeItemId = (item: AffinityTreeItem) => item.id
+const treeItemLabel = (item: AffinityTreeItem) => item.id
+const treeItemChildren = (item: AffinityTreeItem) => item.children
+
+/**
+ * Properties required to render information about a process or task in its
+ * per-CPU hierarchy.
+ */
+interface RunnerInfoProps {
+    /** the process or task; this gives details such as name and scheduling */
+    busybody: Busybody
+    /** is this runner actually on the CPU or a parent process in the hierarchy
+     * and off-CPU? 
+     */
+    onCPU: boolean
+    /** is this runner pinned to a subset of CPUs including this one the
+     * hierarchy is for? 
+     */
+    pinned: boolean
+    /** is there a runner lower down in a branch that is pinned?  */
+    pinnedBelow: boolean
 }
 
 /**
- * Component `Info` renders information about a process or task in the context
- * of a specific CPU.
+ * Component `BusybodyInfo` renders information about a process or task, including
+ * pinning and on-CPU adornments.
  */
-const Info = ({ busybody, onCPU, pinned, pinnedBelow }: InfoProps) => {
+const RunnerInfo = ({ busybody, onCPU, pinned, pinnedBelow }: RunnerInfoProps) => {
     const bbInfo = isProcess(busybody)
         ? <ProcessInfo process={busybody} hideAffinity={true} />
         : <TaskInfo task={busybody} />
@@ -252,12 +383,76 @@ const Info = ({ busybody, onCPU, pinned, pinnedBelow }: InfoProps) => {
         : <>{pinnedBelowAdornment}<UnpinnedInfo>{details}</UnpinnedInfo></>
 }
 
-// Compare two executors A and B, returning <0 if A goes before B, >0 if A goes
+/**
+ * `RunnerItem` renders a tree item representing a process or task (aka
+ * "runner").
+ */
+const RunnerItem = ({ runner }: { runner: Runner }) => {
+    const isPinned = runner.pinned
+    const isKthread = xidOf(runner.busybody) === 2
+        || (isProcess(runner.busybody) && runner.busybody && runner.busybody.parent?.pid === 2)
+    return <RunnerItemBlock>
+        {isPinned && <><PinnedIcon fontSize="inherit" /> </>}
+        {!isKthread && runner?.realtimeBelow && <><RealtimeIcon className="rt-below" fontSize="inherit" /> </>}
+        <RunnerInfo busybody={runner.busybody} onCPU={runner.onCPU} pinned={isPinned} pinnedBelow={runner.pinnedBelow} />
+    </RunnerItemBlock>
+}
+
+// Custom item's custom double click handler type ;) gets just the logical CPU
+// number if its a CPU item, otherwise if its a runner item, the handler gets
+// passed both cpu and runner's TID (which might be a PID, who knows).
+type onItemDoubleClickHandler = (event: React.MouseEvent<HTMLDivElement>, cpu?: number, tid?: number) => void
+
+// AffinityTreeItemProps defines the properties including a reference passed to
+// our customized tree item renderer.
+interface AffinityTreeItemProps extends Omit<UseTreeItemParameters, 'rootRef'>,
+    Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> {
+    onItemDoubleClick?: onItemDoubleClickHandler
+}
+
+// AffinityTreeItem returns a heavily customized rendition of an affinity tree
+// item, that can be either a logical CPU or a process/task item.
+const AffinityTreeItem = ({ ref, ...props }: AffinityTreeItemProps & { ref?: React.Ref<HTMLLIElement> }) => {
+    const { id, itemId, label, disabled, children, onItemDoubleClick, ...other } = props
+    const {
+        getContextProviderProps,
+        getRootProps,
+        getContentProps,
+        getIconContainerProps,
+        status,
+    } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref })
+    const item = useTreeItemModel<AffinityTreeItem>(itemId)!
+
+    return <TreeItemProvider {...getContextProviderProps()}>
+        <TreeItemRoot {...getRootProps(other)}>
+            <TreeItemContent {...getContentProps({
+                onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => {
+                    if (onItemDoubleClick) {
+                        const { cpu, tid } = itemCPUTID(itemId)
+                        onItemDoubleClick(event, cpu, tid)
+                    }
+                }
+            })}>
+                <TreeItemIconContainer {...getIconContainerProps()}>
+                    {status.expandable && (status.expanded ? <ExpandMore /> : <ChevronRight />)}
+                </TreeItemIconContainer>
+                {
+                    isCPUItem(item)
+                    && <OnlineCore><CPUIcon fontSize="inherit" /> {item.cpu}</OnlineCore>
+                    || (isRunnerItem(item) && <RunnerItem runner={item.runner} />)
+                }
+            </TreeItemContent>
+            {status.expandable && status.expanded && <ul>{children}</ul>}
+        </TreeItemRoot>
+    </TreeItemProvider>
+}
+
+// Compare two runners A and B, returning <0 if A goes before B, >0 if A goes
 // after B, otherwise 0; the order is determined as follows:
 // - tasks go before processes.
 // - more specific affinity (fewer CPUs) go before broader CPU love.
 // - finally, order by names, then PIDs/TIDs.
-const compareExecutors = (a: Executor, b: Executor) => {
+const compareRunners = (a: Runner, b: Runner) => {
     const isTaskA = isTask(a.busybody)
     const isTaskB = isTask(b.busybody)
     if (isTaskA != isTaskB) {
@@ -269,36 +464,6 @@ const compareExecutors = (a: Executor, b: Executor) => {
         return affinityA - affinityB
     }
     return compareBusybodies(a.busybody, b.busybody)
-}
-
-type execOnCoreHandler = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => void
-
-// execsTreeOnCore recursively renders the process or task with the specified
-// TID/PID as well as all its children leading up to pinned tasks.
-const execsTreeOnCore = (cpu: number, xid: number, execsPerCore: PerCoreExecutors, onDoubleClick: execOnCoreHandler, onMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void) => {
-    const exec = execsPerCore[xid]
-    if (!exec) {
-        return <></>
-    }
-    const isPinned = exec.pinned && exec.onCPU // ignore pinning indication when not on this CPU
-    return <TreeItem
-        key={xid}
-        itemId={executorItemID(xid, cpu)}
-        label={<div style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-            {isPinned && <><PinnedIcon fontSize="inherit" /> </>}
-            <Info busybody={exec.busybody} onCPU={exec.onCPU} pinned={isPinned} pinnedBelow={exec.pinnedBelow} />
-        </div>}
-        slotProps={{
-            content: {
-                onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => onDoubleClick(event, cpu, xid),
-                onMouseDown: onMouseDown,
-            }
-        }}
-    >{exec.children
-        ?.sort((a, b) => compareExecutors(a, b))
-        .map((exec) => execsTreeOnCore(cpu, pidtid(exec.busybody), execsPerCore, onDoubleClick, onMouseDown))
-        }
-    </TreeItem>
 }
 
 export interface AffinityTreeProps {
@@ -337,32 +502,19 @@ export interface AffinityTreeProps {
  */
 export const AffinityTree = ({ apiRef, discovery }: AffinityTreeProps) => {
 
-    const pinnedExecutorsMemo = useMemo(() => pinnedExecutors(discovery.processes, discovery.onlineCPUs), [discovery])
+    const pinnedExecutorsMemo = useMemo(
+        () => mapRunners(discovery.processes, discovery.onlineCPUs),
+        [discovery])
 
     // Tree node expansion is a component-local state. We need to also use a
     // reference to the really current expansion state as for yet unknown
     // reasons setExpanded() will pass stale state information to its reducer.  
     const [expanded, setExpanded] = useState<string[]>([])
-    const currExpanded = useRef<string[]>([])
 
     const currOnlineCPUs = useRef<string[]>([])
 
-    useEffect(() => { currExpanded.current = expanded }, [expanded])
-
     useImperativeHandle(apiRef, () => ({
-        expandAll() {
-            const cpus = Object.keys(pinnedExecutorsMemo)
-                .map((cpu) => cpuItemID(Number(cpu)))
-            const lowerexecs = Object.entries(pinnedExecutorsMemo)
-                .map(([cpuno, coreExecutors]) => {
-                    const cpu = Number(cpuno)
-                    return Object.values(coreExecutors)
-                        .filter(exec => exec.children && exec.children.length > 0)
-                        .map(exec => executorItemID(pidtid(exec.busybody), cpu))
-                })
-                .flat()
-            setExpanded(cpus.concat(lowerexecs))
-        },
+        expandAll() { /* not supported because it can literally render your browser unusable */ },
         collapseAll() {
             const cpus = Object.keys(pinnedExecutorsMemo).map((cpu) => cpuItemID(Number(cpu)))
             setExpanded(cpus)
@@ -388,75 +540,76 @@ export const AffinityTree = ({ apiRef, discovery }: AffinityTreeProps) => {
         setExpanded(nodeIds)
     }
 
-    // double clicking on the contents of a CPU node expands it, together with
-    // all its child and grandchild nodes.
-    const handleCoreExpand = (event: React.MouseEvent<HTMLDivElement>, cpu: number) => {
-        event.preventDefault()
-        const execIds = Object.values(pinnedExecutorsMemo[cpu]).
-            map(exec => executorItemID(pidtid(exec.busybody), cpu))
-        setExpanded(expanded.concat(execIds, cpuItemID(cpu)))
-    }
-
     // return all the ids of the pinned task/process as well as of all ancestors
     // on their path. All other paths are ignored.
-    const execSubtreeIds = (cpu: number, exec: Executor): string[] => {
-        const ids = [executorItemID(pidtid(exec.busybody), cpu)]
-        if (!exec.children || exec.children.length === 0) {
+    const runnerSubtreeIds = (cpu: number, runner: Runner): string[] => {
+        const ids = [runnerOnCPUItemID(xidOf(runner.busybody), cpu)]
+        if (!runner.children || runner.children.length === 0) {
             return ids
         }
-        return ids.concat(exec.children
-            .filter((subexec) => subexec.pinnedBelow || subexec.pinned)
-            .map(subexec => execSubtreeIds(cpu, subexec)).flat())
+        return ids.concat(runner.children
+            .filter((subrunner) => subrunner.pinnedBelow || subrunner.pinned)
+            .map(subrunner => runnerSubtreeIds(cpu, subrunner)).flat())
     }
 
     // double clicking on the contents of a collapsed task/process node expands
     // it, together with all child and grandchild nodes. Double clicking on an
     // expanded task/process node collapses it.
-    const handleExecExpandCollapse = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => {
+    const handleItemDoubleClick = (event: React.MouseEvent<HTMLDivElement>, cpu: number, tid: number) => {
         event.preventDefault() // ♫ I'm the Great Preventer ♪♬
-        const idx = expanded.indexOf(executorItemID(tid, cpu))
+
+        if (tid === undefined) {
+            // expand a CPU item...
+            const execIds = Object.values(pinnedExecutorsMemo[cpu]).
+                map(exec => runnerOnCPUItemID(xidOf(exec.busybody), cpu))
+            setExpanded(expanded.concat(execIds, cpuItemID(cpu)))
+            return
+        }
+
+        // expand or collapse a runner item...
+        const idx = expanded.indexOf(runnerOnCPUItemID(tid, cpu))
         if (idx >= 0) {
             setExpanded([...expanded.slice(0, idx), ...expanded.slice(idx + 1)])
             return
         }
-        setExpanded(expanded.concat(execSubtreeIds(cpu, pinnedExecutorsMemo[cpu][tid])))
+        setExpanded(expanded.concat(runnerSubtreeIds(cpu, pinnedExecutorsMemo[cpu][tid])))
     }
 
     // prevent the browser from selecting the node contents upon double
-    // clicking; this still allows click-dragging to select content.
-    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    // clicking, but allow first click etc.; this still allows click-dragging to
+    // select content.
+    const handleMouseDown = (event: React.MouseEvent<HTMLUListElement>) => {
         if (event.detail === 2) {
             event.preventDefault() // ♫ I'm the Great Preventer ♪♬
         }
     }
 
-    // render all CPU nodes, as well as their pinned task child and grandchild
-    // nodes.
-    const cpus = Object.entries(pinnedExecutorsMemo).
-        map(([cpu, tasksOnCores]) => [Number(cpu), tasksOnCores] as [number, PerCoreExecutors]).
-        sort(([cpuA], [cpuB]) => cpuA - cpuB).
-        map(([cpu, execsPerCore]) => {
-            return <TreeItem
-                key={cpu}
-                itemId={cpuItemID(cpu)}
-                label={<OnlineCore><CPUIcon fontSize="inherit" /> {cpu}</OnlineCore>}
-                slotProps={{
-                    content: {
-                        onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => handleCoreExpand(event, cpu),
-                        onMouseDown: handleMouseDown,
-                    }
-                }}
-            >{[2, 1].map((tid) => execsTreeOnCore(cpu, tid, execsPerCore, handleExecExpandCollapse, handleMouseDown))}</TreeItem>
-        })
-
     return (
-        (cpus.length &&
-            <SimpleTreeView
+        (toplevelAffinityItems.length &&
+            <RichTreeView
                 className="affinitytree"
-                onExpandedItemsChange={handleToggle}
+                items={toplevelAffinityItems(pinnedExecutorsMemo)}
+
+                getItemId={treeItemId}
+                getItemLabel={treeItemLabel}
+                getItemChildren={treeItemChildren}
+
+                slots={{
+                    item: AffinityTreeItem
+                }}
+
+                slotProps={{
+                    item: {
+                        onItemDoubleClick: handleItemDoubleClick,
+                    } as Partial<AffinityTreeItemProps>,
+                }}
+
                 expandedItems={expanded}
                 expansionTrigger="iconContainer"
-            >{cpus}</SimpleTreeView>
+
+                onExpandedItemsChange={handleToggle}
+                onMouseDown={handleMouseDown}
+            />
         ) || (
             <Typography variant="body1" color="textSecondary">
                 nothing discovered yet, please refresh

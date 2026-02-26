@@ -67,9 +67,23 @@ import { Affinities } from 'views/affinities'
 import { CondBadge } from 'components/condbadge'
 
 interface tooltips {
-    collapseall: string
-    expandall: string
+    collapseall?: string
+    expandall?: string
 }
+
+interface individualTreeactions {
+    collapseall?: boolean
+    expandall?: boolean
+}
+
+const isIndividualTreeActions = (i: boolean | individualTreeactions): i is individualTreeactions =>
+    typeof i === 'object'
+
+// treeactionEnabled returns true if either the passed configuration value is
+// true, or an object where the additionally specified field/key has the value
+// true; otherwise, false is returned.
+const treeactionEnabled = (enableTreeActions: boolean | individualTreeactions, action: keyof individualTreeactions) =>
+    isIndividualTreeActions(enableTreeActions) ? Boolean(enableTreeActions[action]) : enableTreeActions
 
 /**
  * Describes properties of an individual sidebar view item, such as its icon to
@@ -85,7 +99,7 @@ interface viewItem {
     type?: NamespaceType /** type of namespace to show, if any */
 
     badge?: boolean /** show namespaces count badge */
-    treeactions?: boolean /** show tree expand/collapse buttons */
+    treeactions?: boolean | individualTreeactions /** show tree expand/collapse buttons */
     tooltips?: tooltips /** tooltip text if differing from default */
 }
 
@@ -150,10 +164,11 @@ const views: viewItem[][] = [
         {
             icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities",
             title: "Core Fancy",
-            treeactions: true,
+            treeactions: {
+                collapseall: true,
+            },
             tooltips: {
-                expandall: "expand all CPUs with all their processes and tasks",
-                collapseall: "collapse to show only CPU nodes with PID1 and PID2"
+                collapseall: "collapse to show only CPU nodes with PID1 and PID2",
             }
         },
     ], [
@@ -236,20 +251,22 @@ const LxknsApp = () => {
                 }
                 tools={() => <>
                     {view.treeactions && <>
-                        <Tooltip key="collapseall" title={view.tooltips?.collapseall || "expand only top-level namespace(s)"}>
-                            <IconButton color="inherit" onClick={() => {
-                                currentAPI((api) => api?.collapseAll())
-                            }} size="large">
-                                <ChevronRightIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip key="expandall" title={view.tooltips?.expandall || "expand all"}>
-                            <IconButton color="inherit" onClick={() => {
-                                currentAPI((api) => api?.expandAll())
-                            }} size="large">
-                                <ExpandMoreIcon />
-                            </IconButton>
-                        </Tooltip>
+                        {treeactionEnabled(view.treeactions, 'collapseall') &&
+                            <Tooltip key="collapseall" title={view.tooltips?.collapseall || "expand only top-level namespace(s)"}>
+                                <IconButton color="inherit" onClick={() => {
+                                    currentAPI((api) => api?.collapseAll())
+                                }} size="large">
+                                    <ChevronRightIcon />
+                                </IconButton>
+                            </Tooltip>}
+                        {treeactionEnabled(view.treeactions, 'expandall') &&
+                            <Tooltip key="expandall" title={view.tooltips?.expandall || "expand all"}>
+                                <IconButton color="inherit" onClick={() => {
+                                    currentAPI((api) => api?.expandAll())
+                                }} size="large">
+                                    <ExpandMoreIcon />
+                                </IconButton>
+                            </Tooltip>}
                     </>}
                     <Refresher />
                 </>}
