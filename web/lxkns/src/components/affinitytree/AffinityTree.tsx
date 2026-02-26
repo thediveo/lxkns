@@ -25,6 +25,7 @@ import PinnedBelowIcon from "icons/PinnedBelow"
 import { numCPUs, sameAffinity } from "models/lxkns/affinity"
 import CPUIcon from "icons/CPU"
 import { ChevronRight, ExpandMore } from "@mui/icons-material"
+import RealtimeIcon from "icons/Realtime"
 
 const OnlineCore = styled('span')(() => ({
     '& > .MuiSvgIcon-root': {
@@ -32,6 +33,14 @@ const OnlineCore = styled('span')(() => ({
         position: 'relative',
         top: '0.1ex',
     },
+}))
+
+const RunnerItemBlock = styled('div')(({ theme }) => ({
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    '& > .MuiSvgIcon-root.rt-below': {
+        color: theme.palette.stressedsched,
+    }
 }))
 
 // OffCPUInfo overrides the foreground color for child elements with higher
@@ -56,14 +65,17 @@ const UnpinnedInfo = styled('span')(() => ({
  * PID1 or PID2.
  */
 type Runner = {
+    /** process or task */
+    busybody: Busybody
+
     /** true if on-CPU, false if anchestor on other CPU(s) */
     onCPU: boolean
     /** true if a subset of the online CPU(s) */
     pinned: boolean
     /** true if processes or tasks exists below that are using only a subset of CPUs */
     pinnedBelow: boolean
-    /** process or task */
-    busybody: Busybody
+
+    realtimeBelow?: boolean
 
     /** further processes and tasks, might not be on-CPU if there's an process
      * or task further down the branch.
@@ -77,6 +89,12 @@ const sameScheduling = (bbA: Busybody, bbB: Busybody) => {
     return (bbA?.policy || 0) === (bbB?.policy || 0)
         && (bbA?.priority || 0) === (bbB?.priority || 0) // assuming 0 is fine here
         && (bbA?.nice || 0) === (bbB?.nice || 0)
+}
+
+// Is a process or task scheduled with one of the FIFO/RR/DEADLINE policies?
+const isRealtime = (bb: Busybody) => {
+    const policy = bb.policy
+    return policy == 1 || policy == 2 || policy == 6
 }
 
 /**
@@ -129,13 +147,14 @@ const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
                             && sameScheduling(task, task.process))
                         ? task.process : task
                     const xid = xidOf(busybody)
+                    const realtime = isRealtime(busybody)
                     let runner = runnersOnCPU[xid]
                     if (!runner) {
                         runner = runnersOnCPU[xid] = {
+                            busybody: busybody,
                             onCPU: true,
                             pinned: !sameAffinity(busybody.affinity, onlineCPUs),
                             pinnedBelow: false,
-                            busybody: busybody,
                         }
                     } else {
                         // We've already processed this task, but it might have
@@ -163,14 +182,27 @@ const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
                             if (!procRunner.children) procRunner.children = []
                             procRunner.children.push(runner)
                             if (pinned) {
-                                // when we're dealing with a task/process that
-                                // has been pinned to a single specific CPU then
-                                // make sure to set indicators along the
-                                // breadcrumb path, so that we later can render
-                                // node adornments whenever we're on a branch
-                                // with single CPU pinning somewhere below.
-                                while (procRunner && !procRunner.pinnedBelow) {
-                                    procRunner.pinnedBelow = true
+                                const procShadow = proc
+                                const procRunnerShadow = procRunner
+                                {
+                                    let proc: Process | null = procShadow
+                                    let procRunner = procRunnerShadow
+                                    // when we're dealing with a task/process that
+                                    // has been pinned to a single specific CPU then
+                                    // make sure to set indicators along the
+                                    // breadcrumb path, so that we later can render
+                                    // node adornments whenever we're on a branch
+                                    // with single CPU pinning somewhere below.
+                                    while (procRunner && !procRunner.pinnedBelow) {
+                                        procRunner.pinnedBelow = true
+                                        proc = proc?.parent || null
+                                        procRunner = runnersOnCPU[proc?.pid || 0]
+                                    }
+                                }
+                            }
+                            if (realtime) {
+                                while (procRunner && !procRunner?.realtimeBelow) {
+                                    procRunner.realtimeBelow = true
                                     proc = proc?.parent || null
                                     procRunner = runnersOnCPU[proc?.pid || 0]
                                 }
@@ -178,10 +210,11 @@ const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
                             break
                         }
                         procRunner = {
+                            busybody: proc,
                             onCPU: false,
                             pinned: !sameAffinity(proc.affinity, onlineCPUs),
                             pinnedBelow: pinned,
-                            busybody: proc,
+                            realtimeBelow: realtime,
                             children: [runner],
                         }
                         runnersOnCPU[proc.pid] = procRunner
@@ -356,10 +389,13 @@ const RunnerInfo = ({ busybody, onCPU, pinned, pinnedBelow }: RunnerInfoProps) =
  */
 const RunnerItem = ({ runner }: { runner: Runner }) => {
     const isPinned = runner.pinned
-    return <div style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+    const isKthread = xidOf(runner.busybody) === 2
+        || (isProcess(runner.busybody) && runner.busybody && runner.busybody.parent?.pid === 2)
+    return <RunnerItemBlock>
         {isPinned && <><PinnedIcon fontSize="inherit" /> </>}
+        {!isKthread && runner?.realtimeBelow && <><RealtimeIcon className="rt-below" fontSize="inherit" /> </>}
         <RunnerInfo busybody={runner.busybody} onCPU={runner.onCPU} pinned={isPinned} pinnedBelow={runner.pinnedBelow} />
-    </div>
+    </RunnerItemBlock>
 }
 
 // Custom item's custom double click handler type ;) gets just the logical CPU
