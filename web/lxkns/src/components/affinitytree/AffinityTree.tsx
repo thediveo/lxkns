@@ -28,7 +28,7 @@ import { ChevronRight, ExpandMore } from "@mui/icons-material"
 import RealtimeIcon from "icons/Realtime"
 
 const OnlineCore = styled('span')(() => ({
-    '& > .MuiSvgIcon-root': {
+    '& .MuiSvgIcon-root': {
         verticalAlign: 'text-top',
         position: 'relative',
         top: '0.1ex',
@@ -38,7 +38,7 @@ const OnlineCore = styled('span')(() => ({
 const RunnerItemBlock = styled('div')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
-    '& > .MuiSvgIcon-root.rt-below': {
+    '& .MuiSvgIcon-root.rt-below': {
         color: theme.palette.stressedsched,
     }
 }))
@@ -392,7 +392,7 @@ const RunnerItem = ({ runner }: { runner: Runner }) => {
     const isKthread = xidOf(runner.busybody) === 2
         || (isProcess(runner.busybody) && runner.busybody && runner.busybody.parent?.pid === 2)
     return <RunnerItemBlock>
-        {isPinned && <><PinnedIcon fontSize="inherit" /> </>}
+        {runner.onCPU && isPinned && <><PinnedIcon fontSize="inherit" /> </>}
         {!isKthread && runner?.realtimeBelow && <><RealtimeIcon className="rt-below" fontSize="inherit" /> </>}
         <RunnerInfo busybody={runner.busybody} onCPU={runner.onCPU} pinned={isPinned} pinnedBelow={runner.pinnedBelow} />
     </RunnerItemBlock>

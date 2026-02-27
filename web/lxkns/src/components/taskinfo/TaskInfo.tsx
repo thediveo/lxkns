@@ -118,15 +118,15 @@ export const TaskInfo = ({ task, short, className }: TaskInfoProps) => {
     return !!task && (
         <TaskInformation className={clsx(className, short && taskInfoClass)}>
             <ThreadIcon fontSize="inherit" />
-            <Tooltip title="task"><>
+            <Tooltip title="task"><span>
                 <TaskName>{task.name}</TaskName>
                 &nbsp;[{task.tid}] of &nbsp;
-            </></Tooltip>
+            </span></Tooltip>
             {process.container && <ContainerInformation container={process.container} />}
-            <Tooltip title="task"><>
+            <Tooltip title="task"><span>
                 <ProcessName>{process ? process.name : ''}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
-            </></Tooltip>
+            </span></Tooltip>
             {!short && <> <SchedulerInfo process={task} /></>}
             {!short && task.cpucgroup && task.cpucgroup !== "/" && !process.container 
                 && <CgroupInfo busybody={task} />}
