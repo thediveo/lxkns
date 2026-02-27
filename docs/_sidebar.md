@@ -4,7 +4,7 @@
 * [Getting Started](getting-started)
 * [Getting Around](getting-around)
   * [Sidebar/Help](sidebar-help)
-  * [Discovery Refresh](refresh)
+  * [Discovery Refresh](discovery-refresh)
   * [All Namespaces View](all-namespaces)
   * [Namespace Type Views](typed-namespace)
   * [Mount Namespaces View](mount-namespace)
