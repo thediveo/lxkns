@@ -14,7 +14,7 @@
 
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
-import type { Discovery, Engine, Namespace } from 'models/lxkns'
+import type { Container, Discovery, Engine, Namespace } from 'models/lxkns'
 import { Typography } from '@mui/material'
 import { SimpleTreeView, TreeItem, type TreeViewItemId } from '@mui/x-tree-view'
 import { compareEngines } from 'utils/engine'
@@ -25,13 +25,32 @@ import { useAtom } from 'jotai'
 
 import type { ContainerTreeProps } from './types'
 import EngineInfo from 'components/engineinfo'
+import { cpulistText } from 'models/lxkns/affinity'
+import CPUList from 'components/cpulist'
 
 const coll = new Intl.Collator(undefined, {
     numeric: true,
 })
 
-const enginekeyid = (engine: Engine) => `eng-${engine.type}-${engine.pid}`
+const engineID = (engine: Engine) => `eng-${engine.type}-${engine.pid}`
+const cpulistID = (engine: Engine, cpulist: string) => `aff-${engine.type}-${engine.pid}-${cpulist}`
 
+type ContainersByCPUList = { [key: string]: Container[] }
+
+const cpusContainerMap = (engine: Engine) => {
+    const map: ContainersByCPUList = {}
+    engine.containers.forEach(cntr => {
+        const containersWithCPUList = map[cpulistText(cntr.process.affinity)] ??= []
+        containersWithCPUList.push(cntr)
+    })
+    return map
+}
+
+/**
+ * Component `ContainerTree` renders a tree that shows the found container
+ * engines as the first level nodes, and then the containers discovered for that
+ * particular engine.
+ */
 export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
 
     const [expandWLInitially] = useAtom(expandWorkloadInitiallyAtom)
@@ -53,24 +72,31 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
             // expand all engines with their workload, as well as their
             // namespaces.
             const allengines = Object.values(engines)
-                .map(engine => enginekeyid(engine))
+                .map(engine => engineID(engine))
+            const allcpulists = Object.values(engines)
+                .map(engine => Object.keys(cpusContainerMap(engine)).map(key => cpulistID(engine, key)))
+                .flat()
             const workloads = Object.values(engines)
                 .map(engine => engine.containers)
                 .flat()
                 .map(cntr => cntr.process.pid.toString())
-            setExpanded(allengines.concat(workloads))
+            setExpanded(allengines.concat(allcpulists, workloads))
         },
         collapseAll() {
+            // collapse the namespaces, that is: show only the engines, the cpu
+            // ranges, and containers.
             const engines = discovery.engines || {}
-            const allengines = Object.values(engines)
-                .map(engine => enginekeyid(engine))
-            setExpanded(allengines)
+            const allEnginesWithAllCPULists = Object.values(engines)
+                .map(engine => [engineID(engine)].concat(
+                    Object.keys(cpusContainerMap(engine)).map(key => cpulistID(engine, key))
+                )).flat()
+            setExpanded(allEnginesWithAllCPULists)
         },
     }))
 
-    // ensure that the engine nodes are always expanded; optionally, when the
-    // corresponding setting has been enabled, also expand the
-    // workload/container nodes. Expanding the engine nodes shows the
+    // ensure that the engine nodes and their cpu lists are always expanded;
+    // optionally, when the corresponding setting has been enabled, also expand
+    // the workload/container nodes. Expanding the engine nodes shows the
     // workload/containers. Expanding the workload/containers shows the
     // namespaces. 
     useEffect(() => {
@@ -78,7 +104,7 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
         const previousEngines = previousDiscovery.current.engines || {}
 
         const expandEngineIds = Object.values(engines)
-            .map(engine => enginekeyid(engine))
+            .map(engine => engineID(engine))
             .filter(id => !currExpanded.current.includes(id))
 
         const previousWorkloadIds = Object.values(previousEngines)
@@ -91,7 +117,15 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
             .map(cntr => cntr.process.pid.toString())
             .filter(id => expandWLInitially && !previousWorkloadIds.includes(id))
 
-        setExpanded(currExpanded.current.concat(expandEngineIds, expandWorkloadsIds))
+        const previousCPUListIds = Object.values(previousEngines)
+            .map(engine => Object.keys(cpusContainerMap(engine)).map(key => cpulistID(engine, key)))
+            .flat()
+        const expandCPUListIds = Object.values(engines)
+            .map(engine => Object.keys(cpusContainerMap(engine)).map(key => cpulistID(engine, key)))
+            .flat()
+            .filter(id => !previousCPUListIds.includes(id))
+
+        setExpanded(currExpanded.current.concat(expandEngineIds, expandCPUListIds, expandWorkloadsIds))
         previousDiscovery.current = discovery
     }, [discovery, expandWLInitially])
 
@@ -107,38 +141,52 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
         Object.values(discovery.engines || {})
             .sort(compareEngines)
             .map(engine => {
-                const keyid = enginekeyid(engine)
-                const cntrs = engine.containers
-                    .sort((c1, c2) => coll.compare(c1.name, c2.name))
-                    .map((cntr) => {
-                        const proc = cntr.process
-                        const prockeyid = proc.pid.toString()
-                        //const usernamespace = proc.namespaces['user']
+                const keyid = engineID(engine)
+                const containersByCPUList = cpusContainerMap(engine)
+                const cpulistItems = Object.entries(containersByCPUList)
+                    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+                    .map(([key, pinnedCntrs]) => {
+                        const cpulist = pinnedCntrs[0].process.affinity
+                        const id = cpulistID(engine, key)
                         return <TreeItem
-                            className="containerprocess"
-                            key={prockeyid}
-                            itemId={prockeyid}
-                            label={<ProcessInfo process={proc} />}
+                            className="cpulist"
+                            key={key}
+                            itemId={id}
+                            label={<CPUList cpus={cpulist} showIcon={true} />}
                         >
-                            {Object.entries(proc.namespaces)
-                                .filter((entry): entry is [string, Namespace] => {
-                                    const [, procns] = entry
-                                    return !!procns
-                                })
-                                .sort(([, procns1], [, procns2]) => procns1.type.localeCompare(procns2.type))
-                                .map(([nstype, procns]) => <TreeItem
-                                    className="tenant"
-                                    key={procns.nsid}
-                                    itemId={`${proc.pid}-${procns.nsid}`}
-                                    label={
-                                        <NamespaceInfo
-                                            shared={procns === proc.parent?.namespaces[nstype]}
-                                            noprocess={true}
-                                            namespace={procns}
-                                        />
-                                    }
-                                />)
-                            }
+                            {pinnedCntrs
+                                .sort((c1, c2) => coll.compare(c1.name, c2.name))
+                                .map((cntr) => {
+                                    const proc = cntr.process
+                                    const prockeyid = proc.pid.toString()
+                                    //const usernamespace = proc.namespaces['user']
+                                    return <TreeItem
+                                        className="containerprocess"
+                                        key={prockeyid}
+                                        itemId={prockeyid}
+                                        label={<ProcessInfo process={proc} />}
+                                    >
+                                        {Object.entries(proc.namespaces)
+                                            .filter((entry): entry is [string, Namespace] => {
+                                                const [, procns] = entry
+                                                return !!procns
+                                            })
+                                            .sort(([, procns1], [, procns2]) => procns1.type.localeCompare(procns2.type))
+                                            .map(([nstype, procns]) => <TreeItem
+                                                className="tenant"
+                                                key={procns.nsid}
+                                                itemId={`${proc.pid}-${procns.nsid}`}
+                                                label={
+                                                    <NamespaceInfo
+                                                        shared={procns === proc.parent?.namespaces[nstype]}
+                                                        noprocess={true}
+                                                        namespace={procns}
+                                                    />
+                                                }
+                                            />)
+                                        }
+                                    </TreeItem>
+                                })}
                         </TreeItem>
                     })
                 return <TreeItem
@@ -146,7 +194,7 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
                     key={keyid}
                     itemId={keyid}
                     label={<EngineInfo engine={engine} />}
-                >{cntrs}</TreeItem>
+                >{cpulistItems}</TreeItem>
             })
     ), [discovery])
 
