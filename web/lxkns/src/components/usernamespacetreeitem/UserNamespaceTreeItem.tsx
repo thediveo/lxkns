@@ -88,7 +88,7 @@ export const UserNamespaceTreeItem = ({ namespace: usernamespace, processes }: U
         .sort(compareBusybodies)
         .map(busybody =>  {
             if (isProcess(busybody)) {
-                if (busybody != usernamespace.ealdorman && !showProcess(busybody, showSystemProcesses)) {
+                if (busybody !== usernamespace.ealdorman && !showProcess(busybody, showSystemProcesses)) {
                     return null
                 }
                 return <TreeItem
