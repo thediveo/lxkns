@@ -250,7 +250,7 @@ const LxknsApp = () => {
                     </CondBadge>
                 }
                 tools={() => <>
-                    {view.treeactions && <>
+                    {view.treeactions && <span>
                         {treeactionEnabled(view.treeactions, 'collapseall') &&
                             <Tooltip key="collapseall" title={view.tooltips?.collapseall || "expand only top-level namespace(s)"}>
                                 <IconButton color="inherit" onClick={() => {
@@ -267,7 +267,7 @@ const LxknsApp = () => {
                                     <ExpandMoreIcon />
                                 </IconButton>
                             </Tooltip>}
-                    </>}
+                    </span>}
                     <Refresher />
                 </>}
                 drawertitle={() =>

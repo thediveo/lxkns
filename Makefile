@@ -42,3 +42,11 @@ startapp: ## starts web UI app for development
 	$(eval GIT_VERSION := $(shell $(GET_SEMVERSION)))
 	@echo "starting version" $(GIT_VERSION)
 	@cd web/lxkns && sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=$$GIT_VERSION/" .env && yarn start
+
+canaries-deploy: ## start example canaries
+	docker run -it --rm --name pinned-canary --cpuset-cpus=1 -d alpine /bin/sh -c 'while true; do sleep 1; done'
+	go run -exec 'sudo taskset -c 1' ./internal/cmd/rttask &
+
+canaries-undeploy: ## stop example canaries
+	docker rm -f pinned-canary || true
+	pkill -INT -P $$(pgrep -f '^go run -exec sudo taskset -c 1')

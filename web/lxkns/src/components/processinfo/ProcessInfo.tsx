@@ -109,13 +109,13 @@ export const ProcessInfo = ({ process, short, hideAffinity, className }: Process
     return !!process && (
         <ProcessInformation className={clsx(className, short && piShort)}>
             {process.container && <ContainerInformation container={process.container} />}
-            <Tooltip title="process"><>
+            <Tooltip title="process"><span>
                 {process.pid === 1 
                     ? <Init1Icon className="init1" fontSize="inherit" /> 
                     : process.pid === 2 || process.parent?.pid === 2 ? <TuxIcon fontSize="inherit" /> : <ProcessIcon fontSize="inherit" />}
                 <ProcessName>{process.name}</ProcessName>
                 &nbsp;<span>({process.pid})</span>
-            </></Tooltip>
+            </span></Tooltip>
             {!(short || hideAffinity) && <CPUList cpus={process.affinity} noWrap showIcon tooltip="CPU affinity list" />}
             {!short && <SchedulerInfo process={process} />}
             {!short && process.cpucgroup && process.cpucgroup !== "/" && !process.container

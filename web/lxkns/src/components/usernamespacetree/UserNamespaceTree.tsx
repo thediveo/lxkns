@@ -68,17 +68,18 @@ export const UserNamespaceTree = ({ apiRef, discovery }: UserNamespaceTreeProps)
             const allealdormen = Object.values(discovery.namespaces)
                 .filter(ns => ns.type !== "user" && ns.ealdorman !== null)
                 .map(ns => ns.owner.nsid.toString() + "-" + ns.ealdorman?.pid.toString())
-            setExpanded(alluserns.concat(allealdormen))
+            const expanded = alluserns.concat(allealdormen)
+            currExpanded.current = expanded
+            setExpanded(expanded)
         },
         collapseAll() {
             const topuserns = Object.values(discovery.namespaces)
                 .filter(ns => ns.type === "user" && ns.parent === null)
                 .map(ns => ns.nsid.toString())
+            currExpanded.current = topuserns
             setExpanded(topuserns)
         },
     }))
-
-    useEffect(() => { currExpanded.current = expanded }, [expanded])
 
     // After updating the discovery information, check if there are any new user
     // namespaces (including their sub items grouping non-user namespaces by
@@ -121,8 +122,10 @@ export const UserNamespaceTree = ({ apiRef, discovery }: UserNamespaceTreeProps)
         // nodes.
         const expandNodeIds = expandingUserns.map(userns => userns.nsid.toString())
             .concat(expandingProcIds)
-        setExpanded(currExpanded.current.concat(expandNodeIds));
-        previousDiscovery.current = discovery;
+        const expanded = currExpanded.current.concat(expandNodeIds)
+        setExpanded(expanded)
+        currExpanded.current = expanded
+        previousDiscovery.current = discovery
     }, [discovery, expandInitially])
 
     // Whenever the user clicks on the expand/close icon next to a tree item,
@@ -130,6 +133,7 @@ export const UserNamespaceTree = ({ apiRef, discovery }: UserNamespaceTreeProps)
     // explicitly take back control (ha ... hah ... HAHAHAHA!!!) of the expansion
     // state of the tree.
     const handleToggle = (_: React.SyntheticEvent | null, nodeIds: string[]) => {
+        currExpanded.current = nodeIds
         setExpanded(nodeIds)
     }
 

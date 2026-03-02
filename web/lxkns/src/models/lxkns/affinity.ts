@@ -36,3 +36,12 @@ export const sameAffinity = (cpusA: number[][] | null, cpusB: number[][] | null)
  */
 export const numCPUs = (cpus: number[][] | null) =>
     cpus?.reduce((sum, [from, to]) => (to - from + 1) + sum, 0) || 0
+
+/**
+ * Returns a textual representation of the list of logical CPUs.
+ *
+ * @param cpus CPU affinity list, or null
+ * @returns textual representation of CPU list.
+ */
+export const cpulistText = (cpus: number[][] | null) =>
+    cpus?.map(([from, to]) => from === to ? `${from}` : `${from}-${to}`).join(',') || ""
