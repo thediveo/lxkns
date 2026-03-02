@@ -12,14 +12,15 @@
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
-Discover how containers are using Linux kernel namespaces...
+Do you want to learn more about the namespaces of the Linux kernel as well as
+mountpoints and how they empower containers? Then have a look at `lxkns`:
 
-[![container namespaces](docs/_images/all-namespaces-with-containers-thumbnail.png)](docs/_images/all-namespaces-with-containers.png)
-
-...or the mounts inside your containers, and how _over-mounts_ make other mounts
-_invisible_.
-
-[![container mounts](docs/_images/container-mounts-thumbnail.png)](docs/_images/container-mounts.png)
+- see and learn how the host and system processes use different namespaces,
+- find out how containers use namespaces,
+- learn how mount points are used inside containers and how they propagate
+  throughout the system,
+- find out how certain processes and (kernel) tasks run only on specific CPUs
+  and how some of them use (quasi) realtime scheduling.
 
 ## Quick Start
 
@@ -34,8 +35,16 @@ least kernel version 5.6 or later.
 docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
 ```
 
-Finally, visit `http://localhost:5010` and start looking around Linux kernel
-namespaces, as well as mount points with their hierarchies.
+Finally, visit `http://localhost:5010` (the default unless overriden, see below)
+and start looking around Linux kernel namespaces, mount points with their
+hierarchies, and how processes and task are allowed to be scheduled on CPUs.
+
+To bind the `lxkns` service to a different address and port, set and pass the
+`LXKNS_ADDRESS` environment variable:
+
+```bash
+LXKNS_ADDRESS=127.0.0.1:12345 docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
+```
 
 ### Siemens Industrial Edge
 
@@ -45,6 +54,15 @@ namespaces, as well as mount points with their hierarchies.
 3. Deploy the "Linux kernel namespace namespace discovery" app to your IE
    (virtual) devices.
 4. On your IE (virtual) device, navigate to `https://ied-address/lxkns`.
+
+## Eye Candy
+
+[![container namespaces](docs/_images/all-namespaces-with-containers-thumbnail.png)](docs/_images/all-namespaces-with-containers.png)
+
+...or the mounts inside your containers, and how _over-mounts_ make other mounts
+_invisible_.
+
+[![container mounts](docs/_images/container-mounts-thumbnail.png)](docs/_images/container-mounts.png)
 
 ## Overview
 

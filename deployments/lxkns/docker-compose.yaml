@@ -10,7 +10,7 @@ services:
             - "/lxkns"
             - "--debug"
         ports:
-            - "5010:5010"
+            - "${LXKNS_ADDRESS:-127.0.0.1:5010}:5010"
         user: "65534"
         security_opt:
             # apparmor only accepts a profile name, which must have been loaded

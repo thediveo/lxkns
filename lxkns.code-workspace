@@ -23,6 +23,9 @@
 		"eslint.runtime": "/usr/local/bin/node",
 		"terminal.integrated.scrollback": 50000,
 		"docker.lsp.telemetry": "off",
+		"markdown.styles": [
+			"style.css"
+		],
 	},
 	"extensions": {
 		"recommendations": [
