@@ -10,7 +10,11 @@ services:
             - "/lxkns"
             - "--debug"
         ports:
-            - "${LXKNS_ADDRESS:-127.0.0.1:5010}:5010"
+            - name: "lxkns web UI and API"
+              host_ip: "${LXKNS_ADDRESS:-127.0.0.1}"
+              published: "${LXKNS_PORT:-5010}"
+              target: 5010
+              protocol: "tcp"
         user: "65534"
         security_opt:
             # apparmor only accepts a profile name, which must have been loaded
