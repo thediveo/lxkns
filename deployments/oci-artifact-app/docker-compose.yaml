@@ -9,8 +9,8 @@ services:
             - "--debug"
         ports:
             - name: "lxkns web UI and API"
-              host_ip: "${LXKNS_ADDRESS:-127.0.0.1}"
-              published: "${LXKNS_PORT:-5010}"
+              host_ip: "127.0.0.1"
+              published: "5010"
               target: 5010
               protocol: "tcp"
         user: "65534"
