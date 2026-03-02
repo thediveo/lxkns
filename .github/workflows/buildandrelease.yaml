@@ -91,6 +91,7 @@ jobs:
             TAG="$tag" docker compose \
               -f deployments/oci-artifact-app/docker-compose.yaml \
               publish --resolve-image-digests \
+                --with-env \
                 ghcr.io/${{ github.repository }}/app:$tag
           done
 
