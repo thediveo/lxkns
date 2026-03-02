@@ -13,8 +13,8 @@ mkdir -p ${EMPTYCONTEXT}
 trap 'rm -rf -- "${EMPTYCONTEXT}"' EXIT
 
 contexts=()
-workspace_details=$(go work edit --json >/dev/null 2>&1)
-if [[ ${workspace_details} ]]; then
+workspace_details=$(go work edit --json 2>/dev/null)
+if [[ -n "${workspace_details}" ]]; then
     goworkdir=$(dirname $(go env GOWORK))
     echo "found workspace" ${goworkdir}
     diskpaths=$(echo ${workspace_details} | jq --raw-output '.Use | .[]? | .DiskPath')
