@@ -39,11 +39,11 @@ Finally, visit `http://localhost:5010` (the default unless overriden, see below)
 and start looking around Linux kernel namespaces, mount points with their
 hierarchies, and how processes and task are allowed to be scheduled on CPUs.
 
-To bind the `lxkns` service to a different address and port, set and pass the
-`LXKNS_ADDRESS` environment variable:
+To bind the `lxkns` service to a different address and port, set and pass one or
+both of the `LXKNS_ADDRESS` and `LXKNS_PORT` environment variables:
 
 ```bash
-LXKNS_ADDRESS=127.0.0.1:12345 docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
+LXKNS_ADDRESS=127.0.0.1 LXKNS_PORT=12345 docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
 ```
 
 ### Siemens Industrial Edge
