@@ -10,7 +10,12 @@
 
 ![lxkns logo](_images/lxkns-gophers.png ':size=150')
 
-## Abstract
+- Do you want to see how Linux (kernel) namespaces are used by containers?
+- And see how these namespaces are used throughout the Linux host?
+- How containers use mount points and how these are separated throughout the
+  system, yet also propagate between separations?
+- Which processes and (kernel) tasks are allowed to execute on all or only
+  certain CPUs of your system? 
 
 **lxkns**[^1] discovers Linux-kernel namespaces and how they are used by
 processes and threads.  In (almost) every nook and cranny of your Linux
@@ -35,26 +40,18 @@ Docker compose v2 plugin. (Debian users are advised to install docker-ce package
 instead of Debian's outdated docker.io ones).
 
 ```bash
-# I feel lucky!
 docker compose -f oci://github.com/thediveo/lxkns/app up -d
 ```
 
-This loads a suitable Docker composer deployment file and feeds it directly into
-`docker compose`, deploying the `ghcr.io/thediveo/lxkns` multi-architecture
-container image. Supported architectures are amd64 and arm64.
+Now point your web browser to `http://localhost:5010` after the service has been
+successfully deployed.
 
-## Eye Candy
-
-The lxkns service provides a web user interface for comfy discovery. Run `make
-deploy` and then point your web browser to `http://localhost:5010` after the
-service has been successfully deployed.
-
-![lxkns teaser](_images/teaser.png ':class=teaser')
+![lxkns teaser](_images/teaser-all-namespaces.png ':class=teaser')
 ![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
 
 (Please click or tap to enlarge)
 
-## In a Nutshell
+## Technical
 
 **lxkns** is...
 

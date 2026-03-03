@@ -16,7 +16,7 @@ logical CPU are the roots ➋ of the two process/task hierarchies:
 
 - **PID&nbsp;2** for the kernel-space processes, which are strictly termed
   "kernel threads" despite appearing as processes.
-- **PID&nbsp;1** for all the user-space processes and tasks (~threads).
+- **PID&nbsp;1**[^PID1] for all the user-space processes and tasks (~threads).
 
 ![view CPU affinities and realtime scheduling](_images/lxkns-core-fancy-view.png ':class=framedscreenshot')
 
@@ -24,16 +24,18 @@ logical CPU are the roots ➋ of the two process/task hierarchies:
 > to execute on this particular CPU; this is to show the context of those
 > processes that are "pinned" to this particular CPU.
 
-- the **information about an process is grayed out completely** when it is not
-  allowed to run on the particular CPU a process hierarchy is shown for.
-- the **information about a process is semi-transparent** when it is allowed to
-  run on this particular CPU, but not specifically restricted ("pinned") to it.
+- the **information about an process is grayed out completely** when it is **not
+  allowed** to run on the particular CPU a process hierarchy is shown for.
+- the **information about a process is semi-transparent** when it **is allowed
+  to run** on this particular CPU, but not specifically restricted ("pinned") to
+  it.
 
 Interestingly, the codespace VM has a
 [`multipathd`](https://manpages.org/multipathd/8) process ➎ that is running with
-realtime scheduling: when it needs to run it cannot be interrupted anymore as
-its scheduling policy is FIFO (first in, first out) at the highest priority 99
-of the Linux kernel. `multipathd` handles multiple paths to a storage device.
+realtime scheduling and on all CPUs: when it needs to run it cannot be
+interrupted anymore as its scheduling policy is FIFO (first in, first out) at
+the highest priority 99 of the Linux kernel. `multipathd` handles multiple paths
+to a storage device.
 
 ### Notes
 
