@@ -48,7 +48,7 @@ const RunnerItemBlock = styled('div')(({ theme }) => ({
 const OffCPUInfo = styled('span')(({ theme }) => ({
     '& *': {
         color: theme.palette.text.disabled + "!important",
-        opacity: '0.5 !important',
+        opacity: '0.85 !important',
     },
 }))
 
