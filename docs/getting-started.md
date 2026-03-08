@@ -9,7 +9,8 @@ nice web-based UI.
 ## Prerequisite
 
 Make sure you have installed Docker and the [Docker compose plugin
-v2+](https://docs.docker.com/compose/install/linux/).
+v2+](https://docs.docker.com/compose/install/linux/). (Debian users are advised
+to install docker-ce packages instead of Debian's outdated docker.io ones).
 
 ## Deploy
 

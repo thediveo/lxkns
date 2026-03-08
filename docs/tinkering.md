@@ -1,53 +1,46 @@
 # Tinkering
 
-## make Targets
+We recommend tinkering with **lxkns** in a [Development
+Container](https://containers.dev/). The repository contains multiple
+configurations, for starter we recommend the "lxkns (fully privileged,
+Docker-in-Docker)" configuration.
 
-The repository's top-level directory contains a simple `Makefile` featuring the
-following targets:
+This will drop you after some time into your dedicated development container
+that – more for fun than really necessary – its own Docker engine. The
+development container is configured with `pid:host` and `cgroupns:host` so that
+any **lxkns** tool process or service has full host view.
 
-- `test`: builds and runs all tests inside a container; the tests are run twice,
-  once as root and once as a non-root user.
+## Build and Deploy lxkns Service
 
-- `deploy` and `undeploy`: builds and starts, or stops, the containerized lxkns
-  discovery service.
+```bash
+make deploy
+```
 
-- `coverage`: runs a full coverage on all tests in the module, once as root,
-  once as non-root, resulting in a single `coverage.html`. This also updates
-  the coverage badge in `README.md`.
+## Tinkering with the UI
 
-- `clean`: removes coverage files, as well as any top-level CLI tool binaries
-  that happened to end up there instead of `${GOPATH}/bin`.
+First time after (re)building the dev container (you might need to confirm that
+Corepack downloads a specific yarn version):
 
-- `pkgsite`: serves the Go module documentation of **lxkns** module on port
-  6060.
+```bash
+cd web/lxkns
+yarn install
+```
 
-- `manual`: serves the **lxkns** manual on port 3030 (and 3031 for automatic
-  refreshes).
+Then any time inside `web/lxkns`:
 
-- `report`: runs the [Go Report Card](https://goreportcard.com/) on the local
-  code base.
+```bash
+yarn dev
+```
 
-- `install`: builds and installs the CLI binaries into `${GOPATH}/bin`, then
-  installs these binaries into `/usr/local/bin`.
+To tinker with the storybook, inside `web/lxkns`:
 
-## Automated Tests
+```bash
+yarn storybook
+```
 
-All lxkns module tests (including tests for the CLI tools) can be run in a test
-container, see the `deployments/test` directory for how the test container is
-built.
-
-A Docker engine (including the containerd engine) is required to be installed,
-operational, and accessible also from non-root users.
-
-Getting rid of `--privileged` even for the test container was a challenge. The
-last missing piece in this puzzle was Docker's CLI flag `--security-opt
-systempaths=unconfined`. This finally allows us to successfully pass tests in
-child PID namespaces (and even inside child user namespaces to get a better kick
-out of it) which require remounting `/proc`. See also the [Docker Engine 19.03
-release notes](https://docs.docker.com/engine/release-notes/19.03/), and
-[PR&nbsp;#1808: add cli integration for unconfined
-systempaths](https://github.com/docker/cli/pull/1808).
+## Note
 
 It's funny to see how people really get happy when `--privileged` gets dropped,
 yet `CRAP_SYS_ADMIN` and `CAP_SYS_PTRACE` doesn't ring any bells – when these
-should ring for kingdom come.
+should ring for kingdom come. The development container actually indirectly uses
+`--privileged`: this is activated by the Docker-in-Docker devcontainer feature.

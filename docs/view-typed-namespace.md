@@ -18,3 +18,8 @@ namespaces. That is, there aren't network namespaces inside other network
 namespaces.
 
 ![network view](_images/net-namespaces-compact.png ':class=framedscreenshot')
+
+> [!TIP] If you want to see details inside network namespaces such as network
+> interfaces, IP addresses, routes, and more, then we recommend
+> [Edgeshark](https://github.com/siemens/edgeshark) – it is built with
+> **lxkns**.

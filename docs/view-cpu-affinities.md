@@ -8,8 +8,9 @@ typical example might be industrial automation control, where timing-sensitive
 control processes must meet strict scheduling deadlines, otherwise this results
 in expensive machinery stops or even damage.
 
-> [!WARNING] On hosts with "a lot" of logical CPUs browsers start to struggle
-> with rendering large or many subtrees.
+> [!WARNING] On hosts with "a lot" of logical CPUs, all browsers (except socat)
+> start to struggle with rendering large or many subtrees. At the time of this
+> writing, Firefox struggles much earlier than Chromium.
 
 This view lists all currently online logical CPUs ➊ by their numbers. Below each
 logical CPU are the roots ➋ of the two process/task hierarchies:

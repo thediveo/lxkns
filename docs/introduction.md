@@ -1,4 +1,6 @@
-# Linux-kernel Namespaces (+Containers)
+# Linux-kernel Namespaces
+
+...and containers and mount point hierarchies and process CPU-affinities and...
 
 [![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
@@ -10,12 +12,17 @@
 
 ![lxkns logo](_images/lxkns-gophers.png ':size=150')
 
-- Do you want to see how Linux (kernel) namespaces are used by containers?
-- And see how these namespaces are used throughout the Linux host?
-- How containers use mount points and how these are separated throughout the
-  system, yet also propagate between separations?
-- Which processes and (kernel) tasks are allowed to execute on all or only
-  certain CPUs of your system? 
+Curious...?
+
+- Do you want to see how Containers use Linux (kernel) namespaces?
+- Learn how these namespaces are used throughout the Linux host, outside of
+  containers?
+- Finding out how containers separate mount points, yet how some of these mount
+  points nevertheless propagate between host and containers?
+- Seeing which processes and (kernel) tasks are allowed to execute on all or
+  only certain CPUs of your system? 
+
+## Abstract
 
 **lxkns**[^1] discovers Linux-kernel namespaces and how they are used by
 processes and threads.  In (almost) every nook and cranny of your Linux
@@ -33,6 +40,10 @@ technology](https://snapcraft.io/docs). This discovery engine even determines
 the **visibility of mount points**, taking different forms of **overmounting**
 into consideration.
 
+And since **lxkns** needs to discover all processes and tasks anyway, it can
+additionally show you which of them activate realtime scheduling and high
+priorities, as well the CPUs they're allowed to run on. 
+
 ## Quick Deploy
 
 Make sure that you have a fairly recent Docker engine installed, including the
@@ -49,7 +60,7 @@ successfully deployed.
 ![lxkns teaser](_images/teaser-all-namespaces.png ':class=teaser')
 ![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
 
-(Please click or tap to enlarge)
+(_Please click or tap the teaser images to enlarge them._)
 
 ## Technical
 
