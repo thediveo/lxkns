@@ -1,4 +1,6 @@
-# Linux-kernel Namespaces (+Containers)
+# Linux-kernel Namespaces
+
+...and containers and mount point hierarchies and process CPU-affinities and...
 
 [![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
@@ -9,6 +11,16 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 ![lxkns logo](_images/lxkns-gophers.png ':size=150')
+
+Curious...?
+
+- Do you want to see how Containers use Linux (kernel) namespaces?
+- Learn how these namespaces are used throughout the Linux host, outside of
+  containers?
+- Finding out how containers separate mount points, yet how some of these mount
+  points nevertheless propagate between host and containers?
+- Seeing which processes and (kernel) tasks are allowed to execute on all or
+  only certain CPUs of your system? 
 
 ## Abstract
 
@@ -28,6 +40,10 @@ technology](https://snapcraft.io/docs). This discovery engine even determines
 the **visibility of mount points**, taking different forms of **overmounting**
 into consideration.
 
+And since **lxkns** needs to discover all processes and tasks anyway, it can
+additionally show you which of them activate realtime scheduling and high
+priorities, as well the CPUs they're allowed to run on. 
+
 ## Quick Deploy
 
 Make sure that you have a fairly recent Docker engine installed, including the
@@ -35,26 +51,18 @@ Docker compose v2 plugin. (Debian users are advised to install docker-ce package
 instead of Debian's outdated docker.io ones).
 
 ```bash
-# I feel lucky!
 docker compose -f oci://github.com/thediveo/lxkns/app up -d
 ```
 
-This loads a suitable Docker composer deployment file and feeds it directly into
-`docker compose`, deploying the `ghcr.io/thediveo/lxkns` multi-architecture
-container image. Supported architectures are amd64 and arm64.
+Now point your web browser to `http://localhost:5010` after the service has been
+successfully deployed.
 
-## Eye Candy
-
-The lxkns service provides a web user interface for comfy discovery. Run `make
-deploy` and then point your web browser to `http://localhost:5010` after the
-service has been successfully deployed.
-
-![lxkns teaser](_images/teaser.png ':class=teaser')
+![lxkns teaser](_images/teaser-all-namespaces.png ':class=teaser')
 ![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
 
-(Please click or tap to enlarge)
+(_Please click or tap the teaser images to enlarge them._)
 
-## In a Nutshell
+## Technical
 
 **lxkns** is...
 

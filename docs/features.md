@@ -40,7 +40,7 @@
 - the Go API supports not only discovery, but also switching namespaces (OS
   thread switching).
 
-- tested with Go 1.20-1.21. Please note that as of v0.24.0+ Go Generics are used
+- tested with Go 1.24-1.26. Please note that as of v0.24.0+ Go Generics are used
   in some parts of the code base to reduce duplicated boilerplates.
 
 - namespace discovery can be integrated into other applications or run as a

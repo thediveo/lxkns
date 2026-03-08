@@ -12,24 +12,30 @@ to understand it, then you will surely like that **lxkns** neatly displays the
 discovered mount points in a tree, according to their **mount point paths** (VFS
 paths) and starting from the root ➊.
 
-![mount view](_images/mntview.png ':class=framedscreenshot')
-
-> [!NOTE] **lxkns** discovers mount points even for process-less bind-mounted
-> mount namespaces (...now that's quite a mouth full of techno babble). It does
-> so by creating a temporary task or process attached to the bind-mounted mount
-> namespace … et voilà: it sees the mount points inside that mount namespace.
-> More details can be found in our section on [Mountineers](mountineers).
-
-> [!WARNING] Do not confuse the "mount point hierarchy" with the "mount point
-> _path_ hierarchy": while the latter _path_ hierarchy bases on the VFS paths,
-> the hierarchy of mount points reflects the dependency of these mount points on
-> each other and thus determining visibility and other properties.
+![mount view](_images/mount-namespace-points.png ':class=framedscreenshot')
 
 A number in square brackets ➋ indicates the total amount of child and
 grand-child mount points below a particular mount point.
 
 A tree node with a folder icon and its name in italics ➌ is not a mount point,
 but instead a common mount path element of several mount point paths in the tree view.
+
+### Mount _Points_ ./. _Paths_
+
+Please do not confuse the "mount point hierarchy" with the "mount point _path_
+hierarchy": while the latter _path_ hierarchy bases on the VFS paths, the
+hierarchy of mount points reflects the dependency of these mount points on each
+other and thus determining visibility and other properties.
+
+### Process-less Mount Namespaces
+
+**lxkns** discovers mount points even for process-less bind-mounted mount
+namespaces (...now that's quite a mouth full of techno babble). It does so by
+creating a temporary task or process attached to the bind-mounted mount
+namespace … et voilà: it sees the mount points inside that mount namespace. More
+details can be found in our section on [Mountineers](mountineers).
+
+## Mount Point Information
 
 Individual mount points show additional information:
 

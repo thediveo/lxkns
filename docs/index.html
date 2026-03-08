@@ -233,6 +233,10 @@
               return marked.Renderer.prototype.paragraph.apply(null, [
                 interpolateReferences(interpolateFootnotes(text))
             ])},
+            listitem(text) {
+              return marked.Renderer.prototype.listitem.apply(null, [
+                interpolateReferences(interpolateFootnotes(text))
+              ])},
             text(text) {
               return marked.Renderer.prototype.text.apply(null, [
                 interpolateReferences(interpolateFootnotes(text))

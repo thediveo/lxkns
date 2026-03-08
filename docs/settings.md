@@ -1,12 +1,13 @@
 # Settings
 
 The user interface and discovery display can be configured to some extent. The
-settings are stored in the browser's web storage and is host-specific.
+settings are stored in the browser's web storage and are thus host-specific.
 
 ![settings](_images/settings.png ':class=framedscreenshot')
 
 - **Theme**: switches between a light or dark theme, or considers the user's
-  preference.
+  preference. The default is to take the user's desktop or browser preference,
+  where available.
   
   > [!NOTE] Some desktop systems and browsers don't propagate any user
   > preferences to web applications, so this might default to a light theme
