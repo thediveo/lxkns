@@ -22,6 +22,7 @@ import ContainerInfo from 'components/containerinfo'
 import CgroupInfo from 'components/cgroupinfo'
 import ProcessName from 'components/processname/ProcessName'
 import SchedulerInfo from 'components/schedinfo'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const taskInfoClass = "short-taskinfo"
@@ -31,10 +32,7 @@ const TaskInformation = styled('span')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
     '& > .MuiSvgIcon-root': {
-        marginRight: '0.15em',
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.2ex',
+        ...MuiSvgIconCSS,
         color: theme.palette.task,
     },
     '& .init1': {

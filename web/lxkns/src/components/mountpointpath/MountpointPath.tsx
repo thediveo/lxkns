@@ -19,6 +19,7 @@ import { styled } from '@mui/material'
 import { type MountPoint, unescapeMountPath } from 'models/lxkns/mount'
 import HiddenmountIcon from 'icons/Hiddenmount'
 import MountIcon from 'icons/namespaces/Mount'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const mpHidden = 'mountpointpath-hidden'
@@ -28,10 +29,7 @@ const MpPath = styled('span')(({ theme }) => ({
     position: 'relative',
     
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'baseline',
-        position: 'relative',
-        top: '0.3ex',
-        marginRight: '0.3em',
+        ...MuiSvgIconCSS,
     },
 
     [`&.${mpHidden}`]: {

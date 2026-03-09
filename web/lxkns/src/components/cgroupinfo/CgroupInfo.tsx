@@ -18,14 +18,13 @@ import { styled, Tooltip } from '@mui/material'
 import { type Busybody } from 'models/lxkns'
 import CgroupNamespace from 'icons/namespaces/Cgroup'
 import clsx from 'clsx'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const CgroupInformation = styled('span')(({ theme }) => ({
     marginLeft: '0.5em',
     '&.cgroupinformation > .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
+        ...MuiSvgIconCSS,
         marginRight: 0,
         color: theme.palette.cgroup,
     },

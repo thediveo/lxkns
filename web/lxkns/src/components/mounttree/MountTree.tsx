@@ -27,6 +27,7 @@ import PeerIcon from 'icons/propagation/Peer'
 import SlaveIcon from 'icons/propagation/Slave'
 import UnbindableIcon from 'icons/propagation/Unbindable'
 import ReadonlyIcon from 'icons/Readonly'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const mpHidden = 'mountpoint-hidden'
@@ -35,9 +36,7 @@ const Label = styled('span')(({ theme }) => ({
     whiteSpace: 'nowrap',
     fontWeight: theme.typography.fontWeightLight,
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'baseline',
-        position: 'relative',
-        top: '0.3ex',
+        ...MuiSvgIconCSS,
     },
 
     [`&.${mpHidden}`]: {

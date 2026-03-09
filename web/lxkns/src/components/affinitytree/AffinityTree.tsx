@@ -26,18 +26,23 @@ import { numCPUs, sameAffinity } from "models/lxkns/affinity"
 import CPUIcon from "icons/CPU"
 import { ChevronRight, ExpandMore } from "@mui/icons-material"
 import RealtimeIcon from "icons/Realtime"
+import { MuiSvgIconCSS } from "utils/muisvgiconcss"
+import OffCPU from "icons/OffCPU"
 
+
+// Individual logical CPU node
 const OnlineCore = styled('span')(() => ({
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
+        ...MuiSvgIconCSS,
     },
 }))
 
 const RunnerItemBlock = styled('div')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
+    '& .MuiSvgIcon-root': {
+        ...MuiSvgIconCSS,
+    },
     '& .MuiSvgIcon-root.rt-below': {
         color: theme.palette.stressedsched,
     }
@@ -373,9 +378,9 @@ const RunnerInfo = ({ busybody, onCPU, pinned, pinnedBelow }: RunnerInfoProps) =
     const bbInfo = isProcess(busybody)
         ? <ProcessInfo process={busybody} hideAffinity={true} />
         : <TaskInfo task={busybody} />
-    const pinnedBelowAdornment = pinnedBelow ? <><PinnedBelowIcon fontSize="inherit" /> </> : ''
+    const pinnedBelowAdornment = pinnedBelow ? <PinnedBelowIcon fontSize="inherit" /> : ''
     if (!onCPU) {
-        return <OffCPUInfo>{pinnedBelowAdornment}{bbInfo}</OffCPUInfo>
+        return <OffCPUInfo>{pinnedBelowAdornment}<OffCPU fontSize="inherit" />{bbInfo}</OffCPUInfo>
     }
     const details = <><CPUList cpus={busybody.affinity} noWrap showIcon tooltip="CPU affinity list" /> {bbInfo}</>
     return pinned
@@ -392,8 +397,8 @@ const RunnerItem = ({ runner }: { runner: Runner }) => {
     const isKthread = xidOf(runner.busybody) === 2
         || (isProcess(runner.busybody) && runner.busybody && runner.busybody.parent?.pid === 2)
     return <RunnerItemBlock>
-        {runner.onCPU && isPinned && <><PinnedIcon fontSize="inherit" /> </>}
-        {!isKthread && runner?.realtimeBelow && <><RealtimeIcon className="rt-below" fontSize="inherit" /> </>}
+        {runner.onCPU && isPinned && <PinnedIcon fontSize="inherit" />}
+        {!isKthread && runner?.realtimeBelow && <RealtimeIcon className="rt-below" fontSize="inherit" />}
         <RunnerInfo busybody={runner.busybody} onCPU={runner.onCPU} pinned={isPinned} pinnedBelow={runner.pinnedBelow} />
     </RunnerItemBlock>
 }
@@ -438,7 +443,7 @@ const AffinityTreeItem = ({ ref, ...props }: AffinityTreeItemProps & { ref?: Rea
                 </TreeItemIconContainer>
                 {
                     isCPUItem(item)
-                    && <OnlineCore><CPUIcon fontSize="inherit" /> {item.cpu}</OnlineCore>
+                    && <OnlineCore><CPUIcon fontSize="inherit" />{item.cpu}</OnlineCore>
                     || (isRunnerItem(item) && <RunnerItem runner={item.runner} />)
                 }
             </TreeItemContent>

@@ -25,6 +25,7 @@ import clsx from 'clsx'
 import ChildrenIcon from 'icons/Children'
 import { styled } from '@mui/material'
 import TaskInfo from 'components/taskinfo/TaskInfo'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const namespaceShared = "shared-namespace"
@@ -48,18 +49,15 @@ const UserChildrenInfo = styled('span')(() => ({
     whiteSpace: 'nowrap',
     marginLeft: '0.5em',
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
+        ...MuiSvgIconCSS,
     },
 }))
 
 const OwnerInformation = styled('span')(({ theme }) => ({
     fontWeight: theme.typography.fontWeightLight,
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
+        ...MuiSvgIconCSS,
+        marginRight: 0,
     },
     '&.root .MuiSvgIcon-root': { color: theme.palette.ownerroot },
 }))

@@ -112,7 +112,7 @@ export const Frozen: Story = {
     parameters: {
         docs: {
             description: {
-                story: 'Notice that this time the cgroup details appear.',
+                story: 'Notice that this time the cgroup details (=cgroup and pause icons, controller path) appear.',
             },
         },
     },

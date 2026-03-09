@@ -16,15 +16,13 @@ import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
 import CPUIcon from 'icons/CPUAffinity'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 const CPURangeList = styled('span')(({ theme }) => ({
     color: theme.palette.cpulist,
     '&.cpulist > .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.1ex',
-        marginRight: '0.2em',
+        ...MuiSvgIconCSS,
         color: theme.palette.cpulist,
     },
 }))

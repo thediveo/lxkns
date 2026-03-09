@@ -23,6 +23,7 @@ import PodIcon from 'icons/containers/K8sPod'
 import IEAppIcon from 'icons/containers/IEApp'
 import DevContainerIcon from 'icons/containers/DevContainer'
 import CodespaceIcon from 'icons/containers/Codespace'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 // https://github.com/siemens/turtlefinder/blob/f16cb520dc9f7c416e7a3aedd81f4d36e21b99dd/stacker.go#L16C7-L16C77
 const TurtlefinderContainerPrefixLabelName = 'turtlefinder/container/prefix'
@@ -32,10 +33,7 @@ const ContainerInformation = styled('span')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
     '& .MuiSvgIcon-root': {
-        marginRight: '0.15em',
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.2ex',
+        ...MuiSvgIconCSS,
         color: theme.palette.container,
     },
 }))
