@@ -27,6 +27,7 @@ import CPUIcon from "icons/CPU"
 import { ChevronRight, ExpandMore } from "@mui/icons-material"
 import RealtimeIcon from "icons/Realtime"
 import { MuiSvgIconCSS } from "utils/muisvgiconcss"
+import OffCPU from "icons/OffCPU"
 
 
 // Individual logical CPU node
@@ -379,7 +380,7 @@ const RunnerInfo = ({ busybody, onCPU, pinned, pinnedBelow }: RunnerInfoProps) =
         : <TaskInfo task={busybody} />
     const pinnedBelowAdornment = pinnedBelow ? <PinnedBelowIcon fontSize="inherit" /> : ''
     if (!onCPU) {
-        return <OffCPUInfo>{pinnedBelowAdornment}{bbInfo}</OffCPUInfo>
+        return <OffCPUInfo>{pinnedBelowAdornment}<OffCPU fontSize="inherit" />{bbInfo}</OffCPUInfo>
     }
     const details = <><CPUList cpus={busybody.affinity} noWrap showIcon tooltip="CPU affinity list" /> {bbInfo}</>
     return pinned
