@@ -20,6 +20,7 @@ import type { Namespace } from 'models/lxkns'
 
 import { darken, alpha, lighten, type Theme, styled } from '@mui/material'
 import { NamespaceIcon, namespaceTypeInfo } from 'components/namespaceicon'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 
 // Based on the general idea from https://stackoverflow.com/a/53309284 "how to
@@ -82,9 +83,9 @@ const Badge = styled('span')(({ theme }) => ({
 
     // type icon placement...
     '& .MuiSvgIcon-root': {
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.05ex',
+        ...MuiSvgIconCSS,
+        top: 0,
+        marginRight: 0,
     },
 
     [`&.${namespaceShared}`]: {

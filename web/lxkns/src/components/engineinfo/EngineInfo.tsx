@@ -19,15 +19,13 @@ import type { Container } from 'models/lxkns'
 import { engineTypeName } from 'utils/engine'
 import { ContainerTypeIcon } from 'components/containertypeicon'
 import type { EngineInfoProps } from './types'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 const EngineInformation = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
     '& .MuiSvgIcon-root': {
-        marginRight: '0.15em',
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.2ex',
+        ...MuiSvgIconCSS,
     },
 }))
 
@@ -44,6 +42,14 @@ const EngineID = styled('span')(() => ({
     },
 }))
 
+/**
+ * The `EngineInfo` component renders information about a container engine: the
+ * appropriate flavor/type icon, the engine's PID, and its (hopefully) unique
+ * ID.
+ * 
+ * Icons and text are rendered in normal text color. The ID is rendered using a
+ * mono-spaced font.
+ */
 export const EngineInfo = ({ engine, className }: EngineInfoProps) => {
 
     const typename = engineTypeName(engine.type)

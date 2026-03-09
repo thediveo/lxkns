@@ -25,6 +25,7 @@ import CPUList from 'components/cpulist/CPUList'
 import SchedulerInfo from 'components/schedinfo/SchedulerInfo'
 import ProcessName from 'components/processname/ProcessName'
 import TuxIcon from 'icons/Tux'
+import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
 const piShort = "short-processinfo"
 
@@ -33,10 +34,7 @@ const ProcessInformation = styled('span')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
     '& .MuiSvgIcon-root': {
-        marginRight: '0.15em',
-        verticalAlign: 'text-top',
-        position: 'relative',
-        top: '0.2ex',
+        ...MuiSvgIconCSS,
         color: theme.palette.process,
     },
     '& .init1': {
