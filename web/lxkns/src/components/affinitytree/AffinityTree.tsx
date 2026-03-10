@@ -146,9 +146,19 @@ const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
                     // UNLESS:
                     // - the task has different CPU affinities than its process;
                     // - or, the task has different scheduling parameters than
-                    //   its process.
-                    const busybody = task.tid === task.process.pid
-                        || (sameAffinity(task.affinity, task.process.affinity)
+                    //   its process;
+                    // - or, the process(!) has realtime scheduling set, then show
+                    //   all its tasks, realtime or not.
+                    const busybody = 
+                        // it's already the main task that represents the process,
+                        // so we're taking the process instead, without repeating
+                        // the main task below the process.
+                        (task.tid === task.process.pid)
+                        // the task's process isn't realtime and the task has the
+                        // same CPU affinity and scheduling configured as its process,
+                        // then show the process, not the task.
+                        || (!isRealtime(task.process) 
+                            && sameAffinity(task.affinity, task.process.affinity)
                             && sameScheduling(task, task.process))
                         ? task.process : task
                     const xid = xidOf(busybody)
