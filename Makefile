@@ -46,7 +46,8 @@ startapp: ## starts web UI app for development
 canaries-deploy: ## start example canaries
 	docker run -it --rm --name pinned-canary --cpuset-cpus=1 -d alpine /bin/sh -c 'while true; do sleep 1; done'
 	go run -exec 'sudo taskset -c 1' ./internal/cmd/rttask &
+	go run -exec 'sudo taskset -c 1' ./internal/cmd/rttask --main &
 
 canaries-undeploy: ## stop example canaries
 	docker rm -f pinned-canary || true
-	pkill -INT -P $$(pgrep -f '^go run -exec sudo taskset -c 1')
+	for pid in $$(pgrep -f '^go run -exec sudo taskset -c 1'); do pkill -INT -P $$pid; done

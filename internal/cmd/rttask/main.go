@@ -10,9 +10,11 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/signal"
 	"runtime"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
 )
 
@@ -20,9 +22,38 @@ func init() {
 	runtime.LockOSThread() // don't you dare to seek greener pastures, erm, cores!
 }
 
-func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), unix.SIGTERM, unix.SIGINT)
+func newRootCmd() (rootCmd *cobra.Command) {
+	rootCmd = &cobra.Command{
+		Use:     "rttask",
+		Short:   "rttasks creates multiple tasks and sets one of them to realtime, then sleeps",
+		Version: "0",
+		Args:    cobra.NoArgs,
+		Run:     rttask,
+	}
+	rootCmd.PersistentFlags().BoolP("main", "m", false, "promote main task to realtime instead of new task")
+	return
+}
+
+func rttask(cmd *cobra.Command, _ []string) {
+	ctx, stop := signal.NotifyContext(context.Background(),
+		unix.SIGTERM, unix.SIGINT)
 	defer stop()
+
+	promoteMain, _ := cmd.PersistentFlags().GetBool("main")
+	if promoteMain {
+		// main task is already locked in init()
+		if err := unix.SchedSetAttr(0, &unix.SchedAttr{
+			Policy:   unix.SCHED_FIFO,
+			Priority: 1, // lowest 1 up to highest 99
+		}, 0); err != nil {
+			panic(err)
+		}
+
+		println("rt task TID", os.Getpid())
+		println("going to sleep")
+		<-ctx.Done()
+		return
+	}
 
 	rttid := make(chan int)
 	go func() {
@@ -52,4 +83,14 @@ func main() {
 	println("rt task TID", <-rttid)
 	println("going to sleep")
 	<-ctx.Done()
+}
+
+func main() {
+	// This is cobra boilerplate documentation, except for the missing call to
+	// fmt.Println(err) which in the original boilerplate is just plain wrong:
+	// it renders the error message twice, see also:
+	// https://github.com/spf13/cobra/issues/304
+	if err := newRootCmd().Execute(); err != nil {
+		os.Exit(1)
+	}
 }
