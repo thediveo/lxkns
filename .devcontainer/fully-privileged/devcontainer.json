@@ -14,8 +14,8 @@
             "moby": false // go for the upstream Docker-CE
         },
         "ghcr.io/thediveo/devcontainer-features/docsify:0": {
-            "port": "3400",
-            "livereload-port": "3401"
+            "port": "3300",
+            "livereload-port": "3301"
         },
         "ghcr.io/thediveo/devcontainer-features/local-pkgsite:0": {},
         "ghcr.io/thediveo/devcontainer-features/goreportcard:0": {},
