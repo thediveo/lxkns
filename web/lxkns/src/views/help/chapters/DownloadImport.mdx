@@ -1,0 +1,26 @@
+import DownloadIcon from 'icons/Download'
+import ImportIcon from 'icons/Upload'
+
+# Download or Import Discovery Data
+
+## Download
+
+After the first (successful) discovery, the download &#32;<DownloadIcon
+className="icon"/> in the application bar becomes enabled. Tapping or clicking
+it will automatically download the raw JSON discovery data as received from the
+**lxkns** service REST API endpoint `/api/namespaces`.
+
+## Import
+
+At any time you can import (or upload) the raw JSON discovery data from a
+previously exported discovery. Tapping or clicking the &#32;<ImportIcon
+className="icon"/> button in the application bar will bring up a import dialog.
+
+You can use the "BROWSE FILE" button to select a raw JSON discovery data file;
+this will open your platform's file selection dialog. Alternatively, you can
+drag and drop a JSON discovery data file into the marked region in the import
+dialog.
+
+Then tap or click the "IMPORT" button to import and render the discovery
+information. This will also automatically disable automatic cyclic discovery
+updates until you manually set a refresh cycle duration again.

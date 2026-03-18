@@ -12,10 +12,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import React, { useRef } from 'react'
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
+import React, { useRef, useState } from 'react'
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom'
 
-import { SnackbarProvider } from 'notistack'
+import { SnackbarProvider, useSnackbar } from 'notistack'
 
 import { Provider as StateProvider, useAtom } from 'jotai'
 
@@ -65,6 +65,11 @@ import type { TreeAPI } from './treeapi'
 import CPUAffinityIcon from 'icons/CPUAffinity'
 import { Affinities } from 'views/affinities'
 import { CondBadge } from 'components/condbadge'
+import DownloadIcon from 'icons/Download'
+import UploadIcon from 'icons/Upload'
+import { discoveryRefreshIntervalAtom, useRawDiscoveryJSON } from 'components/discovery/hooks'
+import { generateFilename } from 'utils/generatefilename'
+import { DiscoveryUploader } from 'components/discoveryuploader/DiscoveryUploader'
 
 interface tooltips {
     collapseall?: string
@@ -99,6 +104,7 @@ interface viewItem {
     type?: NamespaceType /** type of namespace to show, if any */
 
     badge?: boolean /** show namespaces count badge */
+    saveload?: boolean /** show download/upload buttons */
     treeactions?: boolean | individualTreeactions /** show tree expand/collapse buttons */
     tooltips?: tooltips /** tooltip text if differing from default */
 }
@@ -112,58 +118,67 @@ const views: viewItem[][] = [
         {
             icon: <HomeIcon />, label: "all namespaces", path: "/",
             title: "All Linux Namespaces",
-            badge: true, treeactions: true
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <ContainerIcon />, label: "all containers", path: "/containers",
             title: "All Container Namespaces",
-            badge: true, treeactions: true
+            badge: true, saveload: true, treeactions: true
         },
     ], [
         {
             icon: <NamespaceIcon type={NamespaceType.user} />,
             title: "Linux User Namespaces",
-            label: "user namespaces", path: "/user", type: NamespaceType.user, badge: true, treeactions: true
+            label: "user namespaces", path: "/user", type: NamespaceType.user,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.pid} />,
             title: "Linux PID Namespaces",
-            label: "PID namespaces", path: "/pid", type: NamespaceType.pid, badge: true, treeactions: true
+            label: "PID namespaces", path: "/pid", type: NamespaceType.pid,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.cgroup} />,
             title: "Linux Cgroup Namespaces",
-            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup, badge: true, treeactions: true
+            label: "cgroup namespaces", path: "/cgroup", type: NamespaceType.cgroup,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.ipc} />,
             title: "Linux IPC Namespaces",
-            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc, badge: true, treeactions: true
+            label: "IPC namespaces", path: "/ipc", type: NamespaceType.ipc,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.mnt} />,
             title: "Linux Mnt Namespaces",
-            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt, badge: true, treeactions: true
+            label: "mount namespaces", path: "/mnt", type: NamespaceType.mnt,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.net} />,
             title: "Linux Net Namespaces",
-            label: "network namespaces", path: "/net", type: NamespaceType.net, badge: true, treeactions: true
+            label: "network namespaces", path: "/net", type: NamespaceType.net,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.uts} />,
             title: "Linux UTS Namespaces",
-            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts, badge: true, treeactions: true
+            label: "UTS namespaces", path: "/uts", type: NamespaceType.uts,
+            badge: true, saveload: true, treeactions: true
         },
         {
             icon: <NamespaceIcon type={NamespaceType.time} />,
             title: "Linux Time Namespaces",
-            label: "time namespaces", path: "/time", type: NamespaceType.time, badge: true, treeactions: true
+            label: "time namespaces", path: "/time", type: NamespaceType.time,
+            badge: true, saveload: true, treeactions: true
         },
     ], [
         {
             icon: <CPUAffinityIcon />, label: "core fancy", path: "/affinities",
             title: "Core Fancy",
+            saveload: true,
             treeactions: {
                 collapseall: true,
             },
@@ -173,7 +188,7 @@ const views: viewItem[][] = [
         },
     ], [
         { icon: <TuneIcon />, label: "settings", path: "/settings", title: "Settings" },
-        { icon: <HelpIcon />, label: "help", path: "/help/lxkns", title: "Help" },
+        { icon: <HelpIcon />, label: "help", path: "/help", title: "Help" },
         { icon: <InfoIcon />, label: "about", path: "/about", title: "About lxkns" },
     ]
 ]
@@ -212,12 +227,18 @@ const LxknsAppBarDrawer = styled(AppBarDrawer)(({ theme }) => ({
 const LxknsApp = () => {
 
     const theme = useTheme()
+    const { enqueueSnackbar } = useSnackbar()
+
+    const [showUploaderDialog, setShowUploaderDialog] = useState(false)
 
     const path = useLocation().pathname
     const view = viewProperties(path)
     const typeview = view?.type ? view : undefined
 
     const discovery = useDiscovery()
+    const hasDiscovered = Object.keys(discovery.processes).length !== 0
+    const [rawJSON, setRawJSON] = useRawDiscoveryJSON()
+    const [, setRefreshInterval] = useAtom(discoveryRefreshIntervalAtom)
 
     // Number of namespaces shown ... either type-specific or total number.
     const count = typeview
@@ -239,8 +260,24 @@ const LxknsApp = () => {
         }
     }
 
-    return (
-        <Box width="100vw" height="100vh" display="flex" flexDirection="column">
+    const handleDownload = () => {
+        const blob = new Blob([rawJSON], { type: 'application/json' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = generateFilename('lxkns', 'json')
+        link.click()
+        enqueueSnackbar('successfully downloaded discovery data', {
+            variant: 'success',
+            autoHideDuration: 2000,
+        })
+    }
+
+    const handleImport = (content: string) => {
+        setRefreshInterval(null)
+        setRawJSON(content)
+    }
+
+    return (<Box width="100vw" height="100vh" display="flex" flexDirection="column">
             <LxknsAppBarDrawer
                 drawerwidth={300}
                 swipeAreaWidth={Number(theme.spacing(1))}
@@ -253,20 +290,38 @@ const LxknsApp = () => {
                     {view.treeactions && <span>
                         {treeactionEnabled(view.treeactions, 'collapseall') &&
                             <Tooltip key="collapseall" title={view.tooltips?.collapseall || "expand only top-level namespace(s)"}>
-                                <IconButton color="inherit" onClick={() => {
-                                    currentAPI((api) => api?.collapseAll())
-                                }} size="large">
+                                <IconButton color="inherit" size="large" disabled={!hasDiscovered}
+                                    onClick={() => {
+                                        currentAPI((api) => api?.collapseAll())
+                                    }}>
                                     <ChevronRightIcon />
                                 </IconButton>
                             </Tooltip>}
                         {treeactionEnabled(view.treeactions, 'expandall') &&
                             <Tooltip key="expandall" title={view.tooltips?.expandall || "expand all"}>
-                                <IconButton color="inherit" onClick={() => {
-                                    currentAPI((api) => api?.expandAll())
-                                }} size="large">
+                                <IconButton color="inherit" size="large" disabled={!hasDiscovered}
+                                    onClick={() => {
+                                        currentAPI((api) => api?.expandAll())
+                                    }}>
                                     <ExpandMoreIcon />
                                 </IconButton>
                             </Tooltip>}
+                    </span>}
+                    {view.saveload && <span>
+                        <Tooltip title="Download discovery data">
+                            <IconButton color="inherit" size="large" disabled={!hasDiscovered}
+                                onClick={handleDownload}
+                            >
+                                <DownloadIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Import discovery data">
+                            <IconButton color="inherit" size="large"
+                                onClick={() => setShowUploaderDialog(true)}
+                            >
+                                <UploadIcon />
+                            </IconButton>
+                        </Tooltip>
                     </span>}
                     <Refresher />
                 </>}
@@ -291,10 +346,16 @@ const LxknsApp = () => {
                     ])
                 }
             />
+            <DiscoveryUploader
+                open={showUploaderDialog}
+                onClose={() => setShowUploaderDialog(false)}
+                onImport={handleImport}
+            />
             <Box m={0} flex={1} overflow="auto">
                 <Routes>
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/help" element={<Navigate to="/help/lxkns" replace />} />
                     <Route path="/help/*" element={<Help />} />
                     <Route
                         path="/containers"
@@ -342,8 +403,7 @@ const LxknsApp = () => {
                     />
                 </Routes>
             </Box>
-        </Box>
-    );
+        </Box>);
 }
 
 // Wrap the Lxkns app component into a theme provider that switches between

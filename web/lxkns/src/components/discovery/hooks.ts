@@ -22,6 +22,8 @@ const discoveryResultAtom = atom({
     processes: {},
 } as Discovery)
 
+const rawDiscoveryJSONAtom = atom('{}')
+
 /** 
  * Use the namespace discovery result in a react component; on purpose, there no
  * way to set it (it wouldn't make sense).
@@ -29,6 +31,29 @@ const discoveryResultAtom = atom({
 export const useDiscovery = () => {
     const [discovery] = useAtom(discoveryResultAtom)
     return discovery
+}
+
+/**
+ * Use the the raw namespace discovery JSON result in a react component. Or set
+ * new raw JSON discovery data, this then will be parsed and if not throwing any
+ * error both the raw discovery data atom as well as the discovery atom will
+ * both be updated.
+ */
+export const useRawDiscoveryJSON = (): [string, (raw: string) => void] => {
+    const [raw, setRaw] = useAtom(rawDiscoveryJSONAtom)
+    const [, setResult] = useAtom(discoveryResultAtom)
+    const [, setError] = useAtom(discoveryErrorAtom)
+    return [raw, (arg: string) => {
+        try {
+            // throw up as early as possible ... during parsing the raw data.
+            const jsondata = fromjson(JSON.parse(arg))
+            setRaw(arg)
+            setResult(jsondata)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
+            setError('import failed')
+        }
+    }]
 }
 
 /**
@@ -45,7 +70,7 @@ const initialRefreshInterval = (() => {
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) { /* empty */ }
     return 5000;
 })()
@@ -89,14 +114,19 @@ const fetchDiscoveryData = (set: Setter) => {
                 throw Error(httpresult.status + " " + httpresult.statusText)
             }
             try {
-                return httpresult.json()
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                return httpresult.text()
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
+                // eslint-disable-next-line preserve-caught-error
                 throw Error('malformed discovery API response')
             }
         })
-        .then(jsondata => fromjson(jsondata))
-        .then(discovery => set(discoveryResultAtom, discovery))
+        .then(jsonraw => [JSON.parse(jsonraw), jsonraw])
+        .then(([jsondata, jsonraw]) => [fromjson(jsondata), jsonraw])
+        .then(([discovery, jsonraw]) => {
+            set(discoveryResultAtom, discovery)
+            set(rawDiscoveryJSONAtom, jsonraw)
+        })
         .catch((error) => {
             // Don't forget to reset the refreshing indication and then set the
             // error result, so someone else can pick it up and send a toast to the
