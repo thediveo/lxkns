@@ -18,7 +18,8 @@ import { useRef, useState, type ChangeEvent } from "react"
 
 const DropZone = styled(Box)(({ theme }) => ({
     display: 'block',
-    border: '2px dashed',
+    borderWidth: '2px',
+    borderStyle: 'dashed',
     borderColor: theme.palette.divider,
     borderRadius: '2px',
     margin: theme.spacing(0),
@@ -26,6 +27,7 @@ const DropZone = styled(Box)(({ theme }) => ({
     textAlign: 'center',
 
     '&.draggedover': {
+        borderStyle: 'solid',
         borderColor: theme.palette.primary.main,
     }
 }))
@@ -47,16 +49,22 @@ export interface DiscoveryUploaderProps {
 export const DiscoveryUploader = ({ open, onClose, onImport }: DiscoveryUploaderProps) => {
 
     const [file, setFile] = useState<File | null>(null)
-    const [draggedOver, setDraggedOver] = useState(false)
+    const [inDrag, setInDrag] = useState(false)
 
+    // we need a reference to the (hidden) file selector input field in order to
+    // trigger the dialog by simulating a click on the input field.
     const inputRef = useRef<HTMLInputElement | null>(null)
 
+    // when closing the dialog, reset our state so we're clean for the next
+    // show.
     const handleClose = () => {
         onClose?.()
         setFile(null)
-        setDraggedOver(false)
+        setInDrag(false)
     }
 
+    // when asked to import, asynchronously get the dropped file's contents and
+    // call the parent-supplied callback handler with the concrete string contents.
     const handleImport = async () => {
         if (onImport && file) {
             const content = await file.text()
@@ -65,6 +73,8 @@ export const DiscoveryUploader = ({ open, onClose, onImport }: DiscoveryUploader
         handleClose()
     }
 
+    // when the user selected a file, remember this choice so we can show the
+    // file name in the drop zone as feedback as well as a reminder to the user.
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
         const f = event.target.files?.[0] ?? null
         if (f) {
@@ -72,21 +82,30 @@ export const DiscoveryUploader = ({ open, onClose, onImport }: DiscoveryUploader
         }
     }
 
+    // give visual feedback during drag&drop within the drop zone; if the drag
+    // doesn't include files (like text selections, URLs, HTML content, ...)
+    // then do not give any positive visual feedback.
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault()
-        setDraggedOver(true)
+        if (Array.from(event.dataTransfer.types).includes("Files")) {
+            setInDrag(true)
+        }
     }
 
+    // give visual feedback during drag&drop within the drop zone.
     const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault()
-        setDraggedOver(false)
+        setInDrag(false)
     }
 
+    // give visual feedback during drag&drop within the drop zone; additionally,
+    // on drop pick up the first file (if any) and remember it as the user's
+    // choice in order to give visual feedback and a reminder to the user.
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault()
-        setDraggedOver(false)
+        setInDrag(false)
         const f = event.dataTransfer.files?.[0] ?? null
-        if (f) {
+        if (f && (f.type === 'application/json' || f.name.toLowerCase().endsWith('.json'))) {
             setFile(f)
         }
     }
@@ -103,20 +122,20 @@ export const DiscoveryUploader = ({ open, onClose, onImport }: DiscoveryUploader
         <DialogTitle>Import Discovery Data</DialogTitle>
         <DialogContent>
             <DropZone
-                className={clsx(draggedOver && 'draggedover')}
+                className={clsx(inDrag && 'draggedover')}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
                 <Typography variant="body1" gutterBottom>
-                    Drag & drop a discovery JSON data file here, or click to select file.
+                    Drag & drop a discovery JSON data file here, or click to browse.
                 </Typography>
                 <Button
                     variant="contained"
                     onClick={() => inputRef.current?.click()}
                     sx={{ mt: 2 }}
                 >
-                    Browse File
+                    Browse
                 </Button>
                 {file &&
                     <Typography
