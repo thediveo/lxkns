@@ -70,6 +70,8 @@ import UploadIcon from 'icons/Upload'
 import { discoveryRefreshIntervalAtom, useRawDiscoveryJSON } from 'components/discovery/hooks'
 import { generateFilename } from 'utils/generatefilename'
 import { DiscoveryUploader } from 'components/discoveryuploader/DiscoveryUploader'
+import { rgba } from 'utils/rgba'
+import BlockIcon from '@mui/icons-material/Block'
 
 interface tooltips {
     collapseall?: string
@@ -216,6 +218,17 @@ const LxknsAppBarDrawer = styled(AppBarDrawer)(({ theme }) => ({
     },
 }))
 
+const NoDropZone = styled(Box)(({ theme }) => ({
+    zIndex: theme.zIndex.modal - 1, // this allows drag&drop into a modal dialog
+    position: 'absolute',
+    inset: 0, // attach to top-left and bottom-right.
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rgba(theme.palette.background.paper, 0.5),
+    pointerEvents: 'none',
+}))
+
 /**
  * The `LxknsApp` component renders the general app layout without thinking
  * about providers for routing, themes, discovery, et cetera. So this component
@@ -240,6 +253,8 @@ const LxknsApp = () => {
     const [rawJSON, setRawJSON] = useRawDiscoveryJSON()
     const [, setRefreshInterval] = useAtom(discoveryRefreshIntervalAtom)
 
+    const [inDrag, setInDrag] = useState(false)
+
     // Number of namespaces shown ... either type-specific or total number.
     const count = typeview
         ? Object.values(discovery.namespaces)
@@ -260,6 +275,9 @@ const LxknsApp = () => {
         }
     }
 
+    // get the discovery raw JSON and attach it to a short-lived document link
+    // that we then automatically click in order to initiate the download of the
+    // raw JSON.
     const handleDownload = () => {
         const blob = new Blob([rawJSON], { type: 'application/json' })
         const link = document.createElement('a')
@@ -270,14 +288,54 @@ const LxknsApp = () => {
             variant: 'success',
             autoHideDuration: 2000,
         })
+        document.removeChild(link)
     }
 
+    // we're asked to import the passed discovery raw JSON, so we disable any
+    // automatic refresh and set the discovery raw JSON. This then automatically
+    // triggers JSON parsing and the generation of the fully interconnected
+    // in-RAM discovery model.
     const handleImport = (content: string) => {
         setRefreshInterval(null)
         setRawJSON(content)
     }
 
-    return (<Box width="100vw" height="100vh" display="flex" flexDirection="column">
+    // when dragging something over the app window (excluding a modal dialog) we
+    // simply block dropping, preventing the browser from switching away from
+    // the app.
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        setInDrag(true)
+    }
+
+    // when leaving dragging, ensure to remove the "no drag" overlay.
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        setInDrag(false)
+    }
+
+    // when dropping something over the app window (excluding a modal dialog) we
+    // simply block dropping, preventing the browser from switching away from
+    // the app.
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        setInDrag(false)
+    }
+
+    return (
+        <Box
+            width="100vw" height="100vh"
+            display="flex" flexDirection="column"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            <NoDropZone sx={{ display: inDrag ? undefined : 'none' }}>
+                <BlockIcon sx={{
+                    fontSize: "500%",
+                    color: theme.palette.error.main
+                }} />
+            </NoDropZone>
             <LxknsAppBarDrawer
                 drawerwidth={300}
                 swipeAreaWidth={Number(theme.spacing(1))}
@@ -403,7 +461,8 @@ const LxknsApp = () => {
                     />
                 </Routes>
             </Box>
-        </Box>);
+        </Box>
+    )
 }
 
 // Wrap the Lxkns app component into a theme provider that switches between
