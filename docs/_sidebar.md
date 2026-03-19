@@ -5,6 +5,7 @@
 * [Getting Around](getting-around)
   * [Sidebar/Help](sidebar-help)
   * [Discovery Refresh](discovery-refresh)
+  * [Download/Import](impexport)
   * [All Namespaces View](view-all-namespaces)
   * [All Containers View](view-all-container-namespaces)
   * [Namespace Type Views](view-typed-namespace)

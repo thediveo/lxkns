@@ -11,7 +11,9 @@ The application bar additionally offers these quick-access actions:
 - ➋ these expand and collapse actions only appear in these views that present
   their information in tree-like forms. These actions are absent from other
   views, such as help, settings, and about.
-- ➌ trigger either a manual discovery or set the automatic refresh. See also
+- ➌ these actions allow downloading discoveries in JSON format, and importing
+  them again later at any time. 
+- ➍ trigger either a manual discovery or set the automatic refresh. See also
   [discovery refresh](#discovery-refresh) for details.
 
 The sidebar can be closed either by click or tapping the close symbol ➊ or by
