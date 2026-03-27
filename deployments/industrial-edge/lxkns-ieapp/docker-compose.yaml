@@ -7,6 +7,13 @@ services:
         command:
             - "/lxkns"
         user: "65534"
+        security_opt:
+            # apparmor only accepts a profile name, or unconfined; now there
+            # are Industrial Edge configurations that enable AppArmor and the
+            # default container rules conflict with what lxkns needs to do on
+            # behalf of its user. So switch AppArmor off for the lxkns service
+            # container.
+            - apparmor:unconfined
         # Clean all default capabilities Docker might otherwise grant us and
         # several of them we don't need; add only those capabilities we really
         # need, such as CAP_WORLD_DOMINATION.

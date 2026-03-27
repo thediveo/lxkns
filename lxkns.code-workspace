@@ -26,6 +26,7 @@
 		"markdown.styles": [
 			"style.css"
 		],
+		"workbench.tree.indent": 16,
 	},
 	"extensions": {
 		"recommendations": [
