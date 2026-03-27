@@ -6,6 +6,9 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
+permissions:
+  contents: read
+
 env:
   PLATFORMS: linux/amd64,linux/arm64
   BUILDCONTEXTS: "" # ugly band-aid as per https://github.com/github/vscode-github-actions/issues/47#issuecomment-1488592302
