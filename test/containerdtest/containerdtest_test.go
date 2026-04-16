@@ -18,7 +18,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/v2/client"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -75,7 +75,7 @@ var _ = Describe("creates and destroys test containers", func() {
 		Expect(c).NotTo(BeNil())
 		defer pool.Purge(c)
 
-		Expect(c.Status()).To(Equal(containerd.Running))
+		Expect(c.Status()).To(Equal(client.Running))
 	})
 
 	It("creates paused container", func() {
@@ -84,7 +84,7 @@ var _ = Describe("creates and destroys test containers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		defer pool.Purge(c)
 
-		Expect(c.Status()).To(Equal(containerd.Paused))
+		Expect(c.Status()).To(Equal(client.Paused))
 	})
 
 })

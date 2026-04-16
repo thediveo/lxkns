@@ -18,24 +18,24 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/cio"
-	"github.com/containerd/containerd/namespaces"
-	"github.com/containerd/containerd/oci"
-	"github.com/containerd/containerd/remotes/docker"
+	"github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/remotes/docker"
+	"github.com/containerd/containerd/v2/pkg/cio"
+	"github.com/containerd/containerd/v2/pkg/namespaces"
+	"github.com/containerd/containerd/v2/pkg/oci"
 )
 
 // Pool represents a containerd client working on a specific (containerd)
 // namespace.
 type Pool struct {
 	Namespace string
-	Client    *containerd.Client
+	Client    *client.Client
 }
 
 // Container represents a container belonging to a containerd Pool.
 type Container struct {
 	pool      *Pool
-	Container containerd.Container
+	Container client.Container
 }
 
 // NewPool creates a new containerd client that works in the specified
@@ -44,7 +44,7 @@ func NewPool(endpoint string, namespace string) (*Pool, error) {
 	if endpoint == "" {
 		endpoint = "/run/containerd/containerd.sock"
 	}
-	client, err := containerd.New(endpoint)
+	client, err := client.New(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +62,11 @@ func (pool *Pool) context() context.Context {
 
 // Run creates a new container using the specified image ref and runs it using
 // the specified args. If run is false, the container is then paused.
-func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...containerd.NewContainerOpts) (*Container, error) {
+func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...client.NewContainerOpts) (*Container, error) {
 	ctx := pool.context()
 
 	// Pull image if not already in the content store.
-	var image containerd.Image
+	var image client.Image
 	var err error
 	// OUCH! the default resolver keeps a persistent client around, so this
 	// triggers the goroutine leak detection. Thus, we need to explicitly
@@ -76,8 +76,8 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 	httpclnt := &http.Client{}
 	if image, err = pool.Client.GetImage(ctx, ref); err != nil {
 		image, err = pool.Client.Pull(ctx, ref,
-			containerd.WithPullUnpack,
-			containerd.WithResolver(docker.NewResolver(docker.ResolverOptions{
+			client.WithPullUnpack,
+			client.WithResolver(docker.NewResolver(docker.ResolverOptions{
 				Client: httpclnt,
 			})))
 	}
@@ -87,8 +87,8 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 	}
 
 	opts = append(opts[:],
-		containerd.WithNewSnapshot(id+"-snapshot", image),
-		containerd.WithNewSpec(
+		client.WithNewSnapshot(id+"-snapshot", image),
+		client.WithNewSpec(
 			oci.WithImageConfigArgs(image, args),
 		),
 	)
@@ -118,9 +118,9 @@ func (pool *Pool) Run(id string, ref string, run bool, args []string, opts ...co
 func (pool *Pool) Purge(c *Container) {
 	ctx := pool.context()
 	if task, err := c.Container.Task(ctx, nil); err == nil {
-		_, _ = task.Delete(ctx, containerd.WithProcessKill)
+		_, _ = task.Delete(ctx, client.WithProcessKill)
 	}
-	_ = c.Container.Delete(ctx, containerd.WithSnapshotCleanup)
+	_ = c.Container.Delete(ctx, client.WithSnapshotCleanup)
 	_ = pool.Client.SnapshotService("").Remove(context.Background(), c.Container.ID()+"-snapshot")
 }
 
@@ -133,11 +133,11 @@ func (pool *Pool) PurgeID(id string) {
 }
 
 // Status returns the container (task) status or containerd.Unknown.
-func (c *Container) Status() containerd.ProcessStatus {
+func (c *Container) Status() client.ProcessStatus {
 	if task, err := c.Container.Task(c.pool.context(), nil); err == nil {
 		if status, err := task.Status(c.pool.context()); err == nil {
 			return status.Status
 		}
 	}
-	return containerd.Unknown
+	return client.Unknown
 }
