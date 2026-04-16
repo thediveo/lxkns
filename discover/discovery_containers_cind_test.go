@@ -22,7 +22,7 @@ import (
 	"syscall"
 	"time"
 
-	cd "github.com/containerd/containerd"
+	"github.com/containerd/containerd/v2/client"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/morbyd"
@@ -112,11 +112,11 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		// properly resolved.
 		endpointPath := fmt.Sprintf("/proc/%d/root%s",
 			pid, "/run/containerd/containerd.sock")
-		var cdclient *cd.Client
+		var cdclient *client.Client
 		Eventually(func() error {
 			var err error
-			cdclient, err = cd.New(endpointPath,
-				cd.WithTimeout(5*time.Second))
+			cdclient, err = client.New(endpointPath,
+				client.WithTimeout(5*time.Second))
 			return err
 		}).Within(30*time.Second).ProbeEvery(1*time.Second).
 			Should(Succeed(), "containerd API never became responsive")
