@@ -17,7 +17,7 @@ package matcher
 import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 )
 
 func ExampleWithFlavor() {

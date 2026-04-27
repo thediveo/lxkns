@@ -18,12 +18,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/moby/moby/client"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/morbyd"
-	"github.com/thediveo/morbyd/run"
-	"github.com/thediveo/morbyd/session"
-	"github.com/thediveo/whalewatcher/watcher"
-	"github.com/thediveo/whalewatcher/watcher/moby"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+	"github.com/thediveo/whalewatcher/v2/watcher"
+	"github.com/thediveo/whalewatcher/v2/watcher/moby"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -69,10 +70,10 @@ var _ = Describe("ContainerEngine", func() {
 		// containers.
 		Expect(sleepy.PID(ctx)).NotTo(BeZero())
 
-		Expect(sess.Client().ContainerPause(ctx, sleepyname)).To(Succeed())
+		Expect(sess.Client().ContainerPause(ctx, sleepyname, client.ContainerPauseOptions{})).Error().To(Succeed())
 
 		DeferCleanup(func(ctx context.Context) {
-			Expect(sess.Client().ContainerUnpause(ctx, sleepyname)).To(Succeed())
+			Expect(sess.Client().ContainerUnpause(ctx, sleepyname, client.ContainerUnpauseOptions{})).Error().To(Succeed())
 		})
 	})
 
@@ -101,8 +102,8 @@ var _ = Describe("ContainerEngine", func() {
 
 		Expect(sleepy.Refresh(ctx)).To(Succeed())
 		Expect(c.ID).To(Equal(sleepy.ID))
-		Expect(c.PID).To(Equal(model.PIDType(sleepy.Details.State.Pid)))
-		Expect(c.Paused).To(Equal(sleepy.Details.State.Paused))
+		Expect(c.PID).To(Equal(model.PIDType(sleepy.Details.Container.State.Pid)))
+		Expect(c.Paused).To(Equal(sleepy.Details.Container.State.Paused))
 		Expect(c.Labels).To(HaveKeyWithValue("foo", "bar"))
 		Expect(c.Type).To(Equal(moby.Type))
 

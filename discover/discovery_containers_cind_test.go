@@ -25,19 +25,19 @@ import (
 	"github.com/containerd/containerd/v2/client"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/morbyd"
-	"github.com/thediveo/morbyd/build"
-	"github.com/thediveo/morbyd/exec"
-	"github.com/thediveo/morbyd/run"
-	"github.com/thediveo/morbyd/session"
-	"github.com/thediveo/morbyd/timestamper"
-	cdengine "github.com/thediveo/whalewatcher/engineclient/containerd"
-	"github.com/thediveo/whalewatcher/engineclient/cri/test/img"
-	mobyengine "github.com/thediveo/whalewatcher/engineclient/moby"
-	"github.com/thediveo/whalewatcher/test"
-	"github.com/thediveo/whalewatcher/watcher"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
-	"github.com/thediveo/whalewatcher/watcher/moby"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/build"
+	"github.com/thediveo/morbyd/v2/exec"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+	"github.com/thediveo/morbyd/v2/timestamper"
+	cdengine "github.com/thediveo/whalewatcher/v2/engineclient/containerd"
+	"github.com/thediveo/whalewatcher/v2/engineclient/cri/test/img"
+	mobyengine "github.com/thediveo/whalewatcher/v2/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/test"
+	"github.com/thediveo/whalewatcher/v2/watcher"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+	"github.com/thediveo/whalewatcher/v2/watcher/moby"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -112,15 +112,20 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		// properly resolved.
 		endpointPath := fmt.Sprintf("/proc/%d/root%s",
 			pid, "/run/containerd/containerd.sock")
-		var cdclient *client.Client
-		Eventually(func() error {
-			var err error
-			cdclient, err = client.New(endpointPath,
+		// ah, this one got tricky over time: just waiting for a single success
+		// can be a false victory with ctr then failing in the next step,
+		// telling us it can't even find the API endpoint socket. So we make
+		// sure that the endpoint is here for some time and consistently
+		// responsive, before we declare success and proceed.
+		Consistently(func() error {
+			cdclient, err := client.New(endpointPath,
 				client.WithTimeout(5*time.Second))
+			if cdclient != nil {
+				_ = cdclient.Close()
+			}
 			return err
-		}).Within(30*time.Second).ProbeEvery(1*time.Second).
+		}).Within(2*time.Second).WithTimeout(30*time.Second).ProbeEvery(500*time.Millisecond).
 			Should(Succeed(), "containerd API never became responsive")
-		_ = cdclient.Close() // not needed anymore, will create fresh ones over and over again
 
 		By("creating a dummy containerd workload that runs detached")
 		cmd := Successful(providerCntr.Exec(ctx,

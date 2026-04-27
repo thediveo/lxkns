@@ -19,7 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 )
 
 var _ = Describe("BeAPod matcher", func() {
