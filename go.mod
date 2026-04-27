@@ -1,12 +1,12 @@
 module github.com/thediveo/lxkns
 
-go 1.26.0
+go 1.25.9
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd/v2 v2.2.3
 	github.com/gammazero/workerpool v1.2.1
-	github.com/getkin/kin-openapi v0.136.0
+	github.com/getkin/kin-openapi v0.135.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/muesli/termenv v0.16.0
@@ -39,7 +39,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	golang.org/x/sys v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/cri-api v0.36.0
+	k8s.io/cri-api v0.36.0-alpha.2
 )
 
 require (
