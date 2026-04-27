@@ -140,31 +140,22 @@ components:
             properties:
                 processes:
                     $ref: '#/components/schemas/ProcessTable'
-                    description: 'Information about all processes, including the process hierarchy.'
                 namespaces:
                     $ref: '#/components/schemas/NamespacesDict'
-                    description: Map of namespaces.
                 pidmap:
                     $ref: '#/components/schemas/PIDMap'
-                    description: Data for translating PIDs between different PID namespaces.
                 options:
                     $ref: '#/components/schemas/DiscoveryOptions'
-                    description: The options specified for discovery.
                 mounts:
                     $ref: '#/components/schemas/NamespacedMountPaths'
-                    description: Map of mount namespace'd mount paths with mount points.
                 containers:
                     $ref: '#/components/schemas/ContainerMap'
-                    description: Discovered containers.
                 container-engines:
                     $ref: '#/components/schemas/ContainerEngineMap'
-                    description: Container engines managing the discovered containers.
                 container-groups:
                     $ref: '#/components/schemas/ContainerGroupMap'
-                    description: Groups of containers.
                 cpus-online:
                     $ref: '#/components/schemas/CPUList'
-                    description: List of currently online CPUs.
         Namespace:
             description: |-
                 Information about a single Linux-kernel namespace. Depending on the extent of
@@ -192,7 +183,6 @@ components:
                     type: integer
                 type:
                     $ref: '#/components/schemas/NamespaceType'
-                    description: Type of this namespace.
                 owner:
                     format: int64
                     description: The ID of the owning user namespace.
@@ -433,9 +423,6 @@ components:
                         type: string
                 tags:
                     $ref: '#/components/schemas/MountTags'
-                    description: |-
-                        optional tags with even more optional values. Tags cannot be a single hyphen
-                        "-".
                 fstype:
                     description: 'filesystem type in the form "type[.subtype]".'
                     type: string
@@ -529,7 +516,6 @@ components:
                     type: boolean
                 labels:
                     $ref: '#/components/schemas/Labels'
-                    description: Label name=value pairs attached to this container.
                 groups:
                     description: |-
                         List of group reference identifiers this container is a member of. For instance,
@@ -604,7 +590,6 @@ components:
                         type: integer
                 labels:
                     $ref: '#/components/schemas/Labels'
-                    description: Additional KEY=VALUE information.
         ContainerMap:
             description: |-
                 Maps container PIDs to containers. Container PIDs are the PIDs
@@ -677,9 +662,6 @@ components:
                     type: string
                 namespaces:
                     $ref: '#/components/schemas/NamespacesSet'
-                    description: |-
-                        References the namespaces this process is joined to, in
-                        form of the namespace IDs (inode numbers).
                 fridgecgroup:
                     description: The freezer cgroup path name in the hierarchy this process is in.
                     type: string
@@ -688,16 +670,12 @@ components:
                     type: boolean
                 affinity:
                     $ref: '#/components/schemas/CPUList'
-                    description: list of CPUs this process/task is allowed to be scheduled on.
                 policy:
                     $ref: '#/components/schemas/SchedulingPolicy'
-                    description: The scheduling policy. 
                 priority:
                     $ref: '#/components/schemas/SchedulingPriority'
-                    description: For FIFO and RR scheduling policies the assigned priority.
                 nice:
                     $ref: '#/components/schemas/SchedulingNice'
-                    description: For non-RT scheduling policies the assigned niceness.
         Process:
             description: |-
                 Information about a specific process, such as its PID, name, and

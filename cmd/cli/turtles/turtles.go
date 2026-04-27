@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siemens/turtlefinder"
+	"github.com/siemens/turtlefinder/v2"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/clippy/cliplugin"
 	"github.com/thediveo/go-plugger/v3"

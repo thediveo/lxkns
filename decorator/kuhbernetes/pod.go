@@ -14,7 +14,7 @@
 
 package kuhbernetes
 
-import "github.com/thediveo/whalewatcher/engineclient/cri"
+import "github.com/thediveo/whalewatcher/v2/engineclient/cri"
 
 // PodGroupType identifies container groups representing Kubernetes pods.
 const PodGroupType = "io.kubernetes.pod"

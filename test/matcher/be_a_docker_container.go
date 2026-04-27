@@ -17,7 +17,7 @@ package matcher
 import (
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 )
 
 // BeADockerContainer succeeds if actual is a Docker container and also satisfy
