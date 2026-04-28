@@ -12,11 +12,12 @@
 
 ARG ALPINE_VERSION=3.23
 ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.25.5
+ARG GO_VERSION=1.26.2
 ARG NODE_VERSION=22
+ARG XX_VERSION=1.9.0
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
-FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
+FROM --platform=${BUILDPLATFORM} tonistiigi/xx:${XX_VERSION} AS cc-helpers
 
 # 1st stage: build the lxkns binary, now this requires cgo and we thus need gcc
 # ... and then we also need header files. Oh, well. Caching to the rescue; we
@@ -43,6 +44,8 @@ ARG MOD7=./
 ARG MOD8=./
 ARG MOD9=./
 
+ENV GOTOOLCHAIN=local
+
 # General warm-up
 RUN apk add clang lld libcap-utils
 COPY --from=cc-helpers / /
@@ -67,13 +70,14 @@ COPY --from=bctx9 . ${MOD9}
 COPY go.mod go.sum ./lxkns/
 
 # Establish the Go workspace
-RUN go work init ${WSDISKPATHS}
+#FIXME: workspace with just lxkns module triggers ambiguous import on google.golang.org/genproto/googleapis/rpc/status
+#RUN go work init ${WSDISKPATHS}
 
 WORKDIR /ws/lxkns
 # We now try to cache only the dependencies in a separate layer, so we can speed
 # up things in case the dependencies do not change. This then reduces the amount
 # of fetching and compiling required when compiling the final binary later.
-RUN go mod download -x
+#RUN go mod download -x
 # And now, finally, we build the lxkns service itself.
 COPY api/ ./api/
 COPY cmd/ ./cmd/
