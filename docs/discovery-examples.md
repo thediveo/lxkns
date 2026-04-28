@@ -51,8 +51,8 @@ import (
     "github.com/thediveo/lxkns/containerizer/whalefriend"
     "github.com/thediveo/lxkns/discover"
     "github.com/thediveo/lxkns/model"
-    "github.com/thediveo/whalewatcher/watcher"
-    "github.com/thediveo/whalewatcher/watcher/moby"
+    "github.com/thediveo/whalewatcher/v2/watcher"
+    "github.com/thediveo/whalewatcher/v2/watcher/moby"
 )
 
 func main() {

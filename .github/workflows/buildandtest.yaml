@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ 'stable', 'oldstable' ]
+        go: [ 'stable' ] # , 'oldstable' ]
     steps:
       - name: switch off Ubuntu security cargo-cult "fences"
         run: |

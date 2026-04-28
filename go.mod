@@ -1,19 +1,20 @@
 module github.com/thediveo/lxkns
 
-go 1.25.9
+go 1.26.0
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd/v2 v2.2.3
 	github.com/gammazero/workerpool v1.2.1
-	github.com/getkin/kin-openapi v0.135.0
+	github.com/getkin/kin-openapi v0.137.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
+	github.com/moby/moby/client v0.4.1
 	github.com/muesli/termenv v0.16.0
 	github.com/onsi/ginkgo/v2 v2.28.2
 	github.com/onsi/gomega v1.39.1
 	github.com/samber/lo v1.53.0
-	github.com/siemens/turtlefinder/v2 v2.0.0-pre.1
+	github.com/siemens/turtlefinder/v2 v2.0.0
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps v0.10.2
 	github.com/thediveo/clippy v0.2.1
@@ -39,7 +40,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	golang.org/x/sys v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/cri-api v0.36.0-alpha.2
+	k8s.io/cri-api v0.36.0
 )
 
 require (
@@ -99,7 +100,6 @@ require (
 	github.com/moby/go-archive v0.2.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/moby/api v1.54.2 // indirect
-	github.com/moby/moby/client v0.4.1 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
@@ -151,8 +151,8 @@ require (
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.44.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260427160629-7cedc36a6bc4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260420184626-e10c466a9529 // indirect
 	google.golang.org/grpc v1.80.0 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	k8s.io/client-go v0.34.1 // indirect
