@@ -70,8 +70,7 @@ COPY --from=bctx9 . ${MOD9}
 COPY go.mod go.sum ./lxkns/
 
 # Establish the Go workspace
-#FIXME: workspace with just lxkns module triggers ambiguous import on google.golang.org/genproto/googleapis/rpc/status
-#RUN go work init ${WSDISKPATHS}
+RUN go work init ${WSDISKPATHS}
 
 WORKDIR /ws/lxkns
 # We now try to cache only the dependencies in a separate layer, so we can speed

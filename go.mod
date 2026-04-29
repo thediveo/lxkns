@@ -2,6 +2,12 @@ module github.com/thediveo/lxkns
 
 go 1.26.0
 
+exclude (
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+	google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
+)
+
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd/v2 v2.2.3
