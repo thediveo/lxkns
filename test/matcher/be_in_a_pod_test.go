@@ -15,11 +15,13 @@
 package matcher
 
 import (
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
+
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("BeInAPod matcher", func() {

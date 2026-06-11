@@ -18,10 +18,11 @@ import (
 	"log/slog"
 
 	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/whalewatcher/v2/watcher/cri"
+
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/v2/watcher/cri"
 )
 
 // Register this Decorator plugin.

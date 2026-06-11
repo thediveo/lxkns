@@ -20,6 +20,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/thediveo/nonstd/xslices"
+
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 )
@@ -108,7 +110,7 @@ func purgeTasks(proc *model.Process) {
 // detachTaskNamespaces detaches the passed task from its namespaces, where
 // necessary.
 func detachTaskNamespaces(task *model.Task) {
-	for namespace := range allUnzeros(task.Namespaces[:]) {
+	for namespace := range xslices.AllUnzeros(task.Namespaces[:]) {
 		if namespace == nil {
 			continue
 		}
@@ -132,7 +134,7 @@ func purgeProcess(proc *model.Process) {
 		proc.Parent = nil // be kind to the GC
 	}
 	// detach process and tasks from namespaces, where necessary.
-	for namespace := range allUnzeros(proc.Namespaces[:]) {
+	for namespace := range xslices.AllUnzeros(proc.Namespaces[:]) {
 		asPlain(namespace).RemoveLeader(proc)
 		for _, task := range proc.Tasks {
 			detachTaskNamespaces(task)

@@ -19,8 +19,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/testbasher"
+
+	"github.com/thediveo/lxkns/nstest"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

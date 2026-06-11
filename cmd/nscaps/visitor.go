@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-asciitree/v2"
+
 	"github.com/thediveo/lxkns/cmd/cli/style"
 	incaps "github.com/thediveo/lxkns/cmd/internal/caps"
 	"github.com/thediveo/lxkns/model"

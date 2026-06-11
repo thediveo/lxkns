@@ -20,9 +20,10 @@ import (
 	"time"
 
 	"github.com/thediveo/clippy/debug"
+	"github.com/thediveo/safe"
+
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/safe"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

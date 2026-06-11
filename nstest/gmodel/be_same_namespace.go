@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/onsi/gomega/types"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+
+	"github.com/onsi/gomega/types"
 )
 
 // BeSameNamespace returns a [types.GomegaMatcher] which compares an actual

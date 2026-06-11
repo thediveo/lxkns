@@ -19,10 +19,12 @@ package ops
 import (
 	"fmt"
 	"runtime"
+	"slices"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
-	"golang.org/x/sys/unix"
 )
 
 // SwitchNamespaceErr represents an error that occurred while trying to switch
@@ -187,7 +189,7 @@ func Visit(f func(), nsrefs ...relations.Relation) (err error) {
 		// attempt only, then no namespace switch has happened at all and in
 		// this case we can still unlock the thread.
 		unlock := err == nil || len(switchback) == 0
-		for idx := len(switchback) - 1; idx >= 0; idx-- {
+		for idx := range slices.Backward(switchback) {
 			if restoreErr := unix.Setns(switchback[idx].fd, 0); restoreErr != nil && err == nil {
 				// keep the OS-level thread locked so it gets thrown away when
 				// the calling goroutine (hopefully) quickly terminates on

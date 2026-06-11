@@ -25,13 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/internal/namespaces"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/morbyd/v2"
 	"github.com/thediveo/morbyd/v2/run"
 	"github.com/thediveo/morbyd/v2/session"
@@ -39,12 +32,19 @@ import (
 	"github.com/thediveo/whalewatcher/v2/watcher"
 	"github.com/thediveo/whalewatcher/v2/watcher/moby"
 
+	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/internal/namespaces"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/nstest"
+	. "github.com/thediveo/lxkns/nstest/gmodel"
+	"github.com/thediveo/lxkns/species"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/success"
-
-	. "github.com/thediveo/lxkns/nstest/gmodel"
 )
 
 var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)

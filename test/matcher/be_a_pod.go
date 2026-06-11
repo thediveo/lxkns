@@ -15,9 +15,10 @@
 package matcher
 
 import (
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 )
 
 // BeAPod succeeds if actual is a model.Group or a *model.Group with the

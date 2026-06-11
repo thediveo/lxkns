@@ -18,6 +18,7 @@ package discover
 
 import (
 	"github.com/thediveo/cpus"
+
 	"github.com/thediveo/lxkns/model"
 )
 

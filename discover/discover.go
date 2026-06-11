@@ -23,13 +23,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-
+	"maps"
 	"slices"
 
 	"github.com/thediveo/cpus"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/exp/maps"
 )
 
 // Result stores the results of a tour through Linux processes and
@@ -99,18 +99,20 @@ func SortChildNamespaces(nslist []model.Hierarchy) []model.Hierarchy {
 func SortedNamespaces(nsmap model.NamespaceMap) []model.Namespace {
 	// Copy the namespaces from the map into a slice, so we can then sort it
 	// next.
-	nslist := maps.Values(nsmap)
-	slices.SortFunc(nslist, func(ns1, ns2 model.Namespace) int {
-		switch v := ns1.ID().Ino - ns2.ID().Ino; {
-		case v > ^uint64(0)>>1:
-			return -1
-		case v == 0:
-			return 0
-		default:
-			return 1
-		}
-	})
+	nslist := slices.Collect(maps.Values(nsmap))
+	slices.SortFunc(nslist, compareNamespacesByIno)
 	return nslist
+}
+
+func compareNamespacesByIno(ns1, ns2 model.Namespace) int {
+	switch v := ns1.ID().Ino - ns2.ID().Ino; {
+	case v > ^uint64(0)>>1:
+		return -1
+	case v == 0:
+		return 0
+	default:
+		return 1
+	}
 }
 
 // SortedNamespaces returns a sorted list of discovered namespaces of the

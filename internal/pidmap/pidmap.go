@@ -159,5 +159,6 @@ func nspid(pid model.PIDType, procroot string) (pids []model.PIDType) {
 			return
 		}
 	}
+	_ = scanner.Err()
 	panic(procroot + " filesystem broken: no NSpid element in status.")
 }

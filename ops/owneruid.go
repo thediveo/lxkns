@@ -22,9 +22,10 @@ import (
 	"errors"
 	"unsafe"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/relations"
-	"golang.org/x/sys/unix"
 )
 
 // ownerUID takes an open file descriptor which must reference a user namespace.

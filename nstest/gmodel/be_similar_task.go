@@ -19,9 +19,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/thediveo/lxkns/model"
+
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/model"
 )
 
 func BeSimilarTask(expectedtask any) types.GomegaMatcher {
@@ -36,7 +37,7 @@ var taskT = reflect.TypeFor[model.Task]()
 
 func (matcher *beSimilarTaskMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
-		//nolint ST1005 communicate useful messages, not Go platitudes.
+		//nolint // communicate useful messages, not Go platitudes.
 		return false, errors.New(
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}

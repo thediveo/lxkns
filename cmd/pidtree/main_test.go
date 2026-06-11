@@ -20,17 +20,19 @@ import (
 	"time"
 
 	"github.com/thediveo/clippy/debug"
+	"github.com/thediveo/safe"
+	"github.com/thediveo/testbasher"
+
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/safe"
-	"github.com/thediveo/testbasher"
+
+	"github.com/onsi/gomega/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
-	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/fdooze"
 )
 

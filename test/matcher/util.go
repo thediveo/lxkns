@@ -17,9 +17,10 @@ package matcher
 import (
 	"fmt"
 
+	"github.com/thediveo/lxkns/model"
+
 	o "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/model"
 )
 
 // withContainer returns a matcher that transforms actual into a container value

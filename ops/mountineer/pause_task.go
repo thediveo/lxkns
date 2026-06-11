@@ -19,8 +19,9 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/thediveo/lxkns/model"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/model"
 )
 
 // newPauseTask starts a new pause task that immediately attaches itself

@@ -16,6 +16,7 @@ package icon
 
 import (
 	"github.com/spf13/cobra"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/species"
 

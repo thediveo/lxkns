@@ -17,11 +17,11 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/thediveo/lxkns/model"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-
-	"github.com/thediveo/lxkns/model"
 )
 
 var (

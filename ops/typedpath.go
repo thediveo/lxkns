@@ -19,11 +19,12 @@ import (
 	"os"
 
 	"github.com/thediveo/ioctl"
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/sys/unix"
 )
 
 // TypedNamespacePath is an explicitly typed NamespacePath reference in the file

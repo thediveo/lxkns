@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-mntinfo"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"

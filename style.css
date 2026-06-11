@@ -1,7 +1,0 @@
-:root {
-    --mono-font: Consolas,'Roboto Mono','Lucida Sans','Courier','Courier New', monospace;
-}
-
-code, pre {
-    font-family: var(--mono-font);
-}

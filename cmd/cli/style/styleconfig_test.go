@@ -15,9 +15,10 @@
 package style
 
 import (
+	"github.com/thediveo/safe"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/safe"
 )
 
 var _ = Describe("reads styles", func() {

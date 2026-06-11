@@ -1,34 +1,38 @@
 {
     "name": "lxkns (fully privileged, Docker-in-Docker)",
     "portsAttributes": {
-        "6060": {
+        "16093": {
             "label": "lxkns Go package documentation",
             "onAutoForward": "silent",
             "protocol": "http"
         }
     },
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {
-            "version": "latest",
-            "moby": false // go for the upstream Docker-CE
-        },
-        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
-            "port": "3300",
-            "livereload-port": "3301"
-        },
-        "ghcr.io/thediveo/devcontainer-features/local-pkgsite:0": {},
-        "ghcr.io/thediveo/devcontainer-features/goreportcard:0": {},
-        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:0": {},
-        "ghcr.io/thediveo/devcontainer-features/gocover:0": {
+        "ghcr.io/devcontainers/features/node:2": {},
+        "ghcr.io/devcontainers/features/go:1": {},
+        "ghcr.io/thediveo/devcontainer-features/goreportcard:1": {},
+        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:1": {},
+        "ghcr.io/thediveo/devcontainer-features/pinact:0": {},
+        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {},
+        "ghcr.io/thediveo/devcontainer-features/gocover:1": {
             "root": true,           // test both as ordinary user and root
             "num-programs": "1",    // do never run package-level tests in parallel
             "race": true,           // enable race detector
             "verbose": true,
             "html": true            // generate coverage.html
         },
-        "ghcr.io/thediveo/devcontainer-features/pin-github-action:0": {},
-        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {}
+        "ghcr.io/thediveo/devcontainer-features/local-pkgsite:1": {
+            "port": "16093"
+        },
+        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
+            "port": "3300",
+            "livereload-port": "3301"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "moby": false // go for the upstream Docker-CE
+        }
     },
     "runArgs": [
         "--pid=host",

@@ -26,6 +26,7 @@ import (
 	"log/slog"
 
 	"github.com/thediveo/go-mntinfo"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/mounts"
 	"github.com/thediveo/lxkns/ops/mountineer"

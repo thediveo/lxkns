@@ -25,10 +25,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/thediveo/procfsroot"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/procfsroot"
 )
 
 // Mountineer takes a namespace reference, where this namespace reference might

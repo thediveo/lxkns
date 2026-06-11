@@ -17,8 +17,9 @@ package main
 import (
 	"testing"
 
-	"github.com/onsi/gomega/format"
 	"github.com/thediveo/lxkns/cmd/cli/style"
+
+	"github.com/onsi/gomega/format"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

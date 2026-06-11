@@ -22,10 +22,11 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops/mountineer"
-	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
 )
 
 // DockerPluginFlavor is the Docker Plugin flavor of containerd containers.

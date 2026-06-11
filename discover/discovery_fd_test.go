@@ -20,13 +20,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
-	nonetns "github.com/thediveo/notwork/netns"
+	"github.com/thediveo/notwork/nlhandle"
 	"github.com/thediveo/spacetest/netns"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -119,7 +120,7 @@ read # wait for test to proceed()
 
 		netnsino := netns.Ino(netnsFd)
 
-		nlh := nonetns.NewNetlinkHandle(netnsFd)
+		nlh := nlhandle.New(netnsFd)
 		defer nlh.Close()
 
 		By("keeping only a socket as the last reference to the transient network namespace")

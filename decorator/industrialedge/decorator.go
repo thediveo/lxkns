@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
+
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/model"

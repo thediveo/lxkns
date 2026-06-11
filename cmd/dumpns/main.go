@@ -23,13 +23,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/debug"
+
 	"github.com/thediveo/lxkns"
 	apitypes "github.com/thediveo/lxkns/api/types"
 	"github.com/thediveo/lxkns/cmd/cli/task"
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
-
-	_ "github.com/thediveo/clippy/debug"
 )
 
 // dumpns emits the namespace and process discovery results as JSON. It takes

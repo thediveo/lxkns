@@ -24,9 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -51,8 +52,8 @@ var _ = Describe("Discover from processes", Ordered, func() {
 	})
 
 	It("finds at least the namespaces lsns finds", func() {
-		// hear, hear ... lsns finally upped its game :D
-		allns := Namespaces(FromProcs(), FromBindmounts())
+		// hear, hear ... lsns finally upped its game :D ... again :D:D:D
+		allns := Namespaces(FromProcs(), FromBindmounts(), WithHierarchy())
 		alllsns := lsns()
 		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash|runc) (.+ )?/tmp/`)
 		for _, lsns := range alllsns {
@@ -85,7 +86,10 @@ var _ = Describe("Discover from processes", Ordered, func() {
 						fmt.Fprintf(&lxnslist, "\t%s\n", ns.String())
 					}
 				}
-				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%slxkns:\n%s", lsns.Type, lsns.NS, lsnslist.String(), lxnslist.String())
+				return fmt.Sprintf("missing %s namespace %d\nlsns:\n%s\nlxkns:\n%s",
+					lsns.Type, lsns.NS,
+					lsnslist.String(),
+					lxnslist.String())
 			})
 			// As of lsns util-linux 2.39.1 we now get bind-mounted namespaces
 			// as well, so we need to cover this case especially.

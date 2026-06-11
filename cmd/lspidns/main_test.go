@@ -20,12 +20,13 @@ import (
 	"time"
 
 	"github.com/thediveo/clippy/debug"
-	"github.com/thediveo/lxkns/cmd/cli/turtles"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/safe"
 	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/spacer"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

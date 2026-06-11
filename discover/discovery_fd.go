@@ -29,12 +29,13 @@ import (
 	"strings"
 
 	"github.com/thediveo/ioctl"
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/sys/unix"
 )
 
 // discoverFromFd discovers (1) namespaces from open file descriptors

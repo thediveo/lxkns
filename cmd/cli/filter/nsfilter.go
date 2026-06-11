@@ -21,6 +21,7 @@ import (
 	"github.com/thediveo/clippy/cliplugin"
 	"github.com/thediveo/enumflag/v2"
 	"github.com/thediveo/go-plugger/v3"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )

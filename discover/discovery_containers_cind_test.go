@@ -23,8 +23,6 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/v2/client"
-	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/morbyd/v2"
 	"github.com/thediveo/morbyd/v2/build"
 	"github.com/thediveo/morbyd/v2/exec"
@@ -38,6 +36,9 @@ import (
 	"github.com/thediveo/whalewatcher/v2/watcher"
 	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
 	"github.com/thediveo/whalewatcher/v2/watcher/moby"
+
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

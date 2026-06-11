@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/thediveo/cpus"
+
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"

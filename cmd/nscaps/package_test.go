@@ -20,17 +20,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thediveo/lxkns/cmd/cli/style"
-	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/spacer"
 	"golang.org/x/sys/unix"
 
+	"github.com/thediveo/lxkns/cmd/cli/style"
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
+
+	"github.com/onsi/gomega/format"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/format"
 )
 
 var (

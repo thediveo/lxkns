@@ -26,8 +26,9 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/thediveo/lxkns/ops"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/ops"
 )
 
 func init() {
