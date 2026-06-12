@@ -15,18 +15,21 @@
 package portable
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 	"time"
 
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/spacetest"
+	"github.com/thediveo/spacetest/netns"
+	"golang.org/x/sys/unix"
 
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 
@@ -34,11 +37,16 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("portable reference integration", func() {
 
 	BeforeEach(func() {
+		if os.Geteuid() != 0 {
+			Skip("needs root")
+		}
+
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
 			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
@@ -49,35 +57,13 @@ var _ = Describe("portable reference integration", func() {
 		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 	})
 
-	It("opens portable (network) namespace reference and runs a sub-process in it", func() {
-		// We need to create a new network namespace which we later want to
-		// enter in a separate Go routine. Unfortunately, while we could create
-		// a new network namespace when creating a new user namespace first, we
-		// won't be allowed to enter another user namespace because we're
-		// already OS multi-threaded.
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("main", `
-unshare -n $stage2
-`)
-		scripts.Script("stage2", `
-process_namespaceid net
-read # wait for test to proceed()
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-
-		netnsid := nstest.CmdDecodeNSId(cmd)
-
+	It("opens portable (network) namespace reference and runs a sub-process in it", func(ctx context.Context) {
+		netnsfd := netns.NewTransient()
 		// Try to reference and lock the new network namespace created by the
 		// test script, then try to enter it and run a separate process attached
 		// to the new network namespace.
-		lockednetns, netnsunlocker, err := PortableReference{ID: netnsid, Type: species.CLONE_NEWNET}.Open()
-		Expect(err).NotTo(HaveOccurred())
+		lockednetns, netnsunlocker := Successful2R(
+			PortableReference{ID: species.NamespaceIDfromInode(netns.Ino(netnsfd)), Type: species.CLONE_NEWNET}.Open())
 		defer netnsunlocker()
 		res, err := ops.Execute(
 			func() any {
@@ -92,37 +78,24 @@ read # wait for test to proceed()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res).To(BeAssignableToTypeOf([]byte{}))
 		b, _ := res.([]byte)
-		Expect(string(b)).To(MatchRegexp(fmt.Sprintf(`net:\[%d\]`, netnsid.Ino)))
+		Expect(string(b)).To(MatchRegexp(fmt.Sprintf(`net:\[%d\]`, netns.Ino(netnsfd))))
 	})
 
 	It("keeps an Open()ed portable namespace reference open/locked without any processes left", func() {
-		if os.Geteuid() != 0 {
-			Skip("needs root")
-		}
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("main", `
-unshare -n $stage2
-`)
-		scripts.Script("stage2", `
-process_namespaceid net
-read # wait for test to proceed()
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-
-		netnsid := nstest.CmdDecodeNSId(cmd)
-
+		netnsfd := spacetest.NewUnmanagedTransient(unix.CLONE_NEWNET)
+		netnsid := species.NamespaceIDfromInode(netns.Ino(netnsfd))
+		closenetns := sync.OnceFunc(func() {
+			Expect(unix.Close(netnsfd)).To(Succeed())
+		})
+		defer closenetns()
 		// Must keep the returned new namespace reference alive till the end, as
 		// otherwise garbage collecting it will prematurely close the wrapped
 		// *os.File ... and we don't want THAT.
-		lockednetns, netnsunlocker, err := PortableReference{ID: netnsid, Type: species.CLONE_NEWNET}.Open()
-		Expect(err).NotTo(HaveOccurred())
+		lockednetns, netnsunlocker := Successful2R(
+			PortableReference{ID: species.NamespaceIDfromInode(netns.Ino(netnsfd)), Type: species.CLONE_NEWNET}.Open())
 		defer netnsunlocker()
-		// Finish the test script so that there are no more processes left
-		// attached to the newly created network namespace.
-		cmd.Close()
+		// Remove our hold on the newly created network namespace.
+		closenetns()
 		// Wait a short time so that the network namespace could be garbage
 		// collected, weren't it for the locking reference we're still keeping.
 		// We check in two steps: first, the namespace must not be found anymore

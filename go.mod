@@ -39,7 +39,7 @@ require (
 	github.com/thediveo/notwork v1.13.2
 	github.com/thediveo/procfsroot v1.0.3
 	github.com/thediveo/safe v0.9.1
-	github.com/thediveo/spacetest v0.12.1
+	github.com/thediveo/spacetest v0.15.0
 	github.com/thediveo/spaserve v1.0.4
 	github.com/thediveo/success v1.3.1
 	github.com/thediveo/testbasher v1.0.9

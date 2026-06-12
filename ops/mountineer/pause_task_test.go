@@ -17,16 +17,17 @@ package mountineer
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/thediveo/testbasher"
-
-	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/spacetest/mntns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("task-based pauser", func() {
@@ -34,7 +35,8 @@ var _ = Describe("task-based pauser", func() {
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithPolling(100 * time.Millisecond).ShouldNot(HaveLeaked())
+			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(100 * time.Millisecond).
+				ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
 	})
@@ -43,23 +45,11 @@ var _ = Describe("task-based pauser", func() {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("main", `
-unshare -m $stage2
-`)
-		scripts.Script("stage2", `
-echo $$
-read
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-		var pid int
-		cmd.Decode(&pid)
 
-		p, err := newPauseTask(fmt.Sprintf("/proc/%d/ns/mnt", pid))
-		Expect(err).NotTo(HaveOccurred())
+		_, procfsroot := mntns.NewTransient()
+		pid := Successful(strconv.ParseUint(strings.Split(procfsroot, "/")[2], 10, 32))
+
+		p := Successful(newPauseTask(fmt.Sprintf("/proc/%d/ns/mnt", pid)))
 		p.Close()
 	})
 

@@ -28,19 +28,22 @@ import (
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/species"
 
+	"github.com/onsi/gomega/gexec"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 )
 
-var _ = Describe("renders pid namespaces", func() {
+var _ = Describe("renders pid namespaces", Ordered, func() {
 
 	var initusernsid, initpidnsid, usernsid, pidnsid species.NamespaceID
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		goodfds := Filedescriptors()
 		DeferCleanup(func() {
+			gexec.CleanupBuildArtifacts()
 			Eventually(Goroutines).Within(2 * time.Second).WithPolling(100 * time.Millisecond).
 				ShouldNot(HaveLeaked())
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
@@ -66,6 +69,17 @@ var _ = Describe("renders pid namespaces", func() {
 
 		usernsid = species.NamespaceIDfromInode(spacetest.Ino(subspc.User, unix.CLONE_NEWUSER))
 		pidnsid = species.NamespaceIDfromInode(spacetest.Ino(subspc.PID, unix.CLONE_NEWPID))
+	})
+
+	BeforeEach(func() {
+		goodgos := Goroutines()
+		goodfds := Filedescriptors()
+		DeferCleanup(func() {
+			Eventually(Goroutines).Within(2 * time.Second).WithPolling(100 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+		})
+
 	})
 
 	It("CLI --foobar fails correctly", func() {

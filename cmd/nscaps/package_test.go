@@ -30,6 +30,7 @@ import (
 	"github.com/thediveo/lxkns/species"
 
 	"github.com/onsi/gomega/format"
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -46,6 +47,8 @@ var (
 var allns *discover.Result
 
 var _ = BeforeSuite(func() {
+	DeferCleanup(gexec.CleanupBuildArtifacts)
+
 	initialUsernsID = species.NamespaceIDfromInode(spacetest.CurrentIno(unix.CLONE_NEWUSER))
 
 	defer func(l *slog.Logger) { slog.SetDefault(l) }(slog.Default())
