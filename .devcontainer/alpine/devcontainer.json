@@ -7,7 +7,7 @@
             "protocol": "http"
         }
     },
-    "image": "golang:1.26.2-alpine3.23",
+    "image": "golang:1.26.4-alpine3.24",
     "runArgs": [
         "--pid=host",
         "--cgroupns=host"

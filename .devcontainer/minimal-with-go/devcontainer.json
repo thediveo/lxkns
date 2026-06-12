@@ -7,16 +7,15 @@
             "protocol": "http"
         }
     },
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
+        "ghcr.io/devcontainers/features/go:1": {},
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest",
             "moby": false // go for the upstream Docker-CE
         },
-        "ghcr.io/devcontainers/features/go:1": {
-            "version": "latest",
-            "golangciLintVersion": "latest"
-        }
+        "ghcr.io/thediveo/devcontainer-features/pinact:0": {},
+        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {}
     },
     "runArgs": [
         "--pid=host",
