@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-asciitree/v2"
+
 	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/xslices"

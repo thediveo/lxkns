@@ -103,7 +103,7 @@ type ProcessTable map[PIDType]*Process
 // zero-based indices. See also
 // https://man7.org/linux/man-pages/man5/proc.5.html.
 const (
-	statlineFieldPID       = 1 - 1 //nolint SA4000 while proc(5) documents fields, we need indices
+	statlineFieldPID       = 1 - 1 //nolint // while proc(5) documents fields, we need indices
 	statlineFieldComm      = 2 - 1
 	statlineFieldPPID      = 4 - 1
 	statlineFieldStarttime = 22 - 1

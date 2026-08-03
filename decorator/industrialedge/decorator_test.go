@@ -19,20 +19,21 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/decorator/composer"
-	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/morbyd/v2"
 	"github.com/thediveo/morbyd/v2/run"
 	"github.com/thediveo/morbyd/v2/session"
 	"github.com/thediveo/whalewatcher/v2/watcher"
 	"github.com/thediveo/whalewatcher/v2/watcher/moby"
 
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/decorator/composer"
+	"github.com/thediveo/lxkns/model"
+	. "github.com/thediveo/lxkns/test/matcher"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
-	. "github.com/thediveo/lxkns/test/matcher"
 	. "github.com/thediveo/success"
 )
 

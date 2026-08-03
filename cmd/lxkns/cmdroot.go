@@ -30,6 +30,8 @@ import (
 	"github.com/thediveo/clippy"
 	_ "github.com/thediveo/clippy/log"
 	"github.com/thediveo/go-plugger/v3"
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns"
 	_ "github.com/thediveo/lxkns/cmd/cli/silent"
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
@@ -39,7 +41,6 @@ import (
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/sys/unix"
 )
 
 // reexec reexecutes itself in the initial cgroup namespace, if necessary, and

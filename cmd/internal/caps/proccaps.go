@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/caps"
+
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -72,5 +73,6 @@ func statusEffectiveCaps(f *os.File) caps.CapabilitiesSet {
 			return caps
 		}
 	}
+	_ = scanner.Err()
 	return nil
 }

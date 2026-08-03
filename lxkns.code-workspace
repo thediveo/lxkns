@@ -5,15 +5,39 @@
 		}
 	],
 	"settings": {
-		"go.lintTool": "golangci-lint-v2",
-		"plantuml.diagramsRoot": "puml",
-		"plantuml.exportFormat": "svg",
-		"plantuml.exportOutDir": "docs/_images",
-		"plantuml.exportSubFolder": false,
-        "go.testFlags": [
-            "-v"
+        "go.buildTags": "matchers,pprof,kind",
+        "go.lintTool": "golangci-lint-v2",
+        "go.lintFlags": [
+            "--build-tags=matchers,pprof,kind"
         ],
-		"makefile.extensionOutputFolder": "./.vscode",
+        "go.alternateTools": {
+            "customFormatter": "golangci-lint-v2"
+        },
+        "go.formatTool": "custom",
+        "go.formatFlags": [
+            "fmt",
+            "--stdin"
+        ],
+        "go.testTimeout": "300s",
+        "go.testFlags": [
+            "-v",
+            "-race",
+            "--",
+            "-ginkgo.v",
+            "-ginkgo.no-color"
+        ],
+        "gopls": {
+            "ui.semanticTokens": true,
+            // https://github.com/golang/vscode-go/blob/master/docs/settings.md#uidiagnosticanalyses
+            "ui.diagnostic.analyses": {},
+            // https://github.com/golang/vscode-go/blob/master/docs/settings.md#uicodelenses
+            "ui.codelenses": {
+                "vulncheck": true,
+            }
+        },
+        "markdown.styles": [
+            "./.vscode/markdown-preview.css"
+        ],
 		"eslint.nodePath": "${workspaceFolder}/web/lxkns/node_modules",
 		"eslint.workingDirectories": [
 			"web/lxkns"
@@ -23,9 +47,6 @@
 		"eslint.runtime": "/usr/local/bin/node",
 		"terminal.integrated.scrollback": 50000,
 		"docker.lsp.telemetry": "off",
-		"markdown.styles": [
-			"style.css"
-		],
 		"workbench.tree.indent": 16,
 	},
 	"extensions": {

@@ -20,17 +20,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thediveo/lxkns/cmd/cli/style"
-	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/spacer"
 	"golang.org/x/sys/unix"
 
+	"github.com/thediveo/lxkns/cmd/cli/style"
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
+
+	"github.com/onsi/gomega/format"
+	"github.com/onsi/gomega/gexec"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/format"
 )
 
 var (
@@ -44,6 +47,8 @@ var (
 var allns *discover.Result
 
 var _ = BeforeSuite(func() {
+	DeferCleanup(gexec.CleanupBuildArtifacts)
+
 	initialUsernsID = species.NamespaceIDfromInode(spacetest.CurrentIno(unix.CLONE_NEWUSER))
 
 	defer func(l *slog.Logger) { slog.SetDefault(l) }(slog.Default())
@@ -58,23 +63,23 @@ var _ = BeforeSuite(func() {
 	})
 
 	By("creating a child user namespace")
-	subspaceClient, subspc := spacerClient.Subspace(true, false)
+	subspaceClient, subuserns := spacerClient.NewTransientUser()
 	DeferCleanup(func() {
 		subspaceClient.Close()
 	})
 	someProcPID = model.PIDType(subspaceClient.PID())
 	Expect(someProcPID).NotTo(Equal(model.PIDType(os.Getpid())))
-	someProcUsernsID = species.NamespaceIDfromInode(spacetest.Ino(subspc.User, unix.CLONE_NEWUSER))
+	someProcUsernsID = species.NamespaceIDfromInode(spacetest.Ino(subuserns, unix.CLONE_NEWUSER))
 
 	By("creating another child user namespace and a network namespace")
-	targetspaceClient, targetsubspc := spacerClient.Subspace(true, false)
+	targetspaceClient, targetsubuserns := spacerClient.NewTransientUser()
 	DeferCleanup(func() {
 		targetspaceClient.Close()
 	})
 	targetPID = model.PIDType(targetspaceClient.PID())
 	Expect(targetPID).NotTo(Equal(model.PIDType(os.Getpid())))
 	Expect(targetPID).NotTo(Equal(someProcPID))
-	targetUsernsID = species.NamespaceIDfromInode(spacetest.Ino(targetsubspc.User, unix.CLONE_NEWUSER))
+	targetUsernsID = species.NamespaceIDfromInode(spacetest.Ino(targetsubuserns, unix.CLONE_NEWUSER))
 
 	tnetns := targetspaceClient.NewTransient(unix.CLONE_NEWNET)
 	targetNetnsID = species.NamespaceIDfromInode(spacetest.Ino(tnetns, unix.CLONE_NEWNET))

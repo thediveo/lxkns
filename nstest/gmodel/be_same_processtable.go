@@ -18,8 +18,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/onsi/gomega/types"
 	"github.com/thediveo/lxkns/model"
+
+	"github.com/onsi/gomega/types"
 )
 
 // BeSameProcessTable returns a [types.GomegaMatcher] which compares an actual
@@ -38,7 +39,7 @@ var processtableT = reflect.TypeFor[model.ProcessTable]()
 
 func (matcher *beSameProcessTableMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
-		//nolint ST1005 communicate useful messages, not Go platitudes.
+		//nolint // communicate useful messages, not Go platitudes.
 		return false, fmt.Errorf(
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}

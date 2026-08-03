@@ -20,9 +20,10 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/thediveo/lxkns/model"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/lxkns/model"
 )
 
 var _ = Describe("procfs references", func() {

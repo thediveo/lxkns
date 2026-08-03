@@ -15,8 +15,9 @@
 package matcher
 
 import (
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/model"
+
+	. "github.com/onsi/gomega"
 )
 
 func ExampleWithName() {

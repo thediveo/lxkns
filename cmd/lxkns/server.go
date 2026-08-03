@@ -24,8 +24,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/spaserve"
+
+	"github.com/thediveo/lxkns/containerizer"
 )
 
 var (

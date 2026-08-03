@@ -15,12 +15,19 @@
 package discover
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
+	"github.com/thediveo/spacetest/mntns"
+	"github.com/thediveo/spacetest/netns"
+	"github.com/thediveo/spacetest/units"
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,6 +38,10 @@ import (
 var _ = Describe("Discover from bind-mounts", func() {
 
 	BeforeEach(func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
 		DeferCleanup(slog.SetDefault, slog.Default())
 		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
 
@@ -42,37 +53,25 @@ var _ = Describe("Discover from bind-mounts", func() {
 		})
 	})
 
-	It("finds hidden hierarchical user namespaces", func() {
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Common(`bm=/tmp/netbindmount`)
-		scripts.Script("main", `
-# Create new user and mount namespace to bind-mount things in. We need the
-# user namespace in order to gain full capabilities, including the mount
-# capability. While this will drive Debian Disciples into a frenzy, we
-# rather run our tests. Creating a separate mount namespace is necessary as we
-# don't have capabilities in the user namespace we started from. And it has the
-# nice side-effect that this tests discovery in other mount namespaces than the
-# initial mount namespace.
-unshare -Umr $stage2
-`)
-		scripts.Script("stage2", `
-umount $bm || /bin/true # remove stale bind mount.
-touch $bm # make sure we have a thing to bind mount over.
-unshare -n $stage2a # create new net namespace and bind-mount it.
-read # wait for test to proceed()
-umount $bm || /bin/true # clean up.
-rm $bm || /bin/true
-`)
-		scripts.Script("stage2a", `
-process_namespaceid net # prints the "current" net namespace ID.
-mount --bind /proc/self/ns/net $bm
-# That's it: the end of the script, continue in stage2...
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-		netnsid := nstest.CmdDecodeNSId(cmd)
+	It("finds hidden hierarchical user namespaces", func(ctx context.Context) {
+		const bmpath = "/tmp/lxkns-discover-discovery_bindmount_test"
+
+		netnsfd := netns.NewTransient()
+		mntnsfd, _ := mntns.NewTransient()
+		mntns.Execute(mntnsfd, func() {
+			mntns.MountTmpfs(64 * units.KiB)
+			Expect(os.WriteFile(bmpath, nil, 0770)).To(Succeed())
+			Expect(unix.Mount(
+				fmt.Sprintf("/proc/self/fd/%d", netnsfd),
+				bmpath,
+				"",
+				unix.MS_BIND|unix.MS_RDONLY,
+				"",
+			)).To(Succeed(),
+				"cannot bind transient netns into /tmp inside transient mntns")
+		})
+
+		netnsid := species.NamespaceIDfromInode(netns.Ino(netnsfd))
 		allns := Namespaces(WithStandardDiscovery())
 		Expect(allns.Namespaces[model.NetNS]).To(HaveKey(netnsid))
 	})

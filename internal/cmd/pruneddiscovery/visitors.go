@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-asciitree/v2"
+
 	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 )

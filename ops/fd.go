@@ -18,11 +18,12 @@ import (
 	"fmt"
 
 	"github.com/thediveo/ioctl"
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/nsioctl"
 	"github.com/thediveo/lxkns/ops/internal/opener"
 	"github.com/thediveo/lxkns/ops/relations"
 	"github.com/thediveo/lxkns/species"
-	"golang.org/x/sys/unix"
 )
 
 // NamespaceFd references a Linux-kernel namespace via an open file descriptor.

@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	"github.com/thediveo/go-asciitree/v2"
+
 	"github.com/thediveo/lxkns/model"
 )
 

@@ -284,10 +284,7 @@ func caps(proc *model.Process, tns model.Namespace) (tcaps targetCapsSummary, eu
 	// namespace, checking if we find the process' user namespace.
 	userns := targetuserns
 	childuserns := model.Hierarchy(nil)
-	for {
-		if userns == procuserns { // nolint QF1006
-			break
-		}
+	for userns != procuserns {
 		childuserns = userns
 		userns = userns.Parent()
 		if userns == nil {
@@ -339,5 +336,6 @@ func processEuid(proc *model.Process) int {
 			return euid
 		}
 	}
+	_ = scanner.Err()
 	panic("/proc filesystem broken: no Uid element in status.")
 }

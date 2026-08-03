@@ -209,6 +209,7 @@ func processCgroup(controllertypes []string, pid PIDType) (paths []string) {
 			}
 		}
 	}
+	_ = scanner.Err()
 	// Now fix the missing cgroups controller paths we couldn't satisfy from v1
 	// (if present) using the unified v2 hierarchy path. We're simplifying here
 	// and don't look for a specific controller type (which we might find up

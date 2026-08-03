@@ -94,7 +94,7 @@ func discoverHierarchy(nstype species.NamespaceType, _ string, result *Result) {
 			// to climb up further. This won't catch the initial user/pid
 			// namespaces, but then these will break out of the loop anyway,
 			// as they don't have any parents.
-			if ns.(model.Hierarchy).Parent() != nil { //nolint QF1006
+			if ns.(model.Hierarchy).Parent() != nil { //nolint:staticcheck // one of many breaks
 				break
 			}
 			// By the way ... if it's a user namespace, then get its owner's

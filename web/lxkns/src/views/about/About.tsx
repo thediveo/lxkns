@@ -21,7 +21,7 @@ import type { MDXComponents } from 'mdx/types'
 
 
 export const About = () => (
-    <Box m={2} flex={1} overflow="auto">
+    <Box sx={{ m: 2, flex: 1, overflow: "auto" }}>
         <MuiMarkdown mdx={AboutContent} shortcodes={{ a: SmartA } as MDXComponents} />
     </Box>
 )

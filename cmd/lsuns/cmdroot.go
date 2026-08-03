@@ -20,7 +20,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/debug"
 	"github.com/thediveo/go-asciitree/v2"
+
 	"github.com/thediveo/lxkns"
 	"github.com/thediveo/lxkns/cmd/cli/filter"
 	"github.com/thediveo/lxkns/cmd/cli/icon"
@@ -30,8 +32,6 @@ import (
 	"github.com/thediveo/lxkns/cmd/cli/task"
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
-
-	_ "github.com/thediveo/clippy/debug"
 )
 
 func newRootCmd() (rootCmd *cobra.Command) {

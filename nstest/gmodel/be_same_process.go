@@ -19,9 +19,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/thediveo/lxkns/model"
+
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/model"
 )
 
 // BeSameProcess returns a [types.GomegaMatcher] which compares an actual
@@ -55,7 +56,7 @@ var processT = reflect.TypeFor[model.Process]()
 
 func (matcher *beSameProcessMatcher) Match(actual any) (bool, error) {
 	if actual == nil && matcher.expected == nil {
-		//nolint ST1005 communicate useful messages, not Go platitudes.
+		//nolint
 		return false, errors.New(
 			"Refusing to compare <nil> to <nil>.\nBe explicit and use BeNil() instead. This is to avoid mistakes where both sides of an assertion are erroneously uninitialized.")
 	}

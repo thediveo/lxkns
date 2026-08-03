@@ -19,6 +19,8 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/thediveo/nonstd/xstrings"
+
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -68,6 +70,7 @@ func (e *lsnsentry) UnmarshalJSON(b []byte) (err error) {
 	}
 	if cmd := fields["command"]; cmd != nil { // might be missing sometimes?!
 		err = tostr(fields["command"], &e.Command)
+		e.Command = xstrings.Truncate(e.Command, 30)
 	}
 	return
 }

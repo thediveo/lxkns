@@ -29,14 +29,14 @@ import {
     Switch as Toggle,
     Typography,
 } from '@mui/material';
-import { 
-    expandInitiallyAtom, 
-    expandWorkloadInitiallyAtom, 
-    showSharedNamespacesAtom, 
-    showSystemProcessesAtom, 
-    THEME_DARK, 
-    THEME_LIGHT, 
-    THEME_USERPREF, 
+import {
+    expandInitiallyAtom,
+    expandWorkloadInitiallyAtom,
+    showSharedNamespacesAtom,
+    showSystemProcessesAtom,
+    THEME_DARK,
+    THEME_LIGHT,
+    THEME_USERPREF,
     themeAtom
 } from './atoms';
 
@@ -67,11 +67,11 @@ export const Settings = () => {
     }
 
     return (
-        <Box m={1} overflow="auto">
-            <SettingsGrid container direction="row" justifyContent="center">
+        <Box sx={{ m: 1, overflow: "auto" }} >
+            <SettingsGrid container direction="row" sx={{ justifyContent: "center" }}>
                 <Grid
                     container
-                    direction="column"
+                    sx={{ direction: "column" }}
                     style={{ minWidth: '35em', maxWidth: '60em' }}
                 >
                     <Typography variant="subtitle1">Appearance</Typography>

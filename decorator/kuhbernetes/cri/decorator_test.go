@@ -23,10 +23,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/thediveo/lxkns/containerizer/whalefriend"
-	"github.com/thediveo/lxkns/decorator/kuhbernetes"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/test/matcher"
 	"github.com/thediveo/morbyd/v2"
 	"github.com/thediveo/morbyd/v2/build"
 	"github.com/thediveo/morbyd/v2/run"
@@ -37,6 +33,11 @@ import (
 	"github.com/thediveo/whalewatcher/v2/test"
 	"github.com/thediveo/whalewatcher/v2/watcher"
 	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
+
+	"github.com/thediveo/lxkns/containerizer/whalefriend"
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/test/matcher"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

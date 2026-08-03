@@ -20,13 +20,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/species"
-	nonetns "github.com/thediveo/notwork/netns"
+	"github.com/thediveo/notwork/nlhandle"
+	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/netns"
 	"github.com/thediveo/testbasher"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -113,14 +115,14 @@ read # wait for test to proceed()
 		}
 
 		By("creating a transient new network namespace we only keep a socket connected to")
-		netnsFd := netns.NewTransient()
+		netnsFd := spacetest.NewUnmanagedTransient(unix.CLONE_NEWNET)
 		closeNetnsFd := sync.OnceFunc(func() { _ = unix.Close(netnsFd) })
 		defer closeNetnsFd()
 
 		netnsino := netns.Ino(netnsFd)
 
-		nlh := nonetns.NewNetlinkHandle(netnsFd)
-		defer nlh.Close()
+		nlh := nlhandle.New(netnsFd)
+		defer func() { _ = nlh.Close() }()
 
 		By("keeping only a socket as the last reference to the transient network namespace")
 		closeNetnsFd()

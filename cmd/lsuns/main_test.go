@@ -22,11 +22,12 @@ import (
 	"time"
 
 	"github.com/thediveo/clippy/debug"
-	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/safe"
 	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/spacer"
 	"golang.org/x/sys/unix"
+
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -57,12 +58,12 @@ var _ = Describe("renders user namespaces", func() {
 		})
 
 		By("creating a child user namespace")
-		subspaceClient, subspc := spacerClient.Subspace(true, false)
+		subspaceClient, subuserns := spacerClient.NewTransientUser()
 		DeferCleanup(func() {
 			subspaceClient.Close()
 		})
 
-		childUsernsID = spacetest.Ino(subspc.User, unix.CLONE_NEWUSER)
+		childUsernsID = spacetest.Ino(subuserns, unix.CLONE_NEWUSER)
 
 		By("creating a network namespace owned by child user namespace")
 		netnsfd := subspaceClient.NewTransient(unix.CLONE_NEWNET)

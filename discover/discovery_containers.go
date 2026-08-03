@@ -22,10 +22,10 @@ import (
 	"log/slog"
 
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/decorator"
-	"github.com/thediveo/lxkns/model"
 
+	"github.com/thediveo/lxkns/decorator"
 	_ "github.com/thediveo/lxkns/decorator/all" // register all decorator plugins
+	"github.com/thediveo/lxkns/model"
 )
 
 // discoverContainers discovers alive containers using the optionally specified

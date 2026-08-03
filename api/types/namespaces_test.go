@@ -21,40 +21,44 @@ import (
 	"log/slog"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+	"github.com/thediveo/nonstd/xiter"
+	"github.com/thediveo/nonstd/xslices"
+	"github.com/thediveo/spacetest"
+	"github.com/thediveo/spacetest/spacer"
+	"github.com/thediveo/whalewatcher/v2/watcher"
+	"github.com/thediveo/whalewatcher/v2/watcher/moby"
+	"golang.org/x/sys/unix"
 
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/containerizer/whalefriend"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
+	. "github.com/thediveo/lxkns/nstest/gmodel"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/morbyd/v2"
-	"github.com/thediveo/morbyd/v2/run"
-	"github.com/thediveo/morbyd/v2/session"
-	"github.com/thediveo/testbasher"
-	"github.com/thediveo/whalewatcher/v2/watcher"
-	"github.com/thediveo/whalewatcher/v2/watcher/moby"
+
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/success"
-
-	. "github.com/thediveo/lxkns/nstest/gmodel"
 )
 
 var sleepyname = "morbid_moby" + strconv.FormatInt(GinkgoRandomSeed(), 10)
 
 var (
-	allns      *discover.Result
-	scripts    = testbasher.Basher{}
-	scriptscmd *testbasher.TestCommand
-	userns     model.Namespace
-	usernames  discover.UidUsernameMap
+	allns     *discover.Result
+	userns    model.Namespace
+	usernames discover.UidUsernameMap
 
 	cizer containerizer.Containerizer
 )
@@ -64,8 +68,6 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	// inside BeforeSuite; thus plain "defer" instead of DeferCleanup.
 	defer slog.SetDefault(slog.Default())
 	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
-
-	DeferCleanup(func() { scripts.Done() })
 
 	By("creating a new Docker session for testing")
 	sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=api.types.namespaces")))
@@ -95,17 +97,24 @@ var _ = BeforeSuite(func(ctx context.Context) {
 		Within(5 * time.Second).ProbeEvery(250 * time.Millisecond).Should(BeClosed())
 
 	// Add some controlled namespaces for discovery...
-	scripts.Common(nstest.NamespaceUtilsScript)
-	scripts.Script("main", `
-unshare -Ur unshare -U $stage2 # create a new user ns inside another user ns (so we get a proper owner relationship).
-`)
-	scripts.Script("stage2", `
-process_namespaceid user # prints the user namespace ID of "the" process.
-read # wait for test to proceed()
-`)
-	scriptscmd = scripts.Start("main")
-	DeferCleanup(func() { scriptscmd.Close() })
-	usernsid := nstest.CmdDecodeNSId(scriptscmd)
+	DeferCleanup(gexec.CleanupBuildArtifacts)
+	spc := spacer.New(context.Background(),
+		spacer.WithOut(GinkgoWriter), spacer.WithErr(GinkgoWriter))
+	DeferCleanup(spc.Close)
+	// create a first user namespace
+	subspc, subuserns := spc.NewTransientUser()
+	DeferCleanup(func() {
+		subspc.Close()
+		_ = unix.Close(subuserns)
+	})
+	// create a second user namespace inside the first user names, so we get an
+	// owner relationship between these two user namespaces.
+	subsubspc, subsubuserns := subspc.NewTransientUser()
+	DeferCleanup(func() {
+		subsubspc.Close()
+		_ = unix.Close(subsubuserns)
+	})
+	usernsid := species.NamespaceIDfromInode(spacetest.Ino(subsubuserns, unix.CLONE_NEWUSER))
 
 	// "nearly-all-ns" and ... containerz!
 	allns = discover.Namespaces(
@@ -131,19 +140,21 @@ read # wait for test to proceed()
 })
 
 func pidlist(pids []model.PIDType) string {
-	s := []string{}
-	for _, pid := range pids {
-		s = append(s, fmt.Sprint(pid))
-	}
-	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
+	return fmt.Sprintf("[ %s ]", strings.Join(
+		slices.Collect(xiter.Map(xslices.AllValues(pids),
+			func(pid model.PIDType) string {
+				return fmt.Sprint(pid)
+			})),
+		", "))
 }
 
 func childlist(hns model.Hierarchy) string {
-	s := []string{}
-	for _, child := range hns.Children() {
-		s = append(s, fmt.Sprint(child.(model.Namespace).ID().Ino))
-	}
-	return fmt.Sprintf("[ %s ]", strings.Join(s, ", "))
+	return fmt.Sprintf("[ %s ]", strings.Join(
+		slices.Collect(xiter.Map(xslices.AllValues(hns.Children()),
+			func(child model.Hierarchy) string {
+				return fmt.Sprint(child.(model.Namespace).ID().Ino)
+			})),
+		", "))
 }
 
 // returns a "reference:ref," string to insert into a JSON object serialization,
@@ -234,7 +245,9 @@ var _ = Describe("namespaces JSON", func() {
 				"parent": %d,
 				"children": %s,
 				"user-id": %d,
-				"user-name": %q
+				"user-name": %q,
+				"leaders": [%d],
+				"ealdorman": %d
 			}`,
 			parentuserns.ID().Ino,
 			refifnotempty(parentuserns.Ref()),
@@ -242,6 +255,8 @@ var _ = Describe("namespaces JSON", func() {
 			childlist(parentuserns.(model.Hierarchy)),
 			parentuserns.(model.Ownership).UID(),
 			usernames[uint32(parentuserns.(model.Ownership).UID())],
+			userns.(model.Hierarchy).Parent().(model.Namespace).Ealdorman().PID,
+			userns.(model.Hierarchy).Parent().(model.Namespace).Ealdorman().PID,
 		)))
 
 		// Also check the grandparent user namespace.

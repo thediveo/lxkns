@@ -22,9 +22,10 @@ import (
 	"maps"
 
 	"github.com/gammazero/workerpool"
+	"github.com/thediveo/whalewatcher/v2/watcher"
+
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/v2/watcher"
 )
 
 // WhaleFriend is a containerizer internally backed by one or more

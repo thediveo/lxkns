@@ -21,10 +21,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/thediveo/testbasher"
+
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
-	"github.com/thediveo/testbasher"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -7,9 +7,9 @@
             "protocol": "http"
         }
     },
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+        "ghcr.io/devcontainers/features/docker-in-docker:4": {
             "version": "latest",
             "moby": false // go for the upstream Docker-CE
         }
@@ -34,7 +34,7 @@
     "postCreateCommand": {
         "use-project-lxknsrc": "ln -sf ${containerWorkspaceFolder}/.lxknsrc.yaml ${HOME}/.lxknsrc.yaml", 
         "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
-        "yawn": ". ${NVM_DIR}/nvm.sh && cd web/lxkns && corepack enable && CI=1 yarn set version latest",
+        "yawn": ". ${NVM_DIR}/nvm.sh && cd web/lxkns && corepack enable && corepack install",
         "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
         "no-first-run-notice": "rm -f /workspaces/.codespaces/shared/first-run-notice.txt",
         // considering the enormous noise made by the user namespace proponents

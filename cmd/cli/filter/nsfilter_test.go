@@ -16,9 +16,10 @@ package filter
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/thediveo/safe"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/safe"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

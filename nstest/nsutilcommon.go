@@ -19,8 +19,9 @@
 package nstest
 
 import (
-	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/testbasher"
+
+	"github.com/thediveo/lxkns/species"
 )
 
 // NamespaceUtilsScript defines some convenience common script functions when

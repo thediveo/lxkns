@@ -100,5 +100,6 @@ func userNamesFromPasswd(passwdpath string) UidUsernameMap {
 			usernames[uint32(uid)] = fields[0]
 		}
 	}
+	_ = scanner.Err()
 	return usernames
 }
