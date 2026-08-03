@@ -324,8 +324,12 @@ const LxknsApp = () => {
 
     return (
         <Box
-            width="100vw" height="100vh"
-            display="flex" flexDirection="column"
+            sx={{
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+            }}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -409,7 +413,7 @@ const LxknsApp = () => {
                 onClose={() => setShowUploaderDialog(false)}
                 onImport={handleImport}
             />
-            <Box m={0} flex={1} overflow="auto">
+            <Box sx={{m: 0, flex:1, overflow:"auto"}}>
                 <Routes>
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />

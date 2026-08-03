@@ -26,7 +26,7 @@ export interface ContainersProps {
 }
 
 export const Containers = ({ apiRef, discovery }: ContainersProps) => (
-    <Box pl={1}>
+    <Box sx={{ pl: 1 }}>
         <ContainerTree discovery={discovery} apiRef={apiRef} />
     </Box>
 )

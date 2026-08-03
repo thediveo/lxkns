@@ -42,7 +42,7 @@ const chapters: HelpViewerChapter[] = [
     { title: 'Type-Specific Views', chapter: ch('Typedviews'), slug: 'typedviews' },
     { title: 'Mount Namespaces', chapter: ch('Mounts'), slug: 'mounts' },
     { title: 'Containers', chapter: ch('Containers'), slug: 'containers' },
-    { title: 'Core Fancy', chapter: ch('Affinities'), slug: 'affinities'},
+    { title: 'Core Fancy', chapter: ch('Affinities'), slug: 'affinities' },
     { title: 'Application Bar', chapter: ch('Appbar'), slug: 'appbar' },
     { title: 'Namespaces', chapter: ch('Namespaces'), slug: 'namespaces' },
     { title: 'Settings', chapter: ch('Settings'), slug: 'settings' },
@@ -68,7 +68,7 @@ interface AtomsHydratorProps {
     children: ReactNode
 }
 
-const AtomsHydrator = ({ atomvals, children}: AtomsHydratorProps) => {
+const AtomsHydrator = ({ atomvals, children }: AtomsHydratorProps) => {
     useHydrateAtoms(new Map(atomvals))
     return children
 }
@@ -83,9 +83,9 @@ const Example = ({ children, maxWidth, states }: ExampleProps) => {
     return (
         <Provider>
             <AtomsHydrator atomvals={atomvals}>
-                <Box m={2}>
+                <Box sx={{ m: 2 }}>
                     <Card style={{ maxWidth: maxWidth || '100%' }}>
-                        <Box m={1} style={{ overflowX: 'auto' }}>
+                        <Box sx={{ m: 1 }} style={{ overflowX: 'auto' }}>
                             {children}
                         </Box>
                     </Card>
@@ -111,7 +111,7 @@ const IconBox = styled('span')(({ theme }) => ({
 }))
 
 
-const DisabledText = styled('span')(({theme}) => ({
+const DisabledText = styled('span')(({ theme }) => ({
     color: theme.palette.text.disabled,
 }))
 
@@ -119,7 +119,7 @@ const BoxedIcons = ({ children }: { children: ReactNode }) => {
     return <IconBox>{children}</IconBox>
 }
 
-const NamespaceExample = ({ type, initial, shared }: {type: NamespaceType; initial: boolean; shared: boolean}) =>
+const NamespaceExample = ({ type, initial, shared }: { type: NamespaceType; initial: boolean; shared: boolean }) =>
     <NamespaceBadge namespace={{
         nsid: 4026531837,
         type: type,
@@ -134,14 +134,14 @@ export const Help = () => (
         chapters={chapters}
         baseroute="/help"
         markdowner={MuiMarkdown}
-        shortcodes={{ 
-            a: SmartA, 
+        shortcodes={{
+            a: SmartA,
             BoxedIcons,
             DisabledText,
-            Example, 
-            NamespaceBadge, 
-            NamespaceExample 
+            Example,
+            NamespaceBadge,
+            NamespaceExample
         }}
-        style={{overflow: 'visible'}}
+        style={{ overflow: 'visible' }}
     />
 )

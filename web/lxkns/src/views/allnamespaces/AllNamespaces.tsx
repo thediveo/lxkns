@@ -26,7 +26,7 @@ export interface AllNamespacesProps {
 }
 
 export const AllNamespaces = ({ apiRef, discovery }: AllNamespacesProps) => (
-    <Box pl={1}>
+    <Box sx={{ pl: 1 }}>
         <UserNamespaceTree discovery={discovery} apiRef={apiRef} />
     </Box>
 )

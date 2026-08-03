@@ -53,7 +53,7 @@ export interface AffinitiesProps {
  *   as a visual clue.
  */
 export const Affinities = ({ apiRef, discovery }: AffinitiesProps) => (
-    <Box pl={1}>
-        <AffinityTree discovery={discovery} apiRef={apiRef }/>
+    <Box sx={{ pl: 1 }}>
+        <AffinityTree discovery={discovery} apiRef={apiRef} />
     </Box>
 )

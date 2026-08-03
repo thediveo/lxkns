@@ -149,18 +149,18 @@ const mapRunners = (processes: ProcessMap, onlineCPUs: number[][] | null) => {
                     //   its process;
                     // - or, the process(!) has realtime scheduling set, then show
                     //   all its tasks, realtime or not.
-                    const busybody = 
+                    const busybody =
                         // it's already the main task that represents the process,
                         // so we're taking the process instead, without repeating
                         // the main task below the process.
                         (task.tid === task.process.pid)
-                        // the task's process isn't realtime and the task has the
-                        // same CPU affinity and scheduling configured as its process,
-                        // then show the process, not the task.
-                        || (!isRealtime(task.process) 
-                            && sameAffinity(task.affinity, task.process.affinity)
-                            && sameScheduling(task, task.process))
-                        ? task.process : task
+                            // the task's process isn't realtime and the task has the
+                            // same CPU affinity and scheduling configured as its process,
+                            // then show the process, not the task.
+                            || (!isRealtime(task.process)
+                                && sameAffinity(task.affinity, task.process.affinity)
+                                && sameScheduling(task, task.process))
+                            ? task.process : task
                     const xid = xidOf(busybody)
                     const realtime = isRealtime(busybody)
                     let runner = runnersOnCPU[xid]
@@ -440,7 +440,7 @@ const AffinityTreeItem = ({ ref, ...props }: AffinityTreeItemProps & { ref?: Rea
 
     return <TreeItemProvider {...getContextProviderProps()}>
         <TreeItemRoot {...getRootProps(other)}>
-            <TreeItemContent {...getContentProps({
+            <TreeItemContent status={status} {...getContentProps({
                 onDoubleClick: (event: React.MouseEvent<HTMLDivElement>) => {
                     if (onItemDoubleClick) {
                         const { cpu, tid } = itemCPUTID(itemId)

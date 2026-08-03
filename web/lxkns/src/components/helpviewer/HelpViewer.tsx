@@ -65,7 +65,7 @@ const NavigatorButton = styled(IconButton)(({ theme }) => ({
     },
 }))
 
-const Markdowner = styled(MuiMarkdown)(({theme}) => ({
+const Markdowner = styled(MuiMarkdown)(({ theme }) => ({
     // Compensate for the height of the sticky toc navigator button.
     marginTop: '-24px',
 
@@ -226,7 +226,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
     const canvas = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
-        canvas.current?.parentElement?.scrollTo({top: 0, left: 0})
+        canvas.current?.parentElement?.scrollTo({ top: 0, left: 0 })
     }, [location])
 
     // Anchor state for the ToC navigation popup menu.
@@ -284,7 +284,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 as={markdowner || MuiMarkdown}
                 mdx={chapters[currentChapterIndex].chapter as MDXContent}
                 fallback={
-                    <Box sx={{ marginTop: '-24px' }} m={1}>
+                    <Box sx={{ marginTop: '-24px', m: 1 }}>
                         <ChapterSkeleton sx={{ width: '15rem' }} />
                     </Box>
                 }

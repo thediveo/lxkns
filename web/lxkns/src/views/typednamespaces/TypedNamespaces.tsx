@@ -41,7 +41,7 @@ export const TypedNamespaces = ({ apiRef, discovery }: TypedNamespacesProps) => 
         // unmounting the existing tree component and remounting a fresh one in
         // order to clear the namespace tree's internal state completely. Yes,
         // this is slightly (w)hacky.
-        nstype && <Box pl={1}>
+        nstype && <Box sx={{ pl: 1 }}>
             <NamespaceProcessTree
                 key={nstype}
                 type={nstype}
