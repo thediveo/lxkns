@@ -58,12 +58,12 @@ var _ = Describe("renders user namespaces", func() {
 		})
 
 		By("creating a child user namespace")
-		subspaceClient, subspc := spacerClient.Subspace(true, false)
+		subspaceClient, subuserns := spacerClient.NewTransientUser()
 		DeferCleanup(func() {
 			subspaceClient.Close()
 		})
 
-		childUsernsID = spacetest.Ino(subspc.User, unix.CLONE_NEWUSER)
+		childUsernsID = spacetest.Ino(subuserns, unix.CLONE_NEWUSER)
 
 		By("creating a network namespace owned by child user namespace")
 		netnsfd := subspaceClient.NewTransient(unix.CLONE_NEWNET)

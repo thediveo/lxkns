@@ -60,15 +60,15 @@ var _ = Describe("renders pid namespaces", Ordered, func() {
 			spcclnt.Close()
 		})
 
-		subclnt, subspc := spcclnt.Subspace(true, true)
+		subclnt, subuserns, subpidns := spcclnt.NewTransientUserPID()
 		DeferCleanup(func() {
-			_ = unix.Close(subspc.PID)
-			_ = unix.Close(subspc.User)
+			_ = unix.Close(subpidns)
+			_ = unix.Close(subuserns)
 			subclnt.Close()
 		})
 
-		usernsid = species.NamespaceIDfromInode(spacetest.Ino(subspc.User, unix.CLONE_NEWUSER))
-		pidnsid = species.NamespaceIDfromInode(spacetest.Ino(subspc.PID, unix.CLONE_NEWPID))
+		usernsid = species.NamespaceIDfromInode(spacetest.Ino(subuserns, unix.CLONE_NEWUSER))
+		pidnsid = species.NamespaceIDfromInode(spacetest.Ino(subpidns, unix.CLONE_NEWPID))
 	})
 
 	BeforeEach(func() {

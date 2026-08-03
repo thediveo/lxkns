@@ -102,19 +102,19 @@ var _ = BeforeSuite(func(ctx context.Context) {
 		spacer.WithOut(GinkgoWriter), spacer.WithErr(GinkgoWriter))
 	DeferCleanup(spc.Close)
 	// create a first user namespace
-	subspc, subspcns := spc.Subspace(true, false)
+	subspc, subuserns := spc.NewTransientUser()
 	DeferCleanup(func() {
 		subspc.Close()
-		_ = unix.Close(subspcns.User)
+		_ = unix.Close(subuserns)
 	})
 	// create a second user namespace inside the first user names, so we get an
 	// owner relationship between these two user namespaces.
-	subsubspc, subsubspcns := subspc.Subspace(true, false)
+	subsubspc, subsubuserns := subspc.NewTransientUser()
 	DeferCleanup(func() {
 		subsubspc.Close()
-		_ = unix.Close(subsubspcns.User)
+		_ = unix.Close(subsubuserns)
 	})
-	usernsid := species.NamespaceIDfromInode(spacetest.Ino(subsubspcns.User, unix.CLONE_NEWUSER))
+	usernsid := species.NamespaceIDfromInode(spacetest.Ino(subsubuserns, unix.CLONE_NEWUSER))
 
 	// "nearly-all-ns" and ... containerz!
 	allns = discover.Namespaces(

@@ -63,23 +63,23 @@ var _ = BeforeSuite(func() {
 	})
 
 	By("creating a child user namespace")
-	subspaceClient, subspc := spacerClient.Subspace(true, false)
+	subspaceClient, subuserns := spacerClient.NewTransientUser()
 	DeferCleanup(func() {
 		subspaceClient.Close()
 	})
 	someProcPID = model.PIDType(subspaceClient.PID())
 	Expect(someProcPID).NotTo(Equal(model.PIDType(os.Getpid())))
-	someProcUsernsID = species.NamespaceIDfromInode(spacetest.Ino(subspc.User, unix.CLONE_NEWUSER))
+	someProcUsernsID = species.NamespaceIDfromInode(spacetest.Ino(subuserns, unix.CLONE_NEWUSER))
 
 	By("creating another child user namespace and a network namespace")
-	targetspaceClient, targetsubspc := spacerClient.Subspace(true, false)
+	targetspaceClient, targetsubuserns := spacerClient.NewTransientUser()
 	DeferCleanup(func() {
 		targetspaceClient.Close()
 	})
 	targetPID = model.PIDType(targetspaceClient.PID())
 	Expect(targetPID).NotTo(Equal(model.PIDType(os.Getpid())))
 	Expect(targetPID).NotTo(Equal(someProcPID))
-	targetUsernsID = species.NamespaceIDfromInode(spacetest.Ino(targetsubspc.User, unix.CLONE_NEWUSER))
+	targetUsernsID = species.NamespaceIDfromInode(spacetest.Ino(targetsubuserns, unix.CLONE_NEWUSER))
 
 	tnetns := targetspaceClient.NewTransient(unix.CLONE_NEWNET)
 	targetNetnsID = species.NamespaceIDfromInode(spacetest.Ino(tnetns, unix.CLONE_NEWNET))

@@ -13,6 +13,9 @@ linters:
     - godoclint
     - modernize
     - nolintlint
+  exclusions:
+    paths:
+      - web/lxkns/
 formatters:
   enable:
     - gci
