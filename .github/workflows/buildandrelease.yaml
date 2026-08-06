@@ -87,7 +87,7 @@ jobs:
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Linux
             kernel namespaces discovery
 
-      - name: Publish compose file as OCI artifact
+      - name: Publish compose file(s) as OCI artifact(s)
         shell: bash
         run: |
           echo "${{ steps.metadata.outputs.tag-names }}" | while read -r tag; do
@@ -95,6 +95,10 @@ jobs:
               -f deployments/oci-artifact-app/docker-compose.yaml \
               publish --resolve-image-digests \
                 ghcr.io/${{ github.repository }}/app:$tag
+            TAG="$tag" docker compose \
+              -f deployments/oci-artifact-app/docker-compose-cfg.yaml \
+              publish --resolve-image-digests \
+                ghcr.io/${{ github.repository }}/app/cfg:$tag
           done
 
       - name: Build Industrial Edge app bundle
