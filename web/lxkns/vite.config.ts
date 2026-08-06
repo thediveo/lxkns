@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import svgr from 'vite-plugin-svgr'
 import mdx from '@mdx-js/rollup'
 import path from 'path'
@@ -33,8 +32,9 @@ export default defineConfig({
         },
     },
     resolve: {
+        tsconfigPaths: true,
         alias: Object.fromEntries(
-            srcs.map(d => [d, path.resolve(__dirname, `src/${d}`)])
+            srcs.map(d => [d, path.resolve(import.meta.dirname, `src/${d}`)])
         )
     },
     plugins: [
@@ -42,7 +42,6 @@ export default defineConfig({
             enforce: 'pre',
             ...mdx(mdxConfiguration)
         },
-        tsconfigPaths(),
         react(),
         svgr({
             svgrOptions: {

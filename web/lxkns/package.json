@@ -53,8 +53,7 @@
     "typographic-en-dashes": "^1.0.1",
     "typographic-quotes": "^2.0.1",
     "usehooks-ts": "^3.1.1",
-    "vite-plugin-svgr": "^5.2.0",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vite-plugin-svgr": "^5.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

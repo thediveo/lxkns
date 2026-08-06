@@ -2,15 +2,15 @@
 
 # Linux kernel Namespaces
 
-[![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
+[![Manual](https://img.shields.io/badge/-manual-goldenrod?logo=mdbook&labelColor=505050)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
+<br>
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
-
+<br>
 ![build and test](https://github.com/thediveo/lxkns/actions/workflows/buildandtest.yaml/badge.svg?branch=master)
 ![Coverage](https://img.shields.io/badge/Coverage-87.6%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
-[![Go Report Card](https://goreportcard.com/badge/github.com/thediveo/lxkns)](https://goreportcard.com/report/github.com/thediveo/lxkns)
 
 Do you want to learn more about the namespaces of the Linux kernel as well as
 mountpoints and how they empower containers? Then have a look at `lxkns`:
@@ -24,7 +24,25 @@ mountpoints and how they empower containers? Then have a look at `lxkns`:
 
 ## Quick Start
 
-### Docker Compose
+### Docker Compose v5.2.0+ (June 2026)
+
+If you are using a Docker compose plugin v5.2.0 or later installed, you can
+(_finally_) override deployment defaults by setting one or more of the following
+environment variables when executing `docker compose ... up -y`:
+
+| env var | Default |
+| --- | --- |
+| `LXKNS_IP` | `127.0.0.1` |
+| `LXKNS_PORT` | `5010` |
+
+For instance, to deploy to `127.0.0.1:5050` (`-y` automatically accepts all
+configured settings):
+
+```bash
+LXKNS_PORT=5050 docker compose -f oci://ghcr.io/thediveo/lxkns/app/cfg:latest up -y
+```
+
+### Docker Compose v2.34.0+ (March 2025)
 
 First, ensure that you have the Docker compose v2 plugin version 2.34.0 or later
 installed. Version 2.34.0 was released March 2025. Make also sure you have a
