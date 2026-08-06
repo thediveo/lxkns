@@ -116,6 +116,12 @@ export const DiscoveryUploader = ({ open, onClose, onImport }: DiscoveryUploader
         slotProps={{
             paper: {
                 sx: { backgroundImage: 'none' }
+            },
+            backdrop: {
+                sx: {
+                    backgroundColor: 'transparent',
+                    backdropFilter: 'blur(2px)'
+                }
             }
         }}
     >

@@ -413,7 +413,11 @@ const LxknsApp = () => {
                 onClose={() => setShowUploaderDialog(false)}
                 onImport={handleImport}
             />
-            <Box sx={{m: 0, flex:1, overflow:"auto"}}>
+            <Box sx={{
+                m: 0,
+                flex: 1,
+                overflow: "auto",
+            }}>
                 <Routes>
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/about" element={<About />} />
