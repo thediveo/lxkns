@@ -41,11 +41,12 @@ const ContainerInformation = styled('span')(({ theme }) => ({
 const Turtlepath = styled('span')(({ theme }) => ({
     fontStyle: 'normal',
     color: theme.palette.container,
-    fontSize: '80%',
+    fontSize: '85%',
 }))
 
 const ContainerName = styled('span')(({ theme }) => ({
     fontStyle: 'italic',
+    fontWeight: 'bolder',
     color: theme.palette.container,
     '&::before': {
         content: '"«"',

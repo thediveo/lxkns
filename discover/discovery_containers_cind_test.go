@@ -48,8 +48,8 @@ import (
 )
 
 const (
-	imgName  = "thediveo/kindisch-lxkns-containerd"
-	cindName = "lxkns-cind" // name of Docker container with containerd
+	cntrDiscoImgName  = "thediveo/kindisch-lxkns-containerd-cntrdisco"
+	cntrDiscoCntrName = "lxkns-cind-cntrdisco" // name of Docker container with containerd
 )
 
 var _ = Describe("Discovering containers in containers", Serial, func() {
@@ -85,12 +85,12 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 		// https://github.com/thediveo/whalewatcher/blob/cca7f5676b3f63b0e2d6311a60ca3da2fd07ead7/engineclient/containerd/containerd_test.go#L115
 		By("spinning up a Docker container with stand-alone containerd, courtesy of the KinD k8s sig")
 		Expect(sess.BuildImage(ctx, "./test/_kindisch",
-			build.WithTag(imgName),
+			build.WithTag(cntrDiscoImgName),
 			build.WithBuildArg("KINDEST_BASE_TAG="+test.KindestBaseImageTag),
 			build.WithOutput(timestamper.New(GinkgoWriter)))).
 			Error().NotTo(HaveOccurred())
 		providerCntr = Successful(sess.Run(ctx, img.Name,
-			run.WithName(cindName),
+			run.WithName(cntrDiscoCntrName),
 			run.WithAutoRemove(),
 			run.WithPrivileged(),
 			run.WithSecurityOpt("label=disable"),
@@ -177,7 +177,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 
 		By("finding the containerd-in-docker container")
 		allns := Namespaces(WithStandardDiscovery(), WithContainerizer(cizer))
-		cind := allns.Containers.FirstWithName(cindName)
+		cind := allns.Containers.FirstWithName(cntrDiscoCntrName)
 		Expect(cind).NotTo(BeNil())
 		enginepid := cind.PID
 		Expect(enginepid).NotTo(BeZero(), "missing/invalid container %q with zero PID", cind.Name)

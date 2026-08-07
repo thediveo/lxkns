@@ -31,9 +31,24 @@ type ContainerModel struct {
 	Groups           GroupMap
 }
 
+// NewContainerModelAllEngines returns a new [ContainerModel] for
+// (un)marshalling, optionally preparing it from a list of discovered containers
+// (with managing container engines and groups). It will also include engines
+// which are currently workload-less.
+func NewContainerModelAllEngines(containers []*model.Container, engines []*model.ContainerEngine) *ContainerModel {
+	cm := &ContainerModel{}
+	cm.Containers = NewContainerMap(cm, containers)
+	cm.ContainerEngines = NewCompleteEngineMap(cm, engines)
+	cm.Groups = NewGroupMap(cm, containers)
+	return cm
+}
+
 // NewContainerModel returns a new [ContainerModel] for (un)marshalling,
 // optionally preparing it from a list of discovered containers (with managing
 // container engines and groups).
+//
+// Deprecated: replaced by [NewContainerModelAllEngines] that handles
+// workload-less container engines.
 func NewContainerModel(containers []*model.Container) *ContainerModel {
 	cm := &ContainerModel{}
 	cm.Containers = NewContainerMap(cm, containers)
@@ -176,8 +191,25 @@ type EngineMap struct {
 	cm             *ContainerModel
 }
 
+func NewCompleteEngineMap(cm *ContainerModel, engines []*model.ContainerEngine) EngineMap {
+	m := EngineMap{
+		enginesByRefID: map[uint]*model.ContainerEngine{},
+		engineRefIDs:   map[*model.ContainerEngine]uint{},
+		cm:             cm,
+	}
+	eid := uint(0)
+	for _, engine := range engines {
+		eid++
+		m.engineRefIDs[engine] = eid // associate a new ID with the engine
+		m.enginesByRefID[eid] = engine
+	}
+	return m
+}
+
 // NewEngineMap creates a new map for [ContainerEngine] objects, optionally
 // building using a discovered list of containers (with their container engines).
+//
+// Deprecated: replaced by [NewCompleteEngineMap].
 func NewEngineMap(cm *ContainerModel, containers []*model.Container) EngineMap {
 	m := EngineMap{
 		enginesByRefID: map[uint]*model.ContainerEngine{},
@@ -217,6 +249,9 @@ func (m EngineMap) EngineRefID(engine *model.ContainerEngine) uint {
 // EngineMarshal is a [model.ContainerEngine] with additional fields for
 // (un)marshalling the container references, as we cannot directly serialize
 // plain pointers in an information model with lots of cycles.
+//
+// Please note that workload-less container engine will have no containers
+// related to them.
 type EngineMarshal struct {
 	Containers []uint `json:"containers"` // container ref IDs.
 	*model.ContainerEngine

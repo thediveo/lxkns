@@ -68,11 +68,21 @@ export const Settings = () => {
 
     return (
         <Box sx={{ m: 1, overflow: "auto" }} >
-            <SettingsGrid container direction="row" sx={{ justifyContent: "center" }}>
+            <SettingsGrid
+                container
+                direction="row"
+                sx={{ 
+                    justifyContent: "center", 
+                    flexDirection: "row" ,
+                }}
+            >
                 <Grid
                     container
-                    sx={{ direction: "column" }}
-                    style={{ minWidth: '35em', maxWidth: '60em' }}
+                    sx={{ 
+                        minWidth: '35em',
+                        maxWidth: '60em',
+                        flexDirection: "column",
+                    }}
                 >
                     <Typography variant="subtitle1">Appearance</Typography>
                     <Card>

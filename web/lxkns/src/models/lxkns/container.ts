@@ -62,6 +62,7 @@ export interface Engine {
     type: string
     api: string
     pid: number
+    labels: LabelMap
     containers: Container[]
 }
 

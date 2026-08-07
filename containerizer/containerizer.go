@@ -35,3 +35,14 @@ type Containerizer interface {
 	// Close and release all resources allocated by this Containerizer.
 	Close()
 }
+
+// Overseer discovers containers from an overseen set of container engines,
+// returning all these engines with their respective workloads. This discovery
+// explicitly covers currently workload-less container engines.
+type Overseer interface {
+	Containerizer
+
+	// Discover user-level "alive" containers, returning them organized by their
+	// responsible container engines, including currently workload-less engines.
+	EnginesInclContainers(ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper) []*model.ContainerEngine
+}

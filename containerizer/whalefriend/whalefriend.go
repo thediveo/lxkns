@@ -36,7 +36,7 @@ type WhaleFriend struct {
 	workers    workerpool.WorkerPool
 }
 
-var _ containerizer.Containerizer = (*WhaleFriend)(nil)
+var _ containerizer.Overseer = (*WhaleFriend)(nil)
 
 // Option represents a function able to set a particular WhaleFriend option
 // state.
@@ -78,44 +78,61 @@ func WithWorkers(num uint) Option {
 	}
 }
 
-// watchersContainers returns the alive [model.Container] objects managed by the
-// specified engine/watcher. The containers returned are additionally linked to
-// a unique [model.ContainerEngine] and these container engines are also aware
-// of their containers.
-func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Watcher) []*model.Container {
+// watcherContainers returns new [model.Container] objects for the alive
+// container managed by the specified engine/watcher, together with the
+// corresponding new [model.ContainerEngine] description. The containers
+// returned are already linked to this container engine description.
+func (c *WhaleFriend) engineContainers(ctx context.Context, engine watcher.Watcher) *model.ContainerEngine {
 	eng := &model.ContainerEngine{
 		ID:      engine.ID(ctx),
 		Type:    engine.Type(),
 		Version: engine.Version(ctx),
 		API:     engine.API(),
 		PID:     model.PIDType(engine.PID()),
+		Labels:  model.Labels{},
 	}
-	for _, projname := range append(engine.Portfolio().Names(), "") {
-		project := engine.Portfolio().Project(projname)
-		if project == nil {
-			continue
-		}
-		for _, container := range project.Containers() {
+	for container := range engine.Portfolio().AllContainers() {
+		cntr := &model.Container{
+			ID:     container.ID,
+			Name:   container.Name,
+			Type:   eng.Type,
+			Flavor: eng.Type,
+			PID:    model.PIDType(container.PID),
+			Paused: container.Paused,
 			// Ouch! Make sure to clone the Labels map and not simply pass it
 			// directly on to the lxkns container objects. Otherwise decorators
 			// adding labels would modify the labels shared through the
 			// underlying container label source. So, clone the labels
 			// (top-level only) and then happy decorating.
-			clonedLabels := maps.Clone(container.Labels)
-			cntr := &model.Container{
-				ID:     container.ID,
-				Name:   container.Name,
-				Type:   eng.Type,
-				Flavor: eng.Type,
-				PID:    model.PIDType(container.PID),
-				Paused: container.Paused,
-				Labels: clonedLabels,
-				Engine: eng,
-			}
-			eng.AddContainer(cntr)
+			Labels: maps.Clone(container.Labels),
+			Engine: eng,
 		}
+		eng.AddContainer(cntr)
 	}
-	return eng.Containers
+	return eng // including eng.Containers
+}
+
+// EnginesInclContainers discovers containers and returns them related to their
+// container engines (including currently workload-less engines).
+func (c *WhaleFriend) EnginesInclContainers(ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper) []*model.ContainerEngine {
+	// Gather all alive containers known at this time to our whale watchers. For
+	// fun, we run the workload queries concurrently using a (limited) worker
+	// pool. First, we submit query jobs for all engines that we watch...ch :=
+	// make(chan *model.ContainerEngine)
+	ch := make(chan *model.ContainerEngine)
+	for _, watcher := range c.watchers {
+		c.workers.Submit(func() {
+			slog.Debug("querying engine workload", slog.String("id", watcher.ID(ctx)))
+			ch <- c.engineContainers(ctx, watcher)
+		})
+	}
+	// ...and then we're collecting the results while the workers from the pool
+	// churn on the submitted jobs.
+	engines := make([]*model.ContainerEngine, 0, len(c.watchers))
+	for w := 0; w < len(c.watchers); w++ {
+		engines = append(engines, <-ch)
+	}
+	return engines
 }
 
 // Containers returns the current container state of (alive) containers from all
@@ -123,21 +140,14 @@ func (c *WhaleFriend) watchersContainers(ctx context.Context, engine watcher.Wat
 func (c *WhaleFriend) Containers(
 	ctx context.Context, procs model.ProcessTable, pidmap model.PIDMapper,
 ) []*model.Container {
-	// Gather all alive containers known at this time to our whale watchers. For
-	// fun, we run the workload queries concurrently using a (limited) worker
-	// pool. First, we submit query jobs for all engines that we watch...
-	ch := make(chan []*model.Container)
-	for _, watcher := range c.watchers {
-		c.workers.Submit(func() {
-			slog.Debug("querying engine workload", slog.String("id", watcher.ID(ctx)))
-			ch <- c.watchersContainers(ctx, watcher)
-		})
+	engines := c.EnginesInclContainers(ctx, procs, pidmap)
+	count := 0
+	for _, engine := range engines {
+		count += len(engine.Containers)
 	}
-	// ...and then we're collecting the results while the workers from the pool
-	// churn on the submitted jobs.
-	containers := []*model.Container{}
-	for w := 0; w < len(c.watchers); w++ {
-		containers = append(containers, <-ch...)
+	containers := make([]*model.Container, 0, count)
+	for _, engine := range engines {
+		containers = append(containers, engine.Containers...)
 	}
 	return containers
 }
