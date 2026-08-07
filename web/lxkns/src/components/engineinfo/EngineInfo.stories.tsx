@@ -43,6 +43,7 @@ export const Default: Story = {
         id: 'FOOL-BARZ-1234-THIS-SPAC-FORE-RENT',
         api: '',
         containers: [],
+        labels: {},
     },
   },
 };

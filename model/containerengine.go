@@ -30,6 +30,10 @@ type ContainerEngine struct {
 	// Container engine PID, if known. Otherwise, zero.
 	PID PIDType `json:"pid"`
 
+	// Meta data in form of labels explicitly assigned or decorated to this
+	// engine.
+	Labels Labels `json:"labels"`
+
 	// Containers discovered from this container engine.
 	Containers []*Container `json:"-"`
 

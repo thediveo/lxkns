@@ -1,9 +1,12 @@
 {
 	"folders": [
-		{
-			"path": "."
-		}
-	],
+        {
+            "path": "."
+        },
+        {
+            "path": "../turtlefinder"
+        }
+    ],
 	"settings": {
         "go.buildTags": "matchers,pprof,kind",
         "go.lintTool": "golangci-lint-v2",

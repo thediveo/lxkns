@@ -65,7 +65,7 @@ export const lxknsDarkTheme = mergeDeep(
                 run: green[500],
                 froozen: red[700],
             },
-            cpulist: grey[500],
+            cpulist: blueGrey[300],
             nice: lightGreen[500],
             notnice: orange[500],
         },
