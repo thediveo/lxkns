@@ -21,9 +21,11 @@ import { GroupedPropagationMembers } from 'components/groupedpropagationmembers/
 import type { NamespaceMap } from 'models/lxkns/model'
 import { MountpointRoot } from 'components/mountpointroot'
 import { NamespaceInfo } from 'components/namespaceinfo'
+import type React from 'react'
 
 
 const MountPathTitle = styled('div')(({ theme }) => ({
+    width: 'fit-content',
     fontSize: '120%',
     fontWeight: theme.typography.fontWeightLight,
     marginBottom: theme.spacing(1),
@@ -64,14 +66,18 @@ const PropertyValue = styled('div')(({ theme }) => ({
 interface NameValueRowProps {
     name: React.ReactNode
     value: React.ReactNode
+    title?: string
 }
 
 /**
  * Renders a single key-value grid row.
  */
-const NameValueRow = ({ name, value }: NameValueRowProps) => {
+const NameValueRow = ({ name, value, title }: NameValueRowProps) => {
     return <>
-        <PropertyName>{name}:</PropertyName>
+        {title
+            ? <Tooltip title={title}><PropertyName>{name}:</PropertyName></Tooltip>
+            : <PropertyName>{name}:</PropertyName>
+        }
         <PropertyValue>{value}</PropertyValue>
     </>
 }
@@ -83,7 +89,7 @@ const Options = ({ options }: { options: string[] }) =>
     <>{options
         .sort((opt1, opt2) => opt1.localeCompare(opt2, undefined, { numeric: true }))
         .map((opt, idx) => [
-            idx > 0 && <span key={`optionvals-br-${idx}`}>,<br/></span>,
+            idx > 0 && <span key={`optionvals-br-${idx}`}>,<br /></span>,
             <span key={idx}>{opt}</span>
         ])
     }</>
@@ -147,14 +153,17 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
         .filter(member => member !== mountpoint && member.mastergroup === mountpoint.peergroup)
 
     return <>
-        <MountPathTitle>
-            <MountpointPath drum="always" plainpath={true} mountpoint={mountpoint} />
-        </MountPathTitle>
+        <Tooltip title="path inside the mount namespace where the mount point appears">
+            <MountPathTitle>
+                <MountpointPath drum="always" plainpath={true} mountpoint={mountpoint} />
+            </MountPathTitle>
+        </Tooltip>
         <MountProperties>
             <NameValueRow
                 key="mountns"
                 name={'mount namespace'}
                 value={<NamespaceInfo shortprocess={true} namespace={mountpoint.mountnamespace} />}
+                title="mount namespace in which this mount appears"
             />
             <NameValueRow key="device" name="device" value={`${mountpoint.major}:${mountpoint.minor}`} />
             <NameValueRow key="fstype" name="filesystem type" value={<>
@@ -174,28 +183,51 @@ export const MountpointInfo = ({ mountpoint, namespaces }: MountpointInfoProps) 
                 </ExternalDocumentation>
             </>}
             />
-            <NameValueRow key="root" name="root" value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />} />
+            <NameValueRow
+                key="root"
+                name="root"
+                value={<MountpointRoot root={mountpoint.root} namespaces={namespaces} />}
+                title="the path within the mounted filesystem that is exposed at the mount point"
+            />
             <NameValueRow key="opts" name="options" value={<Options options={mountpoint.mountoptions} />} />
             <NameValueRow key="superopts" name="superblock options" value={<Options options={mountpoint.superoptions.split(',')} />} />
             <NameValueRow key="source" name="source" value={mountpoint.source} />
-            <NameValueRow key="propa" name="propagation mode" value={propagationmodes.join(', ')} />
+            <NameValueRow
+                key="propa"
+                name="propagation mode"
+                value={propagationmodes.join(', ')}
+                title="determines how mount and unmount events are shared between related mount points and mount namespaces"
+            />
             {peers && peers.length > 0 && <NameValueRow
                 key="peers"
                 name="peer mounts"
                 value={<GroupedPropagationMembers members={peers} />}
+                title="a mount point that receives mount and unmount events from the above peer and shares also its own mount changes"
             />}
             {masters && masters.length > 0 && <NameValueRow
                 key="masterpeers"
                 name="master peer mounts"
                 value={<GroupedPropagationMembers members={masters} />}
+                title="a mount point that receives mount and unmount event from its peers and also shares its own mount changes with these peers, as well as propagating its changes to the above mountpoint"
             />}
             {slaves && slaves.length > 0 && <NameValueRow
                 key="slaves"
                 name="slave mounts"
                 value={<GroupedPropagationMembers members={slaves} />}
+                title="a mount point that receives mount and unmount events from the above master, but does not propagate back its own mount changes"
             />}
-            <NameValueRow key="mntid" name="ID" value={mountpoint.mountid} />
-            <NameValueRow key="parentid" name="parent ID" value={parent} />
+            <NameValueRow
+                key="mntid"
+                name="ID"
+                value={mountpoint.mountid}
+                title="unique ID of this mount point regardless of mount namespace"
+            />
+            <NameValueRow
+                key="parentid"
+                name="parent ID"
+                value={parent}
+                title="unique ID of the parent mount point"
+            />
             <NameValueRow key="tags" name="tags" value={tags} />
         </MountProperties>
     </>
