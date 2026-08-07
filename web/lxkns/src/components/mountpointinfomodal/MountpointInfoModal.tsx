@@ -31,7 +31,7 @@ const MountpointDialog = styled(Dialog)(() => ({
 const MountpointDialogTitle = styled(DialogTitle)(({ theme }) => ({
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
-    '& .MuiSvgIcon-root': {
+    '& .MuiSvgIcon-root.readonly': {
         position: 'relative',
         verticalAlign: 'baseline',
         top: '0.3ex',
@@ -80,9 +80,20 @@ export const MountpointInfoModalProvider = ({
                     scroll="paper"
                     open={!!mountpoint}
                     onClose={handleClose}
+                    slotProps={{
+                        paper: {
+                            sx: { backgroundImage: 'none' }
+                        },
+                        backdrop: {
+                            sx: {
+                                backgroundColor: 'transparent',
+                                backdropFilter: 'blur(2px)'
+                            }
+                        }
+                    }}
                 >
                     <MountpointDialogTitle>
-                        {mountpoint.mountoptions.includes('ro') && <><ReadonlyIcon fontSize="inherit" />&nbsp;</>}
+                        {mountpoint.mountoptions.includes('ro') && <><ReadonlyIcon className="readonly" fontSize="inherit" />&nbsp;</>}
                         {mountpoint.hidden && 'Hidden '}
                         Mount Point
                         <CloseButton
