@@ -95,7 +95,7 @@ export const lxknsLightTheme = {
             run: green[500],
             froozen: red[900],
         },
-        cpulist: grey[600],
+        cpulist: blueGrey[500],
         nice: lightGreen[700],
         notnice: orange[900],
         prio: red[400],

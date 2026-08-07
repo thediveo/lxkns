@@ -84,7 +84,7 @@ var _ = Describe("ContainerEngine", func() {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		cew := New(ctx, []watcher.Watcher{dockerw})
+		cew := New(ctx, []watcher.Watcher{dockerw}, WithWorkers(0))
 		Expect(cew).NotTo(BeNil())
 		defer cew.Close()
 

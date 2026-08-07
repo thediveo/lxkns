@@ -18,11 +18,12 @@ package discover
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/nonstd/sets"
 
+	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/decorator"
 	_ "github.com/thediveo/lxkns/decorator/all" // register all decorator plugins
 	"github.com/thediveo/lxkns/model"
@@ -43,62 +44,81 @@ func discoverContainers(result *Result) {
 	if len(result.PIDNSRoots) == 1 {
 		initialPIDns = result.PIDNSRoots[0]
 	}
-	containers := result.Options.Containerizer.Containers(context.Background(), result.Processes, result.PIDMap)
-	// Update the discovery information with the container found and establish
+
+	// Pick up the workload, and if possible, all container engines, even if
+	// without any workload at this time.
+	var engines []*model.ContainerEngine
+	var containers []*model.Container
+	if overseer, ok := result.Options.Containerizer.(containerizer.Overseer); ok {
+		// We got all the engines and with them their individual workloads, so
+		// we now derive the total workload.
+		engines = overseer.EnginesInclContainers(context.Background(), result.Processes, result.PIDMap)
+		count := 0
+		for _, engine := range engines {
+			count += len(engine.Containers)
+		}
+		containers = make([]*model.Container, 0, count)
+		for _, engine := range engines {
+			containers = append(containers, engine.Containers...)
+		}
+	} else {
+		// We only get the total workload, and now derive their engines; this
+		// will miss out engines without workloads.
+		containers = result.Options.Containerizer.Containers(context.Background(), result.Processes, result.PIDMap)
+		engineSet := sets.New[*model.ContainerEngine]()
+		for _, container := range containers {
+			engineSet.Add(container.Engine)
+		}
+		engines = engineSet.Elements()
+	}
+
+	// Update the discovery information with the containers found and establish
 	// the links between container and process information model objects. Also
 	// translate container PIDs where necessary, such as in case of
 	// containerized container engines (sic!).
 	result.Containers = containers
-	enginesPIDns := map[*model.ContainerEngine]model.Namespace{} // cache engines' PID namespaces
-	pidmap := result.PIDMap                                      // might be nil
-	for _, container := range containers {
-		if container.Engine == nil {
-			panic(fmt.Sprintf("containerizer returned container without engine: %+v", container))
+	result.ContainerEngines = engines
+	pidmap := result.PIDMap // might be nil
+	for _, engine := range engines {
+		var enginePIDns model.Namespace
+		if engineProc, ok := result.Processes[engine.PID]; ok {
+			enginePIDns = engineProc.Namespaces[model.PIDNS]
+		} else if engine.PPIDHint != 0 {
+			// This is a newly socket-activated engine that isn't yet
+			// included in the process tree – that process tree that
+			// ironically lead to the detection of the socket activator and
+			// then activation of that container engine. As we cannot change
+			// the past discovery some kind soul – a turtle, perchance? –
+			// might have passed us a hint about the engine's parent process
+			// PID. This parent process's PID namespace should be the same
+			// as the container engine, so it should be good for container
+			// PID translation.
+			//
+			// This deserves a badge: [COMMENTOR] ... rhymes with
+			// "tormentor" *snicker*
+			if parentProc, ok := result.Processes[engine.PPIDHint]; ok {
+				enginePIDns = parentProc.Namespaces[model.PIDNS]
+			}
 		}
-		enginePIDns, ok := enginesPIDns[container.Engine]
-		if !ok {
-			if engineProc, ok := result.Processes[container.Engine.PID]; ok {
-				enginePIDns = engineProc.Namespaces[model.PIDNS]
-			} else if container.Engine.PPIDHint != 0 {
-				// This is a newly socket-activated engine that isn't yet
-				// included in the process tree – that process tree that
-				// ironically lead to the detection of the socket activator and
-				// then activation of that container engine. As we cannot change
-				// the past discovery some kind soul – a turtle, perchance? –
-				// might have passed us a hint about the engine's parent process
-				// PID. This parent process's PID namespace should be the same
-				// as the container engine, so it should be good for container
-				// PID translation.
-				//
-				// This deserves a badge: [COMMENTOR] ... rhymes with
-				// "tormentor" *snicker*
-				if parentProc, ok := result.Processes[container.Engine.PPIDHint]; ok {
-					enginePIDns = parentProc.Namespaces[model.PIDNS]
+		// Cache even unsuckcessful engine PID namespace lookups.
+		for _, container := range engine.Containers {
+			// Translate container PID from its managing container engine PID
+			// namespace to initial PID namespace, if necessary.
+			if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns {
+				if pid := pidmap.Translate(container.PID, enginePIDns, initialPIDns); pid != 0 {
+					container.PID = pid
 				}
 			}
-			// Cache even unsuckcessful engine PID namespace lookups.
-			enginesPIDns[container.Engine] = enginePIDns
-		}
-		// Translate container PID from its managing container engine PID
-		// namespace to initial PID namespace, if necessary.
-		if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns {
-			if pid := pidmap.Translate(container.PID, enginePIDns, initialPIDns); pid != 0 {
-				container.PID = pid
+			// Relate this container with its initial process and vice versa.
+			if containerProc, ok := result.Processes[container.PID]; ok {
+				containerProc.Container = container
+				container.Process = containerProc
 			}
 		}
-		// Relate this container with its initial process and vice versa.
-		if containerProc, ok := result.Processes[container.PID]; ok {
-			containerProc.Container = container
-			container.Process = containerProc
-		}
-	}
-	engines := make([]*model.ContainerEngine, 0, len(enginesPIDns))
-	for engine := range enginesPIDns {
-		engines = append(engines, engine)
 	}
 	slog.Info("discovered containers",
 		slog.Int("count", len(containers)), slog.Int("engine_count", len(engines)))
-	// Run registered Decorators on discovered containers.
+	// Run registered Decorators on discovered engines (and their containers).
 	for _, decorator := range plugger.Group[decorator.Decorate]().Symbols() {
 		decorator(engines, result.Options.Labels)
 	}

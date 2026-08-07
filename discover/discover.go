@@ -35,17 +35,18 @@ import (
 // Result stores the results of a tour through Linux processes and
 // kernel namespaces.
 type Result struct {
-	Options           DiscoverOpts           // options used during discovery.
-	Namespaces        model.AllNamespaces    // all discovered namespaces, subject to filtering according to Options.
-	InitialNamespaces model.NamespacesSet    // the 7 initial namespaces.
-	UserNSRoots       []model.Namespace      // the topmost user namespace(s) in the hierarchy.
-	PIDNSRoots        []model.Namespace      // the topmost PID namespace(s) in the hierarchy.
-	Processes         model.ProcessTable     // processes checked for namespaces.
-	PIDMap            model.PIDMapper        `json:"-"` // optional PID translator.
-	Mounts            NamespacedMountPathMap // per mount-namespace mount paths and mount points.
-	Containers        model.Containers       // all alive containers found.
-	SocketProcessMap  SocketProcesses        // optional socket inode number to process(es) mapping.
-	OnlineCPUs        cpus.List              // optional list of online CPUs when discovering process/task affinities.
+	Options           DiscoverOpts             // options used during discovery.
+	Namespaces        model.AllNamespaces      // all discovered namespaces, subject to filtering according to Options.
+	InitialNamespaces model.NamespacesSet      // the 7 initial namespaces.
+	UserNSRoots       []model.Namespace        // the topmost user namespace(s) in the hierarchy.
+	PIDNSRoots        []model.Namespace        // the topmost PID namespace(s) in the hierarchy.
+	Processes         model.ProcessTable       // processes checked for namespaces.
+	PIDMap            model.PIDMapper          `json:"-"` // optional PID translator.
+	Mounts            NamespacedMountPathMap   // per mount-namespace mount paths and mount points.
+	Containers        model.Containers         // all alive containers found.
+	ContainerEngines  []*model.ContainerEngine // all container engines found, including workload-less engines.
+	SocketProcessMap  SocketProcesses          // optional socket inode number to process(es) mapping.
+	OnlineCPUs        cpus.List                // optional list of online CPUs when discovering process/task affinities.
 }
 
 // SocketProcesses maps socket inode numbers to processes that have open file
@@ -230,8 +231,8 @@ func Namespaces(options ...DiscoveryOption) *Result {
 		result.PIDMap = NewPIDMap(result)
 	}
 
-	// Optionally discover alive containers and relate the containers to
-	// processes and vice versa.
+	// Optionally discover alive containers (and engines) and relate the
+	// containers to processes and vice versa.
 	discoverContainers(result)
 
 	// Pick up leader process CPU affinity and scheduling setup.

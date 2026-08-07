@@ -140,7 +140,7 @@ func NewDiscoveryResult(opts ...NewDiscoveryResultOption) *DiscoveryResult {
 	}
 	// And now for the user-space container-related things, comprising not only
 	// containers, but also container groups and container engines.
-	dr.ContainerModel = NewContainerModel(dr.DiscoveryResult.Containers)
+	dr.ContainerModel = NewContainerModelAllEngines(dr.DiscoveryResult.Containers, dr.DiscoveryResult.ContainerEngines)
 	dr.Fields[FieldContainers] = &dr.ContainerModel.Containers
 	dr.Fields[FieldContainerEngines] = &dr.ContainerModel.ContainerEngines
 	dr.Fields[FieldContainerGroups] = &dr.ContainerModel.Groups
