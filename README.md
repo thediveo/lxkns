@@ -4,7 +4,6 @@
 
 [![Manual](https://img.shields.io/badge/-manual-goldenrod?logo=mdbook&labelColor=505050)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
-<br>
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 <br>
 ![build and test](https://github.com/thediveo/lxkns/actions/workflows/buildandtest.yaml/badge.svg?branch=master)

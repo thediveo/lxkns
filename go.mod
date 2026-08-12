@@ -1,6 +1,6 @@
 module github.com/thediveo/lxkns
 
-go 1.25.12
+go 1.26.3
 
 exclude (
 	google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
@@ -10,17 +10,17 @@ exclude (
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/containerd/containerd/v2 v2.3.0-beta.0
+	github.com/containerd/containerd/v2 v2.3.4
 	github.com/gammazero/workerpool v1.2.1
 	github.com/getkin/kin-openapi v0.146.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/moby/moby/client v0.5.1
 	github.com/muesli/termenv v0.16.0
-	github.com/onsi/ginkgo/v2 v2.32.0
+	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/samber/lo v1.53.0
-	github.com/siemens/turtlefinder/v2 v2.0.0
+	github.com/siemens/turtlefinder/v2 v2.1.0
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps v0.10.5
 	github.com/thediveo/clippy v0.2.2
@@ -33,7 +33,7 @@ require (
 	github.com/thediveo/go-plugger/v3 v3.2.2
 	github.com/thediveo/ioctl v0.9.5
 	github.com/thediveo/klo v1.1.2
-	github.com/thediveo/morbyd/v2 v2.2.3
+	github.com/thediveo/morbyd/v2 v2.2.4
 	github.com/thediveo/namspill v0.1.9
 	github.com/thediveo/nonstd v0.21.0
 	github.com/thediveo/notwork v1.14.0
@@ -46,7 +46,7 @@ require (
 	github.com/thediveo/whalewatcher/v2 v2.0.1
 	golang.org/x/sys v0.47.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/cri-api v0.36.0-alpha.2
+	k8s.io/cri-api v0.36.3
 )
 
 require (
@@ -143,17 +143,17 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
-	golang.org/x/exp v0.0.0-20260603202125-055de637280b // indirect
+	golang.org/x/exp v0.0.0-20260812173653-3d80eb74bc5b // indirect
 	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/tools v0.48.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
-	k8s.io/client-go v0.36.0-alpha.2 // indirect
+	k8s.io/client-go v0.36.3 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
