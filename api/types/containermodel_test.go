@@ -31,6 +31,7 @@ var (
 		Version: "123",
 		API:     "/foo",
 		PID:     42,
+		Labels:  model.Labels{},
 	}
 	ce2 = model.ContainerEngine{
 		ID:      "ce2",
@@ -38,6 +39,7 @@ var (
 		Version: "456",
 		API:     "/bar",
 		PID:     666,
+		Labels:  model.Labels{},
 	}
 	g1 = model.Group{
 		Name:   "groupies",
@@ -153,7 +155,8 @@ var _ = Describe("container model JSON", func() {
 		"type": "typeA",
 		"version": "123",
 		"api": "/foo",
-		"pid": 42
+		"pid": 42,
+		"labels": {}
 	},
 	"2": {
 		"containers": [
@@ -163,7 +166,8 @@ var _ = Describe("container model JSON", func() {
 		"type": "typeB",
 		"version": "456",
 		"api": "/bar",
-		"pid": 666
+		"pid": 666,
+		"labels": {}
 	}
 }`))
 	})
