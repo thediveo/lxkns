@@ -10,9 +10,9 @@
 # done executing "make deploy" with the current working directory set to this
 # repository's root directory.
 
-ARG ALPINE_VERSION=3.23
-ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.26.2
+ARG ALPINE_VERSION=3.24
+ARG ALPINE_PATCH=1
+ARG GO_VERSION=1.26.5
 ARG NODE_VERSION=22
 ARG XX_VERSION=1.9.0
 

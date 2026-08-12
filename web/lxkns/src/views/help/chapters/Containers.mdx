@@ -30,12 +30,19 @@ corner.
   <ContainerTree discovery={discovery} />
 </Example>
 
-Yes, you're seeing this example correctly: there are multiple Docker engines –
-it's a codespace where the host has its Docker engine. This host Docker runs a
+Yes, you're reading this example correctly: there are multiple Docker engines –
+it's a codespace where the host has its Docker engine. That is, a _real_
+Docker-in-Docker setup (and not one of those myriads of incorrect Mediocre.com
+examples that simply mount the Docker socket).
+
+This host Docker runs a
 devcontainer that in turns runs its own Docker-in-Docker. The **lxkns** service
 has been deployed to this "inner" Docker instance, and there's also another
 container for demonstration purposes (that has been pinned to the second logical
 CPU, but no other).
+
+And then, there's another Docker engine inside a Docker container, but it is
+grayed out because it currently doesn't have any alive containers to pet.
 
 ## Container (Engine) Types
 

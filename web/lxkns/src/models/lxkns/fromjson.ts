@@ -167,8 +167,14 @@ export const fromjson = (discoverydata: unknown): Discovery => {
     if (discovery.containers) {
         discovery.engines = (discovery as any)['container-engines'] as EngineMap
         (discovery as any)['container-engines'] = undefined
-        Object.entries(discovery.engines).forEach(([, engine]) => {
+        Object.entries(discovery.engines).forEach(([, engine], idx) => {
             engine.containers = []
+            // ensure that old discoveries still work that don't contain any
+            // labels.
+            engine.labels = engine.labels || {}
+            // ensure that old discoveries will still work by supplying our own
+            // engine IDs if missing in the discovery.
+            engine.labels['turtlefinder/engine/id'] = engine.labels['turtlefinder/engine/id'] || (idx+1).toString()
         })
         discovery.groups = (discovery as any)['container-groups'] as GroupMap;
         (discovery as any)['container-groups'] = undefined
