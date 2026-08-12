@@ -81,6 +81,67 @@ const StackEngines = (engines: Engine[]) => {
     return fakeroot.children
 }
 
+const EngineWithWorkload = ({ engine }: { engine: StackedEngine }) => {
+    const keyid = engineID(engine)
+    const containersByCPUList = cpusContainerMap(engine)
+    const cpulistItems = Object.entries(containersByCPUList)
+        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+        .map(([key, pinnedCntrs]) => {
+            const cpulist = pinnedCntrs[0].process.affinity
+            const id = cpulistID(engine, key)
+            return <TreeItem
+                className="cpulist"
+                key={key}
+                itemId={id}
+                label={<CPUList cpus={cpulist} showIcon={true} />}
+            >
+                {pinnedCntrs
+                    .sort((c1, c2) => coll.compare(c1.name, c2.name))
+                    .map((cntr) => {
+                        const proc = cntr.process
+                        const prockeyid = proc.pid.toString()
+                        //const usernamespace = proc.namespaces['user']
+                        return <TreeItem
+                            className="containerprocess"
+                            key={prockeyid}
+                            itemId={prockeyid}
+                            label={<ProcessInfo process={proc} />}
+                        >
+                            {Object.entries(proc.namespaces)
+                                .filter((entry): entry is [string, Namespace] => {
+                                    const [, procns] = entry
+                                    return !!procns
+                                })
+                                .sort(([, procns1], [, procns2]) => procns1.type.localeCompare(procns2.type))
+                                .map(([nstype, procns]) => <TreeItem
+                                    className="tenant"
+                                    key={procns.nsid}
+                                    itemId={`${proc.pid}-${procns.nsid}`}
+                                    label={
+                                        <NamespaceInfo
+                                            shared={procns === proc.parent?.namespaces[nstype]}
+                                            noprocess={true}
+                                            namespace={procns}
+                                        />
+                                    }
+                                />)
+                            }
+                        </TreeItem>
+                    })}
+            </TreeItem>
+        })
+    const engineListItems = engine.children
+        .sort(compareEngines)
+        .map((engine, idx) => <EngineWithWorkload key={idx} engine={engine} />)
+    return <TreeItem
+        className="engine"
+        key={keyid}
+        itemId={keyid}
+        label={<EngineInfo engine={engine} />}
+        disabled={cpulistItems.length === 0}
+    >{cpulistItems}{engineListItems}</TreeItem>
+}
+
 /**
  * Component `ContainerTree` renders a tree that shows the found container
  * engines as the first level nodes, and then the containers discovered for that
@@ -170,67 +231,6 @@ export const ContainerTree = ({ apiRef, discovery }: ContainerTreeProps) => {
     // state of the tree.
     const handleToggle = (_event: React.SyntheticEvent | null, nodeIds: Array<TreeViewItemId>) => {
         setExpanded(nodeIds)
-    }
-
-    const EngineWithWorkload = ({ engine }: { engine: StackedEngine }) => {
-        const keyid = engineID(engine)
-        const containersByCPUList = cpusContainerMap(engine)
-        const cpulistItems = Object.entries(containersByCPUList)
-            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-            .map(([key, pinnedCntrs]) => {
-                const cpulist = pinnedCntrs[0].process.affinity
-                const id = cpulistID(engine, key)
-                return <TreeItem
-                    className="cpulist"
-                    key={key}
-                    itemId={id}
-                    label={<CPUList cpus={cpulist} showIcon={true} />}
-                >
-                    {pinnedCntrs
-                        .sort((c1, c2) => coll.compare(c1.name, c2.name))
-                        .map((cntr) => {
-                            const proc = cntr.process
-                            const prockeyid = proc.pid.toString()
-                            //const usernamespace = proc.namespaces['user']
-                            return <TreeItem
-                                className="containerprocess"
-                                key={prockeyid}
-                                itemId={prockeyid}
-                                label={<ProcessInfo process={proc} />}
-                            >
-                                {Object.entries(proc.namespaces)
-                                    .filter((entry): entry is [string, Namespace] => {
-                                        const [, procns] = entry
-                                        return !!procns
-                                    })
-                                    .sort(([, procns1], [, procns2]) => procns1.type.localeCompare(procns2.type))
-                                    .map(([nstype, procns]) => <TreeItem
-                                        className="tenant"
-                                        key={procns.nsid}
-                                        itemId={`${proc.pid}-${procns.nsid}`}
-                                        label={
-                                            <NamespaceInfo
-                                                shared={procns === proc.parent?.namespaces[nstype]}
-                                                noprocess={true}
-                                                namespace={procns}
-                                            />
-                                        }
-                                    />)
-                                }
-                            </TreeItem>
-                        })}
-                </TreeItem>
-            })
-        const engineListItems = engine.children
-            .sort(compareEngines)
-            .map((engine, idx) => <EngineWithWorkload key={idx} engine={engine} />)
-        return <TreeItem
-            className="engine"
-            key={keyid}
-            itemId={keyid}
-            label={<EngineInfo engine={engine} />}
-            disabled={cpulistItems.length === 0}
-        >{cpulistItems}{engineListItems}</TreeItem>
     }
 
     const engineItemsMemo = useMemo(() => (
