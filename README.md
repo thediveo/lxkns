@@ -25,6 +25,12 @@ mountpoints and how they empower containers? Then have a look at `lxkns`:
 
 ### Docker Compose v5.2.0+ (June 2026)
 
+With default deployment settings:
+
+```bash
+docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
+```
+
 If you are using a Docker compose plugin v5.2.0 or later installed, you can
 (_finally_) override deployment defaults by setting one or more of the following
 environment variables when executing `docker compose ... up -y`:
@@ -34,8 +40,8 @@ environment variables when executing `docker compose ... up -y`:
 | `LXKNS_IP` | `127.0.0.1` |
 | `LXKNS_PORT` | `5010` |
 
-For instance, to deploy to `127.0.0.1:5050` (`-y` automatically accepts all
-configured settings):
+For instance, to deploy to a different port on `127.0.0.1:5050` (`-y`
+automatically accepts all configured settings):
 
 ```bash
 LXKNS_PORT=5050 docker compose -f oci://ghcr.io/thediveo/lxkns/app/cfg:latest up -y
