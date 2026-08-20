@@ -113,6 +113,7 @@ var _ = Describe("ContainerEngine", func() {
 		Expect(e.Type).To(Equal(moby.Type))
 		Expect(e.API).NotTo(BeEmpty())
 		Expect(e.ID).NotTo(BeEmpty())
+		Expect(e.Labels).To(HaveKeyWithValue(EngineAPIVersionLabelName, HavePrefix("1.")))
 	})
 
 })
