@@ -30,7 +30,6 @@ import (
 	"github.com/thediveo/morbyd/v2/session"
 	"github.com/thediveo/morbyd/v2/timestamper"
 	cdengine "github.com/thediveo/whalewatcher/v2/engineclient/containerd"
-	"github.com/thediveo/whalewatcher/v2/engineclient/cri/test/img"
 	mobyengine "github.com/thediveo/whalewatcher/v2/engineclient/moby"
 	"github.com/thediveo/whalewatcher/v2/test"
 	"github.com/thediveo/whalewatcher/v2/watcher"
@@ -89,7 +88,7 @@ var _ = Describe("Discovering containers in containers", Serial, func() {
 			build.WithBuildArg("KINDEST_BASE_TAG="+test.KindestBaseImageTag),
 			build.WithOutput(timestamper.New(GinkgoWriter)))).
 			Error().NotTo(HaveOccurred())
-		providerCntr = Successful(sess.Run(ctx, img.Name,
+		providerCntr = Successful(sess.Run(ctx, cntrDiscoImgName,
 			run.WithName(cntrDiscoCntrName),
 			run.WithAutoRemove(),
 			run.WithPrivileged(),
