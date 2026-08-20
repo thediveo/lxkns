@@ -28,6 +28,13 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
+// EngineAPIVersionLabelName defines the label name for optional engine API
+// version information. Note, this is about API versions, not container engine
+// versions. Also, containerd currently does not provide any API version
+// information, while Docker and CRI-supporting engines (including containerd)
+// do.
+const EngineAPIVersionLabelName = "lxkns/engine/api-version"
+
 // WhaleFriend is a containerizer internally backed by one or more
 // Whalewatchers, that is, [watcher.Watcher] container observers.
 type WhaleFriend struct {
@@ -90,6 +97,11 @@ func (c *WhaleFriend) engineContainers(ctx context.Context, engine watcher.Watch
 		API:     engine.API(),
 		PID:     model.PIDType(engine.PID()),
 		Labels:  model.Labels{},
+	}
+	if v, _ := engine.(watcher.APIVersioner); v != nil {
+		if apiVersion := v.APIVersion(ctx); apiVersion != "" {
+			eng.Labels[EngineAPIVersionLabelName] = apiVersion
+		}
 	}
 	for container := range engine.Portfolio().AllContainers() {
 		cntr := &model.Container{
