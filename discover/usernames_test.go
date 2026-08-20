@@ -15,21 +15,22 @@
 package discover
 
 import (
+	"bytes"
 	"log/slog"
 	"os"
 	"os/user"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/thediveo/testbasher"
-
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/ops/mountineer"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("maps UIDs", func() {
@@ -86,33 +87,24 @@ var _ = Describe("maps UIDs", func() {
 		// In order to check the data we want to discover, we need an
 		// independent second view. Now, that's a job for safety, not for
 		// reliability.
-		scripts := testbasher.Basher{}
-		scripts.Common(nstest.NamespaceUtilsScript)
-		// Remember: we're here now in a container with root privileges. And
-		// this needs awk in the host. And then there are probably differences
-		// between nsenter made by Alpine(hmpf) and nsenter on the host system
-		// in terms of their CLI flags, so we need to detect the CLI flag
-		// variant to use...
-		scripts.Script("main", `
-ENTERMNT=$(nsenter -h 2>&1 | grep -q -e "--mnt" && echo "--mnt" || echo "-m")
-nsenter -t 1 ${ENTERMNT} -- /usr/bin/awk -F: 'BEGIN{printf "{"}{printf "\"%s\":%s,",$1,$3}END{printf "\"guardian-fooobar\":666}\n"}' /etc/passwd
-read
-`)
-		scriptscmd := scripts.Start("main")
-		var useruidmap map[string]uint32
-		scriptscmd.Decode(&useruidmap)
-		Expect(useruidmap).To(HaveKeyWithValue("guardian-fooobar", uint32(666)))
+		mnteer := Successful(mountineer.New([]string{"/proc/1/ns/mnt"}, nil))
+		defer mnteer.Close()
+		useruidmap := map[string]uint32{}
+		for line := range bytes.Lines(Successful(mnteer.ReadFile("/etc/passwd"))) {
+			fields := strings.Split(string(line), ":")
+			if len(fields) < 3 {
+				continue
+			}
+			useruidmap[fields[0]] = uint32(Successful(strconv.Atoi(fields[2])))
+		}
+
 		hostuidusermap := UidUsernameMap{}
 		for user, uid := range useruidmap {
-			if uid != 666 {
-				hostuidusermap[uint32(uid)] = user
-			}
+			hostuidusermap[uid] = user
 		}
-		scriptscmd.Close()
-		scripts.Done()
 
 		usernames := DiscoverUserNames(allns.Namespaces)
-		Expect(usernames).To(HaveLen(len(useruidmap) - 1))
+		Expect(usernames).To(HaveLen(len(useruidmap)))
 		for uid, username := range hostuidusermap {
 			Expect(usernames[uid]).To(Equal(username), "missing uid %d: %q", uid, username)
 		}
