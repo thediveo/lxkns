@@ -1,5 +1,5 @@
 {
-    "name": "lxkns workspace with turtlefinder (fully privileged, Docker-in-Docker)",
+    "name": "lxkns/turtlefinder/whalewatcher workspace(fully privileged, Docker-in-Docker)",
     "portsAttributes": {
         "6060": {
             "label": "lxkns Go package documentation",
@@ -48,7 +48,8 @@
 
         // additionally bind-mount the sibling github.com/siemens/turtlefinder
         // repo into our devcontainer workspace.
-        "type=bind,source=${localWorkspaceFolder}/../turtlefinder,target=/workspaces/turtlefinder"
+        "type=bind,source=${localWorkspaceFolder}/../turtlefinder,target=/workspaces/turtlefinder",
+        "type=bind,source=${localWorkspaceFolder}/../whalewatcher,target=/workspaces/whalewatcher"
     ],
     "remoteEnv": {
         "GOPATH": "/home/vscode/go",
@@ -70,7 +71,7 @@
         "cargo-culture": "echo 1 | sudo tee -a /proc/sys/kernel/unprivileged_userns_clone",
         // create a Go workspace in the parent directory to our sibling repo
         // directories. 
-        "go-workspace": "sudo chmod vscode:vscode /workspaces && cd /workspaces && go work init ./lxkns ./turtlefinder"
+        "go-workspace": "sudo chown vscode:vscode /workspaces && cd /workspaces && go work init ./lxkns ./turtlefinder ./whalewatcher"
     },
     "customizations": {
         "vscode": {

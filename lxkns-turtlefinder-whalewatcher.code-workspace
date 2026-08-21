@@ -1,0 +1,63 @@
+{
+	"folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "../turtlefinder"
+        },
+        {
+            "path": "../whalewatcher"
+        }
+    ],
+	"settings": {
+        "go.buildTags": "matchers,pprof,kind",
+        "go.lintTool": "golangci-lint-v2",
+        "go.lintFlags": [
+            "--build-tags=matchers,pprof,kind"
+        ],
+        "go.alternateTools": {
+            "customFormatter": "golangci-lint-v2"
+        },
+        "go.formatTool": "custom",
+        "go.formatFlags": [
+            "fmt",
+            "--stdin"
+        ],
+        "go.testTimeout": "300s",
+        "go.testFlags": [
+            "-v",
+            "-race",
+            "--",
+            "-ginkgo.v",
+            "-ginkgo.no-color"
+        ],
+        "gopls": {
+            "ui.semanticTokens": true,
+            // https://github.com/golang/vscode-go/blob/master/docs/settings.md#uidiagnosticanalyses
+            "ui.diagnostic.analyses": {},
+            // https://github.com/golang/vscode-go/blob/master/docs/settings.md#uicodelenses
+            "ui.codelenses": {
+                "vulncheck": true,
+            }
+        },
+        "markdown.styles": [
+            "./.vscode/markdown-preview.css"
+        ],
+		"eslint.nodePath": "${workspaceFolder}/web/lxkns/node_modules",
+		"eslint.workingDirectories": [
+			"web/lxkns"
+		],
+		"eslint.enable": true,
+		"eslint.useFlatConfig": true,
+		"eslint.runtime": "/usr/local/bin/node",
+		"terminal.integrated.scrollback": 50000,
+		"docker.lsp.telemetry": "off",
+		"workbench.tree.indent": 16,
+	},
+	"extensions": {
+		"recommendations": [
+			"42crunch.vscode-openapi"
+		]
+	}
+}
