@@ -29,6 +29,8 @@ import (
 	"github.com/thediveo/lxkns/model"
 )
 
+const containerDebug = false
+
 // discoverContainers discovers alive containers using the optionally specified
 // Containerizer (as part of Result.Options) and then resolves the relationships
 // between containers and processes (and thus also namespaces). Also translates
@@ -104,10 +106,20 @@ func discoverContainers(result *Result) {
 		for _, container := range engine.Containers {
 			// Translate container PID from its managing container engine PID
 			// namespace to initial PID namespace, if necessary.
+			cPID := container.PID
 			if pidmap != nil && enginePIDns != nil && enginePIDns != initialPIDns {
 				if pid := pidmap.Translate(container.PID, enginePIDns, initialPIDns); pid != 0 {
 					container.PID = pid
 				}
+			}
+			if containerDebug {
+				slog.Debug("container PID mapping",
+					slog.GroupAttrs("container",
+						slog.String("name", container.Name),
+						slog.String("type", container.Type),
+						slog.Uint64("pid", uint64(cPID)),
+					),
+					slog.Uint64("translated-pid", uint64(container.PID)))
 			}
 			// Relate this container with its initial process and vice versa.
 			if containerProc, ok := result.Processes[container.PID]; ok {
@@ -118,6 +130,7 @@ func discoverContainers(result *Result) {
 	}
 	slog.Info("discovered containers",
 		slog.Int("count", len(containers)), slog.Int("engine_count", len(engines)))
+
 	// Run registered Decorators on discovered engines (and their containers).
 	for _, decorator := range plugger.Group[decorator.Decorate]().Symbols() {
 		decorator(engines, result.Options.Labels)
