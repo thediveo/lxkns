@@ -20,7 +20,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/samber/lo v1.53.0
-	github.com/siemens/turtlefinder/v2 v2.3.0
+	github.com/siemens/turtlefinder/v2 v2.3.1
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps v0.10.5
 	github.com/thediveo/clippy v0.2.2
