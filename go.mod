@@ -12,7 +12,7 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/containerd/containerd/v2 v2.3.4
 	github.com/gammazero/workerpool v1.2.1
-	github.com/getkin/kin-openapi v0.146.0
+	github.com/getkin/kin-openapi v0.147.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/moby/moby/client v0.5.1
@@ -20,7 +20,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/samber/lo v1.53.0
-	github.com/siemens/turtlefinder/v2 v2.1.0
+	github.com/siemens/turtlefinder/v2 v2.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps v0.10.5
 	github.com/thediveo/clippy v0.2.2
@@ -46,7 +46,7 @@ require (
 	github.com/thediveo/whalewatcher/v2 v2.1.0
 	golang.org/x/sys v0.47.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/cri-api v0.36.3
+	k8s.io/cri-api v0.36.4
 )
 
 require (
@@ -143,7 +143,6 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
-	golang.org/x/exp v0.0.0-20260812173653-3d80eb74bc5b // indirect
 	golang.org/x/mod v0.38.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
