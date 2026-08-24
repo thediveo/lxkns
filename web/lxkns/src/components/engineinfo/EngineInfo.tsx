@@ -21,6 +21,8 @@ import { ContainerTypeIcon } from 'components/containertypeicon'
 import type { EngineInfoProps } from './types'
 import { MuiSvgIconCSS } from 'utils/muisvgiconcss'
 
+const EngineAPIVersionLabelName = 'lxkns/engine/api-version'
+
 const EngineInformation = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
@@ -63,6 +65,7 @@ export const EngineInfo = ({ engine, className }: EngineInfoProps) => {
                 fontSize="inherit"
             />
             {typename} engine ({engine.pid})
+            {engine.labels?.[EngineAPIVersionLabelName] && ` API: ${engine.labels[EngineAPIVersionLabelName]} `}
             ID: <EngineID>{engine.id}</EngineID>
         </EngineInformation>
     )
