@@ -1,5 +1,19 @@
 # Important Changes
 
+## 0.46.0
+
+1. This release makes container engine details a first class discovery citizen,
+   even when a container engine currently has no workload. 
+   - the `discover.Result` type now has a `ContainerEngines` field that returns
+     all container engines discovered.
+   - the `model.ContainerEngine`type gained a new `Labels` field that can carry
+     additional engine-specific details. This is used in
+     [@siemens/turtlefinder](https://github.com/siemens/turtlefinder) to report
+     the hierarchy of container engines.
+2. The JSON discovery data now always lists all discovered container engines
+   instead of only those with running or paused containers. Also the JSON engine
+   information gains a `labels` object (map).
+
 ## 0.26.0
 
 1. This release finishes the task (thread) support introduced in 0.24.0. In

@@ -1,6 +1,7 @@
 # Linux-kernel Namespaces
 
-...and containers and mount point hierarchies and process CPU-affinities and...
+..._and_ containers _and_ mount point hierarchies _and_ process CPU-affinities
+_and_...
 
 [![Manual](https://img.shields.io/badge/view-manual-blue)](https://thediveo.github.io/lxkns)
 [![PkgGoDev](https://img.shields.io/badge/-reference-blue?logo=go&logoColor=white&labelColor=505050)](https://pkg.go.dev/github.com/thediveo/lxkns)
@@ -14,12 +15,12 @@
 
 Curious...?
 
-- Do you want to see how Containers use Linux (kernel) namespaces?
-- Learn how these namespaces are used throughout the Linux host, outside of
+- ...do you want to see how Containers use Linux (kernel) namespaces?
+- ...learn how these namespaces are used throughout the Linux host, outside of
   containers?
-- Finding out how containers separate mount points, yet how some of these mount
-  points nevertheless propagate between host and containers?
-- Seeing which processes and (kernel) tasks are allowed to execute on all or
+- ...finding out how containers separate mount points, yet how some of these
+  mount points nevertheless propagate between host and containers?
+- ...seeing which processes and (kernel) tasks are allowed to execute on all or
   only certain CPUs of your system? 
 
 ## Abstract
@@ -46,9 +47,14 @@ priorities, as well the CPUs they're allowed to run on.
 
 ## Quick Deploy
 
+### Docker Compose v2.34.0+ (March 2025)
+
 Make sure that you have a fairly recent Docker engine installed, including the
-Docker compose v2 plugin. (Debian users are advised to install docker-ce packages
-instead of Debian's outdated docker.io ones).
+Docker compose v2 plugin or later. As usual, _Debian_ users are advised to
+install docker-ce packages instead of Debian's own _constantly outdated_
+docker.io ones. The following single command automatically pulls the compose
+deployment as well as the needed image layers and then deploys the default
+setup:
 
 ```bash
 docker compose -f oci://github.com/thediveo/lxkns/app up -d
@@ -61,6 +67,29 @@ successfully deployed.
 ![mount points teaser](_images/teaser-mountpoints.png ':class=teaser')
 
 (_Please click or tap the teaser images to enlarge them._)
+
+### Docker Compose v5.2.0+ (June 2026)
+
+**Rejoice!** Starting with Docker compose v5.2.0 or later you can now customize
+the IP address the `lxkns` service is bound to as well as its HTTP port. Simply
+pass one or both environment variables to `docker compose ... up -y`:
+
+| Env var | Default |
+| --- | --- |
+| `LXKNS_IP` | `127.0.0.1` |
+| `LXKNS_PORT` | `5010` |
+
+For instance, to deploy to a different port on `127.0.0.1:5050` (`-y`
+automatically accepts all configured settings):
+
+```bash
+LXKNS_PORT=5050 docker compose -f oci://ghcr.io/thediveo/lxkns/app/cfg:latest up -y
+```
+
+> [!NOTE] The customizable OCI artifact is `ghcr.io/thediveo/lxkns/app/cfg`, not
+> `ghcr.io/thediveo/lxkns/app`. A separate OCI artifact is necessary so that
+> older compose version still work with the non-customizable OCI artifact, as
+> they get tripped up by the customizable artifact.
 
 ## Technical
 

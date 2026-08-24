@@ -35,7 +35,7 @@ If you are using a Docker compose plugin v5.2.0 or later installed, you can
 (_finally_) override deployment defaults by setting one or more of the following
 environment variables when executing `docker compose ... up -y`:
 
-| env var | Default |
+| Env var | Default |
 | --- | --- |
 | `LXKNS_IP` | `127.0.0.1` |
 | `LXKNS_PORT` | `5010` |
