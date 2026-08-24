@@ -19,12 +19,22 @@ container *types*.
   - `Flavor`: `"docker.com"`
 - ["managed" plugin containers](https://docs.docker.com/engine/extend/) --
   flavored by the `dockerplugin` decorator.
-  - `Type`: `"containerd.io"` ⚠
+  - `Type`: `"containerd.io"` – **NOTE** that Docker handles plugin containers
+    as plain containerd containers. 
   - `Flavor`: `"plugin.docker.com"`
 - [Siemens Industrial Edge](http://siemens.com/industrial-edge) App containers
   -- flavored by the `industrialedge` decorator.
   - `Type`: `"docker.com"`
   - `Flavor`: `"com.siemens.industrialedge.app"`
+
+#### Groups
+
+A group represents a single compose projects consisting of multiple "ordinary"
+Docker containers.
+
+- `Name`: name of Compose project.
+- `Type`: `"com.docker.compose.project"`
+- `Flavor`: `"com.docker.compose.project"`
 
 ## Containerd
 
@@ -46,3 +56,22 @@ container *types*.
 > `containerd`-specific discovery. However, the `"plugins.moby"` is handled as a
 > containerd Container instead of a Docker container, and later post-processed
 > by the `dockerplugin` decorator.
+
+## CRI API
+
+#### Engine
+
+- `Type`: `"k8s.io/cri-api"`
+
+#### Containers
+
+- `Name`: of the container (without the namespace).
+- `Type`: `"k8s.io/cri-api"`
+
+#### Groups
+
+Groups describe k8s pods:
+
+- `Name`: of the k8s namespace.
+- `Type`: `"io.kubernetes.pod"`
+- `Flavor`: `"io.kubernetes.pod"`
