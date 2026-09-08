@@ -97,6 +97,12 @@ var _ = Describe("portable reference", func() {
 	})
 
 	It("Open()s with only the namespace ID given", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		portref := PortableReference{ID: mynetnsid}
 		ref, closer, err := portref.Open()
