@@ -15,6 +15,7 @@
 package portable
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/thediveo/lxkns/ops"
@@ -38,6 +39,9 @@ var _ = Describe("locating namespaces", func() {
 	})
 
 	It("locates a namespace by ID only", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, 0)
 		Expect(netns).NotTo(BeNil())
@@ -45,6 +49,9 @@ var _ = Describe("locating namespaces", func() {
 	})
 
 	It("locates a namespace by ID and type", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, species.CLONE_NEWNET)
 		Expect(netns).NotTo(BeNil())
@@ -52,12 +59,18 @@ var _ = Describe("locating namespaces", func() {
 	})
 
 	It("fails to locate a namespace with wrong type", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		mynetnsid := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		netns := LocateNamespace(mynetnsid, species.CLONE_NEWUSER)
 		Expect(netns).To(BeNil())
 	})
 
 	It("fails to locate a namespace with wrong ID", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		netns := LocateNamespace(species.NamespaceIDfromInode(666), 0)
 		Expect(netns).To(BeNil())
 		netns = LocateNamespace(species.NoneID, 0)
