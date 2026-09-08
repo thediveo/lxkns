@@ -7,7 +7,7 @@
 [![GitHub](https://img.shields.io/github/license/thediveo/lxkns)](https://img.shields.io/github/license/thediveo/lxkns)
 <br>
 ![build and test](https://github.com/thediveo/lxkns/actions/workflows/buildandtest.yaml/badge.svg?branch=master)
-![Coverage](https://img.shields.io/badge/Coverage-87.8%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-88.2%25-brightgreen)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
 
@@ -25,23 +25,26 @@ mountpoints and how they empower containers? Then have a look at `lxkns`:
 
 ### Docker Compose v5.2.0+ (June 2026)
 
-With default deployment settings:
+#### Default Deployment
 
 ```bash
 docker compose -f oci://ghcr.io/thediveo/lxkns/app:latest up
 ```
 
-If you are using a Docker compose plugin v5.2.0 or later installed, you can
-(_finally_) override deployment defaults by setting one or more of the following
-environment variables when executing `docker compose ... up -y`:
+#### Customized Deployment
+
+Customize your deployment by setting one or more of the following environment
+variables when executing `docker compose ... up -y`:
+
+> [!NOTE]
+> `-y` automatically accepts all configured settings without asking back.
 
 | Env var | Default |
 | --- | --- |
 | `LXKNS_IP` | `127.0.0.1` |
 | `LXKNS_PORT` | `5010` |
 
-For instance, to deploy to a different port on `127.0.0.1:5050` (`-y`
-automatically accepts all configured settings):
+For instance, to deploy to a different port on `127.0.0.1:5050`:
 
 ```bash
 LXKNS_PORT=5050 docker compose -f oci://ghcr.io/thediveo/lxkns/app/cfg:latest up -y
