@@ -261,8 +261,8 @@ github.com/secure-systems-lab/go-securesystemslib v0.11.0 h1:iuCR9kcMFD4QurdKrGv
 github.com/secure-systems-lab/go-securesystemslib v0.11.0/go.mod h1:+PMOTjUGwHj2vcZ+TFKlb1tXRbrdWE1LYDT5i9JC80Q=
 github.com/shibumi/go-pathspec v1.3.0 h1:QUyMZhFo0Md5B8zV8x2tesohbb5kfbpTi9rBnKh5dkI=
 github.com/shibumi/go-pathspec v1.3.0/go.mod h1:Xutfslp817l2I1cZvgcfeMQJG5QnU2lh5tVaaMCl3jE=
-github.com/siemens/turtlefinder/v2 v2.3.1 h1:cRiK+X6wMZGZLBAEWD9r4JzbWNtkyIqrzgomHgeQtrE=
-github.com/siemens/turtlefinder/v2 v2.3.1/go.mod h1:Vew3WV9chiWky2TKLJY/q3LSCRD3/DdazwiNI/Op3co=
+github.com/siemens/turtlefinder/v2 v2.3.2-0.20260908194010-6af114c882bc h1:jJ1taUE8phHumhndGVCWifrOTPeywQKE5JCxrJyY/1U=
+github.com/siemens/turtlefinder/v2 v2.3.2-0.20260908194010-6af114c882bc/go.mod h1:Vew3WV9chiWky2TKLJY/q3LSCRD3/DdazwiNI/Op3co=
 github.com/sigstore/sigstore v1.10.8 h1:1Mgkxvkw4AXMfIP1DOjc6kw0GkUgA8pGVpveN/EfOq4=
 github.com/sigstore/sigstore v1.10.8/go.mod h1:f9+B/4iaYimvUkySyb2mvc73n3RLqNn24grHZM/ET8M=
 github.com/sigstore/sigstore-go v1.2.1 h1:YWP/rDbBaEBvtbkj6xtwsSj38ZCFEhTVVadNOXjVe3A=

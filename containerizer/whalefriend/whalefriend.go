@@ -45,6 +45,14 @@ type WhaleFriend struct {
 
 var _ containerizer.Overseer = (*WhaleFriend)(nil)
 
+// enginesOverseer mirrors turtlefinder.Overseer but breaks the import cycle. In
+// Go, the interface name doesn't matter, methods matter to satisfy interfaces.
+type enginesOverseer interface {
+	Engines(context.Context) []*model.ContainerEngine
+}
+
+var _ enginesOverseer = (*WhaleFriend)(nil)
+
 // Option represents a function able to set a particular WhaleFriend option
 // state.
 type Option func(c *WhaleFriend)
@@ -85,24 +93,13 @@ func WithWorkers(num uint) Option {
 	}
 }
 
-// watcherContainers returns new [model.Container] objects for the alive
-// container managed by the specified engine/watcher, together with the
-// corresponding new [model.ContainerEngine] description. The containers
-// returned are already linked to this container engine description.
-func (c *WhaleFriend) engineContainers(ctx context.Context, engine watcher.Watcher) *model.ContainerEngine {
-	eng := &model.ContainerEngine{
-		ID:      engine.ID(ctx),
-		Type:    engine.Type(),
-		Version: engine.Version(ctx),
-		API:     engine.API(),
-		PID:     model.PIDType(engine.PID()),
-		Labels:  model.Labels{},
-	}
-	if v, _ := engine.(watcher.APIVersioner); v != nil {
-		if apiVersion := v.APIVersion(ctx); apiVersion != "" {
-			eng.Labels[EngineAPIVersionLabelName] = apiVersion
-		}
-	}
+// transcribeEnginePlusContainers returns new [model.Container] objects for the
+// alive container managed by the specified engine/watcher, together with the
+// corresponding new [model.ContainerEngine], transcribed from the information
+// provided by the watcher. The containers returned are already linked to this
+// container engine description.
+func (c *WhaleFriend) transcribeEnginePlusContainers(ctx context.Context, engine watcher.Watcher) *model.ContainerEngine {
+	eng := c.transcribeEngine(ctx, engine)
 	for container := range engine.Portfolio().AllContainers() {
 		cntr := &model.Container{
 			ID:     container.ID,
@@ -135,7 +132,7 @@ func (c *WhaleFriend) EnginesInclContainers(ctx context.Context, procs model.Pro
 	for _, watcher := range c.watchers {
 		c.workers.Submit(func() {
 			slog.Debug("querying engine workload", slog.String("id", watcher.ID(ctx)))
-			ch <- c.engineContainers(ctx, watcher)
+			ch <- c.transcribeEnginePlusContainers(ctx, watcher)
 		})
 	}
 	// ...and then we're collecting the results while the workers from the pool
@@ -162,6 +159,35 @@ func (c *WhaleFriend) Containers(
 		containers = append(containers, engine.Containers...)
 	}
 	return containers
+}
+
+// Engines gives access to information about container engines currently
+// monitored.
+func (c *WhaleFriend) Engines(ctx context.Context) []*model.ContainerEngine {
+	engs := make([]*model.ContainerEngine, 0, len(c.watchers))
+	for _, w := range c.watchers {
+		engs = append(engs, c.transcribeEngine(ctx, w))
+	}
+	return engs
+}
+
+// transcribeEngine returns a new *model.ContainerEngine transcribed from the
+// passed watcher.Watcher engine.
+func (c *WhaleFriend) transcribeEngine(ctx context.Context, engine watcher.Watcher) *model.ContainerEngine {
+	eng := &model.ContainerEngine{
+		ID:      engine.ID(ctx),
+		Type:    engine.Type(),
+		Version: engine.Version(ctx),
+		API:     engine.API(),
+		PID:     model.PIDType(engine.PID()),
+		Labels:  model.Labels{},
+	}
+	if v, _ := engine.(watcher.APIVersioner); v != nil {
+		if apiVersion := v.APIVersion(ctx); apiVersion != "" {
+			eng.Labels[EngineAPIVersionLabelName] = apiVersion
+		}
+	}
+	return eng
 }
 
 // Close closes all watcher resources associated with this [WhaleFriend].
