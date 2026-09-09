@@ -20,9 +20,9 @@ import (
 	"slices"
 
 	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/nonstd/xslices"
 
 	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 )

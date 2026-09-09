@@ -52,6 +52,10 @@ var _ = Describe("Discover from processes", Ordered, func() {
 	})
 
 	It("finds at least the namespaces lsns finds", func() {
+		if os.Getuid() != 0 {
+			Skip("Ubuntu has now broken lsns completely. Great Work, Ubuntu")
+		}
+
 		// hear, hear ... lsns finally upped its game :D ... again :D:D:D
 		allns := Namespaces(FromProcs(), FromBindmounts(), WithHierarchy())
 		alllsns := lsns()

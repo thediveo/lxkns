@@ -22,11 +22,11 @@ import (
 	"os/user"
 
 	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/nonstd/xslices"
+	"github.com/thediveo/nonstd/xstrings"
 
 	"github.com/thediveo/lxkns/cmd/cli/style"
 	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/internal/xslices"
-	"github.com/thediveo/lxkns/internal/xstrings"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -60,7 +60,7 @@ func (v *UserNSVisitor) Roots(roots any) []any {
 func (v *UserNSVisitor) Label(node any) (label string) {
 	if ns, ok := node.(model.Namespace); ok {
 		style := style.Styles[ns.Type().Name()]
-		label = xstrings.Join(
+		label = xstrings.JoinSpaced(
 			v.NamespaceIcon(ns)+
 				style.V(ns.(model.NamespaceStringer).TypeIDString()).String(),
 			v.NamespaceReferenceLabel(ns))
@@ -69,7 +69,7 @@ func (v *UserNSVisitor) Label(node any) (label string) {
 	// created this particular user namespace: the user ID and, if available,
 	// the user name.
 	if uns, ok := node.(model.Ownership); ok {
-		label = xstrings.Join(label, fmt.Sprintf("created by UID %d",
+		label = xstrings.JoinSpaced(label, fmt.Sprintf("created by UID %d",
 			style.OwnerStyle.V(uns.UID())))
 		if user, err := user.LookupId(fmt.Sprintf("%d", uns.UID())); err == nil {
 			label += fmt.Sprintf(" (%q)", style.OwnerStyle.V(user.Username))

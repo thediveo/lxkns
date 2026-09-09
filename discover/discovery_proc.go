@@ -36,6 +36,8 @@ import (
 	"os"
 	"strconv"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/thediveo/lxkns/internal/namespaces"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -189,6 +191,13 @@ const (
 	detForChildren
 )
 
+// procDevID is the maj:min device ID of the /proc procfs.
+var procDevID = func() uint64 {
+	var stat unix.Stat_t
+	_ = unix.Stat("/proc", &stat)
+	return stat.Dev // there's no maj:min 0:0
+}()
+
 // determineNamespace reads the details of the specified nsref namespace
 // reference that must be of the specified type. It then updates the
 // additionally specified namespace map. determineNamespace returns the
@@ -218,7 +227,12 @@ func determineNamespace(
 	nsf, _ := ops.NewTypedNamespaceFile(f, nstype)
 	defer func() { _ = nsf.Close() }() // ...we've taken over ownership of the *os.File as well!
 	nsid, err := nsf.ID()
-	if err != nil {
+	// Now, "someone" (kernel? userland?) has started playing tricks with user
+	// namespace IDs where -- when not enough capable -- we're given inodes that
+	// don't belong to the nsfs, but instead to procfs. So we need to cut down
+	// this stupid "sekurity cool-aid" before it clobbers our discovery engine
+	// with incorrect shit data.
+	if err != nil || nsid.Dev == procDevID {
 		return nil, false
 	}
 	ns, existingNs := nsmap[nsid]

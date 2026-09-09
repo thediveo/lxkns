@@ -90,12 +90,16 @@ var _ = Describe("ContainerEngine", func() {
 
 		// wait for the watcher to have completed its initial synchronization
 		// with its container engine...
-		Eventually(dockerw.Ready(), "5s", "100ms").Should(BeClosed())
+		Eventually(dockerw.Ready).Within(5 * time.Second).ProbeEvery(100 * time.Millisecond).
+			Should(BeClosed())
 		// ...then wait for it to have also picked up the paused state of our
 		// test container (better safe than sorry in this case).
 		Eventually(func() bool {
 			return dockerw.Portfolio().Container(sleepyname).Paused
 		}).Should(BeTrue())
+
+		engs := cew.(enginesOverseer).Engines(ctx)
+		Expect(engs).To(HaveLen(1))
 
 		cntrs := cew.Containers(ctx, nil, nil)
 		var c *model.Container

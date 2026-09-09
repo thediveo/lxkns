@@ -52,3 +52,22 @@ func (e *ContainerEngine) AddContainer(c *Container) {
 	e.Containers = append(e.Containers, c)
 	c.Engine = e
 }
+
+// SameAs returns true if the passed engine describes the same engine as this
+// engine, based on these properties:
+//
+//   - ID
+//   - Type
+//   - Version
+//   - API
+//   - PID
+//
+// Especially the workload is ignored in this comparism, but also the
+// user-defined labels.
+func (e *ContainerEngine) SameAs(eng *ContainerEngine) bool {
+	return e.ID == eng.ID &&
+		e.Type == eng.Type &&
+		e.Version == eng.Version &&
+		e.API == eng.API &&
+		e.PID == eng.PID
+}

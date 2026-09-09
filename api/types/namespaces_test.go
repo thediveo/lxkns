@@ -67,7 +67,7 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	// send logging output to the GinkgoWriter, but only do so while we're
 	// inside BeforeSuite; thus plain "defer" instead of DeferCleanup.
 	defer slog.SetDefault(slog.Default())
-	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
 
 	By("creating a new Docker session for testing")
 	sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("lxkns.test=api.types.namespaces")))
@@ -368,8 +368,7 @@ var _ = Describe("namespaces JSON", func() {
 
 	It("survives a NamespacesDict roundtrip", func() {
 		d := NewNamespacesDict(allns)
-		j, err := json.Marshal(d)
-		Expect(err).NotTo(HaveOccurred())
+		j := Successful(json.Marshal(d))
 		Expect(j).NotTo(BeEmpty())
 
 		d2 := NewNamespacesDict(nil)
@@ -378,7 +377,8 @@ var _ = Describe("namespaces JSON", func() {
 		allns2 := (*model.AllNamespaces)(d2.AllNamespaces)
 		for idx := range model.NamespaceTypesCount {
 			nsset := allns.Namespaces[idx]
-			Expect(allns2[idx]).To(HaveLen(len(nsset)))
+			t, _ := model.NamespaceTypeNameByIndex(idx)
+			Expect(allns2[idx]).To(HaveLen(len(nsset)), "namespace type %s", t)
 			for _, ns := range allns2[idx] {
 				Expect(ns).To(BeSameNamespace(nsset[ns.ID()]))
 			}

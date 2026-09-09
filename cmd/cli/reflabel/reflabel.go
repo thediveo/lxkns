@@ -23,10 +23,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/clippy/cliplugin"
 	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/nonstd/xslices"
 
 	"github.com/thediveo/lxkns/cmd/cli/cgrp"
 	"github.com/thediveo/lxkns/cmd/cli/style"
-	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -73,7 +73,7 @@ func namespaceProcessLabel(ns model.Namespace, ealdorman *model.Process, allLead
 		// Sort the leader processes by their PID and then add the other
 		// leaders afterwards, so without doubt we can term these leaders
 		// "trailers" or "followers"...
-		for _, proc := range xslices.SortedCopy(ns.Leaders(), orderProcessByPID) {
+		for _, proc := range xslices.SortedCopyFunc(ns.Leaders(), orderProcessByPID) {
 			if proc != ealdorman {
 				procs = append(procs, proc)
 			}
@@ -115,7 +115,7 @@ func orderProcessByPID(e1, e2 *model.Process) int {
 // attached loose threads (tasks). In this case there is no process information
 // available and thus not rendered.
 func namespaceLooseThreadLabel(looseThreads []*model.Task) string {
-	looseThreads = xslices.SortedCopy(looseThreads, func(t1, t2 *model.Task) int {
+	looseThreads = xslices.SortedCopyFunc(looseThreads, func(t1, t2 *model.Task) int {
 		return int(t1.TID) - int(t2.TID)
 	})
 	s := ""
