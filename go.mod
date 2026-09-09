@@ -20,7 +20,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.32.2
 	github.com/onsi/gomega v1.43.0
 	github.com/samber/lo v1.53.0
-	github.com/siemens/turtlefinder/v2 v2.3.2-0.20260909132054-8c88298f753b
+	github.com/siemens/turtlefinder/v2 v2.4.1
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps v0.10.5
 	github.com/thediveo/clippy v0.2.2
@@ -151,7 +151,7 @@ require (
 	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/grpc v1.83.1 // indirect
+	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	k8s.io/client-go v0.36.3 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
