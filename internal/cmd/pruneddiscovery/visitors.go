@@ -19,8 +19,8 @@ import (
 	"strings"
 
 	"github.com/thediveo/go-asciitree/v2"
+	"github.com/thediveo/nonstd/xslices"
 
-	"github.com/thediveo/lxkns/internal/xslices"
 	"github.com/thediveo/lxkns/model"
 )
 
@@ -55,12 +55,12 @@ func (v *processVisitor) Get(branch any) (label string, properties []string, chi
 		// Only visit tasks of this process if there is more than one task
 		// (which is probably the task group leader representing the process).
 		if len(br.Tasks) > 1 {
-			children = xslices.Any(xslices.SortedCopy(br.Tasks,
+			children = xslices.Any(xslices.SortedCopyFunc(br.Tasks,
 				func(a, b *model.Task) int { return int(a.TID) - int(b.TID) }))
 		}
 		// Always visit the children.
 		children = append(children,
-			xslices.Any(xslices.SortedCopy(br.Children,
+			xslices.Any(xslices.SortedCopyFunc(br.Children,
 				func(a, b *model.Process) int {
 					if d := strings.Compare(a.Name, b.Name); d != 0 {
 						return d
