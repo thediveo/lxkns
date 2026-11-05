@@ -152,6 +152,10 @@ func WithoutTaskAffinityAndScheduling() DiscoveryOption {
 }
 
 // FromFds opts to find namespaces from the open file descriptors of processes.
+//
+// This includes network namespaces only kept alive by sockets; these get
+// referenced by the socket's “/proc/$PID/fd/$FD” path, see
+// [github.com/thediveo/lxkns/ops.NamespacePath] for the implications.
 func FromFds() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.ScanFds = true }
 }

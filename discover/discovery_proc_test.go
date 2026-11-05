@@ -57,7 +57,9 @@ var _ = Describe("Discover from processes", Ordered, func() {
 		}
 
 		// hear, hear ... lsns finally upped its game :D ... again :D:D:D
-		allns := Namespaces(FromProcs(), FromBindmounts(), WithHierarchy())
+		// lsns also lists network namespaces only kept alive by sockets, such
+		// as those of WSL2's initd.
+		allns := Namespaces(FromProcs(), FromFds(), FromBindmounts(), WithHierarchy())
 		alllsns := lsns()
 		ignoreme := regexp.MustCompile(`^(unshare|/bin/bash|runc) (.+ )?/tmp/`)
 		for _, lsns := range alllsns {

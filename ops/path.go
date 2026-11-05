@@ -16,7 +16,6 @@ package ops
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/thediveo/ioctl"
 	"golang.org/x/sys/unix"
@@ -44,9 +43,8 @@ func (nsp NamespacePath) String() string {
 // 🛈 A Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 	// Since we only need to temporarily open the namespace "file", we keep with
-	// unix.Open() and and plain file descriptors instead of os.Open() and
-	// os.File.
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	// plain file descriptors instead of os.Open() and os.File.
+	fd, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return 0, newInvalidNamespaceError(nsp, err)
 	}
@@ -61,8 +59,8 @@ func (nsp NamespacePath) Type() (species.NamespaceType, error) {
 // ID returns the namespace ID in form of its inode number for any given
 // Linux kernel namespace reference.
 func (nsp NamespacePath) ID() (species.NamespaceID, error) {
-	// See above for reasoning why unix.Open() instead of os.Open().
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	// See above for reasoning why plain fds instead of os.Open().
+	fd, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return species.NoneID, err
 	}
@@ -77,8 +75,8 @@ func (nsp NamespacePath) ID() (species.NamespaceID, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) User() (relations.Relation, error) {
-	// See above for reasoning why unix.Open() instead of os.Open().
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	// See above for reasoning why plain fds instead of os.Open().
+	fd, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +99,7 @@ func (nsp NamespacePath) User() (relations.Relation, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsp NamespacePath) Parent() (relations.Relation, error) {
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	fd, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +116,7 @@ func (nsp NamespacePath) Parent() (relations.Relation, error) {
 //
 // 🛈 A Linux kernel version 4.11 or later is required.
 func (nsp NamespacePath) OwnerUID() (int, error) {
-	fd, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	fd, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return 0, err
 	}
@@ -133,7 +131,7 @@ func (nsp NamespacePath) OwnerUID() (int, error) {
 // namespaces under the condition that additionally the type of namespace needs
 // to be known at the same time.
 func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
-	f, err := os.Open(string(nsp))
+	f, err := openNamespaceFile(string(nsp))
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}
@@ -159,7 +157,7 @@ func (nsp NamespacePath) OpenTypedReference() (relations.Relation, opener.Refere
 // [NamespacePath.NsFd] is still in use.
 func (nsp NamespacePath) NsFd() (int, opener.FdCloser, error) {
 	var fdi int
-	fdi, err := unix.Open(string(nsp), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	fdi, err := openNamespacePath(string(nsp))
 	if err != nil {
 		return fdi, nil, newInvalidNamespaceError(nsp, err)
 	}

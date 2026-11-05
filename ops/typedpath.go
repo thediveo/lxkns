@@ -16,7 +16,6 @@ package ops
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/thediveo/ioctl"
 	"golang.org/x/sys/unix"
@@ -72,7 +71,7 @@ func (nsp TypedNamespacePath) Type() (species.NamespaceType, error) {
 //
 // 🛈 A Linux kernel version 4.9 or later is required.
 func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
-	fd, err := unix.Open(string(nsp.NamespacePath), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	fd, err := openNamespacePath(string(nsp.NamespacePath))
 	if err != nil {
 		return nil, newInvalidNamespaceError(nsp, err)
 	}
@@ -91,7 +90,7 @@ func (nsp TypedNamespacePath) Parent() (relations.Relation, error) {
 // internally used to allow optimizing switching namespaces under the condition
 // that additionally the type of namespace needs to be known at the same time.
 func (nsp TypedNamespacePath) OpenTypedReference() (relations.Relation, opener.ReferenceCloser, error) {
-	f, err := os.Open(string(nsp.NamespacePath))
+	f, err := openNamespaceFile(string(nsp.NamespacePath))
 	if err != nil {
 		return nil, nil, newInvalidNamespaceError(nsp, err)
 	}

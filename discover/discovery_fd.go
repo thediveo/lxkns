@@ -154,6 +154,7 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 				if nstype == species.NaNS {
 					continue
 				}
+				nsr = ops.NamespacePath(procFdPath)
 			} else if !scanFds {
 				// while scanning for sockets was requested, scanning fds
 				// wasn't, so we then don't dig deeper into fds that might

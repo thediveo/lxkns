@@ -28,6 +28,7 @@ import (
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -131,6 +132,13 @@ read # wait for test to proceed()
 		allns := Namespaces(FromFds())
 		Expect(allns.Namespaces[model.NetNS]).To(
 			HaveKey(species.NamespaceIDfromInode(netnsino)))
+
+		By("using the socket-based reference and owner of the transient network namespace")
+		allns = Namespaces(FromProcs(), FromFds(), WithOwnership())
+		sockns := allns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netnsino)]
+		Expect(sockns).NotTo(BeNil())
+		Expect(ops.NamespacePath(sockns.Ref()[0]).ID()).To(Equal(sockns.ID()))
+		Expect(sockns.Owner()).NotTo(BeNil())
 	})
 
 	It("discovers the socket-to-process mapping", func() {
