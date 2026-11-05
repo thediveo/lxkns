@@ -80,10 +80,11 @@ func (portref PortableReference) openPath(path string) (rel relations.Relation, 
 	// Before we run further checks, we have to open the namespace first, so
 	// that it cannot get destroyed anymore as long as we keep the fd open that
 	// is referencing it.
-	nsf, err := os.Open(path) // #nosec G304
+	fd, _, err := ops.NamespacePath(path).NsFd()
 	if err != nil {
 		return nil, nil, err
 	}
+	nsf := os.NewFile(uintptr(fd), path) // takes over ownership of fd from NsFd.
 	// Ensure to properly close the open namespace reference in case we fail
 	// down below somewhere while deep in the cross-checks.
 	defer func() {

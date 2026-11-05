@@ -36,6 +36,15 @@ uintptr respectively.
 	netns := NamespacePath("/proc/self/ns/net")
 	path := string(netns)
 
+A [NamespacePath] can also be a procfs fd link to a socket, such as
+“/proc/$PID/fd/$FD”, in which case it references the network namespace of that
+socket. Using such a reference requires ptrace attach access to the process
+(CAP_SYS_PTRACE for other processes) as well as CAP_NET_ADMIN in the user
+namespace owning the network namespace. The PID is taken to be in the caller's
+PID namespace. Such a reference is only valid as long as the process keeps
+this fd open; if the fd number gets reused, the reference might silently point
+to a different network namespace.
+
 In case you want to use the [Visit] function for switching namespaces and you
 need to support Linux kernels before 4.11 (which lack a required ioctl) then you
 can resort to [TypedNamespacePath] instead of [NamespacePath].
