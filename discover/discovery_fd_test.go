@@ -28,6 +28,7 @@ import (
 
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/nstest"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -131,6 +132,13 @@ read # wait for test to proceed()
 		allns := Namespaces(FromFds())
 		Expect(allns.Namespaces[model.NetNS]).To(
 			HaveKey(species.NamespaceIDfromInode(netnsino)))
+
+		By("using the socket-based reference and owner of the transient network namespace")
+		allns = Namespaces(FromProcs(), FromFds(), WithOwnership())
+		sockns := allns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netnsino)]
+		Expect(sockns).NotTo(BeNil())
+		Expect(ops.NamespacePath(sockns.Ref()[0]).ID()).To(Equal(sockns.ID()))
+		Expect(sockns.Owner()).NotTo(BeNil())
 	})
 
 	It("discovers the socket-to-process mapping", func() {
@@ -151,6 +159,52 @@ read # wait for test to proceed()
 		allns = Namespaces(WithSocketProcesses())
 		Expect(allns.SocketProcessMap).To(HaveKeyWithValue(
 			sockstat.Ino, ConsistOf(model.PIDType(os.Getpid()))))
+	})
+
+	It("calls back for open fds of processes", func() {
+		f := Successful(os.CreateTemp("", "lxkns-test-"))
+		DeferCleanup(os.Remove, f.Name())
+		DeferCleanup(f.Close)
+		var fstat unix.Stat_t
+		Expect(unix.Fstat(int(f.Fd()), &fstat)).To(Succeed())
+
+		ourpid := model.PIDType(os.Getpid())
+		var targets, others []string
+		var dupstat unix.Stat_t
+		_ = Namespaces(
+			WithFdCallback(func(e FdEntry) {
+				if e.Process.PID != ourpid || e.Fd != int(f.Fd()) {
+					return
+				}
+				targets = append(targets, e.Target)
+				dupfd := Successful(unix.PidfdGetfd(Successful(e.PidFd()), e.Fd, 0))
+				defer func() { _ = unix.Close(dupfd) }()
+				Expect(unix.Fstat(dupfd, &dupstat)).To(Succeed())
+			}),
+			WithFdCallback(nil),
+			WithFdCallback(func(e FdEntry) {
+				if e.Process.PID == ourpid && e.Fd == int(f.Fd()) {
+					others = append(others, e.Target)
+				}
+			}))
+		Expect(targets).To(ConsistOf(f.Name()))
+		Expect(others).To(Equal(targets))
+		Expect(dupstat.Ino).To(Equal(fstat.Ino))
+	})
+
+	It("doesn't change the result when only calling back for fds", func() {
+		called := false
+		allns := Namespaces(WithFdCallback(func(FdEntry) { called = true }))
+		Expect(called).To(BeTrue())
+		Expect(allns.SocketProcessMap).To(BeNil())
+		Expect(allns.Options.fdCallbacks).To(BeNil())
+		for _, nsmap := range allns.Namespaces {
+			Expect(nsmap).To(BeEmpty())
+		}
+
+		pidfd, err := FdEntry{}.PidFd()
+		Expect(err).To(MatchError(unix.EBADF))
+		Expect(pidfd).To(Equal(-1))
 	})
 
 })

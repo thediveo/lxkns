@@ -52,17 +52,71 @@ import (
 // sufficies to only iterate the process fd entries, leaving out the copies in
 // the task fd entries.
 func discoverFromFd(t species.NamespaceType, procfs string, result *Result) {
-	if !result.Options.ScanFds && !result.Options.DiscoverSocketProcesses {
+	if !result.Options.ScanFds && !result.Options.DiscoverSocketProcesses &&
+		len(result.Options.fdCallbacks) == 0 {
 		slog.Info("skipping discovery of fd-referenced namespaces and socket processes")
 		return
 	}
 	switch {
 	case result.Options.ScanFds:
 		slog.Debug("discovering fd-referenced namespaces and socket processes")
-	default:
+	case result.Options.DiscoverSocketProcesses:
 		slog.Debug("discovering socket processes")
+	default:
+		slog.Debug("scanning fds for callbacks")
 	}
 	scanFd(t, procfs, false, result)
+	// don't keep callbacks (and whatever they reference) alive with the result.
+	result.Options.fdCallbacks = nil
+}
+
+// FdEntry describes an open file descriptor of a process, as passed to an
+// [FdCallback] during discovery. An FdEntry is only valid for the duration of
+// the callback.
+type FdEntry struct {
+	Process *model.Process // process owning the file descriptor.
+	Fd      int            // file descriptor number in the owning process.
+	Target  string         // link target, such as "socket:[123]" or "/dev/net/tun".
+	scan    *fdScanProcess
+}
+
+// PidFd returns a PID file descriptor for the owning process, suitable for
+// [unix.PidfdGetfd]. The PID fd is shared with the discovery and opened only on
+// demand; the caller must neither close nor retain it beyond the callback.
+func (e FdEntry) PidFd() (int, error) {
+	if e.scan == nil {
+		return -1, unix.EBADF
+	}
+	return e.scan.pidFd()
+}
+
+// FdCallback gets called during discovery for each open file descriptor of
+// each discovered process, see [WithFdCallback].
+type FdCallback func(FdEntry)
+
+// fdScanProcess is the per-process state of an fd scan, sharing an on-demand
+// PID fd between the FdEntries of a process and the socket inspection.
+type fdScanProcess struct {
+	pid   model.PIDType
+	pidfd int // -1 if not opened (yet).
+}
+
+func (p *fdScanProcess) pidFd() (int, error) {
+	if p.pidfd < 0 {
+		fd, err := unix.PidfdOpen(int(p.pid), 0)
+		if err != nil {
+			return -1, err
+		}
+		p.pidfd = fd
+	}
+	return p.pidfd, nil
+}
+
+func (p *fdScanProcess) close() {
+	if p.pidfd >= 0 {
+		_ = unix.Close(p.pidfd)
+		p.pidfd = -1
+	}
 }
 
 const socketPrefix = "socket:["
@@ -73,20 +127,26 @@ const socketPrefixLen = len(socketPrefix)
 func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Result) {
 	debugEnabled := slog.Default().Enabled(context.Background(), slog.LevelDebug)
 
-	result.SocketProcessMap = SocketProcesses{}
-	/* shorthand */ scanFds := result.Options.ScanFds
+	/* shorthand */
+	scanFds := result.Options.ScanFds
+	/* shorthand */ fdCallbacks := result.Options.fdCallbacks
+	wantSockets := scanFds || result.Options.DiscoverSocketProcesses
+	if wantSockets {
+		result.SocketProcessMap = SocketProcesses{}
+	}
 	// Iterate over all known processes, and then over all of their open file
 	// descriptors. The /proc filesystem will give us the required
 	// information.
 	total := 0
-	pidfd := 0 // grudingly accepting zero albeit being a valid fd, sigh.
+	var scanproc *fdScanProcess
 	defer func() {
 		// ensure to not leak a process fd in any case.
-		if pidfd > 0 {
-			_ = unix.Close(pidfd)
+		if scanproc != nil {
+			scanproc.close()
 		}
 	}()
-	for pid := range result.Processes {
+	for pid, proc := range result.Processes {
+		scanproc = &fdScanProcess{pid: pid, pidfd: -1}
 		// concatenating strings in combination with strconv.Itoa is roughly
 		// 2.3× faster than to fmt.Sprintf, so its worth any minor inconvenience
 		// anyway. (Intel Core i5 with amd64 architecture)
@@ -120,6 +180,17 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 			if err != nil {
 				continue
 			}
+			if len(fdCallbacks) > 0 {
+				if fdno, err := strconv.Atoi(fdEntry.Name()); err == nil {
+					entry := FdEntry{Process: proc, Fd: fdno, Target: fdDestination, scan: scanproc}
+					for _, fdCallback := range fdCallbacks {
+						fdCallback(entry)
+					}
+				}
+			}
+			if !wantSockets {
+				continue
+			}
 			var nsid species.NamespaceID
 			var nstype species.NamespaceType
 			var nsr relations.Relation
@@ -141,19 +212,18 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 					continue
 				}
 				// So the calling explorer really wants to discover network
-				// namespaces from sockets. If we haven't done yet for this
-				// process, get a PID fd so we can later duplicate the
-				// processes's fd into our process for further inspection.
-				if pidfd <= 0 {
-					pidfd, err = unix.PidfdOpen(int(pid), 0)
-					if err != nil {
-						continue
-					}
+				// namespaces from sockets. Get the (shared) PID fd so we can
+				// duplicate the processes's fd into our process for further
+				// inspection.
+				procPidfd, err := scanproc.pidFd()
+				if err != nil {
+					continue
 				}
-				nsid, nstype = namespaceOfSocket(pidfd, fdEntry.Name())
+				nsid, nstype = namespaceOfSocket(procPidfd, fdEntry.Name())
 				if nstype == species.NaNS {
 					continue
 				}
+				nsr = ops.NamespacePath(procFdPath)
 			} else if !scanFds {
 				// while scanning for sockets was requested, scanning fds
 				// wasn't, so we then don't dig deeper into fds that might
@@ -190,16 +260,15 @@ func scanFd(_ species.NamespaceType, procfs string, fakeprocfs bool, result *Res
 		}
 		// Release the process fd as we don't need it anymore because we're
 		// progressing to the next process in our list.
-		if pidfd > 0 {
-			_ = unix.Close(pidfd)
-			pidfd = 0
-		}
+		scanproc.close()
 	}
 	if scanFds {
 		slog.Info("found namespaces",
 			slog.String("src", "fd"), slog.Int("count", total))
 	}
-	slog.Info("found sockets", slog.Int("count", len(result.SocketProcessMap)))
+	if wantSockets {
+		slog.Info("found sockets", slog.Int("count", len(result.SocketProcessMap)))
+	}
 }
 
 // namespaceOfSocket returns the network namespace a particular socket fd (of

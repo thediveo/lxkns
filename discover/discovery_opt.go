@@ -48,6 +48,7 @@ type DiscoverOpts struct {
 	Labels                         map[string]string `json:"labels"`                        // Pass options (in form of labels) to decorators
 
 	Containerizer containerizer.Containerizer `json:"-"` // Discover containers using containerizer.
+	fdCallbacks   []FdCallback                // called for each open fd of each process.
 
 	withPIDmap bool `json:"-"` // create a PID translator.
 }
@@ -152,6 +153,10 @@ func WithoutTaskAffinityAndScheduling() DiscoveryOption {
 }
 
 // FromFds opts to find namespaces from the open file descriptors of processes.
+//
+// This includes network namespaces only kept alive by sockets; these get
+// referenced by the socket's “/proc/$PID/fd/$FD” path, see
+// [github.com/thediveo/lxkns/ops.NamespacePath] for the implications.
 func FromFds() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.ScanFds = true }
 }
@@ -217,6 +222,23 @@ func WithSocketProcesses() DiscoveryOption {
 // inode numbers and process PIDs.
 func WithoutSocketProcesses() DiscoveryOption {
 	return func(o *DiscoverOpts) { o.DiscoverSocketProcesses = false }
+}
+
+// WithFdCallback registers fn to be called for each open file descriptor of
+// each discovered process, implicitly enabling scanning the file descriptors
+// of processes. It can be specified multiple times to register multiple
+// callbacks.
+//
+// The callbacks get called synchronously and in sequence from the discovering
+// goroutine, before containers are discovered, so they must not block. As the
+// file descriptors are only a snapshot, they might already be closed or even
+// reused when the callback acts upon them.
+func WithFdCallback(fn FdCallback) DiscoveryOption {
+	return func(o *DiscoverOpts) {
+		if fn != nil {
+			o.fdCallbacks = append(o.fdCallbacks, fn)
+		}
+	}
 }
 
 // WithLabel adds a key-value pair to the discovery options.
